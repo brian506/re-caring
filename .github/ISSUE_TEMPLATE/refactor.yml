@@ -1,8 +1,7 @@
 name: Refactor
 description: 리팩터링 작업
 title: "[Refactor]: "
-labels: ["refactor", "feature"]
-type: refactor
+labels: ["refactor"]
 body:
   - type: textarea
     attributes:

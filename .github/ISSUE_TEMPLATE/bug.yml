@@ -1,8 +1,7 @@
 name: Bug
 description: 버그 발생
 title: "[Bug]: "
-labels: ["feature"]
-type: bug
+labels: ["bug"]
 body:
   - type: textarea
     attributes:
