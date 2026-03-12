@@ -33,14 +33,6 @@ public class SecurityConfig {
     private final AuthExceptionTranslationFilter authExceptionTranslationFilter;
 
     @Bean
-    public WebSecurityCustomizer webSecurityCustomizer() {
-        return web -> web.ignoring().requestMatchers("/h2-console/**", "/v3/swagger-ui/**",
-                "/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html", "/api-docs/**", "/favicon.ico",
-                "/error");
-    }
-
-
-    @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) {
         PathPatternRequestMatcher.Builder mvc = withDefaults();
         return http

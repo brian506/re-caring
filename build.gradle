@@ -48,6 +48,12 @@ dependencies {
 	implementation 'io.jsonwebtoken:jjwt-impl:0.12.6'
 	implementation 'io.jsonwebtoken:jjwt-jackson:0.12.6'
 
+	// Redis
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+	// coolSMS
+	implementation 'net.nurigo:sdk:4.3.0'
+
 
 	// test
 	testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
