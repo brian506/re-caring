@@ -7,9 +7,11 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class MemberMapper {
-    public Member toNewMember(SignUpCommand command, EncodedPassword encodedPassword) {
+
+    public Member toNewMember(SignUpCommand command, EncodedPassword encodedPassword, String phone) {
         return Member.create(
                 command.email().email(),
+                phone,
                 encodedPassword.password(),
                 command.name(),
                 command.birth(),

@@ -26,11 +26,11 @@ public class PhoneVerificationService {
         smsClient.sendVerificationCode(command.phone().value(), code.value());
     }
 
-    public void verifyCode(VerifyCodeCommand command) {
+    public String verifyCode(VerifyCodeCommand command) {
         SmsCode storedCode = phoneVerificationReader.findCode(command.phone());
         if (!storedCode.matches(command.code())) {
             throw new AppException(ErrorType.INVALID_VERIFICATION_CODE);
         }
-        phoneVerificationWriter.verify(command.phone());
+        return phoneVerificationWriter.verify(command.phone());
     }
 }

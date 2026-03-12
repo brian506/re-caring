@@ -3,6 +3,7 @@ package com.recaring.sms.controller;
 import com.recaring.sms.business.PhoneVerificationService;
 import com.recaring.sms.controller.request.SendCodeRequest;
 import com.recaring.sms.controller.request.VerifyCodeRequest;
+import com.recaring.sms.controller.response.VerifyCodeResponse;
 import com.recaring.support.response.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -26,8 +27,8 @@ public class PhoneVerificationController {
     }
 
     @PostMapping("/verify")
-    public ResponseEntity<ApiResponse<Void>> verifyCode(@Valid @RequestBody VerifyCodeRequest request) {
-        phoneVerificationService.verifyCode(request.toCommand());
-        return ResponseEntity.ok(ApiResponse.success());
+    public ResponseEntity<ApiResponse<VerifyCodeResponse>> verifyCode(@Valid @RequestBody VerifyCodeRequest request) {
+        String token = phoneVerificationService.verifyCode(request.toCommand());
+        return ResponseEntity.ok(ApiResponse.success(new VerifyCodeResponse(token)));
     }
 }

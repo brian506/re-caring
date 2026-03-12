@@ -1,6 +1,5 @@
 package com.recaring.domain.member.implement;
 
-
 import com.recaring.auth.business.command.SignUpCommand;
 import com.recaring.auth.vo.EncodedPassword;
 import com.recaring.domain.member.Member;
@@ -17,8 +16,8 @@ public class MemberWriter {
     private final MemberMapper memberMapper;
 
     @Transactional
-    public void registerMember(SignUpCommand command, EncodedPassword encodedPassword) {
-        Member member = memberMapper.toNewMember(command, encodedPassword);
+    public void registerMember(SignUpCommand command, EncodedPassword encodedPassword, String phone) {
+        Member member = memberMapper.toNewMember(command, encodedPassword, phone);
         memberRepository.save(member);
     }
 }

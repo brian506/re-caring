@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 public class PhoneVerificationReader {
 
     private static final String CODE_KEY_PREFIX = "phone:verify:";
-    private static final String VERIFIED_KEY_PREFIX = "phone:verified:";
+    private static final String TOKEN_KEY_PREFIX = "phone:token:";
 
     private final StringRedisTemplate redisTemplate;
 
@@ -25,10 +25,11 @@ public class PhoneVerificationReader {
         return new SmsCode(code);
     }
 
-    public void checkVerified(PhoneNumber phone) {
-        String verified = redisTemplate.opsForValue().get(VERIFIED_KEY_PREFIX + phone.value());
-        if (verified == null) {
+    public PhoneNumber findPhoneByToken(String token) {
+        String phone = redisTemplate.opsForValue().get(TOKEN_KEY_PREFIX + token);
+        if (phone == null) {
             throw new AppException(ErrorType.NOT_VERIFIED_PHONE);
         }
+        return new PhoneNumber(phone);
     }
 }
