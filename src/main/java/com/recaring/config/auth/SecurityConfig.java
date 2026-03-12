@@ -1,11 +1,13 @@
-package com.recaring.auth.config;
+package com.recaring.config.auth;
 
+import com.recaring.security.filter.AuthExceptionTranslationFilter;
+import com.recaring.security.filter.JwtAuthenticationFilter;
+import com.recaring.security.handler.JwtAuthenticationEntryPoint;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -33,7 +35,7 @@ public class SecurityConfig {
     private final AuthExceptionTranslationFilter authExceptionTranslationFilter;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         PathPatternRequestMatcher.Builder mvc = withDefaults();
         return http
                 .httpBasic(AbstractHttpConfigurer::disable)
@@ -41,14 +43,15 @@ public class SecurityConfig {
                 .logout(AbstractHttpConfigurer::disable)
                 .oauth2Login(AbstractHttpConfigurer::disable)
                 .csrf(AbstractHttpConfigurer::disable)
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers(mvc.matcher("/api/v1/test-sign-in/**")).permitAll()
                         .requestMatchers(
-                                mvc.matcher("/api/v1/auth/sign-in/**"),
-                                mvc.matcher("/api/v1/auth/check/account"),
-                                mvc.matcher("/api/v1/auth/*/verify"),
                                 mvc.matcher("/api/v1/auth/sign-up"),
-                                mvc.matcher("/api/v1/auth/password/change")
+                                mvc.matcher("/api/v1/auth/sign-in/local"),
+                                mvc.matcher("/api/v1/auth/refresh"),
+                                mvc.matcher("/api/v1/auth/sign-out"),
+                                mvc.matcher("/api/v1/auth/phone/send-code"),
+                                mvc.matcher("/api/v1/auth/phone/verify")
                         ).permitAll()
                         .requestMatchers(
                                 mvc.matcher("/actuator"),

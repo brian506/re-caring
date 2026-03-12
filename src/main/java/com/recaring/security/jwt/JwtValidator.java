@@ -14,16 +14,6 @@ public class JwtValidator {
 
     private final SecretKey secretKey;
 
-    public String getSubjectIfValid(String token) {
-        String subject = validate(token).getPayload().getSubject();
-
-        if (subject == null) {
-            throw new AppException(ErrorType.NOT_FOUND_SUBJECT);
-        }
-
-        return subject;
-    }
-
     public Jws<Claims> validate(String token) {
         try {
             return Jwts.parser()

@@ -11,6 +11,9 @@ public enum ErrorCode {
     E3016, E3017, E3018,
 
     // Phone Verification
-    E3019, E3020, E3021, E3022, E3023
+    E3019, E3020, E3021, E3022, E3023,
+
+    // Email
+    E3024, E3025
 
 }

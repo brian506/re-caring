@@ -1,4 +1,4 @@
-package com.recaring.auth.config;
+package com.recaring.config.auth;
 
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;

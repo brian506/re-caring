@@ -5,19 +5,19 @@ import com.recaring.auth.vo.LocalEmail;
 import com.recaring.auth.vo.Password;
 import com.recaring.domain.member.Gender;
 import com.recaring.domain.member.MemberRole;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDate;
 
 public record SignUpRequest(
         @NotBlank String verificationToken,
-        @NotBlank String email,
+        @Email String email,
         @NotBlank String password,
         @NotBlank String name,
-        @NotNull LocalDate birth,
-        @NotNull Gender gender,
-        @NotNull MemberRole role
+        @NotBlank LocalDate birth,
+        @NotBlank Gender gender,
+        @NotBlank MemberRole role
 ) {
     public SignUpCommand toCommand() {
         return new SignUpCommand(
