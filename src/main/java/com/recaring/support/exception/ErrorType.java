@@ -33,7 +33,7 @@ public enum ErrorType {
     INVALID_PASSWORD_FORMAT(HttpStatus.BAD_REQUEST, ErrorCode.E3015, "비밀번호는 영문과 숫자를 포함해야 합니다.", LogLevel.WARN),
     NOT_FOUND_ACCOUNT(HttpStatus.BAD_REQUEST, ErrorCode.E3016, "존재하지 않는 계정 정보입니다.", LogLevel.WARN),
     INVALID_PASSWORD(HttpStatus.BAD_REQUEST, ErrorCode.E3017, "비밀번호가 일치하지 않습니다.", LogLevel.WARN),
-    INVALID_MEMBER_KEY(HttpStatus.BAD_REQUEST, ErrorCode.E3018, "멤버 key가 유효하지 않습니다.", LogLevel.WARN),
+    INVALID_MEMBER_KEY(HttpStatus.BAD_REQUEST, ErrorCode.E3018, "멤버 key가 유효하지 않습니다.", LogLevel.WARN);
 
     private final HttpStatus status;
     private final ErrorCode errorCode;

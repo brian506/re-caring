@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public enum Role {
+public enum MemberRole {
     GUARDIAN("보호자"),
     CARE_TARGET("보호 대상자");
 
