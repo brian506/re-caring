@@ -50,8 +50,8 @@ public class SecurityConfig {
                                 mvc.matcher("/api/v1/auth/sign-in/local"),
                                 mvc.matcher("/api/v1/auth/refresh"),
                                 mvc.matcher("/api/v1/auth/sign-out"),
-                                mvc.matcher("/api/v1/auth/phone/send-code"),
-                                mvc.matcher("/api/v1/auth/phone/verify")
+                                mvc.matcher("/api/v1/auth/email"),
+                                mvc.matcher("/api/v1/auth/value")
                         ).permitAll()
                         .requestMatchers(
                                 mvc.matcher("/actuator"),

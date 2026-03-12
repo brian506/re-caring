@@ -60,4 +60,8 @@ public class Member extends BaseEntity {
         member.role = role;
         return member;
     }
+
+    public void changePassword(String password) {
+        this.password = password;
+    }
 }

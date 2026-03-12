@@ -28,7 +28,7 @@ public class PhoneVerificationController {
 
     @PostMapping("/verify")
     public ResponseEntity<ApiResponse<VerifyCodeResponse>> verifyCode(@Valid @RequestBody VerifyCodeRequest request) {
-        String token = phoneVerificationService.verifyCode(request.toCommand());
-        return ResponseEntity.ok(ApiResponse.success(new VerifyCodeResponse(token)));
+        String smsToken = phoneVerificationService.verifyCode(request.toCommand());
+        return ResponseEntity.ok(ApiResponse.success(new VerifyCodeResponse(smsToken)));
     }
 }

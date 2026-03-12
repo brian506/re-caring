@@ -1,25 +1,22 @@
 package com.recaring.security.filter;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.recaring.security.exception.AuthenticationExceptionHandler;
 import com.recaring.support.exception.AppException;
-import com.recaring.support.response.ApiResponse;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 
 @Component
 @RequiredArgsConstructor
 public class AuthExceptionTranslationFilter extends OncePerRequestFilter {
 
-    private final ObjectMapper objectMapper;
+    private final AuthenticationExceptionHandler handler;
 
     @Override
     protected void doFilterInternal(
@@ -27,20 +24,13 @@ public class AuthExceptionTranslationFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain
     ) throws ServletException, IOException {
-        filterChain.doFilter(request, response);
+        try {
+            filterChain.doFilter(request, response);
+        } catch (AppException e) {
+            handler.handle(request, response, e);
 
-        AppException exception = (AppException) request.getAttribute(JwtAuthenticationFilter.EXCEPTION_ATTRIBUTE);
-        if (exception != null) {
-            writeErrorResponse(response, exception);
         }
-    }
 
-    private void writeErrorResponse(HttpServletResponse response, AppException exception) throws IOException {
-        response.setStatus(exception.getErrorType().getStatus().value());
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        response.setCharacterEncoding(StandardCharsets.UTF_8.name());
 
-        String body = objectMapper.writeValueAsString(ApiResponse.error(exception.getErrorType()));
-        response.getWriter().write(body);
     }
 }

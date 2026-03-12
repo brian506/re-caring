@@ -3,10 +3,16 @@ package com.recaring.auth.controller;
 import com.recaring.auth.business.CookieService;
 import com.recaring.auth.business.LocalAuthService;
 import com.recaring.auth.business.TokenRefreshService;
+import com.recaring.auth.controller.request.EmailRequest;
+import com.recaring.auth.controller.request.NewPasswordRequest;
 import com.recaring.auth.controller.request.SignInRequest;
 import com.recaring.auth.controller.request.SignUpRequest;
+import com.recaring.auth.controller.response.MaskEmailResponse;
 import com.recaring.auth.controller.response.SignInResponse;
+import com.recaring.auth.vo.LocalEmail;
+import com.recaring.auth.vo.Password;
 import com.recaring.security.vo.Jwt;
+import com.recaring.sms.vo.PhoneNumber;
 import com.recaring.support.response.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -15,10 +21,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
@@ -44,6 +47,18 @@ public class AuthController {
         Jwt jwt = localAuthService.signIn(request.toCommand());
         response.addHeader(HttpHeaders.SET_COOKIE, cookieService.create(jwt.refreshToken()).toString());
         return ResponseEntity.ok(ApiResponse.success(new SignInResponse(jwt.accessToken())));
+    }
+
+    @GetMapping("/email")
+    public ResponseEntity<ApiResponse<MaskEmailResponse>> findEmail(@Valid @ModelAttribute EmailRequest request) {
+        String maskEmail = localAuthService.findEmail(request.name(), request.birth(), new PhoneNumber(request.phone()));
+        return ResponseEntity.ok(ApiResponse.success(new MaskEmailResponse(maskEmail)));
+    }
+
+    @PostMapping("/password")
+    public ResponseEntity<ApiResponse<Void>> findPassword(@Valid @RequestBody NewPasswordRequest request) {
+        localAuthService.findPassword(request.smsToken(), new Password(request.password()));
+        return ResponseEntity.ok(ApiResponse.success());
     }
 
     @PostMapping("/refresh")

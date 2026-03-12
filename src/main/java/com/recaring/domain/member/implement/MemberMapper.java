@@ -12,7 +12,7 @@ public class MemberMapper {
         return Member.create(
                 command.email().email(),
                 phone,
-                encodedPassword.password(),
+                encodedPassword.value(),
                 command.name(),
                 command.birth(),
                 command.gender(),

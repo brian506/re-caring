@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class MemberWriter {
 
+    private final MemberReader memberReader;
     private final MemberRepository memberRepository;
     private final MemberMapper memberMapper;
 
@@ -19,5 +20,11 @@ public class MemberWriter {
     public void registerMember(SignUpCommand command, EncodedPassword encodedPassword, String phone) {
         Member member = memberMapper.toNewMember(command, encodedPassword, phone);
         memberRepository.save(member);
+    }
+
+    @Transactional
+    public void changePassword(String phone, EncodedPassword encodedPassword) {
+        Member member = memberReader.findByPhone(phone);
+        member.changePassword(encodedPassword.value());
     }
 }

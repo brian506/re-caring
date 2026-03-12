@@ -7,6 +7,8 @@ import com.recaring.support.exception.ErrorType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
+
 @Component
 @RequiredArgsConstructor
 public class MemberReader {
@@ -22,4 +24,15 @@ public class MemberReader {
         return memberRepository.findByMemberKey(memberKey)
                 .orElseThrow(() -> new AppException(ErrorType.NOT_FOUND_ACCOUNT));
     }
+
+    public Member findByPhone(String phoneNumber) {
+        return memberRepository.findByPhone(phoneNumber)
+                .orElseThrow(() -> new AppException(ErrorType.NOT_FOUND_ACCOUNT));
+    }
+
+    public Member findByNameAndBirthAndPhone(String name, LocalDate birth, String phone) {
+        return memberRepository.findByNameAndBirthAndPhone(name, birth, phone)
+                .orElseThrow(() -> new AppException(ErrorType.NOT_FOUND_ACCOUNT));
+    }
+
 }
