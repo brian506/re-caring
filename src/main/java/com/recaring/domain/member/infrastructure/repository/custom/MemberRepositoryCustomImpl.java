@@ -14,15 +14,15 @@ public class MemberRepositoryCustomImpl extends QuerydslRepositorySupport implem
         super(entityClass);
     }
 
-
     @Override
     public Optional<Member> findByNameAndBirthAndPhone(String name, LocalDate birth, String phone) {
-        return selectFrom(member)
+        return Optional.ofNullable(
+                selectFrom(member)
                 .where(
                         member.name.eq(name),
                         member.birth.eq(birth),
                         member.phone.eq(phone)
-                )
-                .fetchOptional();
+                ).fetchOne()
+        );
     }
 }
