@@ -39,6 +39,7 @@ public class CookieService {
                 .orElseThrow(() -> new AppException(ErrorType.REQUIRED_AUTH));
     }
 
+    // 쿠키 만료
     public ResponseCookie expire() {
         return ResponseCookie.from(COOKIE_NAME, "")
                 .httpOnly(true)

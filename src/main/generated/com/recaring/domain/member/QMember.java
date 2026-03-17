@@ -48,6 +48,12 @@ public class QMember extends EntityPathBase<Member> {
 
     public final EnumPath<MemberRole> role = createEnum("role", MemberRole.class);
 
+    public final DateTimePath<java.time.LocalDateTime> termsLocationAgreedAt = createDateTime("termsLocationAgreedAt", java.time.LocalDateTime.class);
+
+    public final DateTimePath<java.time.LocalDateTime> termsPrivacyAgreedAt = createDateTime("termsPrivacyAgreedAt", java.time.LocalDateTime.class);
+
+    public final DateTimePath<java.time.LocalDateTime> termsServiceAgreedAt = createDateTime("termsServiceAgreedAt", java.time.LocalDateTime.class);
+
     //inherited
     public final DateTimePath<java.time.LocalDateTime> updatedAt = _super.updatedAt;
 

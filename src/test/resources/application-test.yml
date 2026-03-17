@@ -1,0 +1,33 @@
+spring:
+  config:
+    activate:
+      on-profile: test
+
+  application:
+    name: recaring
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: false
+
+jwt:
+  secret-key: "recaring-test-secret-key-for-jwt-testing-only"
+  access:
+    expiration: 3600000
+  refresh:
+    expiration: 1209600000
+
+coolsms:
+  api-key: "test-api-key"
+  api-secret: "test-api-secret"
+  sender: "01000000000"
+
+client:
+  url: "http://localhost:3000"

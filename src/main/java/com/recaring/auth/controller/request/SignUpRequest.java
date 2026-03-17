@@ -5,8 +5,10 @@ import com.recaring.auth.vo.LocalEmail;
 import com.recaring.auth.vo.Password;
 import com.recaring.domain.member.Gender;
 import com.recaring.domain.member.MemberRole;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDate;
 
@@ -15,9 +17,12 @@ public record SignUpRequest(
         @Email String email,
         @NotBlank String password,
         @NotBlank String name,
-        @NotBlank LocalDate birth,
-        @NotBlank Gender gender,
-        @NotBlank MemberRole role
+        @NotNull LocalDate birth,
+        @NotNull Gender gender,
+        @NotNull MemberRole role,
+        @AssertTrue Boolean isTermsOfServiceAgreed,
+        @AssertTrue Boolean isLocationServiceAgreed,
+        @AssertTrue Boolean isPrivacyPolicyAgreed
 ) {
     public SignUpCommand toCommand() {
         return new SignUpCommand(
@@ -27,6 +32,7 @@ public record SignUpRequest(
                 name,
                 birth,
                 gender,
-                role);
+                role
+        );
     }
 }
