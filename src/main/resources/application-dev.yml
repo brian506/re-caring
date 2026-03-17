@@ -1,0 +1,45 @@
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+
+  jmx:
+    enabled: true
+
+  datasource:
+    first:
+      driver-class-name: org.postgresql.Driver
+      jdbc-url: ${DB_URL}
+      username: ${DB_USERNAME}
+      password: ${DB_PASSWORD}
+
+
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        hbm2ddl:
+          auto: validate
+
+
+
+
+redis:
+  host: ${REDIS_HOST}
+  port: ${REDIS_PORT}
+
+jwt:
+  secretKey: ${JWT_KEY}
+  access:
+    expiration: 3600000
+    header: Authorization
+  refresh:
+    expiration: 1209600000
+    header: Authorization-refresh
+
+coolsms:
+  api-key: ${COOLSMS_API_KEY}
+  api-secret: ${COOLSMS_API_SECRET}
+  sender: ${COOLSMS_SENDER}
+

@@ -1,0 +1,16 @@
+spring:
+  profiles:
+    active: local
+  config:
+    import: "optional:file:.env[.properties]"
+
+  jpa:
+    hibernate:
+      ddl-auto: create
+      database-platform: org.hibernate.dialect.MySQLDialect
+    defer-datasource-initialization: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        show_sql: false
+        format_sql: false
