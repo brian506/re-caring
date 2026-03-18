@@ -42,9 +42,10 @@ public enum ErrorType {
     SMS_SEND_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, ErrorCode.E3022, "SMS 발송에 실패했습니다.", LogLevel.ERROR),
     INVALID_PHONE_FORMAT(HttpStatus.BAD_REQUEST, ErrorCode.E3023, "올바른 휴대폰 번호 형식이 아닙니다.", LogLevel.WARN),
 
-    // Email
+    // member
     EMAIL_IS_NULL(HttpStatus.BAD_REQUEST, ErrorCode.E3024, "이메일은 필수 입력값입니다.", LogLevel.WARN),
-    INVALID_EMAIL_FORMAT(HttpStatus.BAD_REQUEST, ErrorCode.E3025, "올바른 이메일 형식이 아닙니다.", LogLevel.WARN);
+    INVALID_EMAIL_FORMAT(HttpStatus.BAD_REQUEST, ErrorCode.E3025, "올바른 이메일 형식이 아닙니다.", LogLevel.WARN),
+    INVALID_EMAIL(HttpStatus.BAD_REQUEST, ErrorCode.E3026, "이메일이 유효하지 않습니다.", LogLevel.WARN),;
 
     private final HttpStatus status;
     private final ErrorCode errorCode;

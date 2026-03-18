@@ -15,21 +15,21 @@ class PasswordTest {
     @DisplayName("영문과 숫자를 포함한 8자 이상 20자 이하 비밀번호는 생성된다")
     void create_success_with_valid_password() {
         Password password = new Password("password1");
-        assertThat(password.password()).isEqualTo("password1");
+        assertThat(password.value()).isEqualTo("password1");
     }
 
     @Test
     @DisplayName("최소 길이(8자) 비밀번호는 생성된다")
     void create_success_with_min_length_password() {
         Password password = new Password("abcde123");
-        assertThat(password.password()).isEqualTo("abcde123");
+        assertThat(password.value()).isEqualTo("abcde123");
     }
 
     @Test
     @DisplayName("최대 길이(20자) 비밀번호는 생성된다")
     void create_success_with_max_length_password() {
         Password password = new Password("abcdefghij1234567890");
-        assertThat(password.password()).isEqualTo("abcdefghij1234567890");
+        assertThat(password.value()).isEqualTo("abcdefghij1234567890");
     }
 
     @Test

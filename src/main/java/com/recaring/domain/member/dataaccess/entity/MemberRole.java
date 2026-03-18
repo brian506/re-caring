@@ -1,4 +1,4 @@
-package com.recaring.domain.member;
+package com.recaring.domain.member.dataaccess.entity;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

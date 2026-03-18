@@ -1,6 +1,5 @@
 package com.recaring.security.filter;
 
-import com.recaring.domain.member.MemberRole;
 import com.recaring.security.jwt.JwtValidator;
 import com.recaring.support.exception.AppException;
 import io.jsonwebtoken.Claims;

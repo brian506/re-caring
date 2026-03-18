@@ -1,19 +1,17 @@
 package com.recaring.auth.controller;
 
+import com.recaring.auth.dataaccess.entity.LocalAuth;
+import com.recaring.auth.dataaccess.repository.LocalAuthRepository;
 import com.recaring.auth.fixture.AuthFixture;
-import com.recaring.domain.member.Gender;
-import com.recaring.domain.member.Member;
-import com.recaring.domain.member.MemberRole;
+import com.recaring.domain.member.dataaccess.entity.Member;
+import com.recaring.domain.member.dataaccess.repository.MemberRepository;
 import com.recaring.domain.member.fixture.MemberFixture;
-import com.recaring.domain.member.infrastructure.repository.MemberRepository;
 import com.recaring.sms.fixture.SmsFixture;
-import com.recaring.sms.implement.SmsClient;
 import com.recaring.support.AbstractIntegrationTest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -38,10 +36,14 @@ class AuthControllerTest extends AbstractIntegrationTest {
     private MemberRepository memberRepository;
 
     @Autowired
+    private LocalAuthRepository localAuthRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @AfterEach
     void tearDown() {
+        localAuthRepository.deleteAll();
         memberRepository.deleteAll();
         redisTemplate.getConnectionFactory().getConnection().serverCommands().flushAll();
     }
@@ -63,7 +65,7 @@ class AuthControllerTest extends AbstractIntegrationTest {
         client.post()
                 .uri("/api/v1/auth/sign-up")
                 .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue("""
+                .body("""
                         {
                             "verificationToken": "%s",
                             "email": "newuser@example.com",
@@ -82,7 +84,7 @@ class AuthControllerTest extends AbstractIntegrationTest {
                 .expectBody()
                 .jsonPath("$.resultType").isEqualTo("SUCCESS");
 
-        assertThat(memberRepository.findByEmail("newuser@example.com")).isPresent();
+        assertThat(localAuthRepository.findByEmail("newuser@example.com")).isPresent();
     }
 
     @Test
@@ -93,7 +95,7 @@ class AuthControllerTest extends AbstractIntegrationTest {
         client.post()
                 .uri("/api/v1/auth/sign-up")
                 .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue("""
+                .body("""
                         {
                             "verificationToken": "%s",
                             "email": "fail@example.com",
@@ -114,16 +116,22 @@ class AuthControllerTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("POST /api/v1/auth/sign-in/local - 올바른 이메일/비밀번호로 로그인이 성공한다")
     void signIn_success() {
-        // 회원 직접 등록 (BCrypt 인코딩은 Spring context의 PasswordEncoder 사용)
+        // Member 저장 후 LocalAuth 저장 (이메일/비밀번호 인증을 위해 둘 다 필요)
         String encodedPw = passwordEncoder.encode(AuthFixture.RAW_PASSWORD);
-        Member member = Member.create("login@example.com", MemberFixture.PHONE, encodedPw,
-                MemberFixture.NAME, MemberFixture.BIRTH, MemberFixture.GENDER, MemberFixture.ROLE);
+        Member member = MemberFixture.createMember();
         memberRepository.save(member);
+
+        LocalAuth localAuth = LocalAuth.builder()
+                .memberKey(member.getMemberKey())
+                .email("login@example.com")
+                .password(encodedPw)
+                .build();
+        localAuthRepository.save(localAuth);
 
         client.post()
                 .uri("/api/v1/auth/sign-in/local")
                 .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue("""
+                .body("""
                         {
                             "email": "login@example.com",
                             "password": "%s"
@@ -140,14 +148,20 @@ class AuthControllerTest extends AbstractIntegrationTest {
     @DisplayName("POST /api/v1/auth/sign-in/local - 잘못된 비밀번호로 로그인하면 실패한다")
     void signIn_fail_with_wrong_password() {
         String encodedPw = passwordEncoder.encode(AuthFixture.RAW_PASSWORD);
-        Member member = Member.create("user@example.com", MemberFixture.PHONE, encodedPw,
-                MemberFixture.NAME, MemberFixture.BIRTH, MemberFixture.GENDER, MemberFixture.ROLE);
+        Member member = MemberFixture.createMember("01022223333");
         memberRepository.save(member);
+
+        LocalAuth localAuth = LocalAuth.builder()
+                .memberKey(member.getMemberKey())
+                .email("user@example.com")
+                .password(encodedPw)
+                .build();
+        localAuthRepository.save(localAuth);
 
         client.post()
                 .uri("/api/v1/auth/sign-in/local")
                 .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue("""
+                .body("""
                         {
                             "email": "user@example.com",
                             "password": "wrongPass1"
@@ -181,9 +195,18 @@ class AuthControllerTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("GET /api/v1/auth/email - 이름/생년월일/전화번호로 마스킹된 이메일을 조회한다")
     void findEmail_success() {
-        Member member = MemberFixture.createMember("findme@example.com", "01099998888", "김검색",
-                LocalDate.of(1995, 5, 5), Gender.FEMALE);
+        // Member 저장 (phone/name/birth로 조회됨)
+        Member member = MemberFixture.createMember("01099998888", "김검색",
+                LocalDate.of(1995, 5, 5), MemberFixture.GENDER);
         memberRepository.save(member);
+
+        // LocalAuth 저장 (email 반환을 위해 필요)
+        LocalAuth localAuth = LocalAuth.builder()
+                .memberKey(member.getMemberKey())
+                .email("findme@example.com")
+                .password(AuthFixture.ENCODED_PASSWORD)
+                .build();
+        localAuthRepository.save(localAuth);
 
         client.get()
                 .uri(uriBuilder -> uriBuilder

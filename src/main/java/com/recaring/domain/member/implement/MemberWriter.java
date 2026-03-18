@@ -1,9 +1,10 @@
 package com.recaring.domain.member.implement;
 
-import com.recaring.auth.business.command.SignUpCommand;
-import com.recaring.auth.vo.EncodedPassword;
-import com.recaring.domain.member.Member;
-import com.recaring.domain.member.infrastructure.repository.MemberRepository;
+import com.recaring.auth.vo.NewLocalMember;
+import com.recaring.auth.vo.NewOauthMember;
+import com.recaring.common.mapper.member.MemberMapper;
+import com.recaring.domain.member.dataaccess.entity.Member;
+import com.recaring.domain.member.dataaccess.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,19 +13,18 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class MemberWriter {
 
-    private final MemberReader memberReader;
     private final MemberRepository memberRepository;
     private final MemberMapper memberMapper;
 
     @Transactional
-    public void registerMember(SignUpCommand command, EncodedPassword encodedPassword, String phone) {
-        Member member = memberMapper.toNewMember(command, encodedPassword, phone);
-        memberRepository.save(member);
+    public String registerLocalMember(NewLocalMember newLocalMember) {
+        Member member = memberMapper.toLocalMember(newLocalMember);
+        return memberRepository.save(member).getMemberKey();
     }
 
     @Transactional
-    public void changePassword(String phone, EncodedPassword encodedPassword) {
-        Member member = memberReader.findByPhone(phone);
-        member.changePassword(encodedPassword.value());
+    public String registerOAuthMember(NewOauthMember newOauthMember) {
+        Member member = memberMapper.toOAuthMember(newOauthMember);
+        return memberRepository.save(member).getMemberKey();
     }
 }

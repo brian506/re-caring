@@ -2,62 +2,57 @@ package com.recaring.auth.business;
 
 import com.recaring.auth.business.command.SignInCommand;
 import com.recaring.auth.business.command.SignUpCommand;
-import com.recaring.auth.implement.LocalAuthAuthenticator;
+import com.recaring.auth.implement.local.LocalAuthAuthenticator;
+import com.recaring.auth.implement.local.LocalAuthManager;
+import com.recaring.auth.implement.local.LocalAuthReader;
 import com.recaring.auth.implement.RefreshTokenWriter;
+import com.recaring.auth.implement.TokenIssuer;
 import com.recaring.auth.vo.EncodedPassword;
 import com.recaring.auth.vo.Password;
 import com.recaring.common.utils.MaskingUtils;
-import com.recaring.domain.member.Member;
+import com.recaring.domain.member.dataaccess.entity.Member;
 import com.recaring.domain.member.implement.MemberReader;
-import com.recaring.domain.member.implement.MemberWriter;
-import com.recaring.security.jwt.JwtGenerator;
 import com.recaring.security.vo.Jwt;
-import com.recaring.security.vo.TokenPayload;
 import com.recaring.sms.implement.PhoneVerificationReader;
-import com.recaring.sms.implement.PhoneVerificationWriter;
 import com.recaring.sms.vo.PhoneNumber;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.Date;
 
 @Service
 @RequiredArgsConstructor
 public class LocalAuthService {
 
-    private final JwtGenerator jwtGenerator;
+    private final TokenIssuer tokenIssuer;
     private final LocalAuthAuthenticator authAuthenticator;
-    private final MemberWriter memberWriter;
     private final MemberReader memberReader;
+    private final LocalAuthManager localAuthManager;
+    private final LocalAuthReader localAuthReader;
     private final RefreshTokenWriter refreshTokenWriter;
     private final PhoneVerificationReader phoneVerificationReader;
-    private final PhoneVerificationWriter phoneVerificationWriter;
 
     public void signUp(SignUpCommand command) {
-        PhoneNumber phone = phoneVerificationReader.findPhoneByToken(command.verificationToken());
+        PhoneNumber phone = phoneVerificationReader.findPhoneByToken(command.smsToken());
         EncodedPassword encodedPassword = authAuthenticator.encodePassword(command.password());
-        memberWriter.registerMember(command, encodedPassword, phone.value());
-        phoneVerificationWriter.deleteToken(command.verificationToken());
+        localAuthManager.register(command.toNewLocalMember(phone, encodedPassword));
     }
 
     public Jwt signIn(SignInCommand command) {
         Member member = authAuthenticator.authenticate(command);
-        Jwt jwt = jwtGenerator.generateJwt(new TokenPayload(member.getMemberKey(), member.getRole(), new Date()));
-        refreshTokenWriter.save(jwt.refreshToken(), member.getMemberKey());
-        return jwt;
+        return tokenIssuer.issue(member);
     }
 
     public String findEmail(String name, LocalDate birth, PhoneNumber phone) {
-        Member member = memberReader.findByNameAndBirthAndPhone(name, birth, phone.value());
-        return MaskingUtils.maskEmail(member.getEmail());
+        Member member = memberReader.findEmail(name, birth, phone.value());
+        return MaskingUtils.maskEmail(localAuthReader.findByMemberKey(member.getMemberKey()).getEmail());
     }
 
     public void findPassword(String smsToken, Password password) {
         PhoneNumber phone = phoneVerificationReader.findPhoneByToken(smsToken);
+        Member member = memberReader.findByPhone(phone.value());
         EncodedPassword encodedPassword = authAuthenticator.encodePassword(password);
-        memberWriter.changePassword(phone.value(), encodedPassword);
-        phoneVerificationWriter.deleteToken(smsToken);
+        localAuthManager.changePassword(member.getMemberKey(), encodedPassword.value());
     }
 
     public void signOut(String refreshToken) {

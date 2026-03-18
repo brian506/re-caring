@@ -1,9 +1,7 @@
 package com.recaring.security.jwt;
 
-import com.recaring.domain.member.MemberRole;
 import com.recaring.security.fixture.SecurityFixture;
 import com.recaring.security.vo.Jwt;
-import com.recaring.security.vo.TokenPayload;
 import com.recaring.support.exception.AppException;
 import com.recaring.support.exception.ErrorType;
 import io.jsonwebtoken.Jwts;

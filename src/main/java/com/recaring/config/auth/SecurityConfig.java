@@ -48,6 +48,10 @@ public class SecurityConfig {
                         .requestMatchers(
                                 mvc.matcher("/api/v1/auth/sign-up"),
                                 mvc.matcher("/api/v1/auth/sign-in/local"),
+                                mvc.matcher("/api/v1/auth/sign-in/kakao"),
+                                mvc.matcher("/api/v1/auth/sign-in/naver"),
+                                mvc.matcher("/api/v1/auth/sign-up/kakao"),
+                                mvc.matcher("/api/v1/auth/sign-up/naver"),
                                 mvc.matcher("/api/v1/auth/refresh"),
                                 mvc.matcher("/api/v1/auth/sign-out"),
                                 mvc.matcher("/api/v1/auth/email"),

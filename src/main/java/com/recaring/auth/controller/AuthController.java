@@ -2,14 +2,18 @@ package com.recaring.auth.controller;
 
 import com.recaring.auth.business.CookieService;
 import com.recaring.auth.business.LocalAuthService;
+import com.recaring.auth.business.OAuthService;
 import com.recaring.auth.business.TokenRefreshService;
 import com.recaring.auth.controller.request.EmailRequest;
 import com.recaring.auth.controller.request.NewPasswordRequest;
+import com.recaring.auth.controller.request.OauthSignInRequest;
+import com.recaring.auth.controller.request.OauthSignUpRequest;
 import com.recaring.auth.controller.request.SignInRequest;
 import com.recaring.auth.controller.request.SignUpRequest;
 import com.recaring.auth.controller.response.MaskEmailResponse;
+import com.recaring.auth.controller.response.OAuthSignInResponse;
 import com.recaring.auth.controller.response.SignInResponse;
-import com.recaring.auth.vo.LocalEmail;
+import com.recaring.auth.vo.OAuthProvider;
 import com.recaring.auth.vo.Password;
 import com.recaring.security.vo.Jwt;
 import com.recaring.sms.vo.PhoneNumber;
@@ -30,6 +34,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final LocalAuthService localAuthService;
+    private final OAuthService oAuthService;
     private final CookieService cookieService;
     private final TokenRefreshService refreshService;
 
@@ -40,11 +45,55 @@ public class AuthController {
     }
 
     @PostMapping("/sign-in/local")
-    public ResponseEntity<ApiResponse<SignInResponse>> signIn(
+    public ResponseEntity<ApiResponse<SignInResponse>> signInByLocal(
             @Valid @RequestBody SignInRequest request,
             HttpServletResponse response
     ) {
         Jwt jwt = localAuthService.signIn(request.toCommand());
+        response.addHeader(HttpHeaders.SET_COOKIE, cookieService.create(jwt.refreshToken()).toString());
+        return ResponseEntity.ok(ApiResponse.success(new SignInResponse(jwt.accessToken())));
+    }
+
+    @PostMapping("/sign-in/kakao")
+    public ResponseEntity<ApiResponse<OAuthSignInResponse>> signInByKakao(
+            @Valid @RequestBody OauthSignInRequest request,
+            HttpServletResponse response
+    ) {
+        OAuthSignInResponse result = oAuthService.signIn(request.accessToken(), OAuthProvider.KAKAO);
+        if (OAuthSignInResponse.SUCCESS.equals(result.status())) {
+            response.addHeader(HttpHeaders.SET_COOKIE, cookieService.create(result.refreshToken()).toString());
+        }
+        return ResponseEntity.ok(ApiResponse.success(result));
+    }
+
+    @PostMapping("/sign-in/naver")
+    public ResponseEntity<ApiResponse<OAuthSignInResponse>> signInByNaver(
+            @Valid @RequestBody OauthSignInRequest request,
+            HttpServletResponse response
+    ) {
+        OAuthSignInResponse result = oAuthService.signIn(request.accessToken(), OAuthProvider.NAVER);
+        if (OAuthSignInResponse.SUCCESS.equals(result.status())) {
+            response.addHeader(HttpHeaders.SET_COOKIE, cookieService.create(result.refreshToken()).toString());
+        }
+        return ResponseEntity.ok(ApiResponse.success(result));
+    }
+
+    @PostMapping("/sign-up/kakao")
+    public ResponseEntity<ApiResponse<SignInResponse>> signUpByKakao(
+            @Valid @RequestBody OauthSignUpRequest request,
+            HttpServletResponse response
+    ) {
+        Jwt jwt = oAuthService.signUp(OAuthProvider.KAKAO, request.toCommand());
+        response.addHeader(HttpHeaders.SET_COOKIE, cookieService.create(jwt.refreshToken()).toString());
+        return ResponseEntity.ok(ApiResponse.success(new SignInResponse(jwt.accessToken())));
+    }
+
+    @PostMapping("/sign-up/naver")
+    public ResponseEntity<ApiResponse<SignInResponse>> signUpByNaver(
+            @Valid @RequestBody OauthSignUpRequest request,
+            HttpServletResponse response
+    ) {
+        Jwt jwt = oAuthService.signUp(OAuthProvider.NAVER, request.toCommand());
         response.addHeader(HttpHeaders.SET_COOKIE, cookieService.create(jwt.refreshToken()).toString());
         return ResponseEntity.ok(ApiResponse.success(new SignInResponse(jwt.accessToken())));
     }

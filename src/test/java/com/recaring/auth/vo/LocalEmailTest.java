@@ -15,14 +15,14 @@ class LocalEmailTest {
     @DisplayName("올바른 이메일 형식이면 객체가 생성된다")
     void create_success_with_valid_email() {
         LocalEmail email = new LocalEmail("test@example.com");
-        assertThat(email.email()).isEqualTo("test@example.com");
+        assertThat(email.value()).isEqualTo("test@example.com");
     }
 
     @Test
     @DisplayName("숫자와 특수문자가 포함된 이메일도 생성된다")
     void create_success_with_complex_email() {
         LocalEmail email = new LocalEmail("user.name+tag@sub.domain.com");
-        assertThat(email.email()).isEqualTo("user.name+tag@sub.domain.com");
+        assertThat(email.value()).isEqualTo("user.name+tag@sub.domain.com");
     }
 
     @Test

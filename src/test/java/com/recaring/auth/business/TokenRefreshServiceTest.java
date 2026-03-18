@@ -2,13 +2,12 @@ package com.recaring.auth.business;
 
 import com.recaring.auth.implement.RefreshTokenReader;
 import com.recaring.auth.implement.RefreshTokenWriter;
-import com.recaring.domain.member.Member;
+import com.recaring.auth.implement.TokenIssuer;
+import com.recaring.domain.member.dataaccess.entity.Member;
 import com.recaring.domain.member.fixture.MemberFixture;
 import com.recaring.domain.member.implement.MemberReader;
-import com.recaring.security.jwt.JwtGenerator;
 import com.recaring.security.jwt.JwtValidator;
 import com.recaring.security.vo.Jwt;
-import com.recaring.security.vo.TokenPayload;
 import com.recaring.support.exception.AppException;
 import com.recaring.support.exception.ErrorType;
 import io.jsonwebtoken.Claims;
@@ -24,7 +23,6 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.willThrow;
@@ -39,9 +37,6 @@ class TokenRefreshServiceTest {
     private TokenRefreshService tokenRefreshService;
 
     @Mock
-    private JwtGenerator jwtGenerator;
-
-    @Mock
     private JwtValidator jwtValidator;
 
     @Mock
@@ -52,6 +47,9 @@ class TokenRefreshServiceTest {
 
     @Mock
     private MemberReader memberReader;
+
+    @Mock
+    private TokenIssuer tokenIssuer;
 
     @Test
     @DisplayName("유효한 리프레시 토큰으로 새로운 JWT가 발급된다")
@@ -66,14 +64,14 @@ class TokenRefreshServiceTest {
         given(jwtValidator.validate(oldRefreshToken)).willReturn(mockClaims);
         given(refreshTokenReader.findMemberKey(oldRefreshToken)).willReturn(memberKey);
         given(memberReader.findByMemberKey(memberKey)).willReturn(member);
-        given(jwtGenerator.generateJwt(any(TokenPayload.class))).willReturn(newJwt);
+        given(tokenIssuer.issue(member)).willReturn(newJwt);
 
         Jwt result = tokenRefreshService.refresh(oldRefreshToken);
 
         assertThat(result.accessToken()).isEqualTo("new-access-token");
         assertThat(result.refreshToken()).isEqualTo("new-refresh-token");
         then(refreshTokenWriter).should(times(1)).delete(oldRefreshToken);
-        then(refreshTokenWriter).should(times(1)).save("new-refresh-token", member.getMemberKey());
+        then(tokenIssuer).should(times(1)).issue(member);
     }
 
     @Test
