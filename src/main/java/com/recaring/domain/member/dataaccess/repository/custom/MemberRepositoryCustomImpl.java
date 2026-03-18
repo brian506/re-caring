@@ -10,8 +10,8 @@ import static com.recaring.domain.member.dataaccess.entity.QMember.member;
 
 public class MemberRepositoryCustomImpl extends QuerydslRepositorySupport implements MemberRepositoryCustom {
 
-    protected MemberRepositoryCustomImpl(Class<?> entityClass) {
-        super(entityClass);
+    protected MemberRepositoryCustomImpl() {
+        super(Member.class);
     }
 
     @Override
