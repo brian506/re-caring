@@ -65,7 +65,7 @@ class AuthControllerTest extends AbstractIntegrationTest {
         client.post()
                 .uri("/api/v1/auth/sign-up")
                 .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue("""
+                .body("""
                         {
                             "verificationToken": "%s",
                             "email": "newuser@example.com",
@@ -95,7 +95,7 @@ class AuthControllerTest extends AbstractIntegrationTest {
         client.post()
                 .uri("/api/v1/auth/sign-up")
                 .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue("""
+                .body("""
                         {
                             "verificationToken": "%s",
                             "email": "fail@example.com",
@@ -131,7 +131,7 @@ class AuthControllerTest extends AbstractIntegrationTest {
         client.post()
                 .uri("/api/v1/auth/sign-in/local")
                 .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue("""
+                .body("""
                         {
                             "email": "login@example.com",
                             "password": "%s"
@@ -161,7 +161,7 @@ class AuthControllerTest extends AbstractIntegrationTest {
         client.post()
                 .uri("/api/v1/auth/sign-in/local")
                 .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue("""
+                .body("""
                         {
                             "email": "user@example.com",
                             "password": "wrongPass1"

@@ -15,6 +15,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.times;
 
@@ -41,7 +42,7 @@ class RefreshTokenWriterTest {
 
         ReflectionTestUtils.setField(refreshTokenWriter, "refreshExpiration", refreshExpiration);
 
-        org.mockito.Mockito.when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        given(redisTemplate.opsForValue()).willReturn(valueOperations);
 
         // when
         refreshTokenWriter.save(refreshToken, memberKey);
@@ -59,7 +60,7 @@ class RefreshTokenWriterTest {
         String refreshToken = "refresh-token-to-delete";
         String redisKey = "refresh:token:" + refreshToken;
 
-        org.mockito.Mockito.when(redisTemplate.delete(redisKey)).thenReturn(1L);
+        given(redisTemplate.delete(redisKey)).willReturn(true);
 
         // when
         refreshTokenWriter.delete(refreshToken);

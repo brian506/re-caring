@@ -44,7 +44,7 @@ public class LocalAuthService {
     }
 
     public String findEmail(String name, LocalDate birth, PhoneNumber phone) {
-        Member member = memberReader.findByNameAndBirthAndPhone(name, birth, phone.value());
+        Member member = memberReader.findEmail(name, birth, phone.value());
         return MaskingUtils.maskEmail(localAuthReader.findByMemberKey(member.getMemberKey()).getEmail());
     }
 

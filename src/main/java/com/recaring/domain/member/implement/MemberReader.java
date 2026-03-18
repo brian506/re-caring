@@ -25,7 +25,7 @@ public class MemberReader {
                 .orElseThrow(() -> new AppException(ErrorType.NOT_FOUND_ACCOUNT));
     }
 
-    public Member findByNameAndBirthAndPhone(String name, LocalDate birth, String phone) {
+    public Member findEmail(String name, LocalDate birth, String phone) {
         return memberRepository.findAccount(name, birth, phone)
                 .orElseThrow(() -> new AppException(ErrorType.NOT_FOUND_ACCOUNT));
     }
