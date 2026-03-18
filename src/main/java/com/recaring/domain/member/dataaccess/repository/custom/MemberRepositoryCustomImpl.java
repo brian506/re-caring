@@ -1,12 +1,12 @@
-package com.recaring.domain.member.infrastructure.repository.custom;
+package com.recaring.domain.member.dataaccess.repository.custom;
 
-import com.recaring.domain.member.Member;
+import com.recaring.domain.member.dataaccess.entity.Member;
 import com.recaring.support.repository.QuerydslRepositorySupport;
 
 import java.time.LocalDate;
 import java.util.Optional;
 
-import static com.recaring.domain.member.QMember.member;
+import static com.recaring.domain.member.dataaccess.entity.QMember.member;
 
 public class MemberRepositoryCustomImpl extends QuerydslRepositorySupport implements MemberRepositoryCustom {
 
@@ -15,7 +15,7 @@ public class MemberRepositoryCustomImpl extends QuerydslRepositorySupport implem
     }
 
     @Override
-    public Optional<Member> findByNameAndBirthAndPhone(String name, LocalDate birth, String phone) {
+    public Optional<Member> findAccount(String name, LocalDate birth, String phone) {
         return Optional.ofNullable(
                 selectFrom(member)
                 .where(
@@ -25,4 +25,5 @@ public class MemberRepositoryCustomImpl extends QuerydslRepositorySupport implem
                 ).fetchOne()
         );
     }
+
 }

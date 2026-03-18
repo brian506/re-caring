@@ -6,14 +6,14 @@ import org.apache.logging.log4j.util.Strings;
 
 import java.util.regex.Pattern;
 
-public record Password(String password) {
+public record Password(String value) {
 
     private static final int PASSWORD_MIN_LENGTH = 8;
     private static final int PASSWORD_MAX_LENGTH = 20;
     private static final Pattern PASSWORD_PATTERN = Pattern.compile("^(?=.*[a-zA-Z])(?=.*\\d)[a-zA-Z0-9]+$");
 
     public Password {
-        validatePassword(password);
+        validatePassword(value);
     }
 
     private static void validatePassword(String password) {

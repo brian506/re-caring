@@ -1,8 +1,9 @@
-package com.recaring.domain.member;
+package com.recaring.domain.member.dataaccess.entity;
 
 import com.recaring.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.SQLRestriction;
@@ -23,20 +24,14 @@ public class Member extends BaseEntity {
     @Column(name = "member_id")
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String memberKey;
 
-    @Column(nullable = false, length = 50)
-    private String email;
-
-    @Column(nullable = false, length = 11)
+    @Column(nullable = false, unique = true, length = 11)
     private String phone;
 
     @Column(nullable = false, length = 20)
     private String name;
-
-    @Column(nullable = false)
-    private String password;
 
     @Column(nullable = false)
     private LocalDate birth;
@@ -49,6 +44,10 @@ public class Member extends BaseEntity {
     @Column(nullable = false, length = 20)
     private MemberRole role;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 10)
+    private SignUpType signUpType;
+
     @Column(nullable = false)
     private LocalDateTime termsServiceAgreedAt;
 
@@ -58,23 +57,19 @@ public class Member extends BaseEntity {
     @Column(nullable = false)
     private LocalDateTime termsLocationAgreedAt;
 
-    public static Member create(String email, String phone, String password, String name, LocalDate birth, Gender gender, MemberRole role) {
-        Member member = new Member();
-        member.memberKey = UUID.randomUUID().toString();
-        member.email = email;
-        member.phone = phone;
-        member.password = password;
-        member.name = name;
-        member.birth = birth;
-        member.gender = gender;
-        member.role = role;
-        member.termsServiceAgreedAt = LocalDateTime.now();
-        member.termsPrivacyAgreedAt = LocalDateTime.now();
-        member.termsLocationAgreedAt = LocalDateTime.now();
-        return member;
+    @Builder
+    public Member(String phone, String name,
+                                LocalDate birth, Gender gender, MemberRole role, SignUpType signUpType) {
+        this.memberKey = UUID.randomUUID().toString();
+        this.phone = phone;
+        this.name = name;
+        this.birth = birth;
+        this.gender = gender;
+        this.role = role;
+        this.signUpType = signUpType;
+        this.termsServiceAgreedAt = LocalDateTime.now();
+        this.termsPrivacyAgreedAt = LocalDateTime.now();
+        this.termsLocationAgreedAt = LocalDateTime.now();
     }
 
-    public void changePassword(String password) {
-        this.password = password;
-    }
 }

@@ -14,6 +14,6 @@ public enum ErrorCode {
     E3019, E3020, E3021, E3022, E3023,
 
     // Email
-    E3024, E3025
+    E3024, E3025, E3026
 
 }

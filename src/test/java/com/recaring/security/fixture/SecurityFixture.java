@@ -1,6 +1,6 @@
 package com.recaring.security.fixture;
 
-import com.recaring.domain.member.MemberRole;
+import com.recaring.domain.member.dataaccess.entity.MemberRole;
 import com.recaring.security.jwt.JwtGenerator;
 import com.recaring.security.jwt.JwtValidator;
 import com.recaring.security.vo.TokenPayload;

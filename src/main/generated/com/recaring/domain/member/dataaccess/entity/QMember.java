@@ -1,4 +1,4 @@
-package com.recaring.domain.member;
+package com.recaring.domain.member.dataaccess.entity;
 
 import static com.querydsl.core.types.PathMetadataFactory.*;
 
@@ -18,7 +18,7 @@ import com.querydsl.core.types.Path;
 @Generated("com.querydsl.codegen.DefaultEntitySerializer")
 public class QMember extends EntityPathBase<Member> {
 
-    private static final long serialVersionUID = 1873595780L;
+    private static final long serialVersionUID = -841628913L;
 
     public static final QMember member = new QMember("member1");
 
@@ -32,8 +32,6 @@ public class QMember extends EntityPathBase<Member> {
     //inherited
     public final DateTimePath<java.time.LocalDateTime> deletedAt = _super.deletedAt;
 
-    public final StringPath email = createString("email");
-
     public final EnumPath<Gender> gender = createEnum("gender", Gender.class);
 
     public final NumberPath<Long> id = createNumber("id", Long.class);
@@ -42,11 +40,11 @@ public class QMember extends EntityPathBase<Member> {
 
     public final StringPath name = createString("name");
 
-    public final StringPath password = createString("password");
-
     public final StringPath phone = createString("phone");
 
     public final EnumPath<MemberRole> role = createEnum("role", MemberRole.class);
+
+    public final EnumPath<SignUpType> signUpType = createEnum("signUpType", SignUpType.class);
 
     public final DateTimePath<java.time.LocalDateTime> termsLocationAgreedAt = createDateTime("termsLocationAgreedAt", java.time.LocalDateTime.class);
 
