@@ -1,8 +1,14 @@
 spring:
-  profiles:
-    active: local
   config:
-    import: "optional:file:.env[.properties]"
+    activate:
+      on-profile: local
+
+  datasource:
+    first:
+      driver-class-name: org.postgresql.Driver
+      jdbc-url: jdbc:postgresql://localhost:5432/recaring
+      username: recaring
+      password: recaring
 
   jpa:
     hibernate:
@@ -14,3 +20,24 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         show_sql: true
         format_sql: true
+
+redis:
+  host: localhost
+  port: 6379
+
+jwt:
+  secret-key: local-secret-key-must-be-at-least-32-characters-long
+  access:
+    expiration: 3600000
+    header: Authorization
+  refresh:
+    expiration: 1209600000
+    header: Authorization-refresh
+
+coolsms:
+  api-key: local
+  api-secret: local
+  sender: local
+
+client:
+  url: http://localhost:3000

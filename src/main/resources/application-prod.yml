@@ -1,0 +1,39 @@
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  datasource:
+    first:
+      driver-class-name: org.postgresql.Driver
+      jdbc-url: ${DB_URL}
+      username: ${DB_USERNAME}
+      password: ${DB_PASSWORD}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+redis:
+  host: ${REDIS_HOST}
+  port: ${REDIS_PORT}
+
+jwt:
+  secret-key: ${JWT_KEY}
+  access:
+    expiration: 3600000
+    header: Authorization
+  refresh:
+    expiration: 1209600000
+    header: Authorization-refresh
+
+coolsms:
+  api-key: ${COOLSMS_API_KEY}
+  api-secret: ${COOLSMS_API_SECRET}
+  sender: ${COOLSMS_SENDER}
+
+client:
+  url: ${CLIENT_URL}

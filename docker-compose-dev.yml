@@ -16,6 +16,7 @@ services:
     command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
     depends_on:
       - certbot
+      - spring
     networks:
       - re-caring
 
@@ -27,6 +28,32 @@ services:
       - ./data/certbot/conf:/etc/letsencrypt
       - ./data/certbot/www:/var/www/certbot
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+
+  spring:
+    image: brianchoi506/re-caring:latest
+    container_name: recaring-dev-server
+    restart: on-failure:3
+    env_file: .env
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    depends_on:
+      - redis
+    networks:
+      - re-caring
+
+  redis:
+    image: redis:7-alpine
+    container_name: recaring-redis
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+    networks:
+      - re-caring
+
+volumes:
+  redis-data:
 
 networks:
   re-caring:

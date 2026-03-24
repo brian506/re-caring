@@ -1,0 +1,95 @@
+name: re-caRing Dev Deploy
+
+on:
+  workflow_dispatch: # 수동
+  pull_request: # 자동
+    branches:
+      - develop
+    types:
+      - closed
+
+jobs:
+  deploy:
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.pull_request.merged == true
+    environment: dev
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v5
+
+      - name: Grant execute permisson for gradlew
+        run: chmod +x gradlew
+
+      - name: Test
+        run: ./gradlew clean test
+
+      - name: Build
+        run: ./gradlew clean build -x test
+
+      - name: Docker Build
+        run: docker build -t ${{ vars.DOCKERHUB_USERNAME }}/${{ vars.DOCKERHUB_REPOSITORY }}:latest -t ${{ vars.DOCKERHUB_USERNAME }}/${{ vars.DOCKERHUB_REPOSITORY }}:${GITHUB_SHA::8} .
+
+      - name: Docker Hub Login
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Docker Hub Push
+        run: |
+          docker push ${{ vars.DOCKERHUB_USERNAME }}/${{ vars.DOCKERHUB_REPOSITORY }}:latest
+          docker push ${{ vars.DOCKERHUB_USERNAME }}/${{ vars.DOCKERHUB_REPOSITORY }}:${GITHUB_SHA::8}
+
+      - name: Fetch secrets from Parameter Store
+        run: |
+          aws ssm get-parameters \
+            --names \
+              /recaring/dev/DB_URL \
+              /recaring/dev/DB_USERNAME \
+              /recaring/dev/DB_PASSWORD \
+              /recaring/dev/REDIS_HOST \
+              /recaring/dev/REDIS_PORT \
+              /recaring/dev/JWT_KEY \
+              /recaring/dev/COOLSMS_API_KEY \
+              /recaring/dev/COOLSMS_API_SECRET \
+              /recaring/dev/COOLSMS_SENDER \
+              /recaring/dev/CLIENT_URL \
+            --with-decryption \
+            --query "Parameters[*].[Name,Value]" \
+            --output text | while read name value; do
+              key=$(basename $name)
+              echo "$key=$value" >> .env
+            done
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+
+      - name: Copy docker-compose, .env to server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          source: "docker-compose-dev.yml,.env"
+          target: /home/ubuntu/recaring
+
+      - name: Deploy To Server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            cd /home/ubuntu/recaring
+            docker compose -f docker-compose-dev.yml pull
+            docker compose -f docker-compose-dev.yml up -d
