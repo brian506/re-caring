@@ -25,7 +25,7 @@ redis:
   port: ${REDIS_PORT}
 
 jwt:
-  secretKey: ${JWT_KEY}
+  secret-key: ${JWT_KEY}
   access:
     expiration: 3600000
     header: Authorization
@@ -37,3 +37,6 @@ coolsms:
   api-key: ${COOLSMS_API_KEY}
   api-secret: ${COOLSMS_API_SECRET}
   sender: ${COOLSMS_SENDER}
+
+client:
+  url: ${CLIENT_URL}

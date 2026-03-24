@@ -1,0 +1,30 @@
+services:
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: recaring-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: recaring
+      POSTGRES_USER: recaring
+      POSTGRES_PASSWORD: recaring
+      TZ: Asia/Seoul
+    ports:
+      - "5432:5432"
+    networks:
+      - recaring-local
+
+  redis:
+    image: redis:7-alpine
+    container_name: recaring-redis
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Seoul
+    ports:
+      - "6379:6379"
+    networks:
+      - recaring-local
+
+networks:
+  recaring-local:
+    driver: bridge
