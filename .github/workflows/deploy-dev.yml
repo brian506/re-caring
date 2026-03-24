@@ -100,39 +100,28 @@ jobs:
             docker compose -f docker-compose-dev.yml pull
             docker compose -f docker-compose-dev.yml up -d
 
-      ## discord alarm ##
       - name: Notify Discord (dev 배포 성공)
         if: success()
+        env:
+          WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          BRANCH: ${{ github.ref_name }}
+          ACTOR: ${{ github.actor }}
+          SHORT_SHA: ${{ env.SHORT_SHA }}
         run: |
-          curl -X POST ${{ secrets.DISCORD_WEBHOOK_URL }} \
+          curl -X POST "$WEBHOOK_URL" \
             -H "Content-Type: application/json" \
-            -d '{
-              "embeds": [{
-                "title": "✅ Dev 배포 성공",
-                "description": "'"${{ github.event.pull_request.title }}"'",
-                "color": 5763719,
-                "fields": [
-                  { "name": "브랜치", "value": "'"${{ github.ref_name }}"'", "inline": true },
-                  { "name": "커밋", "value": "'"${{ env.SHORT_SHA }}"'", "inline": true },
-                  { "name": "배포자", "value": "'"${{ github.actor }}"'", "inline": true }
-                ]
-              }]
-            }'
+            -d "{\"embeds\":[{\"title\":\"✅ Dev 배포 성공\",\"description\":\"$PR_TITLE\",\"color\":5763719,\"fields\":[{\"name\":\"브랜치\",\"value\":\"$BRANCH\",\"inline\":true},{\"name\":\"커밋\",\"value\":\"$SHORT_SHA\",\"inline\":true},{\"name\":\"배포자\",\"value\":\"$ACTOR\",\"inline\":true}]}]}"
 
       - name: Notify Discord (dev 배포 실패)
         if: failure()
+        env:
+          WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          BRANCH: ${{ github.ref_name }}
+          ACTOR: ${{ github.actor }}
+          SHORT_SHA: ${{ env.SHORT_SHA }}
         run: |
-          curl -X POST ${{ secrets.DISCORD_WEBHOOK_URL }} \
+          curl -X POST "$WEBHOOK_URL" \
             -H "Content-Type: application/json" \
-            -d '{
-              "embeds": [{
-                "title": "❌ Dev 배포 실패",
-                "description": "'"${{ github.event.pull_request.title }}"'",
-                "color": 15548997,
-                "fields": [
-                  { "name": "브랜치", "value": "'"${{ github.ref_name }}"'", "inline": true },
-                  { "name": "커밋", "value": "'"${{ env.SHORT_SHA }}"'", "inline": true },
-                  { "name": "배포자", "value": "'"${{ github.actor }}"'", "inline": true }
-                ]
-              }]
-            }'
+            -d "{\"embeds\":[{\"title\":\"❌ Dev 배포 실패\",\"description\":\"$PR_TITLE\",\"color\":15548997,\"fields\":[{\"name\":\"브랜치\",\"value\":\"$BRANCH\",\"inline\":true},{\"name\":\"커밋\",\"value\":\"$SHORT_SHA\",\"inline\":true},{\"name\":\"배포자\",\"value\":\"$ACTOR\",\"inline\":true}]}]}"
