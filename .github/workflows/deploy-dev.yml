@@ -58,7 +58,14 @@ jobs:
       - name: Fetch secrets from Parameter Store
           run: |
             aws ssm get-parameters \
-              --names /recaring/DB_URL /recaring/DB_USERNAME /recaring/DB_PASSWORD /recaring/JWT_KEY /recaring/COOLSMS_API_KEY /recaring/COOLSMS_API_SECRET /recaring/COOLSMS_SENDER \
+              --names \
+                /recaring/DB_URL \
+                /recaring/DB_USERNAME \
+                /recaring/DB_PASSWORD \
+                /recaring/JWT_KEY \
+                /recaring/COOLSMS_API_KEY \
+                /recaring/COOLSMS_API_SECRET \
+                /recaring/COOLSMS_SENDER \
               --with-decryption \
               --query "Parameters[*].[Name,Value]" \
               --output text | while read name value; do
