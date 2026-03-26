@@ -56,23 +56,15 @@ jobs:
           docker push ${{ vars.DOCKERHUB_USERNAME }}/${{ vars.DOCKERHUB_REPOSITORY }}:${{ env.SHORT_SHA }}
 
       - name: Fetch secrets from Parameter Store
-        run: |
-          aws ssm get-parameters \
-            --names \
-              /recaring/DB_URL \
-              /recaring/DB_USERNAME \
-              /recaring/DB_PASSWORD \          
-              /recaring/JWT_KEY \
-              /recaring/COOLSMS_API_KEY \
-              /recaring/COOLSMS_API_SECRET \
-              /recaring/COOLSMS_SENDER \
-              /recaring/CLIENT_URL \
-            --with-decryption \
-            --query "Parameters[*].[Name,Value]" \
-            --output text | while read name value; do
-              key=$(basename $name)
-              echo "$key=$value" >> .env
-            done
+          run: |
+            aws ssm get-parameters \
+              --names /recaring/DB_URL /recaring/DB_USERNAME /recaring/DB_PASSWORD /recaring/JWT_KEY /recaring/COOLSMS_API_KEY /recaring/COOLSMS_API_SECRET /recaring/COOLSMS_SENDER \
+              --with-decryption \
+              --query "Parameters[*].[Name,Value]" \
+              --output text | while read name value; do
+                key=$(basename "$name")
+                echo "$key=$value" >> .env
+              done
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
