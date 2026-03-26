@@ -4,7 +4,6 @@ spring:
       on-profile: local
 
   datasource:
-    first:
       driver-class-name: org.postgresql.Driver
       jdbc-url: jdbc:postgresql://localhost:5432/recaring
       username: recaring
