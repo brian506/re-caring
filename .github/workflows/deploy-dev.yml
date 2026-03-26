@@ -59,16 +59,14 @@ jobs:
         run: |
           aws ssm get-parameters \
             --names \
-              /recaring/dev/DB_URL \
-              /recaring/dev/DB_USERNAME \
-              /recaring/dev/DB_PASSWORD \
-              /recaring/dev/REDIS_HOST \
-              /recaring/dev/REDIS_PORT \
-              /recaring/dev/JWT_KEY \
-              /recaring/dev/COOLSMS_API_KEY \
-              /recaring/dev/COOLSMS_API_SECRET \
-              /recaring/dev/COOLSMS_SENDER \
-              /recaring/dev/CLIENT_URL \
+              /recaring/DB_URL \
+              /recaring/DB_USERNAME \
+              /recaring/DB_PASSWORD \          
+              /recaring/JWT_KEY \
+              /recaring/COOLSMS_API_KEY \
+              /recaring/COOLSMS_API_SECRET \
+              /recaring/COOLSMS_SENDER \
+              /recaring/CLIENT_URL \
             --with-decryption \
             --query "Parameters[*].[Name,Value]" \
             --output text | while read name value; do
@@ -80,13 +78,13 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
 
-      - name: Copy docker-compose, .env to server
+      - name: Copy files to server
         uses: appleboy/scp-action@master
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_KEY }}
-          source: "docker-compose-dev.yml,.env"
+          source: "docker-compose-dev.yml,.env,nginx/conf.d,scripts"
           target: /home/ubuntu/recaring
 
       - name: Deploy To Server
@@ -96,9 +94,8 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            cd /home/ubuntu/recaring
-            docker compose -f docker-compose-dev.yml pull
-            docker compose -f docker-compose-dev.yml up -d
+            chmod +x /home/ubuntu/recaring/scripts/deploy.sh
+            bash /home/ubuntu/recaring/scripts/deploy.sh
 
       - name: Notify Discord (dev 배포 성공)
         if: success()

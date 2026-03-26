@@ -21,8 +21,8 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
 redis:
-  host: ${REDIS_HOST}
-  port: ${REDIS_PORT}
+  host: redis
+  port: 6379
 
 jwt:
   secret-key: ${JWT_KEY}
@@ -40,3 +40,12 @@ coolsms:
 
 client:
   url: ${CLIENT_URL}
+
+logging:
+  file:
+    path: /app/logs
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 30
+      total-size-cap: 1GB
