@@ -38,7 +38,7 @@ coolsms:
   sender: ${COOLSMS_SENDER}
 
 client:
-  url: ${CLIENT_URL}
+  url: re-caring.duckdns.org
 
 logging:
   file:
