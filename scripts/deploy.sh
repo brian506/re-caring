@@ -34,8 +34,7 @@ docker compose -f $COMPOSE_FILE pull spring-$NEXT
 
 # 비활성 컨테이너 시작
 echo ">>> spring-$NEXT 컨테이너 시작..."
-docker compose -f $COMPOSE_FILE up -d --no-deps spring-$NEXT
-
+docker compose -f $COMPOSE_FILE up -d --force-recreate --no-deps spring-$NEXT
 # 헬스체크: 포트가 응답할 때까지 대기
 echo ">>> 헬스체크 중... (최대 ${HEALTH_CHECK_RETRIES}회 × ${HEALTH_CHECK_INTERVAL}초)"
 for i in $(seq 1 $HEALTH_CHECK_RETRIES); do
