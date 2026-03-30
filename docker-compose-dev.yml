@@ -40,7 +40,7 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./logs:/app/logs
+      - ./logs:/var/logs/re-caring
     depends_on:
       - redis
     networks:
@@ -58,7 +58,7 @@ services:
     ports:
       - "8081:8080"
     volumes:
-      - ./logs:/app/logs
+      - ./logs:/var/logs/re-caring
     depends_on:
       - redis
     networks:
@@ -72,6 +72,8 @@ services:
       - redis-data:/data
     networks:
       - re-caring
+
+
 
 volumes:
   redis-data:
