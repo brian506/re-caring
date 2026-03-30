@@ -42,7 +42,7 @@ services:
     labels:
       - "monitor=true"
     volumes:
-      - ./logs/blue:/var/logs/re-caring
+      - ./logs/blue:/var/log/re-caring
     depends_on:
       - redis
     networks:
@@ -62,7 +62,7 @@ services:
     labels:
       - "monitor=true"
     volumes:
-      - ./logs/green:/var/logs/re-caring
+      - ./logs/green:/var/log/re-caring
     depends_on:
       - redis
     networks:
@@ -89,7 +89,7 @@ services:
     ]
     volumes:
       - ./monitoring/alloy/config.alloy:/etc/alloy/config.alloy
-      - ./logs:/var/logs/re-caring:ro # API 서버 로그 읽기용
+      - ./logs:/var/log/re-caring:ro # API 서버 로그 읽기용
       - /var/run/docker.sock:/var/run/docker.sock
       - alloy-data:/var/lib/alloy/data
     networks:
