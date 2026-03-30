@@ -39,8 +39,10 @@ services:
       REDIS_PORT: 6379
     ports:
       - "8080:8080"
+    labels:
+      - "monitor=true"
     volumes:
-      - ./logs:/var/logs/re-caring
+      - ./logs/blue:/var/logs/re-caring
     depends_on:
       - redis
     networks:
@@ -57,8 +59,10 @@ services:
       REDIS_PORT: 6379
     ports:
       - "8081:8080"
+    labels:
+      - "monitor=true"
     volumes:
-      - ./logs:/var/logs/re-caring
+      - ./logs/green:/var/logs/re-caring
     depends_on:
       - redis
     networks:
@@ -73,10 +77,75 @@ services:
     networks:
       - re-caring
 
+  alloy:
+    image: grafana/alloy:latest
+    container_name: alloy
+    restart: always
+    command: [
+      "run",
+      "--server.http.listen-addr=0.0.0.0:12345",
+      "--storage.path=/var/lib/alloy/data",
+      "/etc/alloy/config.alloy"
+    ]
+    volumes:
+      - ./monitoring/alloy/config.alloy:/etc/alloy/config.alloy
+      - ./logs:/var/logs/re-caring:ro # API 서버 로그 읽기용
+      - alloy-data:/var/lib/alloy/data
+    ports:
+      - "12345:12345"
+    networks:
+      - re-caring
 
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    restart: always
+    ports:
+      - "9090:9090"
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--web.enable-remote-write-receiver"
+      - "--storage.tsdb.retention.time=15d"
+    volumes:
+      - prometheus-data:/var/lib/prometheus/data
+    networks:
+      - re-caring
+
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    restart: always
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/loki-config.yml
+    volumes:
+      - ./monitoring/loki/loki-config.yml:/etc/loki/loki-config.yml
+      - loki-data:/var/lib/loki/data
+    networks:
+      - re-caring
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - grafana-data:/var/lib/grafana/data
+    depends_on:
+      - prometheus
+      - loki
+    networks:
+      - re-caring
 
 volumes:
   redis-data:
+  alloy-data:
+  prometheus-data:
+  loki-data:
+  grafana-data:
+
 
 networks:
   re-caring:
