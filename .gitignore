@@ -38,3 +38,13 @@ out/
 
 ### env ###
 .env
+
+### terraform ###
+/infra/terraform.tfvars
+**/.terraform/*
+*.tfstate
+*.tfstate.backup
+*.tfvars
+crash.log
+override.tf
+override.tf.json
