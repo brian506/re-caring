@@ -90,9 +90,8 @@ services:
     volumes:
       - ./monitoring/alloy/config.alloy:/etc/alloy/config.alloy
       - ./logs:/var/logs/re-caring:ro # API 서버 로그 읽기용
+      - /var/run/docker.sock:/var/run/docker.sock
       - alloy-data:/var/lib/alloy/data
-    ports:
-      - "12345:12345"
     networks:
       - re-caring
 
@@ -100,8 +99,6 @@ services:
     image: prom/prometheus
     container_name: prometheus
     restart: always
-    ports:
-      - "9090:9090"
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
       - "--web.enable-remote-write-receiver"
@@ -115,8 +112,6 @@ services:
     image: grafana/loki:latest
     container_name: loki
     restart: always
-    ports:
-      - "3100:3100"
     command: -config.file=/etc/loki/loki-config.yml
     volumes:
       - ./monitoring/loki/loki-config.yml:/etc/loki/loki-config.yml
@@ -131,7 +126,6 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
       - grafana-data:/var/lib/grafana/data
     depends_on:
       - prometheus

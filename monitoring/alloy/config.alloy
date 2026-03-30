@@ -3,6 +3,7 @@ logging {
   format = "logfmt"
 }
 
+// blue-green 배포에서 컨테이너 식별하기 위해 (monitor = true 라벨인 컨테이너를 바라봄)
 discovery.docker "containers" {
   host = "unix:///var/run/docker.sock"
   filter {
