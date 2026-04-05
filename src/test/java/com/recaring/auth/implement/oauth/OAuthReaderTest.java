@@ -49,7 +49,7 @@ class OAuthReaderTest {
         assertThat(result).isPresent();
         assertThat(result.get().getMemberKey()).isEqualTo(memberKey);
         assertThat(result.get().getProvider()).isEqualTo(provider);
-        assertThat(result.get().getProviderUserId()).isEqualTo(providerUserId);
+        assertThat(result.get().getProviderMemberId()).isEqualTo(providerUserId);
     }
 
     @Test

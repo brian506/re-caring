@@ -112,7 +112,7 @@ class OAuthManagerTest {
         OAuth capturedOAuth = oAuthCaptor.getValue();
         assertThat(capturedOAuth.getMemberKey()).isEqualTo(memberKey);
         assertThat(capturedOAuth.getProvider()).isEqualTo(OAuthProvider.NAVER);
-        assertThat(capturedOAuth.getProviderUserId()).isEqualTo("naver-user-789");
+        assertThat(capturedOAuth.getProviderMemberId()).isEqualTo("naver-user-789");
     }
 
     @Test
