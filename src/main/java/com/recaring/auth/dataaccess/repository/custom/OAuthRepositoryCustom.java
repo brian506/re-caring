@@ -6,5 +6,5 @@ import com.recaring.auth.vo.OAuthProvider;
 import java.util.Optional;
 
 public interface OAuthRepositoryCustom {
-    Optional<OAuth> findOAuthUser(OAuthProvider provider, String providerUserId);
+    Optional<OAuth> findOAuthMember(OAuthProvider provider, String providerMemberId);
 }

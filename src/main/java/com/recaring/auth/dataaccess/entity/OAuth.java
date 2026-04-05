@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(
         name = "oauth",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"provider", "provider_user_id"})
+        uniqueConstraints = @UniqueConstraint(columnNames = {"provider", "provider_member_id"})
 )
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class OAuth extends BaseEntity {
@@ -30,13 +30,13 @@ public class OAuth extends BaseEntity {
     private OAuthProvider provider;
 
     // 고유 번호
-    @Column(name = "provider_user_id", nullable = false)
-    private String providerUserId;
+    @Column(name = "provider_member_id", nullable = false)
+    private String providerMemberId;
 
     @Builder
-    public OAuth(String memberKey, OAuthProvider provider, String providerUserId) {
+    public OAuth(String memberKey, OAuthProvider provider, String providerMemberId) {
         this.memberKey = memberKey;
         this.provider = provider;
-        this.providerUserId = providerUserId;
+        this.providerMemberId = providerMemberId;
     }
 }

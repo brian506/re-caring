@@ -6,8 +6,8 @@ import com.recaring.auth.fixture.AuthFixture;
 import com.recaring.auth.vo.NewLocalMember;
 import com.recaring.common.mapper.auth.AuthMapper;
 import com.recaring.member.implement.MemberWriter;
-import com.recaring.member.dataaccess.entity.Gender;
-import com.recaring.member.dataaccess.entity.MemberRole;
+import com.recaring.member.implement.MemberWriter;
+import com.recaring.member.implement.MembersTermsAgreementWriter;
 import com.recaring.sms.fixture.SmsFixture;
 import com.recaring.support.exception.AppException;
 import com.recaring.support.exception.ErrorType;
@@ -41,6 +41,9 @@ class LocalAuthManagerTest {
 
     @Mock
     private MemberWriter memberWriter;
+
+    @Mock
+    private MembersTermsAgreementWriter termsAgreementWriter;
 
     @Mock
     private AuthMapper mapper;

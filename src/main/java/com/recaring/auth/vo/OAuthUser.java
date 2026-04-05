@@ -1,7 +1,7 @@
 package com.recaring.auth.vo;
 
 public record OAuthUser(
-        String providerUserId,
+        String providerMemberId,
         OAuthProvider provider,
         String email,
         String name

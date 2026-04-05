@@ -15,11 +15,11 @@ public class OAuthRepositoryCustomImpl extends QuerydslRepositorySupport impleme
     }
 
     @Override
-    public Optional<OAuth> findOAuthUser(OAuthProvider provider, String providerUserId) {
+    public Optional<OAuth> findOAuthMember(OAuthProvider provider, String providerMemberId) {
         return Optional.ofNullable(
                 selectFrom(oAuth)
                         .where(oAuth.provider.eq(provider),
-                                oAuth.providerUserId.eq(providerUserId))
+                                oAuth.providerMemberId.eq(providerMemberId))
                         .fetchOne()
         );
     }

@@ -13,6 +13,7 @@ public class LoginHistory extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "login_history_id")
     private Long id;
 
     @Column(nullable = false)

@@ -36,10 +36,10 @@ public class OAuthService {
 
     public OAuthSignInResponse signIn(String accessToken, OAuthProvider provider) {
         OAuthUser oAuthUser = authenticate(accessToken, provider);
-        Optional<OAuth> oAuth = oAuthReader.findOAuthUser(provider, oAuthUser.providerUserId());
+        Optional<OAuth> oAuth = oAuthReader.findOAuthUser(provider, oAuthUser.providerMemberId());
 
         if (oAuth.isEmpty()) {
-            return OAuthSignInResponse.needSignUp(oAuthUser.providerUserId());
+            return OAuthSignInResponse.needSignUp(oAuthUser.providerMemberId());
         }
 
         Member member = memberReader.findByMemberKey(oAuth.get().getMemberKey());

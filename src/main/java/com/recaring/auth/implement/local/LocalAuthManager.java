@@ -5,6 +5,7 @@ import com.recaring.auth.vo.NewLocalMember;
 import com.recaring.auth.dataaccess.repository.LocalAuthRepository;
 import com.recaring.common.mapper.auth.AuthMapper;
 import com.recaring.member.implement.MemberWriter;
+import com.recaring.member.implement.MembersTermsAgreementWriter;
 import com.recaring.support.exception.AppException;
 import com.recaring.support.exception.ErrorType;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,7 @@ public class LocalAuthManager {
     private final LocalAuthReader localAuthReader;
     private final LocalAuthRepository localAuthRepository;
     private final MemberWriter memberWriter;
+    private final MembersTermsAgreementWriter termsAgreementWriter;
     private final AuthMapper mapper;
 
     @Transactional
@@ -27,6 +29,7 @@ public class LocalAuthManager {
         }
         String memberKey = memberWriter.registerLocalMember(member);
         localAuthRepository.save(mapper.createLocalAuth(memberKey, member.email().value(), member.password().value()));
+        termsAgreementWriter.register(memberKey);
     }
 
     @Transactional

@@ -9,7 +9,7 @@ import com.recaring.sms.vo.PhoneNumber;
 import java.time.LocalDate;
 
 public record OAuthSignUpCommand(
-        String providerUserId,
+        String providerMemberId,
         String smsToken,
         String name,
         LocalDate birth,
@@ -24,7 +24,7 @@ public record OAuthSignUpCommand(
                 .gender(gender)
                 .role(role)
                 .provider(provider)
-                .providerUserId(providerUserId)
+                .providerMemberId(providerMemberId)
                 .build();
     }
 }

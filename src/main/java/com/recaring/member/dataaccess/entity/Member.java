@@ -47,11 +47,10 @@ public class Member extends BaseEntity {
     @Column(nullable = false, length = 10)
     private SignUpType signUpType;
 
-    @Embedded
-    private Agreement agreement;
 
     @Builder
-    public Member(String phone, String name, LocalDate birth, Gender gender, MemberRole role, SignUpType signUpType) {
+    public Member(String phone, String name,
+                                LocalDate birth, Gender gender, MemberRole role, SignUpType signUpType) {
         this.memberKey = UUID.randomUUID().toString();
         this.phone = phone;
         this.name = name;
@@ -59,6 +58,6 @@ public class Member extends BaseEntity {
         this.gender = gender;
         this.role = role;
         this.signUpType = signUpType;
-        this.agreement = Agreement.allAgreedNow();
     }
+
 }
