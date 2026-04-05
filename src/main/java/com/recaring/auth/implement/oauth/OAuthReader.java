@@ -14,8 +14,8 @@ public class OAuthReader {
 
     private final OAuthRepository oAuthRepository;
 
-    public Optional<OAuth> findOAuthUser(OAuthProvider provider, String providerUserId) {
-        return oAuthRepository.findOAuthUser(provider, providerUserId);
+    public Optional<OAuth> findOAuthUser(OAuthProvider provider, String providerMemberId) {
+        return oAuthRepository.findOAuthMember(provider, providerMemberId);
     }
 
 }

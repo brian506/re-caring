@@ -85,21 +85,21 @@ class OAuthServiceTest {
         // given
         String accessToken = "kakao-access-token";
         OAuthProvider provider = OAuthProvider.KAKAO;
-        String providerUserId = "kakao-user-123";
+        String providerMemberId = "kakao-user-123";
         String memberKey = "member-key-oauth";
 
-        OAuthUser oAuthUser = new OAuthUser(providerUserId, provider, "user@example.com", "카카오사용자");
+        OAuthUser oAuthUser = new OAuthUser(providerMemberId, provider, "user@example.com", "카카오사용자");
         OAuth oAuth = OAuth.builder()
                 .memberKey(memberKey)
                 .provider(provider)
-                .providerUserId(providerUserId)
+                .providerMemberId(providerMemberId)
                 .build();
         Member member = MemberFixture.createMember();
         Jwt jwt = AuthFixture.createJwt();
 
         given(kakaoAuthenticator.supports(provider)).willReturn(true);
         given(kakaoAuthenticator.authentication(accessToken)).willReturn(oAuthUser);
-        given(oAuthReader.findOAuthUser(provider, providerUserId)).willReturn(Optional.of(oAuth));
+        given(oAuthReader.findOAuthUser(provider, providerMemberId)).willReturn(Optional.of(oAuth));
         given(memberReader.findByMemberKey(memberKey)).willReturn(member);
         given(tokenIssuer.issue(member)).willReturn(jwt);
 
@@ -110,7 +110,7 @@ class OAuthServiceTest {
         assertThat(result.status()).isEqualTo(OAuthSignInResponse.SUCCESS);
         assertThat(result.accessToken()).isEqualTo(jwt.accessToken());
         assertThat(result.refreshToken()).isEqualTo(jwt.refreshToken());
-        assertThat(result.providerUserId()).isNull();
+        assertThat(result.providerMemberId()).isNull();
     }
 
     @Test
@@ -119,13 +119,13 @@ class OAuthServiceTest {
         // given
         String accessToken = "naver-access-token";
         OAuthProvider provider = OAuthProvider.NAVER;
-        String providerUserId = "naver-user-456";
+        String providerMemberId = "naver-user-456";
 
-        OAuthUser oAuthUser = new OAuthUser(providerUserId, provider, "newuser@example.com", "네이버사용자");
+        OAuthUser oAuthUser = new OAuthUser(providerMemberId, provider, "newuser@example.com", "네이버사용자");
 
         given(naverAuthenticator.supports(provider)).willReturn(true);
         given(naverAuthenticator.authentication(accessToken)).willReturn(oAuthUser);
-        given(oAuthReader.findOAuthUser(provider, providerUserId)).willReturn(Optional.empty());
+        given(oAuthReader.findOAuthUser(provider, providerMemberId)).willReturn(Optional.empty());
 
         // when
         OAuthSignInResponse result = oAuthService.signIn(accessToken, provider);
@@ -134,20 +134,20 @@ class OAuthServiceTest {
         assertThat(result.status()).isEqualTo(OAuthSignInResponse.NEED_SIGN_UP);
         assertThat(result.accessToken()).isNull();
         assertThat(result.refreshToken()).isNull();
-        assertThat(result.providerUserId()).isEqualTo(providerUserId);
+        assertThat(result.providerMemberId()).isEqualTo(providerMemberId);
     }
 
     @Test
     @DisplayName("OAuth 회원가입 성공 - 신규 회원 등록 및 JWT 발급")
     void signUp_success() {
         // given
-        String providerUserId = "kakao-new-user";
+        String providerMemberId = "kakao-new-user";
         String smsToken = "sms-token-123";
         OAuthProvider provider = OAuthProvider.KAKAO;
         String memberKey = "member-new-oauth";
 
         OAuthSignUpCommand command = new OAuthSignUpCommand(
-                providerUserId,
+                providerMemberId,
                 smsToken,
                 "새카카오사용자",
                 LocalDate.of(1999, 1, 15),
@@ -194,13 +194,13 @@ class OAuthServiceTest {
     @DisplayName("OAuth 회원가입 - 카카오 provider")
     void signUp_with_kakao() {
         // given
-        String providerUserId = "kakao-123456";
+        String providerMemberId = "kakao-123456";
         String smsToken = "token-kakao";
         OAuthProvider provider = OAuthProvider.KAKAO;
         String memberKey = "kakao-member";
 
         OAuthSignUpCommand command = new OAuthSignUpCommand(
-                providerUserId,
+                providerMemberId,
                 smsToken,
                 "카카오사용자",
                 LocalDate.of(1993, 6, 20),
@@ -228,13 +228,13 @@ class OAuthServiceTest {
     @DisplayName("OAuth 회원가입 - 네이버 provider")
     void signUp_with_naver() {
         // given
-        String providerUserId = "naver-987654";
+        String providerMemberId = "naver-987654";
         String smsToken = "token-naver";
         OAuthProvider provider = OAuthProvider.NAVER;
         String memberKey = "naver-member";
 
         OAuthSignUpCommand command = new OAuthSignUpCommand(
-                providerUserId,
+                providerMemberId,
                 smsToken,
                 "네이버사용자",
                 LocalDate.of(1997, 9, 10),
@@ -262,13 +262,13 @@ class OAuthServiceTest {
     @DisplayName("OAuth 회원가입 - 트랜잭션 내 모든 작업 순서 검증")
     void signUp_transactional_order() {
         // given
-        String providerUserId = "user-tx-123";
+        String providerMemberId = "user-tx-123";
         String smsToken = "tx-token";
         OAuthProvider provider = OAuthProvider.KAKAO;
         String memberKey = "tx-member";
 
         OAuthSignUpCommand command = new OAuthSignUpCommand(
-                providerUserId,
+                providerMemberId,
                 smsToken,
                 "트랜잭션사용자",
                 LocalDate.of(1995, 3, 25),

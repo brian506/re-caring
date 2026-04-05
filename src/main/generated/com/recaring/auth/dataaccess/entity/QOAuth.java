@@ -36,7 +36,7 @@ public class QOAuth extends EntityPathBase<OAuth> {
 
     public final EnumPath<com.recaring.auth.vo.OAuthProvider> provider = createEnum("provider", com.recaring.auth.vo.OAuthProvider.class);
 
-    public final StringPath providerUserId = createString("providerUserId");
+    public final StringPath providerMemberId = createString("providerMemberId");
 
     //inherited
     public final DateTimePath<java.time.LocalDateTime> updatedAt = _super.updatedAt;

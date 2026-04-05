@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Getter
@@ -48,14 +47,6 @@ public class Member extends BaseEntity {
     @Column(nullable = false, length = 10)
     private SignUpType signUpType;
 
-    @Column(nullable = false)
-    private LocalDateTime termsServiceAgreedAt;
-
-    @Column(nullable = false)
-    private LocalDateTime termsPrivacyAgreedAt;
-
-    @Column(nullable = false)
-    private LocalDateTime termsLocationAgreedAt;
 
     @Builder
     public Member(String phone, String name,
@@ -67,9 +58,6 @@ public class Member extends BaseEntity {
         this.gender = gender;
         this.role = role;
         this.signUpType = signUpType;
-        this.termsServiceAgreedAt = LocalDateTime.now();
-        this.termsPrivacyAgreedAt = LocalDateTime.now();
-        this.termsLocationAgreedAt = LocalDateTime.now();
     }
 
 }
