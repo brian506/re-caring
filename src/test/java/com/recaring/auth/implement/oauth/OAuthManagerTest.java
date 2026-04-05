@@ -8,6 +8,7 @@ import com.recaring.common.mapper.auth.AuthMapper;
 import com.recaring.domain.member.dataaccess.entity.Gender;
 import com.recaring.domain.member.dataaccess.entity.MemberRole;
 import com.recaring.domain.member.implement.MemberWriter;
+import com.recaring.domain.member.implement.MembersTermsAgreementWriter;
 import com.recaring.sms.fixture.SmsFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -38,6 +39,9 @@ class OAuthManagerTest {
 
     @Mock
     private MemberWriter memberWriter;
+
+    @Mock
+    private MembersTermsAgreementWriter termsAgreementWriter;
 
     @Mock
     private AuthMapper authMapper;
