@@ -1,4 +1,4 @@
-package com.recaring.domain.member.dataaccess.entity;
+package com.recaring.member.dataaccess.entity;
 
 import com.recaring.common.entity.BaseEntity;
 import jakarta.persistence.*;
