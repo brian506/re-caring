@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -62,6 +63,22 @@ public class SecurityConfig {
                                 mvc.matcher("/actuator/health"),
                                 mvc.matcher("/actuator/prometheus")
                         ).permitAll()
+
+                        // GUARDIAN 전용 (보호자만 접근 가능)
+                        .requestMatchers(
+                                mvc.matcher(HttpMethod.POST, "/api/v1/care/requests"),
+                                mvc.matcher(HttpMethod.GET,  "/api/v1/care/wards"),
+                                mvc.matcher(HttpMethod.POST, "/api/v1/members/phones")
+                        ).hasRole("GUARDIAN")
+
+                        // GUARDIAN + WARD 모두 접근 가능
+                        .requestMatchers(
+                                mvc.matcher(HttpMethod.GET,   "/api/v1/care/requests/received"),
+                                mvc.matcher(HttpMethod.PATCH, "/api/v1/care/requests/{requestKey}/accept"),
+                                mvc.matcher(HttpMethod.PATCH, "/api/v1/care/requests/{requestKey}/reject"),
+                                mvc.matcher(HttpMethod.GET,   "/api/v1/care/wards/{wardKey}/caregivers")
+                        ).hasAnyRole("GUARDIAN", "WARD")
+
                         .anyRequest().authenticated())
                 .sessionManagement(configurer ->
                         configurer.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

@@ -5,7 +5,9 @@ import com.recaring.auth.dataaccess.repository.LocalAuthRepository;
 import com.recaring.auth.fixture.AuthFixture;
 import com.recaring.auth.vo.NewLocalMember;
 import com.recaring.common.mapper.auth.AuthMapper;
-import com.recaring.domain.member.implement.MemberWriter;
+import com.recaring.member.implement.MemberWriter;
+import com.recaring.member.dataaccess.entity.Gender;
+import com.recaring.member.dataaccess.entity.MemberRole;
 import com.recaring.sms.fixture.SmsFixture;
 import com.recaring.support.exception.AppException;
 import com.recaring.support.exception.ErrorType;
@@ -53,8 +55,8 @@ class LocalAuthManagerTest {
             .phone(SmsFixture.createPhoneNumber())
             .name("홍길동")
             .birth(LocalDate.of(1990, 1, 1))
-            .gender(com.recaring.domain.member.dataaccess.entity.Gender.MALE)
-            .role(com.recaring.domain.member.dataaccess.entity.MemberRole.GUARDIAN)
+            .gender(Gender.MALE)
+            .role(MemberRole.GUARDIAN)
             .build();
 
         String memberKey = "member-key-123";
@@ -88,8 +90,8 @@ class LocalAuthManagerTest {
             .phone(SmsFixture.createPhoneNumber())
             .name("홍길동")
             .birth(LocalDate.of(1990, 1, 1))
-            .gender(com.recaring.domain.member.dataaccess.entity.Gender.MALE)
-            .role(com.recaring.domain.member.dataaccess.entity.MemberRole.GUARDIAN)
+            .gender(Gender.MALE)
+            .role(MemberRole.GUARDIAN)
             .build();
 
         given(localAuthRepository.existsByEmail(newMember.email().value())).willReturn(true);

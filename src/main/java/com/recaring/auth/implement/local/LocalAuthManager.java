@@ -4,7 +4,7 @@ import com.recaring.auth.dataaccess.entity.LocalAuth;
 import com.recaring.auth.vo.NewLocalMember;
 import com.recaring.auth.dataaccess.repository.LocalAuthRepository;
 import com.recaring.common.mapper.auth.AuthMapper;
-import com.recaring.domain.member.implement.MemberWriter;
+import com.recaring.member.implement.MemberWriter;
 import com.recaring.support.exception.AppException;
 import com.recaring.support.exception.ErrorType;
 import lombok.RequiredArgsConstructor;

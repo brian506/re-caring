@@ -5,8 +5,8 @@ import com.recaring.auth.business.command.SignUpCommand;
 import com.recaring.auth.vo.EncodedPassword;
 import com.recaring.auth.vo.LocalEmail;
 import com.recaring.auth.vo.Password;
-import com.recaring.domain.member.dataaccess.entity.Gender;
-import com.recaring.domain.member.dataaccess.entity.MemberRole;
+import com.recaring.member.dataaccess.entity.Gender;
+import com.recaring.member.dataaccess.entity.MemberRole;
 import com.recaring.security.vo.Jwt;
 
 import java.time.LocalDate;

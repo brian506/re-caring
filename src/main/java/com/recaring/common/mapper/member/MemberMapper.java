@@ -2,8 +2,8 @@ package com.recaring.common.mapper.member;
 
 import com.recaring.auth.vo.NewLocalMember;
 import com.recaring.auth.vo.NewOauthMember;
-import com.recaring.domain.member.dataaccess.entity.Member;
-import com.recaring.domain.member.dataaccess.entity.SignUpType;
+import com.recaring.member.dataaccess.entity.Member;
+import com.recaring.member.dataaccess.entity.SignUpType;
 import org.springframework.stereotype.Component;
 
 @Component

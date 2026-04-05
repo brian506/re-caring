@@ -1,6 +1,6 @@
 package com.recaring.auth.implement;
 
-import com.recaring.domain.member.dataaccess.entity.Member;
+import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.security.jwt.JwtGenerator;
 import com.recaring.security.vo.Jwt;
 import com.recaring.security.vo.TokenPayload;

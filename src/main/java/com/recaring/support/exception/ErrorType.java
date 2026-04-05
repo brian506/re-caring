@@ -45,7 +45,20 @@ public enum ErrorType {
     // member
     EMAIL_IS_NULL(HttpStatus.BAD_REQUEST, ErrorCode.E3024, "이메일은 필수 입력값입니다.", LogLevel.WARN),
     INVALID_EMAIL_FORMAT(HttpStatus.BAD_REQUEST, ErrorCode.E3025, "올바른 이메일 형식이 아닙니다.", LogLevel.WARN),
-    INVALID_EMAIL(HttpStatus.BAD_REQUEST, ErrorCode.E3026, "이메일이 유효하지 않습니다.", LogLevel.WARN),;
+    INVALID_EMAIL(HttpStatus.BAD_REQUEST, ErrorCode.E3026, "이메일이 유효하지 않습니다.", LogLevel.WARN),
+
+    // Care
+    CARE_CAREGIVER_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, ErrorCode.E3027, "보호 대상자의 보호자/관리자는 최대 3명입니다.", LogLevel.WARN),
+    ALREADY_CARE_RELATIONSHIP(HttpStatus.BAD_REQUEST, ErrorCode.E3028, "이미 등록된 보호자/관리자입니다.", LogLevel.WARN),
+    NOT_GUARDIAN_OF_WARD(HttpStatus.FORBIDDEN, ErrorCode.E3029, "해당 보호 대상자의 보호자가 아닙니다.", LogLevel.WARN),
+    NOT_FOUND_CARE_REQUEST(HttpStatus.BAD_REQUEST, ErrorCode.E3030, "존재하지 않는 케어 요청입니다.", LogLevel.WARN),
+    NOT_CARE_REQUEST_TARGET(HttpStatus.FORBIDDEN, ErrorCode.E3031, "해당 케어 요청의 수신자가 아닙니다.", LogLevel.WARN),
+    EXPIRED_CARE_REQUEST(HttpStatus.BAD_REQUEST, ErrorCode.E3032, "만료된 케어 요청입니다.", LogLevel.WARN),
+    ALREADY_PROCESSED_CARE_REQUEST(HttpStatus.BAD_REQUEST, ErrorCode.E3033, "이미 처리된 케어 요청입니다.", LogLevel.WARN),
+    INVALID_WARD_ROLE(HttpStatus.BAD_REQUEST, ErrorCode.E3034, "보호 대상자로 가입한 회원만 대상자로 추가할 수 있습니다.", LogLevel.WARN),
+    INVALID_CAREGIVER_ROLE(HttpStatus.BAD_REQUEST, ErrorCode.E3035, "보호자로 가입한 회원만 보호자/관리자로 추가할 수 있습니다.", LogLevel.WARN),
+    ALREADY_PENDING_CARE_REQUEST(HttpStatus.BAD_REQUEST, ErrorCode.E3036, "이미 대기 중인 케어 요청이 존재합니다.", LogLevel.WARN),
+    WARD_KEY_REQUIRED(HttpStatus.BAD_REQUEST, ErrorCode.E3037, "보호자를 추가하려면 보호 대상자 키가 필요합니다.", LogLevel.WARN),;
 
     private final HttpStatus status;
     private final ErrorCode errorCode;

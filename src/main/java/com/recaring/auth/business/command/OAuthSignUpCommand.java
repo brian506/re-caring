@@ -2,8 +2,8 @@ package com.recaring.auth.business.command;
 
 import com.recaring.auth.vo.NewOauthMember;
 import com.recaring.auth.vo.OAuthProvider;
-import com.recaring.domain.member.dataaccess.entity.Gender;
-import com.recaring.domain.member.dataaccess.entity.MemberRole;
+import com.recaring.member.dataaccess.entity.Gender;
+import com.recaring.member.dataaccess.entity.MemberRole;
 import com.recaring.sms.vo.PhoneNumber;
 
 import java.time.LocalDate;
