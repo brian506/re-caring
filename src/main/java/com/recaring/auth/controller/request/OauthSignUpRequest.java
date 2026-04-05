@@ -10,7 +10,7 @@ import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 
 public record OauthSignUpRequest(
-        @NotBlank String providerUserId,
+        @NotBlank String providerMemberId,
         @NotBlank String smsToken,
         @NotBlank String name,
         @NotNull LocalDate birth,
@@ -21,6 +21,6 @@ public record OauthSignUpRequest(
         @AssertTrue Boolean isPrivacyPolicyAgreed
 ) {
     public OAuthSignUpCommand toCommand() {
-        return new OAuthSignUpCommand(providerUserId, smsToken, name, birth, gender, role);
+        return new OAuthSignUpCommand(providerMemberId, smsToken, name, birth, gender, role);
     }
 }

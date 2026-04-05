@@ -39,7 +39,7 @@ class OAuthReaderTest {
             .providerMemberId(providerMemberId)
             .build();
 
-        given(oAuthRepository.findOAuthUser(provider, providerMemberId))
+        given(oAuthRepository.findOAuthMember(provider, providerMemberId))
             .willReturn(Optional.of(oAuth));
 
         // when
@@ -59,7 +59,7 @@ class OAuthReaderTest {
         OAuthProvider provider = OAuthProvider.NAVER;
         String providerMemberId = "naver-user-nonexistent";
 
-        given(oAuthRepository.findOAuthUser(provider, providerMemberId))
+        given(oAuthRepository.findOAuthMember(provider, providerMemberId))
             .willReturn(Optional.empty());
 
         // when
@@ -82,7 +82,7 @@ class OAuthReaderTest {
             .providerMemberId(providerMemberId)
             .build();
 
-        given(oAuthRepository.findOAuthUser(OAuthProvider.KAKAO, providerMemberId))
+        given(oAuthRepository.findOAuthMember(OAuthProvider.KAKAO, providerMemberId))
             .willReturn(Optional.of(oAuth));
 
         // when
@@ -106,7 +106,7 @@ class OAuthReaderTest {
             .providerMemberId(providerMemberId)
             .build();
 
-        given(oAuthRepository.findOAuthUser(OAuthProvider.NAVER, providerMemberId))
+        given(oAuthRepository.findOAuthMember(OAuthProvider.NAVER, providerMemberId))
             .willReturn(Optional.of(oAuth));
 
         // when
@@ -135,9 +135,9 @@ class OAuthReaderTest {
             .providerMemberId(sameProviderId)
             .build();
 
-        given(oAuthRepository.findOAuthUser(OAuthProvider.KAKAO, sameProviderId))
+        given(oAuthRepository.findOAuthMember(OAuthProvider.KAKAO, sameProviderId))
             .willReturn(Optional.of(kakaoOAuth));
-        given(oAuthRepository.findOAuthUser(OAuthProvider.NAVER, sameProviderId))
+        given(oAuthRepository.findOAuthMember(OAuthProvider.NAVER, sameProviderId))
             .willReturn(Optional.of(naverOAuth));
 
         // when

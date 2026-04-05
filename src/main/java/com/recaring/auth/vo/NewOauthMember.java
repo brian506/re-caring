@@ -1,6 +1,5 @@
 package com.recaring.auth.vo;
 
-import com.recaring.auth.vo.OAuthProvider;
 import com.recaring.domain.member.dataaccess.entity.Gender;
 import com.recaring.domain.member.dataaccess.entity.MemberRole;
 import lombok.Builder;
@@ -15,6 +14,6 @@ public record NewOauthMember(
         Gender gender,
         MemberRole role,
         OAuthProvider provider,
-        String providerUserId
+        String providerMemberId
 ) {
 }

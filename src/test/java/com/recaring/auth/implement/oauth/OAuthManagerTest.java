@@ -54,13 +54,13 @@ class OAuthManagerTest {
             .gender(Gender.FEMALE)
             .role(MemberRole.GUARDIAN)
             .provider(OAuthProvider.KAKAO)
-            .providerUserId("kakao-user-456")
+            .providerMemberId("kakao-user-456")
             .build();
 
         OAuth createdOAuth = OAuth.builder()
             .memberKey(memberKey)
             .provider(OAuthProvider.KAKAO)
-            .providerUserId("kakao-user-456")
+            .providerMemberId("kakao-user-456")
             .build();
 
         given(memberWriter.registerOAuthMember(newOauthMember)).willReturn(memberKey);
@@ -89,13 +89,13 @@ class OAuthManagerTest {
             .gender(Gender.MALE)
             .role(MemberRole.GUARDIAN)
             .provider(OAuthProvider.NAVER)
-            .providerUserId("naver-user-789")
+            .providerMemberId("naver-user-789")
             .build();
 
         OAuth createdOAuth = OAuth.builder()
             .memberKey(memberKey)
             .provider(OAuthProvider.NAVER)
-            .providerUserId("naver-user-789")
+            .providerMemberId("naver-user-789")
             .build();
 
         given(memberWriter.registerOAuthMember(newOauthMember)).willReturn(memberKey);
@@ -127,13 +127,13 @@ class OAuthManagerTest {
             .gender(Gender.FEMALE)
             .role(MemberRole.GUARDIAN)
             .provider(OAuthProvider.KAKAO)
-            .providerUserId("2827374756383")
+            .providerMemberId("2827374756383")
             .build();
 
         OAuth createdOAuth = OAuth.builder()
             .memberKey(memberKey)
             .provider(OAuthProvider.KAKAO)
-            .providerUserId(kakaoMember.providerUserId())
+            .providerMemberId(kakaoMember.providerMemberId())
             .build();
 
         given(memberWriter.registerOAuthMember(kakaoMember)).willReturn(memberKey);
@@ -159,13 +159,13 @@ class OAuthManagerTest {
             .gender(Gender.MALE)
             .role(MemberRole.GUARDIAN)
             .provider(OAuthProvider.NAVER)
-            .providerUserId("naver-uid-9384756")
+            .providerMemberId("naver-uid-9384756")
             .build();
 
         OAuth createdOAuth = OAuth.builder()
             .memberKey(memberKey)
             .provider(OAuthProvider.NAVER)
-            .providerUserId(naverMember.providerUserId())
+            .providerMemberId(naverMember.providerMemberId())
             .build();
 
         given(memberWriter.registerOAuthMember(naverMember)).willReturn(memberKey);
@@ -191,13 +191,13 @@ class OAuthManagerTest {
             .gender(Gender.FEMALE)
             .role(MemberRole.GUARDIAN)
             .provider(OAuthProvider.KAKAO)
-            .providerUserId("kakao-tx-test")
+            .providerMemberId("kakao-tx-test")
             .build();
 
         OAuth createdOAuth = OAuth.builder()
             .memberKey(memberKey)
             .provider(OAuthProvider.KAKAO)
-            .providerUserId("kakao-tx-test")
+            .providerMemberId("kakao-tx-test")
             .build();
 
         given(memberWriter.registerOAuthMember(newOauthMember)).willReturn(memberKey);

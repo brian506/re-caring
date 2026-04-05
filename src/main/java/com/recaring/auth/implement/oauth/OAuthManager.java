@@ -21,7 +21,7 @@ public class OAuthManager {
     @Transactional
     public String register(NewOauthMember newOauthMember) {
         String memberKey = memberWriter.registerOAuthMember(newOauthMember);
-        oAuthRepository.save(authMapper.createOAuth(memberKey, newOauthMember.provider(), newOauthMember.providerUserId()));
+        oAuthRepository.save(authMapper.createOAuth(memberKey, newOauthMember.provider(), newOauthMember.providerMemberId()));
         termsAgreementWriter.register(memberKey);
         return memberKey;
     }

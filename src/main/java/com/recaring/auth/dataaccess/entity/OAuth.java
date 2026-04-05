@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(
         name = "oauth",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"provider", "provider_user_id"})
+        uniqueConstraints = @UniqueConstraint(columnNames = {"provider", "provider_member_id"})
 )
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class OAuth extends BaseEntity {

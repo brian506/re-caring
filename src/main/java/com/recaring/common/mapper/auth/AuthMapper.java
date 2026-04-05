@@ -16,11 +16,11 @@ public class AuthMapper {
                 .build();
     }
 
-    public OAuth createOAuth(String memberKey, OAuthProvider provider, String providerUserId) {
+    public OAuth createOAuth(String memberKey, OAuthProvider provider, String providerMemberId) {
         return OAuth.builder()
                 .memberKey(memberKey)
                 .provider(provider)
-                .providerUserId(providerUserId)
+                .providerMemberId(providerMemberId)
                 .build();
     }
 }
