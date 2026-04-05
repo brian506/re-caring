@@ -1,12 +1,10 @@
 package com.recaring.member.dataaccess.entity;
 
-import com.recaring.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDateTime;
 
@@ -14,8 +12,7 @@ import java.time.LocalDateTime;
 @Getter
 @Table(name = "members_terms_agreements")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@SQLRestriction("deleted_at IS NULL")
-public class MembersTermsAgreement extends BaseEntity {
+public class MembersTermsAgreement {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

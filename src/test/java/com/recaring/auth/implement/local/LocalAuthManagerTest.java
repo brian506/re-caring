@@ -6,7 +6,6 @@ import com.recaring.auth.fixture.AuthFixture;
 import com.recaring.auth.vo.NewLocalMember;
 import com.recaring.common.mapper.auth.AuthMapper;
 import com.recaring.member.implement.MemberWriter;
-import com.recaring.member.implement.MemberWriter;
 import com.recaring.member.implement.MembersTermsAgreementWriter;
 import com.recaring.sms.fixture.SmsFixture;
 import com.recaring.support.exception.AppException;

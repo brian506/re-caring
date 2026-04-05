@@ -4,7 +4,6 @@ import com.recaring.auth.dataaccess.repository.OAuthRepository;
 import com.recaring.auth.vo.NewOauthMember;
 import com.recaring.common.mapper.auth.AuthMapper;
 import com.recaring.member.implement.MemberWriter;
-import com.recaring.member.implement.MemberWriter;
 import com.recaring.member.implement.MembersTermsAgreementWriter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

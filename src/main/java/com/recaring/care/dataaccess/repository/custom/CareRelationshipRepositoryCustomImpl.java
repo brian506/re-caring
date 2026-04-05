@@ -18,14 +18,14 @@ public class CareRelationshipRepositoryCustomImpl extends QuerydslRepositorySupp
     @Override
     public List<CareRelationship> findAllByWardMemberKey(String wardMemberKey) {
         return selectFrom(careRelationship)
-                .where(careRelationship.wardKey.eq(wardMemberKey))
+                .where(careRelationship.wardMemberKey.eq(wardMemberKey))
                 .fetch();
     }
 
     @Override
     public List<CareRelationship> findAllByCaregiverKey(String caregiverKey) {
         return selectFrom(careRelationship)
-                .where(careRelationship.caregiverKey.eq(caregiverKey))
+                .where(careRelationship.caregiverMemberKey.eq(caregiverKey))
                 .fetch();
     }
 
@@ -34,8 +34,8 @@ public class CareRelationshipRepositoryCustomImpl extends QuerydslRepositorySupp
         Integer result = selectOne()
                 .from(careRelationship)
                 .where(
-                        careRelationship.wardKey.eq(wardKey),
-                        careRelationship.caregiverKey.eq(caregiverKey),
+                        careRelationship.wardMemberKey.eq(wardKey),
+                        careRelationship.caregiverMemberKey.eq(caregiverKey),
                         careRelationship.careRole.eq(careRole)
                 )
                 .fetchFirst();

@@ -1,7 +1,7 @@
-package com.recaring.domain.member.implement;
+package com.recaring.member.implement;
 
-import com.recaring.domain.member.dataaccess.entity.MembersTermsAgreement;
-import com.recaring.domain.member.dataaccess.repository.MembersTermsAgreementRepository;
+import com.recaring.member.dataaccess.entity.MembersTermsAgreement;
+import com.recaring.member.dataaccess.repository.MembersTermsAgreementRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
