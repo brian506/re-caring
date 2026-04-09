@@ -40,7 +40,7 @@ out/
 .env
 
 ### terraform ###
-/infra/terraform.tfvars
+/terraform/terraform.tfvars
 **/.terraform/*
 *.tfstate
 *.tfstate.backup

@@ -1,6 +1,0 @@
-aws_region          = "ap-northeast-2"
-project_name        = "recaring"
-environment         = "dev"
-key_name            = "re-caring-v1"
-app_instance_type   = "t3.small"
-db_instance_class   = "db.t3.micro"

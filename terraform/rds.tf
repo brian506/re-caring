@@ -48,7 +48,7 @@ resource "aws_db_instance" "postgres" {
 	skip_final_snapshot = false
 	deletion_protection = true
 
-	backup_retention_period = 0
+	backup_retention_period = 1 # 이거 스냅샷 추후에 변경해야함(프리티어 끝나고 rds 버전 올려야함)
 	backup_window = "03:00-04:00"
 	maintenance_window = "Mon:04:00-Mon:05:00"
 
