@@ -102,7 +102,7 @@ public class CareController {
     )
     @PatchMapping("/requests/{requestKey}/reject")
     public ResponseEntity<ApiResponse<Void>> rejectRequest(
-            @Parameter(hidden = true) @AuthMember String memberKey,
+            @AuthMember String memberKey,
             @PathVariable String requestKey
     ) {
         careInvitationService.reject(requestKey, memberKey);
