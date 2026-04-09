@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum CareRole {
     GUARDIAN("보호자"),
-    MANAGER("관리자");
+    MANAGER("관계자");
 
     private final String description;
 }

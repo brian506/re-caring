@@ -53,8 +53,16 @@ public class CareRelationshipValidator {
     public void validateCanAddGuardian(String requesterKey, String wardMemberKey) {
         memberValidator.validatePremium(requesterKey);
         List<CareRelationship> careRelationships = careRelationshipRepository.findAllByWardMemberKey(wardMemberKey);
-        checkRoleLimit(careRelationships, CareRole.MANAGER, MAX_MANAGER_COUNT);
-        isDuplicated(careRelationships, CareRelationship::getCaregiverMemberKey,wardMemberKey);
+        checkRoleLimit(careRelationships, CareRole.GUARDIAN, MAX_GUARDIAN_COUNT);
+        isDuplicated(careRelationships, CareRelationship::getCaregiverMemberKey, wardMemberKey);
+    }
+
+    public void validateCaregiverViewAccess(String requesterKey, String wardKey) {
+        boolean isWardSelf = wardKey.equals(requesterKey);
+        boolean isGuardian = careRelationshipRepository.existsByWardKeyAndCaregiverKeyAndCareRole(wardKey, requesterKey, CareRole.GUARDIAN);
+        if (!isWardSelf && !isGuardian) {
+            throw new AppException(ErrorType.NOT_GUARDIAN_OF_WARD);
+        }
     }
 
     private void checkRoleLimit(List<CareRelationship> relationships, CareRole role, int maxCount) {

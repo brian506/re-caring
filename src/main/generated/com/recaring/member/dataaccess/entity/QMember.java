@@ -46,6 +46,8 @@ public class QMember extends EntityPathBase<Member> {
 
     public final EnumPath<SignUpType> signUpType = createEnum("signUpType", SignUpType.class);
 
+    public final EnumPath<SubscriptionType> subscriptionType = createEnum("subscriptionType", SubscriptionType.class);
+
     //inherited
     public final DateTimePath<java.time.LocalDateTime> updatedAt = _super.updatedAt;
 

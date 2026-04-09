@@ -4,6 +4,8 @@ import com.recaring.auth.dataaccess.entity.LocalAuth;
 import com.recaring.auth.dataaccess.repository.LocalAuthRepository;
 import com.recaring.auth.fixture.AuthFixture;
 import com.recaring.auth.vo.NewLocalMember;
+import com.recaring.member.dataaccess.entity.Gender;
+import com.recaring.member.dataaccess.entity.MemberRole;
 import com.recaring.member.implement.MemberWriter;
 import com.recaring.member.implement.MembersTermsAgreementWriter;
 import com.recaring.sms.fixture.SmsFixture;

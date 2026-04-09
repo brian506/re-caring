@@ -26,7 +26,7 @@ public class CareInvitationManager {
     @Transactional
     public void sendWardInvitation(String requesterMemberKey, String phoneNumber) {
         Member ward = memberReader.findByPhone(new PhoneNumber(phoneNumber));
-        NewCareInvitation invitation = NewCareInvitation.ofWardRequest(requesterMemberKey, Ward.from(ward));
+        NewCareInvitation invitation = NewCareInvitation.ofWardRequest(requesterMemberKey, Ward.of(ward.getMemberKey(), ward.getPhone(), ward.getRole()));
 
         careRelationshipValidator.validateCanAddWard(invitation.requesterMemberKey(), invitation.wardMemberKey());
         careInvitationWriter.register(invitation);
@@ -36,7 +36,7 @@ public class CareInvitationManager {
     @Transactional
     public void sendManagerInvitation(String requesterKey, String phoneNumber, String wardMemberKey) {
         Member newManager = memberReader.findByPhone(new PhoneNumber(phoneNumber));
-        NewCareInvitation invitation = NewCareInvitation.ofCaregiverRequest(requesterKey, Caregiver.from(newManager), wardMemberKey, CareRole.MANAGER);
+        NewCareInvitation invitation = NewCareInvitation.ofCaregiverRequest(requesterKey, Caregiver.of(newManager.getMemberKey(), newManager.getRole()), wardMemberKey, CareRole.MANAGER);
 
         careRelationshipValidator.validateCanAddManager(invitation.requesterMemberKey(), invitation.wardMemberKey());
         careInvitationWriter.register(invitation);
@@ -46,7 +46,7 @@ public class CareInvitationManager {
     @Transactional
     public void sendGuardianInvitation(String requesterKey, String phoneNumber, String wardMemberKey) {
         Member newGuardian = memberReader.findByPhone(new PhoneNumber(phoneNumber));
-        NewCareInvitation invitation = NewCareInvitation.ofCaregiverRequest(requesterKey, Caregiver.from(newGuardian), wardMemberKey, CareRole.GUARDIAN);
+        NewCareInvitation invitation = NewCareInvitation.ofCaregiverRequest(requesterKey, Caregiver.of(newGuardian.getMemberKey(), newGuardian.getRole()), wardMemberKey, CareRole.GUARDIAN);
 
         careRelationshipValidator.validateCanAddGuardian(invitation.requesterMemberKey(), invitation.wardMemberKey());
         careInvitationWriter.register(invitation);

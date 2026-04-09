@@ -6,6 +6,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
 @Getter
@@ -14,6 +15,7 @@ import org.hibernate.annotations.SQLRestriction;
         name = "care_relationships",
         uniqueConstraints = @UniqueConstraint(columnNames = {"ward_member_key", "caregiver_member_key"})
 )
+@SQLDelete(sql = "UPDATE care_relationships SET deleted_at = NOW() WHERE care_relationship_id = ?")
 @SQLRestriction("deleted_at IS NULL")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class CareRelationship extends BaseEntity {

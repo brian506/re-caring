@@ -43,7 +43,7 @@ public class CareController {
     }
 
     @Operation(
-            summary = "관리자(Manager) 추가 요청",
+            summary = "관계자(Manager) 추가 요청",
             description = "보호자(GUARDIAN)가 보호 대상자를 대신해 다른 관리자를 추가 요청합니다. [GUARDIAN 전용]"
     )
     @PostMapping("/requests/manager")
@@ -113,13 +113,9 @@ public class CareController {
             summary = "내 보호 대상자 목록 조회",
             description = "내가 보호자/관리자인 보호 대상자(Ward) 목록을 반환합니다. [GUARDIAN 전용]"
     )
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "보호 대상자 목록 반환"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "GUARDIAN 권한 없음")
-    })
     @GetMapping("/wards")
     public ResponseEntity<ApiResponse<List<WardResponse>>> getMyWards(
-            @Parameter(hidden = true) @AuthMember String memberKey
+            @AuthMember String memberKey
     ) {
         List<WardResponse> responses = careRelationshipService.getMyWards(memberKey)
                 .stream()
@@ -132,14 +128,10 @@ public class CareController {
             summary = "특정 보호 대상자의 보호자/관리자 목록 조회",
             description = "특정 보호 대상자(wardKey)에 연결된 보호자 및 관리자 목록을 반환합니다. [GUARDIAN, WARD 공통]"
     )
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "보호자/관리자 목록 반환"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "해당 보호 대상자와 케어 관계가 없음")
-    })
     @GetMapping("/wards/{wardKey}/caregivers")
     public ResponseEntity<ApiResponse<List<CaregiverResponse>>> getCaregivers(
-            @Parameter(hidden = true) @AuthMember String memberKey,
-            @Parameter(description = "보호 대상자 memberKey", example = "abc123-uuid") @PathVariable String wardKey
+            @AuthMember String memberKey,
+            @PathVariable String wardKey
     ) {
         List<CaregiverResponse> responses = careRelationshipService.getCaregivers(wardKey, memberKey)
                 .stream()

@@ -7,6 +7,7 @@ import com.recaring.auth.vo.OAuthProvider;
 import com.recaring.member.dataaccess.entity.Gender;
 import com.recaring.member.dataaccess.entity.MemberRole;
 import com.recaring.member.implement.MemberWriter;
+import com.recaring.member.implement.MembersTermsAgreementWriter;
 import com.recaring.sms.fixture.SmsFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

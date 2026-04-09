@@ -10,12 +10,10 @@ public record ReceivedCareRequestResponse(
         String requestKey,
         String requesterKey,
         String requesterName,
-        String requesterPhone,
         String wardKey,
         String wardName,
         CareRole careRole,
         CareInvitationStatus status,
-        LocalDateTime expiredAt,
         LocalDateTime createdAt
 ) {
     public static ReceivedCareRequestResponse from(ReceivedRequestInfo info) {
@@ -23,12 +21,10 @@ public record ReceivedCareRequestResponse(
                 info.requestKey(),
                 info.requesterKey(),
                 info.requesterName(),
-                info.requesterPhone(),
                 info.wardKey(),
                 info.wardName(),
                 info.careRole(),
                 info.status(),
-                info.expiredAt(),
                 info.createdAt()
         );
     }
