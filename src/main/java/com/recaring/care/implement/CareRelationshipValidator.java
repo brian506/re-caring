@@ -3,11 +3,7 @@ package com.recaring.care.implement;
 import com.recaring.care.dataaccess.entity.CareRelationship;
 import com.recaring.care.dataaccess.entity.CareRole;
 import com.recaring.care.dataaccess.repository.CareRelationshipRepository;
-import com.recaring.member.dataaccess.entity.Member;
-import com.recaring.member.dataaccess.entity.SubscriptionType;
-import com.recaring.member.implement.MemberReader;
 import com.recaring.member.implement.MemberValidator;
-import com.recaring.sms.vo.PhoneNumber;
 import com.recaring.support.exception.AppException;
 import com.recaring.support.exception.ErrorType;
 import lombok.RequiredArgsConstructor;
@@ -43,18 +39,18 @@ public class CareRelationshipValidator {
         isDuplicated(careRelationships, CareRelationship::getWardMemberKey,newWardMemberKey);
     }
 
-    public void validateCanAddManager(String requesterKey, String wardMemberKey) {
+    public void validateCanAddManager(String requesterKey, String wardMemberKey, String newManagerKey) {
         memberValidator.validatePremium(requesterKey);
         List<CareRelationship> careRelationships = careRelationshipRepository.findAllByWardMemberKey(wardMemberKey);
         checkRoleLimit(careRelationships, CareRole.MANAGER, MAX_MANAGER_COUNT);
-        isDuplicated(careRelationships, CareRelationship::getCaregiverMemberKey,wardMemberKey);
+        isDuplicated(careRelationships, CareRelationship::getCaregiverMemberKey, newManagerKey);
     }
 
-    public void validateCanAddGuardian(String requesterKey, String wardMemberKey) {
+    public void validateCanAddGuardian(String requesterKey, String wardMemberKey, String newGuardianKey) {
         memberValidator.validatePremium(requesterKey);
         List<CareRelationship> careRelationships = careRelationshipRepository.findAllByWardMemberKey(wardMemberKey);
         checkRoleLimit(careRelationships, CareRole.GUARDIAN, MAX_GUARDIAN_COUNT);
-        isDuplicated(careRelationships, CareRelationship::getCaregiverMemberKey, wardMemberKey);
+        isDuplicated(careRelationships, CareRelationship::getCaregiverMemberKey, newGuardianKey);
     }
 
     public void validateCaregiverViewAccess(String requesterKey, String wardKey) {

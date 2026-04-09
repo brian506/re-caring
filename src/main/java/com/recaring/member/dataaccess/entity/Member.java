@@ -64,6 +64,7 @@ public class Member extends BaseEntity {
         this.gender = gender;
         this.role = role;
         this.signUpType = signUpType;
+        this.subscriptionType = SubscriptionType.BASIC;
     }
 
 }
