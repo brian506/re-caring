@@ -38,9 +38,9 @@ docker compose -f $COMPOSE_FILE up -d --force-recreate --no-deps spring-$NEXT
 # 헬스체크: 포트가 응답할 때까지 대기
 echo ">>> 헬스체크 중... (최대 ${HEALTH_CHECK_RETRIES}회 × ${HEALTH_CHECK_INTERVAL}초)"
 for i in $(seq 1 $HEALTH_CHECK_RETRIES); do
-    HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:$NEXT_PORT || echo "000")
-    if [ "$HTTP_CODE" != "000" ]; then
-        echo "헬스체크 성공 (HTTP $HTTP_CODE)"
+    HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:$NEXT_PORT/actuator/health)
+    if [ "$HTTP_CODE" == "200" ]; then
+        echo "헬스체크 성공 (HTTP 200)"
         break
     fi
     if [ "$i" -eq "$HEALTH_CHECK_RETRIES" ]; then
