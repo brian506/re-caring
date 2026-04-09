@@ -1,11 +1,10 @@
 package com.recaring.sms.business;
 
-import com.recaring.sms.business.command.SendCodeCommand;
-import com.recaring.sms.business.command.VerifyCodeCommand;
 import com.recaring.sms.implement.PhoneVerificationReader;
 import com.recaring.sms.implement.PhoneVerificationWriter;
 import com.recaring.sms.implement.SmsClient;
 import com.recaring.sms.implement.SmsCodeGenerator;
+import com.recaring.sms.vo.PhoneNumber;
 import com.recaring.sms.vo.SmsCode;
 import com.recaring.support.exception.AppException;
 import com.recaring.support.exception.ErrorType;
@@ -20,17 +19,17 @@ public class PhoneVerificationService {
     private final PhoneVerificationReader phoneVerificationReader;
     private final SmsClient smsClient;
 
-    public void sendCode(SendCodeCommand command) {
+    public void sendCode(PhoneNumber phone) {
         SmsCode code = SmsCodeGenerator.generate();
-        phoneVerificationWriter.add(command.phone(), code);
-        smsClient.sendVerificationCode(command.phone().value(), code.value());
+        phoneVerificationWriter.add(phone, code);
+        smsClient.sendVerificationCode(phone.value(), code.value());
     }
 
-    public String verifyCode(VerifyCodeCommand command) {
-        SmsCode storedCode = phoneVerificationReader.findCode(command.phone());
-        if (!storedCode.matches(command.code())) {
+    public String verifyCode(PhoneNumber phone, SmsCode code) {
+        SmsCode storedCode = phoneVerificationReader.findCode(phone);
+        if (!storedCode.matches(code)) {
             throw new AppException(ErrorType.INVALID_VERIFICATION_CODE);
         }
-        return phoneVerificationWriter.verify(command.phone());
+        return phoneVerificationWriter.verify(phone);
     }
 }

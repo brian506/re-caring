@@ -1,7 +1,7 @@
 package com.recaring.auth.business;
 
-import com.recaring.auth.business.command.SignInCommand;
 import com.recaring.auth.business.command.SignUpCommand;
+import com.recaring.auth.vo.LocalEmail;
 import com.recaring.auth.implement.local.LocalAuthAuthenticator;
 import com.recaring.auth.implement.local.LocalAuthManager;
 import com.recaring.auth.implement.local.LocalAuthReader;
@@ -10,8 +10,8 @@ import com.recaring.auth.implement.TokenIssuer;
 import com.recaring.auth.vo.EncodedPassword;
 import com.recaring.auth.vo.Password;
 import com.recaring.common.utils.MaskingUtils;
-import com.recaring.domain.member.dataaccess.entity.Member;
-import com.recaring.domain.member.implement.MemberReader;
+import com.recaring.member.dataaccess.entity.Member;
+import com.recaring.member.implement.MemberReader;
 import com.recaring.security.vo.Jwt;
 import com.recaring.sms.implement.PhoneVerificationReader;
 import com.recaring.sms.vo.PhoneNumber;
@@ -38,8 +38,8 @@ public class LocalAuthService {
         localAuthManager.register(command.toNewLocalMember(phone, encodedPassword));
     }
 
-    public Jwt signIn(SignInCommand command) {
-        Member member = authAuthenticator.authenticate(command);
+    public Jwt signIn(LocalEmail email, Password password) {
+        Member member = authAuthenticator.authenticate(email, password);
         return tokenIssuer.issue(member);
     }
 
@@ -50,7 +50,7 @@ public class LocalAuthService {
 
     public void findPassword(String smsToken, Password password) {
         PhoneNumber phone = phoneVerificationReader.findPhoneByToken(smsToken);
-        Member member = memberReader.findByPhone(phone.value());
+        Member member = memberReader.findByPhone(phone);
         EncodedPassword encodedPassword = authAuthenticator.encodePassword(password);
         localAuthManager.changePassword(member.getMemberKey(), encodedPassword.value());
     }

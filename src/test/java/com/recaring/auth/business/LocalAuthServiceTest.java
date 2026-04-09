@@ -1,6 +1,5 @@
 package com.recaring.auth.business;
 
-import com.recaring.auth.business.command.SignInCommand;
 import com.recaring.auth.business.command.SignUpCommand;
 import com.recaring.auth.dataaccess.entity.LocalAuth;
 import com.recaring.auth.fixture.AuthFixture;
@@ -10,10 +9,11 @@ import com.recaring.auth.implement.local.LocalAuthAuthenticator;
 import com.recaring.auth.implement.local.LocalAuthManager;
 import com.recaring.auth.implement.local.LocalAuthReader;
 import com.recaring.auth.vo.EncodedPassword;
+import com.recaring.auth.vo.LocalEmail;
 import com.recaring.auth.vo.Password;
-import com.recaring.domain.member.dataaccess.entity.Member;
-import com.recaring.domain.member.fixture.MemberFixture;
-import com.recaring.domain.member.implement.MemberReader;
+import com.recaring.member.dataaccess.entity.Member;
+import com.recaring.member.fixture.MemberFixture;
+import com.recaring.member.implement.MemberReader;
 import com.recaring.security.vo.Jwt;
 import com.recaring.sms.fixture.SmsFixture;
 import com.recaring.sms.implement.PhoneVerificationReader;
@@ -85,14 +85,15 @@ class LocalAuthServiceTest {
     void signIn_success() {
         // given
         Member member = MemberFixture.createMember();
-        SignInCommand command = AuthFixture.createSignInCommand();
+        LocalEmail email = AuthFixture.createLocalEmail();
+        Password password = AuthFixture.createPassword();
         Jwt expectedJwt = AuthFixture.createJwt();
 
-        given(authAuthenticator.authenticate(command)).willReturn(member);
+        given(authAuthenticator.authenticate(email, password)).willReturn(member);
         given(tokenIssuer.issue(member)).willReturn(expectedJwt);
 
         // when
-        Jwt result = localAuthService.signIn(command);
+        Jwt result = localAuthService.signIn(email, password);
 
         // then
         assertThat(result.accessToken()).isEqualTo(AuthFixture.ACCESS_TOKEN);
@@ -135,7 +136,7 @@ class LocalAuthServiceTest {
         Member member = MemberFixture.createMember();
 
         given(phoneVerificationReader.findPhoneByToken(smsToken)).willReturn(phone);
-        given(memberReader.findByPhone(SmsFixture.PHONE)).willReturn(member);
+        given(memberReader.findByPhone(new PhoneNumber(SmsFixture.PHONE))).willReturn(member);
         given(authAuthenticator.encodePassword(newPassword)).willReturn(encodedPassword);
 
         // when

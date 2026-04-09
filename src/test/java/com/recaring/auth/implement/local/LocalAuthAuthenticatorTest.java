@@ -1,13 +1,12 @@
 package com.recaring.auth.implement.local;
 
-import com.recaring.auth.business.command.SignInCommand;
 import com.recaring.auth.fixture.AuthFixture;
 import com.recaring.auth.vo.EncodedPassword;
 import com.recaring.auth.vo.LocalEmail;
 import com.recaring.auth.vo.Password;
-import com.recaring.domain.member.dataaccess.entity.Member;
-import com.recaring.domain.member.fixture.MemberFixture;
-import com.recaring.domain.member.implement.MemberReader;
+import com.recaring.member.dataaccess.entity.Member;
+import com.recaring.member.fixture.MemberFixture;
+import com.recaring.member.implement.MemberReader;
 import com.recaring.support.exception.AppException;
 import com.recaring.support.exception.ErrorType;
 import org.junit.jupiter.api.DisplayName;
@@ -20,7 +19,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 
 @ExtendWith(MockitoExtension.class)
@@ -58,25 +56,24 @@ class LocalAuthAuthenticatorTest {
     @DisplayName("인증 성공 - 올바른 이메일과 비밀번호로 회원 객체 반환")
     void authenticate_success() {
         // given
-        SignInCommand command = AuthFixture.createSignInCommand();
+        LocalEmail email = AuthFixture.createLocalEmail();
+        Password password = AuthFixture.createPassword();
         String memberKey = "member-key-123";
         Member expectedMember = MemberFixture.createMember();
 
-        // Mock LocalAuth 조회
         com.recaring.auth.dataaccess.entity.LocalAuth localAuth =
             com.recaring.auth.dataaccess.entity.LocalAuth.builder()
                 .memberKey(memberKey)
-                .email(command.email().value())
+                .email(email.value())
                 .password(AuthFixture.ENCODED_PASSWORD)
                 .build();
 
-        given(localAuthReader.findByEmail(command.email().value())).willReturn(localAuth);
-        given(passwordEncoder.matches(command.password().value(), AuthFixture.ENCODED_PASSWORD))
-            .willReturn(true);
+        given(localAuthReader.findByEmail(email.value())).willReturn(localAuth);
+        given(passwordEncoder.matches(password.value(), AuthFixture.ENCODED_PASSWORD)).willReturn(true);
         given(memberReader.findByMemberKey(memberKey)).willReturn(expectedMember);
 
         // when
-        Member result = localAuthAuthenticator.authenticate(command);
+        Member result = localAuthAuthenticator.authenticate(email, password);
 
         // then
         assertThat(result.getMemberKey()).isEqualTo(expectedMember.getMemberKey());
@@ -86,22 +83,22 @@ class LocalAuthAuthenticatorTest {
     @DisplayName("인증 실패 - 잘못된 비밀번호로 AppException 발생")
     void authenticate_fail_with_wrong_password() {
         // given
-        SignInCommand command = AuthFixture.createSignInCommand();
+        LocalEmail email = AuthFixture.createLocalEmail();
+        Password password = AuthFixture.createPassword();
         String memberKey = "member-key-123";
 
         com.recaring.auth.dataaccess.entity.LocalAuth localAuth =
             com.recaring.auth.dataaccess.entity.LocalAuth.builder()
                 .memberKey(memberKey)
-                .email(command.email().value())
+                .email(email.value())
                 .password(AuthFixture.ENCODED_PASSWORD)
                 .build();
 
-        given(localAuthReader.findByEmail(command.email().value())).willReturn(localAuth);
-        given(passwordEncoder.matches(command.password().value(), AuthFixture.ENCODED_PASSWORD))
-            .willReturn(false);
+        given(localAuthReader.findByEmail(email.value())).willReturn(localAuth);
+        given(passwordEncoder.matches(password.value(), AuthFixture.ENCODED_PASSWORD)).willReturn(false);
 
         // when & then
-        assertThatThrownBy(() -> localAuthAuthenticator.authenticate(command))
+        assertThatThrownBy(() -> localAuthAuthenticator.authenticate(email, password))
             .isInstanceOf(AppException.class)
             .hasFieldOrPropertyWithValue("errorType", ErrorType.INVALID_PASSWORD);
     }
@@ -110,12 +107,14 @@ class LocalAuthAuthenticatorTest {
     @DisplayName("인증 실패 - 존재하지 않는 이메일로 AppException 발생")
     void authenticate_fail_with_email_not_found() {
         // given
-        SignInCommand command = AuthFixture.createSignInCommand();
-        given(localAuthReader.findByEmail(command.email().value()))
+        LocalEmail email = AuthFixture.createLocalEmail();
+        Password password = AuthFixture.createPassword();
+
+        given(localAuthReader.findByEmail(email.value()))
             .willThrow(new AppException(ErrorType.NOT_FOUND_ACCOUNT));
 
         // when & then
-        assertThatThrownBy(() -> localAuthAuthenticator.authenticate(command))
+        assertThatThrownBy(() -> localAuthAuthenticator.authenticate(email, password))
             .isInstanceOf(AppException.class)
             .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_FOUND_ACCOUNT);
     }

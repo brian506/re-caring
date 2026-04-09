@@ -1,7 +1,7 @@
 package com.recaring.auth.vo;
 
-import com.recaring.domain.member.dataaccess.entity.Gender;
-import com.recaring.domain.member.dataaccess.entity.MemberRole;
+import com.recaring.member.dataaccess.entity.Gender;
+import com.recaring.member.dataaccess.entity.MemberRole;
 import lombok.Builder;
 
 import java.time.LocalDate;

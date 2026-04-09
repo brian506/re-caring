@@ -1,12 +1,11 @@
 package com.recaring.auth.fixture;
 
-import com.recaring.auth.business.command.SignInCommand;
 import com.recaring.auth.business.command.SignUpCommand;
 import com.recaring.auth.vo.EncodedPassword;
 import com.recaring.auth.vo.LocalEmail;
 import com.recaring.auth.vo.Password;
-import com.recaring.domain.member.dataaccess.entity.Gender;
-import com.recaring.domain.member.dataaccess.entity.MemberRole;
+import com.recaring.member.dataaccess.entity.Gender;
+import com.recaring.member.dataaccess.entity.MemberRole;
 import com.recaring.security.vo.Jwt;
 
 import java.time.LocalDate;
@@ -22,7 +21,6 @@ public class AuthFixture {
     public static LocalEmail createLocalEmail() {
         return new LocalEmail(EMAIL);
     }
-
 
     public static Password createPassword() {
         return new Password(RAW_PASSWORD);
@@ -42,14 +40,6 @@ public class AuthFixture {
                 Gender.MALE,
                 MemberRole.GUARDIAN
         );
-    }
-
-    public static SignInCommand createSignInCommand() {
-        return new SignInCommand(createLocalEmail(), createPassword());
-    }
-
-    public static SignInCommand createSignInCommand(String email) {
-        return new SignInCommand(new LocalEmail(email), createPassword());
     }
 
     public static Jwt createJwt() {

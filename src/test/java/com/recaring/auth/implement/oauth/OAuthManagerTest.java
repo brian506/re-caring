@@ -4,11 +4,10 @@ import com.recaring.auth.dataaccess.entity.OAuth;
 import com.recaring.auth.dataaccess.repository.OAuthRepository;
 import com.recaring.auth.vo.NewOauthMember;
 import com.recaring.auth.vo.OAuthProvider;
-import com.recaring.common.mapper.auth.AuthMapper;
-import com.recaring.domain.member.dataaccess.entity.Gender;
-import com.recaring.domain.member.dataaccess.entity.MemberRole;
-import com.recaring.domain.member.implement.MemberWriter;
-import com.recaring.domain.member.implement.MembersTermsAgreementWriter;
+import com.recaring.member.dataaccess.entity.Gender;
+import com.recaring.member.dataaccess.entity.MemberRole;
+import com.recaring.member.implement.MemberWriter;
+import com.recaring.member.implement.MembersTermsAgreementWriter;
 import com.recaring.sms.fixture.SmsFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -43,9 +42,6 @@ class OAuthManagerTest {
     @Mock
     private MembersTermsAgreementWriter termsAgreementWriter;
 
-    @Mock
-    private AuthMapper authMapper;
-
     @Test
     @DisplayName("OAuth 회원가입 성공 - memberWriter와 oAuthRepository 호출 검증")
     void register_success() {
@@ -68,8 +64,7 @@ class OAuthManagerTest {
             .build();
 
         given(memberWriter.registerOAuthMember(newOauthMember)).willReturn(memberKey);
-        given(authMapper.createOAuth(memberKey, OAuthProvider.KAKAO, "kakao-user-456")).willReturn(createdOAuth);
-        given(oAuthRepository.save(createdOAuth)).willReturn(createdOAuth);
+        given(oAuthRepository.save(any(OAuth.class))).willReturn(createdOAuth);
 
         // when
         String result = oAuthManager.register(newOauthMember);
@@ -77,7 +72,6 @@ class OAuthManagerTest {
         // then
         assertThat(result).isEqualTo(memberKey);
         then(memberWriter).should(times(1)).registerOAuthMember(newOauthMember);
-        then(authMapper).should(times(1)).createOAuth(memberKey, OAuthProvider.KAKAO, "kakao-user-456");
         then(oAuthRepository).should(times(1)).save(any(OAuth.class));
     }
 
@@ -103,8 +97,7 @@ class OAuthManagerTest {
             .build();
 
         given(memberWriter.registerOAuthMember(newOauthMember)).willReturn(memberKey);
-        given(authMapper.createOAuth(memberKey, OAuthProvider.NAVER, "naver-user-789")).willReturn(createdOAuth);
-        given(oAuthRepository.save(createdOAuth)).willReturn(createdOAuth);
+        given(oAuthRepository.save(any(OAuth.class))).willReturn(createdOAuth);
 
         // when
         oAuthManager.register(newOauthMember);
@@ -141,7 +134,6 @@ class OAuthManagerTest {
             .build();
 
         given(memberWriter.registerOAuthMember(kakaoMember)).willReturn(memberKey);
-        given(authMapper.createOAuth(eq(memberKey), eq(OAuthProvider.KAKAO), any())).willReturn(createdOAuth);
         given(oAuthRepository.save(any(OAuth.class))).willReturn(createdOAuth);
 
         // when
@@ -173,7 +165,6 @@ class OAuthManagerTest {
             .build();
 
         given(memberWriter.registerOAuthMember(naverMember)).willReturn(memberKey);
-        given(authMapper.createOAuth(eq(memberKey), eq(OAuthProvider.NAVER), any())).willReturn(createdOAuth);
         given(oAuthRepository.save(any(OAuth.class))).willReturn(createdOAuth);
 
         // when
@@ -205,7 +196,6 @@ class OAuthManagerTest {
             .build();
 
         given(memberWriter.registerOAuthMember(newOauthMember)).willReturn(memberKey);
-        given(authMapper.createOAuth(any(), any(), any())).willReturn(createdOAuth);
         given(oAuthRepository.save(any(OAuth.class))).willReturn(createdOAuth);
 
         // when

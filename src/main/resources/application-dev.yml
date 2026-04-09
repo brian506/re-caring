@@ -14,7 +14,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: validate
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
@@ -49,6 +49,16 @@ coolsms:
 
 client:
   url: re-caring.duckdns.org
+
+springdoc:
+  swagger-ui:
+    url: /v3/api-docs
+    path: /v3/api-docs
+    disable-swagger-default-url: true
+  api-docs:
+    enabled: true
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
 
 logging:
   file:

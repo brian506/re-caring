@@ -4,9 +4,10 @@ import com.recaring.auth.dataaccess.entity.LocalAuth;
 import com.recaring.auth.dataaccess.repository.LocalAuthRepository;
 import com.recaring.auth.fixture.AuthFixture;
 import com.recaring.auth.vo.NewLocalMember;
-import com.recaring.common.mapper.auth.AuthMapper;
-import com.recaring.domain.member.implement.MemberWriter;
-import com.recaring.domain.member.implement.MembersTermsAgreementWriter;
+import com.recaring.member.dataaccess.entity.Gender;
+import com.recaring.member.dataaccess.entity.MemberRole;
+import com.recaring.member.implement.MemberWriter;
+import com.recaring.member.implement.MembersTermsAgreementWriter;
 import com.recaring.sms.fixture.SmsFixture;
 import com.recaring.support.exception.AppException;
 import com.recaring.support.exception.ErrorType;
@@ -44,9 +45,6 @@ class LocalAuthManagerTest {
     @Mock
     private MembersTermsAgreementWriter termsAgreementWriter;
 
-    @Mock
-    private AuthMapper mapper;
-
     @Test
     @DisplayName("회원가입 성공 - 새로운 회원을 등록한다")
     void register_success() {
@@ -57,22 +55,15 @@ class LocalAuthManagerTest {
             .phone(SmsFixture.createPhoneNumber())
             .name("홍길동")
             .birth(LocalDate.of(1990, 1, 1))
-            .gender(com.recaring.domain.member.dataaccess.entity.Gender.MALE)
-            .role(com.recaring.domain.member.dataaccess.entity.MemberRole.GUARDIAN)
+            .gender(Gender.MALE)
+            .role(MemberRole.GUARDIAN)
             .build();
 
         String memberKey = "member-key-123";
-        LocalAuth localAuth = LocalAuth.builder()
-            .memberKey(memberKey)
-            .email(newMember.email().value())
-            .password(newMember.password().value())
-            .build();
 
         given(localAuthRepository.existsByEmail(newMember.email().value())).willReturn(false);
         given(memberWriter.registerLocalMember(newMember)).willReturn(memberKey);
-        given(mapper.createLocalAuth(memberKey, newMember.email().value(), newMember.password().value()))
-            .willReturn(localAuth);
-        given(localAuthRepository.save(localAuth)).willReturn(localAuth);
+        given(localAuthRepository.save(any(LocalAuth.class))).willReturn(any());
 
         // when
         localAuthManager.register(newMember);
@@ -92,8 +83,8 @@ class LocalAuthManagerTest {
             .phone(SmsFixture.createPhoneNumber())
             .name("홍길동")
             .birth(LocalDate.of(1990, 1, 1))
-            .gender(com.recaring.domain.member.dataaccess.entity.Gender.MALE)
-            .role(com.recaring.domain.member.dataaccess.entity.MemberRole.GUARDIAN)
+            .gender(Gender.MALE)
+            .role(MemberRole.GUARDIAN)
             .build();
 
         given(localAuthRepository.existsByEmail(newMember.email().value())).willReturn(true);

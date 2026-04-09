@@ -4,8 +4,8 @@ import com.recaring.auth.vo.EncodedPassword;
 import com.recaring.auth.vo.LocalEmail;
 import com.recaring.auth.vo.NewLocalMember;
 import com.recaring.auth.vo.Password;
-import com.recaring.domain.member.dataaccess.entity.Gender;
-import com.recaring.domain.member.dataaccess.entity.MemberRole;
+import com.recaring.member.dataaccess.entity.Gender;
+import com.recaring.member.dataaccess.entity.MemberRole;
 import com.recaring.sms.vo.PhoneNumber;
 
 import java.time.LocalDate;

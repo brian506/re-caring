@@ -1,8 +1,7 @@
 package com.recaring.auth.implement;
 
-import com.recaring.domain.member.dataaccess.entity.Member;
-import com.recaring.domain.member.dataaccess.entity.MemberRole;
-import com.recaring.domain.member.fixture.MemberFixture;
+import com.recaring.member.dataaccess.entity.Member;
+import com.recaring.member.fixture.MemberFixture;
 import com.recaring.security.jwt.JwtGenerator;
 import com.recaring.security.vo.Jwt;
 import com.recaring.security.vo.TokenPayload;
@@ -13,8 +12,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.Date;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
