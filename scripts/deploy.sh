@@ -5,7 +5,7 @@ DEPLOY_DIR=/home/ubuntu/recaring
 COMPOSE_FILE=$DEPLOY_DIR/docker-compose-dev.yml
 SERVICE_URL_FILE=$DEPLOY_DIR/nginx/conf.d/service-url.inc
 HEALTH_CHECK_RETRIES=12
-HEALTH_CHECK_INTERVAL=5
+HEALTH_CHECK_INTERVAL=30
 
 # 다른 인프라 컨테이너 Up
 docker compose -f $COMPOSE_FILE up -d redis nginx alloy prometheus loki grafana certbot
