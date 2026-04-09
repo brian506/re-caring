@@ -35,8 +35,8 @@ services:
     env_file: .env
     environment:
       SPRING_PROFILES_ACTIVE: dev
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
     ports:
       - "8080:8080"
     labels:
@@ -55,8 +55,8 @@ services:
     env_file: .env
     environment:
       SPRING_PROFILES_ACTIVE: dev
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
     ports:
       - "8081:8080"
     labels:
