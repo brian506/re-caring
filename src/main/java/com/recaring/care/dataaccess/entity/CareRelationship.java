@@ -39,4 +39,12 @@ public class CareRelationship extends BaseEntity {
         this.caregiverMemberKey = caregiverMemberKey;
         this.careRole = careRole;
     }
+
+    public static CareRelationship of(String wardMemberKey, String caregiverMemberKey, CareRole careRole) {
+        return CareRelationship.builder()
+                .wardMemberKey(wardMemberKey)
+                .caregiverMemberKey(caregiverMemberKey)
+                .careRole(careRole)
+                .build();
+    }
 }

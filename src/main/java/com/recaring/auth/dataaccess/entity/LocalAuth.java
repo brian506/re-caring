@@ -33,6 +33,14 @@ public class LocalAuth extends BaseEntity {
         this.password = password;
     }
 
+    public static LocalAuth of(String memberKey, String email, String password) {
+        return LocalAuth.builder()
+                .memberKey(memberKey)
+                .email(email)
+                .password(password)
+                .build();
+    }
+
     public void updatePassword(String encodedPassword) {
         this.password = encodedPassword;
     }

@@ -47,6 +47,10 @@ public class Member extends BaseEntity {
     @Column(nullable = false, length = 10)
     private SignUpType signUpType;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private SubscriptionType subscriptionType;
+
 
     @Builder
     public Member(String phone, String name,

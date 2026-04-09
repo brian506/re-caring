@@ -23,9 +23,9 @@ public class CareRelationshipRepositoryCustomImpl extends QuerydslRepositorySupp
     }
 
     @Override
-    public List<CareRelationship> findAllByCaregiverKey(String caregiverKey) {
+    public List<CareRelationship> findAllByCaregiverMemberKey(String caregiverMemberKey) {
         return selectFrom(careRelationship)
-                .where(careRelationship.caregiverMemberKey.eq(caregiverKey))
+                .where(careRelationship.caregiverMemberKey.eq(caregiverMemberKey))
                 .fetch();
     }
 

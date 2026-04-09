@@ -1,5 +1,6 @@
 package com.recaring.care.dataaccess.entity;
 
+import com.recaring.care.vo.NewCareInvitation;
 import com.recaring.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -51,6 +52,15 @@ public class CareInvitation extends BaseEntity {
         this.wardMemberKey = wardMemberKey;
         this.careRole = careRole;
         this.status = CareInvitationStatus.PENDING;
+    }
+
+    public static CareInvitation from(NewCareInvitation invitation) {
+        return CareInvitation.builder()
+                .requesterMemberKey(invitation.requesterMemberKey())
+                .targetMemberKey(invitation.targetMemberKey())
+                .wardMemberKey(invitation.wardMemberKey())
+                .careRole(invitation.careRole())
+                .build();
     }
 
     public String getCaregiverKey() {

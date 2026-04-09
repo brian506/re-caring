@@ -9,7 +9,7 @@ public interface CareRelationshipRepositoryCustom {
 
     List<CareRelationship> findAllByWardMemberKey(String wardMemberKey);
 
-    List<CareRelationship> findAllByCaregiverKey(String caregiverKey);
+    List<CareRelationship> findAllByCaregiverMemberKey(String caregiverMemberKey);
 
     boolean existsByWardKeyAndCaregiverKeyAndCareRole(String wardKey, String caregiverKey, CareRole careRole);
 }

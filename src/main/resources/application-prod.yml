@@ -46,3 +46,9 @@ coolsms:
 
 client:
   url: re-caring.duckdns.org
+
+springdoc:
+  swagger-ui:
+    enabled: false
+  api-docs:
+    enabled: false

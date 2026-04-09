@@ -1,12 +1,11 @@
 package com.recaring.care.business;
 
-import com.recaring.care.business.command.AddCaregiverCommand;
-import com.recaring.care.business.command.AddWardCommand;
 import com.recaring.care.dataaccess.entity.CareInvitation;
 import com.recaring.care.implement.CareInvitationManager;
 import com.recaring.care.implement.CareInvitationReader;
 import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.implement.MemberReader;
+import com.recaring.sms.vo.PhoneNumber;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -22,12 +21,16 @@ public class CareInvitationService {
     private final CareInvitationReader careInvitationReader;
     private final MemberReader memberReader;
 
-    public void sendWardInvitation(AddWardCommand command) {
-        careInvitationManager.sendWardInvitation(command);
+    public void sendWardInvitation(String requesterKey, String phoneNumber) {
+        careInvitationManager.sendWardInvitation(requesterKey, phoneNumber);
     }
 
-    public void sendManagerInvitation(AddCaregiverCommand command) {
-        careInvitationManager.sendManagerInvitation(command);
+    public void sendManagerInvitation(String requesterKey, String phoneNumber, String wardMemberKey) {
+        careInvitationManager.sendManagerInvitation(requesterKey, phoneNumber, wardMemberKey);
+    }
+
+    public void sendGuardianInvitation(String requesterKey, String phoneNumber, String wardMemberKey) {
+        careInvitationManager.sendGuardianInvitation(requesterKey, phoneNumber, wardMemberKey);
     }
 
     public List<ReceivedRequestInfo> getReceivedRequests(String memberKey) {

@@ -3,7 +3,6 @@ package com.recaring.care.implement;
 import com.recaring.care.dataaccess.entity.CareInvitation;
 import com.recaring.care.dataaccess.repository.CareInvitationRepository;
 import com.recaring.care.vo.NewCareInvitation;
-import com.recaring.common.mapper.care.CareMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,11 +12,10 @@ import org.springframework.transaction.annotation.Transactional;
 public class CareInvitationWriter {
 
     private final CareInvitationRepository careInvitationRepository;
-    private final CareMapper careMapper;
 
     @Transactional
     public void register(NewCareInvitation invitation) {
-        careInvitationRepository.save(careMapper.toCareInvitation(invitation));
+        careInvitationRepository.save(CareInvitation.from(invitation));
     }
 
     @Transactional

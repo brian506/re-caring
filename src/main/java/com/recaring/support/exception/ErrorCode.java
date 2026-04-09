@@ -2,21 +2,20 @@ package com.recaring.support.exception;
 
 public enum ErrorCode {
 
-
+    // Global
     E400, E401, E403, E404, E429, E500,
 
+    // Auth (E2xxx) - JWT, OAuth, 로컬 인증, 비밀번호
+    E2000, E2001, E2002, E2003, E2004, E2005, E2006, E2007, E2008,
+    E2009, E2010, E2011, E2012, E2013, E2014, E2015, E2016, E2017, E2018,
 
-    // Auth
-    E3000, E3001, E3002, E3003, E3004, E3005, E3006, E3007, E3008, E3009, E3010, E3011, E3012, E3013, E3014, E3015,
-    E3016, E3017, E3018,
+    // Member (E3xxx) - 이메일, 계정
+    E3000, E3001, E3002, E3003, E3004, E3005,
 
-    // Phone Verification
-    E3019, E3020, E3021, E3022, E3023,
+    // SMS / Phone Verification (E4xxx)
+    E4000, E4001, E4002, E4003, E4004,
 
-    // Email
-    E3024, E3025, E3026,
-
-    // Care
-    E3027, E3028, E3029, E3030, E3031, E3032, E3033, E3034, E3035, E3036, E3037
+    // Care (E5xxx) - 케어 관계, 초대
+    E5000, E5001, E5002, E5003, E5004, E5005, E5006, E5007, E5008, E5009, E5010
 
 }

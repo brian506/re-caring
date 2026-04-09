@@ -1,6 +1,5 @@
 package com.recaring.auth.fixture;
 
-import com.recaring.auth.business.command.SignInCommand;
 import com.recaring.auth.business.command.SignUpCommand;
 import com.recaring.auth.vo.EncodedPassword;
 import com.recaring.auth.vo.LocalEmail;
@@ -23,7 +22,6 @@ public class AuthFixture {
         return new LocalEmail(EMAIL);
     }
 
-
     public static Password createPassword() {
         return new Password(RAW_PASSWORD);
     }
@@ -42,14 +40,6 @@ public class AuthFixture {
                 Gender.MALE,
                 MemberRole.GUARDIAN
         );
-    }
-
-    public static SignInCommand createSignInCommand() {
-        return new SignInCommand(createLocalEmail(), createPassword());
-    }
-
-    public static SignInCommand createSignInCommand(String email) {
-        return new SignInCommand(new LocalEmail(email), createPassword());
     }
 
     public static Jwt createJwt() {

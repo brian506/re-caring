@@ -24,3 +24,4 @@ public class CareInvitationReader {
         return careInvitationRepository.findReceivedPendingRequests(targetKey);
     }
 }
+호

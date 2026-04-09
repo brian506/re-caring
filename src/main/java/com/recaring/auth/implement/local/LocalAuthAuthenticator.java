@@ -1,7 +1,7 @@
 package com.recaring.auth.implement.local;
 
-import com.recaring.auth.business.command.SignInCommand;
 import com.recaring.auth.vo.EncodedPassword;
+import com.recaring.auth.vo.LocalEmail;
 import com.recaring.auth.vo.Password;
 import com.recaring.auth.dataaccess.entity.LocalAuth;
 import com.recaring.member.dataaccess.entity.Member;
@@ -24,9 +24,9 @@ public class LocalAuthAuthenticator {
         return new EncodedPassword(passwordEncoder.encode(password.value()));
     }
 
-    public Member authenticate(SignInCommand command) {
-        LocalAuth localAuth = localAuthReader.findByEmail(command.email().value());
-        if (!passwordEncoder.matches(command.password().value(), localAuth.getPassword())) {
+    public Member authenticate(LocalEmail email, Password password) {
+        LocalAuth localAuth = localAuthReader.findByEmail(email.value());
+        if (!passwordEncoder.matches(password.value(), localAuth.getPassword())) {
             throw new AppException(ErrorType.INVALID_PASSWORD);
         }
         return memberReader.findByMemberKey(localAuth.getMemberKey());

@@ -2,6 +2,7 @@ package com.recaring.member.implement;
 
 import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.dataaccess.repository.MemberRepository;
+import com.recaring.sms.vo.PhoneNumber;
 import com.recaring.support.exception.AppException;
 import com.recaring.support.exception.ErrorType;
 import lombok.RequiredArgsConstructor;
@@ -23,8 +24,8 @@ public class MemberReader {
                 .orElseThrow(() -> new AppException(ErrorType.NOT_FOUND_ACCOUNT));
     }
 
-    public Member findByPhone(String phoneNumber) {
-        return memberRepository.findByPhone(phoneNumber)
+    public Member findByPhone(PhoneNumber phoneNumber) {
+        return memberRepository.findByPhone(phoneNumber.value())
                 .orElseThrow(() -> new AppException(ErrorType.NOT_FOUND_ACCOUNT));
     }
 

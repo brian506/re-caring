@@ -40,3 +40,13 @@ coolsms:
 
 client:
   url: http://localhost:3000
+
+springdoc:
+  swagger-ui:
+    url: /v3/api-docs
+    path: /v3/api-docs
+    disable-swagger-default-url: true
+  api-docs:
+    enabled: true
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json

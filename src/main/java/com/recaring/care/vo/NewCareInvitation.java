@@ -1,7 +1,5 @@
 package com.recaring.care.vo;
 
-import com.recaring.care.business.command.AddCaregiverCommand;
-import com.recaring.care.business.command.AddWardCommand;
 import com.recaring.care.dataaccess.entity.CareRole;
 import com.recaring.support.exception.AppException;
 import com.recaring.support.exception.ErrorType;
@@ -27,9 +25,9 @@ public record NewCareInvitation(
         }
     }
 
-    public static NewCareInvitation ofWardRequest(AddWardCommand command, Ward ward) {
+    public static NewCareInvitation ofWardRequest(String requesterMemberKey, Ward ward) {
         return new NewCareInvitation(
-                command.requesterKey(),
+                requesterMemberKey,
                 ward.memberKey(),
                 ward.memberKey(),
                 CareRole.GUARDIAN
@@ -37,12 +35,12 @@ public record NewCareInvitation(
     }
 
 
-    public static NewCareInvitation ofCaregiverRequest(AddCaregiverCommand command, Caregiver caregiver) {
+    public static NewCareInvitation ofCaregiverRequest(String requesterKey, Caregiver caregiver, String wardMemberKey, CareRole careRole) {
         return new NewCareInvitation(
-                command.requesterKey(),
+                requesterKey,
                 caregiver.memberKey(),
-                command.wardMemberKey(),
-                command.careRole()
+                wardMemberKey,
+                careRole
         );
     }
 }

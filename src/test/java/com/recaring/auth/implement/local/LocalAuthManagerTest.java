@@ -4,7 +4,6 @@ import com.recaring.auth.dataaccess.entity.LocalAuth;
 import com.recaring.auth.dataaccess.repository.LocalAuthRepository;
 import com.recaring.auth.fixture.AuthFixture;
 import com.recaring.auth.vo.NewLocalMember;
-import com.recaring.common.mapper.auth.AuthMapper;
 import com.recaring.member.implement.MemberWriter;
 import com.recaring.member.implement.MembersTermsAgreementWriter;
 import com.recaring.sms.fixture.SmsFixture;
@@ -44,9 +43,6 @@ class LocalAuthManagerTest {
     @Mock
     private MembersTermsAgreementWriter termsAgreementWriter;
 
-    @Mock
-    private AuthMapper mapper;
-
     @Test
     @DisplayName("회원가입 성공 - 새로운 회원을 등록한다")
     void register_success() {
@@ -62,17 +58,10 @@ class LocalAuthManagerTest {
             .build();
 
         String memberKey = "member-key-123";
-        LocalAuth localAuth = LocalAuth.builder()
-            .memberKey(memberKey)
-            .email(newMember.email().value())
-            .password(newMember.password().value())
-            .build();
 
         given(localAuthRepository.existsByEmail(newMember.email().value())).willReturn(false);
         given(memberWriter.registerLocalMember(newMember)).willReturn(memberKey);
-        given(mapper.createLocalAuth(memberKey, newMember.email().value(), newMember.password().value()))
-            .willReturn(localAuth);
-        given(localAuthRepository.save(localAuth)).willReturn(localAuth);
+        given(localAuthRepository.save(any(LocalAuth.class))).willReturn(any());
 
         // when
         localAuthManager.register(newMember);

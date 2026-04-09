@@ -3,8 +3,6 @@ package com.recaring.care.implement;
 import com.recaring.care.dataaccess.entity.CareRelationship;
 import com.recaring.care.dataaccess.entity.CareRole;
 import com.recaring.care.dataaccess.repository.CareRelationshipRepository;
-import com.recaring.support.exception.AppException;
-import com.recaring.support.exception.ErrorType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -21,7 +19,7 @@ public class CareRelationshipReader {
     }
 
     public List<CareRelationship> findAllByCaregiverKey(String caregiverKey) {
-        return careRelationshipRepository.findAllByCaregiverKey(caregiverKey);
+        return careRelationshipRepository.findAllByCaregiverMemberKey(caregiverKey);
     }
 
 
