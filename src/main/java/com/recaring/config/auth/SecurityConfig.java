@@ -64,9 +64,7 @@ public class SecurityConfig {
                                 mvc.matcher("/v3/api-docs")
                         ).permitAll()
                         .requestMatchers(
-                                mvc.matcher("/actuator"),
-                                mvc.matcher("/actuator/health"),
-                                mvc.matcher("/actuator/prometheus")
+                                mvc.matcher("/actuator/**")
                         ).permitAll()
 
                         // GUARDIAN 전용 (보호자만 접근 가능)

@@ -6,9 +6,5 @@ spring:
 
 logging:
   level:
-    root: ERROR
-    org.hibernate.SQL: INFO
-    org.hibernate.type.descriptor.sql: INFO
-    org.springframework.orm.jpa: INFO
-    org.springframework.transaction: INFO
+    root: INFO
 
