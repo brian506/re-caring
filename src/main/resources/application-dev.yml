@@ -50,7 +50,6 @@ client:
 springdoc:
   swagger-ui:
     disable-swagger-default-url: true
-    path: /v3/swagger-ui.html
   api-docs:
     enabled: true
     path: /v3/api-docs
