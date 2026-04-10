@@ -30,7 +30,10 @@ prometheus.remote_write "default" {
 
 // Logs 수집 설정
 local.file_match "app_logs" {
-  path_targets = [{"__path__" = "/var/log/re-caring/**/*.log"}]
+  path_targets = [
+    {"__path__" = "/var/log/re-caring/*.log"},
+    {"__path__" = "/var/log/re-caring/**/*.log"},
+  ]
 }
 
 loki.source.file "app_logs_read" {
@@ -41,8 +44,9 @@ loki.source.file "app_logs_read" {
 loki.process "app_labels" {
   forward_to = [loki.write.default.receiver]
 
+
   stage.multiline {
-    firstline = "^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3}"
+    firstline = "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}"
     max_wait_time = "3s"
   }
   stage.regex {
@@ -57,7 +61,7 @@ loki.process "app_labels" {
 
   stage.static_labels {
       values = {
-          service_name = "re-caring",
+          service_name = "recaring",
           job = "var-log-collector",
       }
   }
