@@ -1,0 +1,59 @@
+language: "ko-KR"
+tone_instructions: "리뷰는 간결하고 명확하게 작성한다. 잘 작성된 코드나 좋은 설계 결정은 구체적으로 칭찬한다. 문제점 지적 시 이유와 개선 방향을 함께 제시하며, 초보자도 이해할 수 있도록 왜 문제인지, 어떻게 고쳐야 하는지 예시 코드와 함께 구체적으로 설명한다. 단순 스타일 지적보다 아키텍처 규칙 위반, 버그 가능성, 보안 이슈에 집중한다."
+
+reviews:
+  profile: assertive
+  request_changes_workflow: false
+  high_level_summary: true # PR 요약 제공
+  poem: false
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - develop
+      - master
+  path_instructions:
+    - path: "**/controller/**"
+      instructions: |
+        - Request DTO → toCommand() 변환 후 Service 호출하는지 확인
+        - Controller에서 Repository를 직접 참조하지 않는지 확인
+        - 반환 타입이 ResponseEntity<ApiResponse<T>> 형태인지 확인
+        - 인증이 필요한 엔드포인트는 @AuthMember를 사용하는지 확인
+    - path: "**/business/**"
+      instructions: |
+        - Service가 Repository를 직접 주입받지 않는지 확인
+        - 비즈니스 흐름 오케스트레이션만 담당하는지 확인 (상세 구현 로직 없어야 함)
+        - Implement Layer를 통해서만 데이터에 접근하는지 확인
+    - path: "**/implement/**"
+      instructions: |
+        - Reader는 조회만, Writer는 저장/수정/삭제만 담당하는지 확인
+        - 단일 책임 원칙을 지키는지 확인
+        - 물리 삭제(repository.delete()) 대신 논리 삭제(entity.delete())를 사용하는지 확인
+    - path: "**/dataaccess/entity/**"
+      instructions: |
+        - @Setter 사용 여부 확인 (금지)
+        - @NoArgsConstructor(access = AccessLevel.PROTECTED) 있는지 확인
+        - DB PK(id) 외부 노출 여부 확인 (memberKey 같은 별도 식별자 사용해야 함)
+        - @SQLRestriction("deleted_at IS NULL") 적용 여부 확인
+    - path: "**/vo/**"
+      instructions: |
+        - Java record로 작성되었는지 확인
+        - compact constructor에서 유효성 검증을 하는지 확인
+        - 검증 실패 시 AppException을 throw하는지 확인
+    - path: "**/*Test.java"
+      instructions: |
+        - 단위 테스트: @ExtendWith(MockitoExtension.class) 사용 여부 확인
+        - given/when/then BDD 스타일인지 확인
+        - @DisplayName에 한국어 설명이 있는지 확인
+        - 통합 테스트: @Tag("integration") 누락 여부 확인
+    - path: "**/*.{yml,yaml,properties}"
+      instructions: |
+        - DB 접속 정보나 비밀번호 같은 민감 정보가 하드코딩 되어 있는지 철저히 확인한다.
+        - application.yml의 들여쓰기나 설정 오타를 점검한다.
+    - path: ".github/workflows/**/*.yml"
+      instructions: |
+        - GitHub Actions 문법 오류와 들여쓰기를 확인한다.
+        - 불필요한 단계(Step)가 있거나 보안상 위험한 권한 설정이 없는지 확인한다.
+
+chat:
+  auto_reply: true
