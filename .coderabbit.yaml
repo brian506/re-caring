@@ -2,13 +2,13 @@ language: "ko-KR"
 tone_instructions: "리뷰는 간결하고 명확하게 작성한다. 잘 작성된 코드나 좋은 설계 결정은 구체적으로 칭찬한다. 문제점 지적 시 이유와 개선 방향을 함께 제시하며, 초보자도 이해할 수 있도록 왜 문제인지, 어떻게 고쳐야 하는지 예시 코드와 함께 구체적으로 설명한다. 단순 스타일 지적보다 아키텍처 규칙 위반, 버그 가능성, 보안 이슈에 집중한다."
 
 reviews:
-  profile: assertive
-  request_changes_workflow: false
+  profile: assertive # 적극적으로 문제를 지적하는 리뷰 스타일
+  request_changes_workflow: false # Changes Requested 대신 Comment로만 남김
   high_level_summary: true # PR 요약 제공
   poem: false
   auto_review:
     enabled: true
-    drafts: false
+    drafts: false # Draft PR은 리뷰하지 않음
     base_branches:
       - develop
       - master
@@ -56,4 +56,4 @@ reviews:
         - 불필요한 단계(Step)가 있거나 보안상 위험한 권한 설정이 없는지 확인한다.
 
 chat:
-  auto_reply: true
+  auto_reply: true # 리뷰 코멘트에 자동 응답 활성화
