@@ -21,16 +21,17 @@ gh pr merge "$PR_NUMBER" \
 echo "=== PR merged. Waiting for deploy-dev workflow ==="
 sleep 10  # 워크플로우 트리거 대기
 
-# merge commit SHA 기반으로 정확한 run 조회 (동시 배포 시 오인 방지)
-MERGE_SHA=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json mergeCommit --jq '.mergeCommit.oid')
-echo "Merge SHA: $MERGE_SHA"
+# PR head commit SHA 기반으로 정확한 run 조회 (동시 배포 시 오인 방지)
+# GitHub Actions는 merge commit이 아닌 PR의 head commit SHA를 headSha로 사용함
+HEAD_SHA=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json headRefOid --jq '.headRefOid')
+echo "PR head SHA: $HEAD_SHA"
 
 RUN_ID=$(gh run list \
   --repo "$REPO" \
   --workflow=deploy-dev.yml \
   --limit 20 \
   --json databaseId,headSha \
-  --jq ".[] | select(.headSha == \"$MERGE_SHA\") | .databaseId" | head -1)
+  --jq ".[] | select(.headSha == \"$HEAD_SHA\") | .databaseId" | head -1)
 
 if [ -z "$RUN_ID" ]; then
   echo "=== deploy-dev run 조회 실패 (merge SHA: $MERGE_SHA) ===" >&2
