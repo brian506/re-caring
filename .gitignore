@@ -47,4 +47,5 @@ out/
 *.tfvars
 crash.log
 override.tf
-override.tf.json.claude/worktrees/
+override.tf.json
+.claude/worktrees/

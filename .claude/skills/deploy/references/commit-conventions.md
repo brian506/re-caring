@@ -2,7 +2,7 @@
 
 ## 형식
 
-```
+```text
 {type}[#{이슈번호}]: {설명}
 ```
 
@@ -21,7 +21,7 @@
 
 ## 예시
 
-```
+```text
 feature[#23]: 회원 프로필 조회 API 구현
 fix[#34]: 로그인 토큰 만료 처리 버그 수정
 refactor[#41]: LocalAuthManager 책임 분리
@@ -31,7 +31,7 @@ refactor[#41]: LocalAuthManager 책임 분리
 
 CI 실패로 인한 수정 커밋은 `fix` 타입을 사용한다:
 
-```
+```text
 fix[#23]: CI 오류 수정 - QueryDSL Q클래스 생성 누락
 fix[#23]: CI 오류 수정 - 테스트 환경 변수 누락
 ```

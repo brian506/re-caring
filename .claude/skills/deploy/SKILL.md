@@ -48,7 +48,7 @@ bash scripts/commit-and-push.sh {N} "{커밋 설명}"
 `assets/pr-template.md`를 읽어 PR 본문을 채운 후 실행한다.
 
 ```bash
-bash scripts/create-pr.sh {N} "{PR 제목}"
+bash scripts/create-pr.sh {N} "{PR 제목}" "{PR 본문}"
 ```
 
 반환된 PR 번호를 기록한다.

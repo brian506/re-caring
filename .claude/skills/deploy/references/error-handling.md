@@ -56,9 +56,11 @@ gh run view {run-id} --repo brian506/re-caring --log-failed
 1. 실패 로그에서 원인 파악
 2. 로컬에서 `./gradlew clean build` 재검증
 3. 수정 커밋 후 push (CI 자동 재트리거):
+
    ```bash
-   bash scripts/commit-and-push.sh {N} "CI 오류 수정 - {원인 요약}"
+   bash scripts/commit-and-push.sh {N} "CI 오류 수정 - {원인 요약}" fix
    ```
+
 4. `bash scripts/wait-for-ci.sh {PR번호}` 재실행
 
 ---
