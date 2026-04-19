@@ -14,13 +14,16 @@ TITLE="$2"
 BODY="$3"
 BRANCH="feature/$ISSUE_NUMBER"
 REPO="brian506/re-caring"
+ASSIGNEE=$(gh api user --jq '.login')
 
 PR_URL=$(gh pr create \
   --repo "$REPO" \
   --base develop \
   --head "$BRANCH" \
   --title "$TITLE" \
-  --body "$BODY")
+  --body "$BODY" \
+  --assignee "$ASSIGNEE" \
+  --label "feature")
 
 echo "Created PR: $PR_URL"
 
