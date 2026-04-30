@@ -12,7 +12,6 @@ import software.amazon.awssdk.services.ssm.model.Parameter;
 
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class SsmEnvironmentPostProcessor implements EnvironmentPostProcessor {
@@ -21,8 +20,7 @@ public class SsmEnvironmentPostProcessor implements EnvironmentPostProcessor {
 
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
-        List<String> activeProfiles = Arrays.asList(environment.getActiveProfiles());
-        if (!activeProfiles.contains("prod") && !activeProfiles.contains("dev")) {
+        if (!Arrays.asList(environment.getActiveProfiles()).contains("prod")) {
             return;
         }
 
