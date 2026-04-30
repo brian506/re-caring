@@ -25,6 +25,42 @@ services:
     networks:
       - recaring-local
 
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: recaring-prometheus
+    restart: unless-stopped
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--web.enable-remote-write-receiver"
+    volumes:
+      - ./monitoring/prometheus/prometheus-local.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-local-data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - recaring-local
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: recaring-grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      TZ: Asia/Seoul
+    volumes:
+      - grafana-local-data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+    ports:
+      - "3001:3000"
+    depends_on:
+      - prometheus
+    networks:
+      - recaring-local
+
+volumes:
+  prometheus-local-data:
+  grafana-local-data:
+
 networks:
   recaring-local:
     driver: bridge
