@@ -1,1 +1,1 @@
-set $service_url http://spring-blue:8080;
+set $service_url http://spring-app.recaring.local:8080;

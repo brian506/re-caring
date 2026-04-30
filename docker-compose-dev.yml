@@ -9,6 +9,8 @@ services:
     ports:
       - "80:80"
       - "443:443"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d
       - ./data/certbot/conf:/etc/letsencrypt
@@ -26,72 +28,16 @@ services:
     volumes:
       - ./data/certbot/conf:/etc/letsencrypt
       - ./data/certbot/www:/var/www/certbot
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
-
-  spring-blue:
-    image: brianchoi506/re-caring:latest
-    container_name: recaring-blue
-    restart: on-failure:3
-    env_file: .env
-    environment:
-      SPRING_PROFILES_ACTIVE: dev
-      SPRING_DATA_REDIS_HOST: redis
-      SPRING_DATA_REDIS_PORT: 6379
-    ports:
-      - "8080:8080"
-    labels:
-      - "monitor=true"
-    volumes:
-      - ./logs/blue:/var/log/re-caring
-    depends_on:
-      - redis
-    networks:
-      - re-caring
-
-  spring-green:
-    image: brianchoi506/re-caring:latest
-    container_name: recaring-green
-    restart: on-failure:3
-    env_file: .env
-    environment:
-      SPRING_PROFILES_ACTIVE: dev
-      SPRING_DATA_REDIS_HOST: redis
-      SPRING_DATA_REDIS_PORT: 6379
-    ports:
-      - "8081:8080"
-    labels:
-      - "monitor=true"
-    volumes:
-      - ./logs/green:/var/log/re-caring
-    depends_on:
-      - redis
-    networks:
-      - re-caring
+      - /var/run/docker.sock:/var/run/docker.sock
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew --deploy-hook \"docker kill -s HUP nginx\"; sleep 12h & wait $${!}; done;'"
 
   redis:
     image: redis:7-alpine
     container_name: recaring-redis
     restart: unless-stopped
+    command: redis-server --appendonly yes --appendfsync everysec
     volumes:
-      - redis-data:/data
-    networks:
-      - re-caring
-
-  alloy:
-    image: grafana/alloy:latest
-    container_name: alloy
-    restart: always
-    command: [
-      "run",
-      "--server.http.listen-addr=0.0.0.0:12345",
-      "--storage.path=/var/lib/alloy/data",
-      "/etc/alloy/config.alloy"
-    ]
-    volumes:
-      - ./monitoring/alloy/config.alloy:/etc/alloy/config.alloy
-      - ./logs:/var/log/re-caring:ro # API 서버 로그 읽기용
-      - /var/run/docker.sock:/var/run/docker.sock
-      - alloy-data:/var/lib/alloy/data
+      - /mnt/efs/redis-data:/data
     networks:
       - re-caring
 
@@ -99,23 +45,14 @@ services:
     image: prom/prometheus
     container_name: prometheus
     restart: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
-      - "--web.enable-remote-write-receiver"
       - "--storage.tsdb.retention.time=15d"
     volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus-data:/var/lib/prometheus/data
-    networks:
-      - re-caring
-
-  loki:
-    image: grafana/loki:latest
-    container_name: loki
-    restart: always
-    command: -config.file=/etc/loki/loki-config.yml
-    volumes:
-      - ./monitoring/loki/loki-config.yml:/etc/loki/loki-config.yml
-      - loki-data:/var/lib/loki/data
     networks:
       - re-caring
 
@@ -129,15 +66,11 @@ services:
       - grafana-data:/var/lib/grafana/data
     depends_on:
       - prometheus
-      - loki
     networks:
       - re-caring
 
 volumes:
-  redis-data:
-  alloy-data:
   prometheus-data:
-  loki-data:
   grafana-data:
 
 
