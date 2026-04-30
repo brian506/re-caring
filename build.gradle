@@ -60,6 +60,12 @@ dependencies {
 	// coolSMS
 	implementation 'net.nurigo:sdk:4.3.0'
 
+	// AWS SDK v2
+	implementation platform('software.amazon.awssdk:bom:2.25.60')
+	implementation 'software.amazon.awssdk:sns'
+	implementation 'software.amazon.awssdk:sqs'
+	implementation 'software.amazon.awssdk:ssm'
+
 	// Swagger (springdoc-openapi)
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.0'
 
