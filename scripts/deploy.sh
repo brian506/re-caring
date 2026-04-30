@@ -16,6 +16,10 @@ for path in "$DEPLOY_DIR/nginx/conf.d" \
 done
 
 echo "=== nginx 설정 리로드 ==="
-docker exec nginx nginx -s reload
+if docker exec nginx nginx -s reload 2>&1; then
+  echo "  nginx reload 성공"
+else
+  echo "  [WARN] nginx reload 실패 — SSL 인증서 미발급 상태일 수 있음. certbot 실행 후 재시도 필요."
+fi
 
 echo "=== 완료 ==="
