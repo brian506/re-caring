@@ -1,0 +1,56 @@
+name: Fix EC2 (one-off)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fix ECS agent and install node_exporter
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          command_timeout: 120s
+          script: |
+            echo "=== Stopping conflicting containers ==="
+            docker stop node-exporter 2>/dev/null || true
+            docker rm node-exporter 2>/dev/null || true
+            docker stop ecs-agent 2>/dev/null || true
+            docker rm ecs-agent 2>/dev/null || true
+
+            echo "=== Restarting ECS agent ==="
+            sudo systemctl restart ecs
+            sleep 10
+            sudo systemctl status ecs --no-pager | head -5
+
+            echo "=== Installing node_exporter as systemd service ==="
+            if ! command -v node_exporter &>/dev/null; then
+              cd /tmp
+              wget -q https://github.com/prometheus/node_exporter/releases/download/v1.8.2/node_exporter-1.8.2.linux-amd64.tar.gz
+              tar xf node_exporter-1.8.2.linux-amd64.tar.gz
+              sudo mv node_exporter-1.8.2.linux-amd64/node_exporter /usr/local/bin/
+              rm -rf node_exporter-1.8.2.linux-amd64*
+            fi
+
+            sudo tee /etc/systemd/system/node_exporter.service > /dev/null <<'EOF'
+            [Unit]
+            Description=Node Exporter
+            After=network.target
+
+            [Service]
+            ExecStart=/usr/local/bin/node_exporter
+            Restart=always
+            RestartSec=5
+
+            [Install]
+            WantedBy=multi-user.target
+            EOF
+
+            sudo systemctl daemon-reload
+            sudo systemctl enable --now node_exporter
+            sleep 3
+            sudo systemctl status node_exporter --no-pager | head -5
+            echo "=== Done ==="
