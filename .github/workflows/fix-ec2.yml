@@ -22,10 +22,15 @@ jobs:
             docker stop ecs-agent 2>/dev/null || true
             docker rm ecs-agent 2>/dev/null || true
 
+            echo "=== Clearing ECS agent state ==="
+            sudo systemctl stop ecs 2>/dev/null || true
+            sudo rm -f /var/lib/ecs/data/ecs_agent_data.json
+            sudo rm -f /var/cache/ecs/ecs-agent.tar
+
             echo "=== Restarting ECS agent ==="
-            sudo systemctl restart ecs
-            sleep 10
-            sudo systemctl status ecs --no-pager | head -5
+            sudo systemctl start ecs
+            sleep 15
+            sudo systemctl status ecs --no-pager | head -6
 
             echo "=== Installing node_exporter as systemd service ==="
             if ! command -v node_exporter &>/dev/null; then
