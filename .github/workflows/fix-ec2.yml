@@ -26,28 +26,19 @@ jobs:
             df -h /var/lib/docker
             docker info 2>&1 | grep -E "Storage|Total|Free|Images|Containers"
 
-            echo "=== Clearing ECS agent state ==="
+            echo "=== Clearing ECS agent state (instance type change fix) ==="
             sudo systemctl stop ecs 2>/dev/null || true
             sudo rm -f /var/lib/ecs/data/ecs_agent_data.json
-            sudo rm -f /var/cache/ecs/ecs-agent.tar
-            docker system prune -f 2>/dev/null || true
+            sudo rm -f /var/lib/ecs/data/*.json
 
-            echo "=== Pulling ECS agent image ==="
-            ECS_IMAGE=$(cat /etc/ecs/ecs.config 2>/dev/null | grep ECS_AGENT_DOCKER_IMAGE || echo "amazon/amazon-ecs-agent:latest")
-            docker pull amazon/amazon-ecs-agent:latest 2>&1 | tail -3
-
-            echo "=== Starting ECS agent ==="
+            echo "=== Starting ECS agent (fresh registration) ==="
             sudo systemctl start ecs
-            sleep 5
+            sleep 15
 
             echo "=== ECS agent container logs ==="
-            docker logs ecs-agent 2>&1 | tail -15 || echo "(no ecs-agent container)"
+            docker logs ecs-agent 2>&1 | tail -10 || echo "(no ecs-agent container)"
 
-            sleep 10
-            sudo systemctl status ecs --no-pager | head -6
-
-            echo "=== ECS init journal (last errors) ==="
-            sudo journalctl -u ecs --since "2 minutes ago" --no-pager 2>&1 | grep -i "error\|fail\|exit\|level=error" | tail -10
+            sudo systemctl status ecs --no-pager | head -5
 
             echo "=== Installing node_exporter as systemd service ==="
             if ! command -v node_exporter &>/dev/null; then
