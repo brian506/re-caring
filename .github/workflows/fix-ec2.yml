@@ -6,6 +6,7 @@ on:
 jobs:
   fix:
     runs-on: ubuntu-latest
+    environment: dev
     steps:
       - name: Fix ECS agent and install node_exporter
         uses: appleboy/ssh-action@master
