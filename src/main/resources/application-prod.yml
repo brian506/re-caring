@@ -16,6 +16,11 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+
 management:
   endpoints:
     web:
@@ -25,10 +30,6 @@ management:
     distribution:
       percentiles-histogram:
         http.server.requests: true
-
-redis:
-  host: ${REDIS_HOST}
-  port: ${REDIS_PORT}
 
 jwt:
   secret-key: ${JWT_KEY}
