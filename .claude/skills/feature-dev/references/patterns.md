@@ -97,6 +97,42 @@ public record PhoneNumber(String value) {
 }
 ```
 
+## 도메인 VO — 레이어 간 흐름 객체
+
+Business 패키지에 데이터 전달 전용 DTO(예: `GpsHistoryInfo`)를 만들지 않는다.
+대신 해당 도메인의 성질을 담은 VO를 `vo` 패키지에 두고, implement → business → controller 전 레이어에서 동일하게 사용한다.
+
+**규칙**
+- 위치: `{domain}/vo/`
+- 형식: `record` (불변)
+- entity → VO 변환은 VO의 `from(Entity entity)` 팩토리 메서드에서 담당
+- Reader 계층이 entity를 VO로 변환해 반환 (Service는 entity를 직접 다루지 않음)
+
+```java
+// vo/Gps.java — GPS 도메인의 성질(좌표 + 시각)을 캡슐화
+public record Gps(double lat, double lng, LocalDateTime recordedAt) {
+    public static Gps from(GpsHistory entity) {
+        return new Gps(entity.getLatitude(), entity.getLongitude(), entity.getRecordedAt());
+    }
+}
+
+// implement/GpsHistoryReader.java — entity → VO 변환 책임
+public List<Gps> findByWardKeyAndDate(String wardMemberKey, LocalDate date) {
+    return repository.findByWardKeyAndDate(wardMemberKey, date)
+            .stream()
+            .map(Gps::from)
+            .toList();
+}
+
+// business/LocationService.java — VO를 그대로 사용
+public List<Gps> getHistory(String caregiverKey, String wardKey, LocalDate date) {
+    locationValidator.validateCaregiverAccess(caregiverKey, wardKey);
+    return gpsHistoryReader.findByWardKeyAndDate(wardKey, date);
+}
+```
+
+**금지**: `business/` 패키지에 데이터 전달용 record(예: `GpsHistoryInfo`) 생성 금지.
+
 ## Request 패턴
 
 - `record` 사용
@@ -105,13 +141,8 @@ public record PhoneNumber(String value) {
 
 ## ApiResponse 반환
 
-```java
-// 데이터 있음
-return ResponseEntity.ok(ApiResponse.success(responseDto));
-
-// 데이터 없음 (201 Created 등)
-return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success());
-```
+- 데이터 있음: `ResponseEntity.ok(ApiResponse.success(responseDto))`
+- 데이터 없음: `ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success())`
 
 ## CareRole / MemberRole
 

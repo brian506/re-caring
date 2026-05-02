@@ -15,12 +15,31 @@ Controller → Business(Service) → Implement → DataAccess(JPA/QueryDSL)
 |--------|------|
 | `auth` | 로컬/OAuth2 인증, 토큰 발급 |
 | `care` | 케어 초대(CareInvitation), 케어 관계(CareRelationship) |
+| `device` | Device Token 발급·검증 (GPS 전용 장기 인증) |
 | `member` | 회원 프로필, 전화번호 인증 연동 |
 | `sms` | CoolSMS 기반 인증코드 발송/검증 |
-| `security` | JWT 필터, JwtGenerator, JwtValidator |
+| `security` | JWT 필터, DeviceTokenAuthFilter, JwtGenerator, JwtValidator |
 | `support` | AppException, ErrorType, ErrorCode, ApiResponse |
 | `common` | AOP, BaseEntity, 글로벌 예외 핸들러 |
 | `config` | Security, Redis, Mapper, Swagger 설정 |
+
+## 도메인 내부 패키지 구조
+
+```
+{domain}/
+├── business/       # Service — 유즈케이스 오케스트레이션
+├── controller/     # REST Controller, Request/Response
+│   ├── request/
+│   └── response/
+├── dataaccess/     # Entity, Repository
+│   ├── entity/
+│   └── repository/
+├── implement/      # Reader, Writer, Manager, Validator, ...
+└── vo/             # 도메인 객체 (불변 record) — 레이어 간 흐름 객체
+```
+
+`vo/`는 해당 도메인의 핵심 성질을 담는 불변 record다. business DTO가 아니라 도메인 개념 자체를 표현한다.
+entity → VO 변환은 VO의 `from()` 팩토리 메서드에서 담당하며, implement 계층(Reader 등)이 변환해 반환한다.
 
 ## Implement 계층 역할 분리
 
@@ -41,13 +60,24 @@ Controller → Business(Service) → Implement → DataAccess(JPA/QueryDSL)
 
 ## 인증 흐름
 
+### JWT (보호자/일반 API)
 ```
 Authorization: Bearer {accessToken}
 → JwtAuthenticationFilter (memberKey를 SecurityContext에 저장)
 → @AuthMember String memberKey (Controller 파라미터 주입)
 ```
-
 Access Token → 응답 바디, Refresh Token → HttpOnly Cookie
+
+### Device Token (GPS 전용, WARD 백그라운드 앱)
+```
+Authorization: Device {deviceToken}
+→ DeviceTokenAuthFilter (wardKey를 SecurityContext에 저장)
+→ @AuthMember String memberKey (기존 LocationController 그대로 사용)
+```
+- `POST /api/v1/location/gps` 경로에서만 작동
+- JwtAuthenticationFilter는 이 경로를 건너뜀 (shouldNotFilter)
+- 발급: `POST /api/v1/device/token` (JWT 인증, WARD 전용, 최초 1회)
+- 재발급: 동일 엔드포인트 재호출 → 기존 토큰 교체
 
 ## 논리 삭제
 
@@ -64,3 +94,11 @@ public class Entity extends BaseEntity { ... }
 
 - 회원: `memberKey` (UUID) — DB PK 외부 노출 절대 금지
 - CareInvitation: `requestKey` (UUID)
+
+## 인덱스 규칙
+
+`@Table(indexes = {...})` 금지. 인덱스는 별도 DDL로 관리하며 Entity에 TODO 주석으로 표시한다 (CLAUDE.md 참고).
+
+---
+
+> 현재 API·엔티티·기술 부채 목록은 `snapshot.md` 참고.

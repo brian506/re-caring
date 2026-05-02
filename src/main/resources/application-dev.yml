@@ -45,7 +45,7 @@ coolsms:
   sender: ${COOLSMS_SENDER}
 
 client:
-  url: re-caring.duckdns.org
+  url: re-caring.com
 
 springdoc:
   swagger-ui:
