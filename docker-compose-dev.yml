@@ -41,6 +41,32 @@ services:
     networks:
       - re-caring
 
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    restart: always
+    network_mode: host
+    pid: host
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+
+  redis-exporter:
+    image: oliver006/redis_exporter:latest
+    container_name: redis-exporter
+    restart: always
+    environment:
+      REDIS_ADDR: redis://recaring-redis:6379
+    depends_on:
+      - redis
+    networks:
+      - re-caring
+
   prometheus:
     image: prom/prometheus
     container_name: prometheus
