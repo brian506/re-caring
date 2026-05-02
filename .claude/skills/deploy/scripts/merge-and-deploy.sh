@@ -18,7 +18,7 @@ gh pr merge "$PR_NUMBER" \
   --merge \
   --delete-branch
 
-echo "=== PR merged. Waiting for deploy-dev workflow ==="
+echo "=== PR merged. Waiting for deploy workflow ==="
 sleep 10  # 워크플로우 트리거 대기
 
 # PR head commit SHA 기반으로 정확한 run 조회 (동시 배포 시 오인 방지)
@@ -28,7 +28,7 @@ echo "PR head SHA: $HEAD_SHA"
 
 RUN_ID=$(gh run list \
   --repo "$REPO" \
-  --workflow=deploy-dev.yml \
+  --workflow=deploy.yml \
   --limit 20 \
   --json databaseId,headSha \
   --jq ".[] | select(.headSha == \"$HEAD_SHA\") | .databaseId" | head -1)
