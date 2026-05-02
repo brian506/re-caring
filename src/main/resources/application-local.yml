@@ -41,6 +41,25 @@ coolsms:
 client:
   url: http://localhost:3000
 
+aws:
+  sqs:
+    gps-queue-url: ""
+
+gps:
+  pattern:
+    analysis:
+      interval-ms: 1800000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, prometheus
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+
 springdoc:
   swagger-ui:
     url: /v3/api-docs
