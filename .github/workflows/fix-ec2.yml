@@ -26,10 +26,9 @@ jobs:
             df -h /var/lib/docker
             docker info 2>&1 | grep -E "Storage|Total|Free|Images|Containers"
 
-            echo "=== Clearing ECS agent state (instance type change fix) ==="
+            echo "=== Clearing ALL ECS agent state (instance type change fix) ==="
             sudo systemctl stop ecs 2>/dev/null || true
-            sudo rm -f /var/lib/ecs/data/ecs_agent_data.json
-            sudo rm -f /var/lib/ecs/data/*.json
+            sudo rm -rf /var/lib/ecs/data/
 
             echo "=== Starting ECS agent (fresh registration) ==="
             sudo systemctl start ecs
