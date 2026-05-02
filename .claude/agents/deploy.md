@@ -41,7 +41,15 @@ bash .claude/skills/deploy/scripts/commit-and-push.sh {N} "{커밋 설명}" {typ
 
 ## Step 3: PR 생성
 
-`assets/pr-template.md`를 참고해 PR 제목과 본문을 작성한다.
+PR 제목은 반드시 아래 형식을 따른다 (commit-conventions.md와 동일):
+
+```
+{type}[#{N}]: {설명}
+```
+
+예시: `feat[#42]: 회원 탈퇴 API 구현`, `fix[#55]: Redis config 경로 수정`
+
+PR 본문은 `assets/pr-template.md`를 참고해 작성한다.
 
 ```bash
 bash .claude/skills/deploy/scripts/create-pr.sh {N} "{PR 제목}" "{PR 본문}"
