@@ -8,6 +8,18 @@ jobs:
     runs-on: ubuntu-latest
     environment: dev
     steps:
+      - uses: actions/checkout@v4
+
+      - name: Copy updated config files to server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          source: "docker-compose-dev.yml,monitoring/prometheus/prometheus.yml"
+          target: /home/ubuntu/recaring
+          strip_components: 0
+
       - name: Remove systemd node_exporter and restart docker-compose
         uses: appleboy/ssh-action@master
         with:
