@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: dev
     steps:
-      - name: Fix ECS agent and install node_exporter
+      - name: Remove systemd node_exporter and restart docker-compose
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -16,54 +16,17 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           command_timeout: 120s
           script: |
-            echo "=== Stopping conflicting containers ==="
-            docker stop node-exporter 2>/dev/null || true
-            docker rm node-exporter 2>/dev/null || true
-            docker stop ecs-agent 2>/dev/null || true
-            docker rm ecs-agent 2>/dev/null || true
-
-            echo "=== Disk & Docker info ==="
-            df -h /var/lib/docker
-            docker info 2>&1 | grep -E "Storage|Total|Free|Images|Containers"
-
-            echo "=== Clearing ALL ECS agent state (instance type change fix) ==="
-            sudo systemctl stop ecs 2>/dev/null || true
-            sudo rm -rf /var/lib/ecs/data/
-
-            echo "=== Starting ECS agent (fresh registration) ==="
-            sudo systemctl start ecs
-            sleep 15
-
-            echo "=== ECS agent container logs ==="
-            docker logs ecs-agent 2>&1 | tail -10 || echo "(no ecs-agent container)"
-
-            sudo systemctl status ecs --no-pager | head -5
-
-            echo "=== Installing node_exporter as systemd service ==="
-            if ! command -v node_exporter &>/dev/null; then
-              cd /tmp
-              wget -q https://github.com/prometheus/node_exporter/releases/download/v1.8.2/node_exporter-1.8.2.linux-amd64.tar.gz
-              tar xf node_exporter-1.8.2.linux-amd64.tar.gz
-              sudo mv node_exporter-1.8.2.linux-amd64/node_exporter /usr/local/bin/
-              rm -rf node_exporter-1.8.2.linux-amd64*
-            fi
-
-            sudo tee /etc/systemd/system/node_exporter.service > /dev/null <<'EOF'
-            [Unit]
-            Description=Node Exporter
-            After=network.target
-
-            [Service]
-            ExecStart=/usr/local/bin/node_exporter
-            Restart=always
-            RestartSec=5
-
-            [Install]
-            WantedBy=multi-user.target
-            EOF
-
+            echo "=== Removing systemd node_exporter (migrating to docker-compose) ==="
+            sudo systemctl disable --now node_exporter 2>/dev/null || true
+            sudo rm -f /etc/systemd/system/node_exporter.service
+            sudo rm -f /usr/local/bin/node_exporter
             sudo systemctl daemon-reload
-            sudo systemctl enable --now node_exporter
-            sleep 3
-            sudo systemctl status node_exporter --no-pager | head -5
+
+            echo "=== Restarting docker-compose with updated config ==="
+            cd ~/re-caring
+            docker compose -f docker-compose-dev.yml pull node-exporter
+            docker compose -f docker-compose-dev.yml up -d node-exporter prometheus
+
+            sleep 5
+            docker compose -f docker-compose-dev.yml ps node-exporter prometheus
             echo "=== Done ==="
