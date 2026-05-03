@@ -23,7 +23,7 @@ jobs:
             sudo systemctl daemon-reload
 
             echo "=== Restarting docker-compose with updated config ==="
-            cd ~/re-caring
+            cd /home/ubuntu/recaring
             docker compose -f docker-compose-dev.yml pull node-exporter
             docker compose -f docker-compose-dev.yml up -d node-exporter prometheus
 
