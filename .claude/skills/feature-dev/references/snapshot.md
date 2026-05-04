@@ -1,6 +1,6 @@
 # 프로젝트 스냅샷
 
-> 마지막 업데이트: 2026-04-25. 기능 추가·수정 시 해당 섹션을 갱신한다.
+> 마지막 업데이트: 2026-05-04. 기능 추가·수정 시 해당 섹션을 갱신한다.
 
 ## 도메인별 패키지 현황
 
@@ -8,8 +8,8 @@
 |--------|-------------|---------------|
 | `auth` | LocalAuthService, OAuthService, TokenRefreshService | LocalAuthAuthenticator, TokenIssuer, RefreshTokenReader/Writer, OAuthManager |
 | `care` | CareInvitationService, CareRelationshipService | CareInvitationManager, CareInvitationReader/Writer, CareRelationshipValidator, SqsPublisher(전략패턴) |
-| `device` | DeviceTokenService | — (Repository 직접 사용) |
-| `location` | LocationService | GpsHistoryReader/Writer, GpsLatestCacheReader/Writer, SseEmitterManager, LocationValidator |
+| `device` | DeviceTokenService | WardDeviceTokenManager, WardDeviceTokenReader |
+| `location` | LocationService | GpsHistoryReader/Writer, GpsLatestCacheReader/Writer, SseEmitterManager, LocationValidator, GpsPatternAnalysisScheduler(SQS 발행) |
 | `member` | MemberService | MemberReader/Writer/Validator |
 | `sms` | PhoneVerificationService | SmsClient, SmsCodeGenerator, PhoneVerificationReader/Writer |
 

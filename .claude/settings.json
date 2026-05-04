@@ -30,7 +30,10 @@
       "Bash(curl -s --max-time * https://re-caring.duckdns.org/*)",
       "Bash(sleep *)",
       "Bash(bash .claude/skills/deploy/scripts/*)",
-      "Bash(bash scripts/*)"
+      "Bash(bash scripts/*)",
+      "Bash(find *)",
+      "Bash(grep *)",
+      "Bash(docker compose *)"
     ],
     "deny": [
       "Bash(git push --force*)",
