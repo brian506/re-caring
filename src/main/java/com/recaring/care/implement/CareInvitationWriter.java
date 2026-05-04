@@ -14,8 +14,8 @@ public class CareInvitationWriter {
     private final CareInvitationRepository careInvitationRepository;
 
     @Transactional
-    public void register(NewCareInvitation invitation) {
-        careInvitationRepository.save(CareInvitation.from(invitation));
+    public CareInvitation register(NewCareInvitation invitation) {
+        return careInvitationRepository.save(CareInvitation.from(invitation));
     }
 
     @Transactional

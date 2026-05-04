@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -27,7 +28,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final String BEARER_PREFIX = "Bearer ";
     static final String EXCEPTION_ATTRIBUTE = "jwtException";
 
+    private static final String GPS_PATH = "/api/v1/location/gps";
+
     private final JwtValidator jwtValidator;
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        return GPS_PATH.equals(request.getRequestURI())
+                && HttpMethod.POST.name().equals(request.getMethod());
+    }
 
     @Override
     protected void doFilterInternal(

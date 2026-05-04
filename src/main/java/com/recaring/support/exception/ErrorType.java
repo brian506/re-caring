@@ -62,7 +62,14 @@ public enum ErrorType {
     INVALID_WARD_ROLE(HttpStatus.BAD_REQUEST, ErrorCode.E5007, "보호 대상자로 가입한 회원만 대상자로 추가할 수 있습니다.", LogLevel.WARN),
     INVALID_CAREGIVER_ROLE(HttpStatus.BAD_REQUEST, ErrorCode.E5008, "보호자로 가입한 회원만 보호자/관리자로 추가할 수 있습니다.", LogLevel.WARN),
     ALREADY_PENDING_CARE_REQUEST(HttpStatus.BAD_REQUEST, ErrorCode.E5009, "이미 대기 중인 케어 요청이 존재합니다.", LogLevel.WARN),
-    WARD_KEY_REQUIRED(HttpStatus.BAD_REQUEST, ErrorCode.E5010, "보호자를 추가하려면 보호 대상자 키가 필요합니다.", LogLevel.WARN);
+    WARD_KEY_REQUIRED(HttpStatus.BAD_REQUEST, ErrorCode.E5010, "보호자를 추가하려면 보호 대상자 키가 필요합니다.", LogLevel.WARN),
+
+    // Location (E6xxx)
+    NOT_WARD_MEMBER(HttpStatus.FORBIDDEN, ErrorCode.E6000, "보호 대상자로 가입한 회원만 GPS를 전송할 수 있습니다.", LogLevel.WARN),
+    NOT_CARE_RELATED_WARD(HttpStatus.FORBIDDEN, ErrorCode.E6001, "케어 관계가 없는 보호 대상자입니다.", LogLevel.WARN),
+
+    // Device (E7xxx)
+    INVALID_DEVICE_TOKEN(HttpStatus.UNAUTHORIZED, ErrorCode.E7000, "유효하지 않은 Device Token입니다.", LogLevel.WARN);
 
     private final HttpStatus status;
     private final ErrorCode errorCode;

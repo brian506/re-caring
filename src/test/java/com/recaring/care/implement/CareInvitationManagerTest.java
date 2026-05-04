@@ -1,8 +1,9 @@
 package com.recaring.care.implement;
 
 import com.recaring.care.dataaccess.entity.CareInvitation;
+import com.recaring.care.event.CareInvitationAcceptedEvent;
+import com.recaring.care.event.CareInvitationSentEvent;
 import com.recaring.care.fixture.CareFixture;
-import com.recaring.care.vo.Caregiver;
 import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.implement.MemberReader;
 import com.recaring.sms.vo.PhoneNumber;
@@ -14,6 +15,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -42,17 +44,23 @@ class CareInvitationManagerTest {
     @Mock
     private CareRelationshipValidator careRelationshipValidator;
 
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
+
     @Test
     @DisplayName("보호 대상자 초대 - 전화번호로 WARD 회원을 찾아 초대장을 등록한다")
     void sendWardInvitation_success() {
         Member ward = CareFixture.createWardMember();
+        CareInvitation saved = CareFixture.createWardInvitation(CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY);
         given(memberReader.findByPhone(new PhoneNumber(CareFixture.WARD_PHONE))).willReturn(ward);
+        given(careInvitationWriter.register(any())).willReturn(saved);
 
         careInvitationManager.sendWardInvitation(CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_PHONE);
 
         then(careRelationshipValidator).should(times(1))
                 .validateCanAddWard(eq(CareFixture.GUARDIAN_MEMBER_KEY), eq(ward.getMemberKey()));
         then(careInvitationWriter).should(times(1)).register(any());
+        then(eventPublisher).should(times(1)).publishEvent(any(CareInvitationSentEvent.class));
     }
 
     @Test
@@ -73,7 +81,9 @@ class CareInvitationManagerTest {
     @DisplayName("관리자 초대 - 전화번호로 GUARDIAN 회원을 찾아 초대장을 등록한다")
     void sendManagerInvitation_success() {
         Member manager = CareFixture.createGuardianMember(CareFixture.MANAGER_PHONE);
+        CareInvitation saved = CareFixture.createManagerInvitation(CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY);
         given(memberReader.findByPhone(new PhoneNumber(CareFixture.MANAGER_PHONE))).willReturn(manager);
+        given(careInvitationWriter.register(any())).willReturn(saved);
 
         careInvitationManager.sendManagerInvitation(
                 CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.MANAGER_PHONE, CareFixture.WARD_MEMBER_KEY);
@@ -84,6 +94,7 @@ class CareInvitationManagerTest {
                         eq(CareFixture.WARD_MEMBER_KEY),
                         eq(manager.getMemberKey()));
         then(careInvitationWriter).should(times(1)).register(any());
+        then(eventPublisher).should(times(1)).publishEvent(any(CareInvitationSentEvent.class));
     }
 
     @Test
@@ -102,7 +113,7 @@ class CareInvitationManagerTest {
     }
 
     @Test
-    @DisplayName("초대 수락 - 케어 관계를 생성하고 초대장 상태를 수락으로 변경한다")
+    @DisplayName("초대 수락 - 케어 관계를 생성하고 초대장 상태를 수락으로 변경하며 이벤트를 발행한다")
     void accept_creates_relationship_and_updates_status() {
         CareInvitation invitation = CareFixture.createWardInvitation(
                 CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY);
@@ -113,6 +124,7 @@ class CareInvitationManagerTest {
 
         then(careRelationshipWriter).should(times(1)).register(eq(invitation), eq(CareFixture.WARD_MEMBER_KEY));
         then(careInvitationWriter).should(times(1)).accept(invitation);
+        then(eventPublisher).should(times(1)).publishEvent(any(CareInvitationAcceptedEvent.class));
     }
 
     @Test

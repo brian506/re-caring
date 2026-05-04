@@ -1,6 +1,7 @@
 package com.recaring.config.auth;
 
 import com.recaring.security.filter.AuthExceptionTranslationFilter;
+import com.recaring.security.filter.DeviceTokenAuthFilter;
 import com.recaring.security.filter.JwtAuthenticationFilter;
 import com.recaring.security.handler.JwtAuthenticationEntryPoint;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,7 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final AuthExceptionTranslationFilter authExceptionTranslationFilter;
+    private final DeviceTokenAuthFilter deviceTokenAuthFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -67,6 +69,12 @@ public class SecurityConfig {
                                 mvc.matcher("/actuator/**")
                         ).permitAll()
 
+                        // WARD 전용
+                        .requestMatchers(
+                                mvc.matcher(HttpMethod.POST, "/api/v1/location/gps"),
+                                mvc.matcher(HttpMethod.POST, "/api/v1/device/token")
+                        ).hasRole("WARD")
+
                         // GUARDIAN 전용 (보호자만 접근 가능)
                         .requestMatchers(
                                 mvc.matcher(HttpMethod.POST, "/api/v1/care/requests"),
@@ -88,7 +96,8 @@ public class SecurityConfig {
                 .exceptionHandling(configurer ->
                         configurer.authenticationEntryPoint(jwtAuthenticationEntryPoint))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterBefore(authExceptionTranslationFilter, JwtAuthenticationFilter.class)
+                .addFilterBefore(deviceTokenAuthFilter, JwtAuthenticationFilter.class)
+                .addFilterBefore(authExceptionTranslationFilter, DeviceTokenAuthFilter.class)
                 .build();
     }
 

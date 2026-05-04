@@ -16,6 +16,12 @@ public enum ErrorCode {
     E4000, E4001, E4002, E4003, E4004,
 
     // Care (E5xxx) - 케어 관계, 초대
-    E5000, E5001, E5002, E5003, E5004, E5005, E5006, E5007, E5008, E5009, E5010
+    E5000, E5001, E5002, E5003, E5004, E5005, E5006, E5007, E5008, E5009, E5010,
+
+    // Location (E6xxx) - GPS, SSE
+    E6000, E6001,
+
+    // Device (E7xxx) - Device Token
+    E7000
 
 }
