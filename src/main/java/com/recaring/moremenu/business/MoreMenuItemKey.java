@@ -1,0 +1,17 @@
+package com.recaring.moremenu.business;
+
+public enum MoreMenuItemKey {
+    LOCATION_COLLECTION_SETTING,
+    NOTIFICATION_SETTING,
+    SAFE_ZONE_SETTING,
+    WARD_SETTING,
+    CAREGIVER_SETTING,
+    PROTECTOR_SETTING,
+    FAQ,
+    TERMS,
+    INQUIRY,
+    APP_VERSION,
+    SIGN_OUT,
+    WITHDRAW_ACCOUNT
+}
+
