@@ -58,10 +58,11 @@ class MoreMenuServiceTest {
     @DisplayName("관리자는 wardKey로 관리자 메뉴를 조회한다")
     void getMenu_returns_manager_menu() {
         MoreMenuInfo expected = menu(MoreMenuContextType.MANAGER);
+        var manager = CareFixture.createGuardianMember(CareFixture.MANAGER_PHONE);
 
         given(memberReader.findByMemberKey(CareFixture.MANAGER_MEMBER_KEY))
-                .willReturn(CareFixture.createGuardianMember(CareFixture.MANAGER_PHONE));
-        given(careRelationshipReader.findCareRole(CareFixture.WARD_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY))
+                .willReturn(manager);
+        given(careRelationshipReader.findCareRole(CareFixture.WARD_MEMBER_KEY, manager.getMemberKey()))
                 .willReturn(CareRole.MANAGER);
         given(moreMenuFactory.getMenu(MoreMenuContextType.MANAGER)).willReturn(expected);
 
@@ -75,10 +76,11 @@ class MoreMenuServiceTest {
     @DisplayName("주보호자는 wardKey로 주보호자 메뉴를 조회한다")
     void getMenu_returns_guardian_menu() {
         MoreMenuInfo expected = menu(MoreMenuContextType.GUARDIAN);
+        var guardian = CareFixture.createGuardianMember();
 
         given(memberReader.findByMemberKey(CareFixture.GUARDIAN_MEMBER_KEY))
-                .willReturn(CareFixture.createGuardianMember());
-        given(careRelationshipReader.findCareRole(CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY))
+                .willReturn(guardian);
+        given(careRelationshipReader.findCareRole(CareFixture.WARD_MEMBER_KEY, guardian.getMemberKey()))
                 .willReturn(CareRole.GUARDIAN);
         given(moreMenuFactory.getMenu(MoreMenuContextType.GUARDIAN)).willReturn(expected);
 

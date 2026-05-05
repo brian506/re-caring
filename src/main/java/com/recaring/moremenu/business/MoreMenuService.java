@@ -21,11 +21,11 @@ public class MoreMenuService {
 
     public MoreMenuInfo getMenu(String memberKey, String wardKey) {
         Member member = memberReader.findByMemberKey(memberKey);
-        MoreMenuContextType contextType = resolveContextType(member, memberKey, wardKey);
+        MoreMenuContextType contextType = resolveContextType(member, wardKey);
         return moreMenuFactory.getMenu(contextType);
     }
 
-    private MoreMenuContextType resolveContextType(Member member, String memberKey, String wardKey) {
+    private MoreMenuContextType resolveContextType(Member member, String wardKey) {
         if (member.getRole() == MemberRole.WARD) {
             return MoreMenuContextType.WARD;
         }
@@ -33,7 +33,7 @@ public class MoreMenuService {
             throw new AppException(ErrorType.WARD_KEY_REQUIRED);
         }
 
-        CareRole careRole = careRelationshipReader.findCareRole(wardKey, memberKey);
+        CareRole careRole = careRelationshipReader.findCareRole(wardKey, member.getMemberKey());
         return switch (careRole) {
             case MANAGER -> MoreMenuContextType.MANAGER;
             case GUARDIAN -> MoreMenuContextType.GUARDIAN;

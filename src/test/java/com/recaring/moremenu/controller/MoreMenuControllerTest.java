@@ -12,6 +12,7 @@ import com.recaring.support.AbstractIntegrationTest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -19,6 +20,7 @@ import org.springframework.http.HttpHeaders;
 import java.util.Date;
 
 @DisplayName("더보기 메뉴 컨트롤러 HTTP 통합 테스트")
+@Tag("integration")
 class MoreMenuControllerTest extends AbstractIntegrationTest {
 
     @Autowired

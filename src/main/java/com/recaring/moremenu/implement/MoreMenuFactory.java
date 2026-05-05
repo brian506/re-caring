@@ -18,8 +18,7 @@ public class MoreMenuFactory {
     private static final String NOTIFICATION_SETTING_TARGET = "ST-003";
     private static final String SAFE_ZONE_SETTING_TARGET = "ZN-001";
     private static final String WARD_SETTING_TARGET = "ST-004";
-    private static final String CAREGIVER_SETTING_TARGET = "ST-005";
-    private static final String PROTECTOR_SETTING_TARGET = "ST-005";
+    private static final String CARE_RELATIONSHIP_SETTING_TARGET = "ST-005";
     private static final String FAQ_TARGET = "CS-001";
     private static final String TERMS_TARGET = "TERMS";
     private static final String INQUIRY_TARGET = "APP_INQUIRY";
@@ -43,7 +42,7 @@ public class MoreMenuFactory {
                     MoreMenuSectionKey.SETTING,
                     List.of(
                             screen(MoreMenuItemKey.NOTIFICATION_SETTING, true, NOTIFICATION_SETTING_TARGET),
-                            screen(MoreMenuItemKey.PROTECTOR_SETTING, true, PROTECTOR_SETTING_TARGET)
+                            screen(MoreMenuItemKey.PROTECTOR_SETTING, true, CARE_RELATIONSHIP_SETTING_TARGET)
                     )
             );
             case MANAGER -> caregiverSettingSection(false);
@@ -59,7 +58,7 @@ public class MoreMenuFactory {
                         screen(MoreMenuItemKey.NOTIFICATION_SETTING, true, NOTIFICATION_SETTING_TARGET),
                         screen(MoreMenuItemKey.SAFE_ZONE_SETTING, locationSettingsEnabled, SAFE_ZONE_SETTING_TARGET),
                         screen(MoreMenuItemKey.WARD_SETTING, true, WARD_SETTING_TARGET),
-                        screen(MoreMenuItemKey.CAREGIVER_SETTING, true, CAREGIVER_SETTING_TARGET)
+                        screen(MoreMenuItemKey.CAREGIVER_SETTING, true, CARE_RELATIONSHIP_SETTING_TARGET)
                 )
         );
     }

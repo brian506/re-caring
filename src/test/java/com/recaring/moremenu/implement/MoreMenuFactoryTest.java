@@ -2,6 +2,7 @@ package com.recaring.moremenu.implement;
 
 import com.recaring.moremenu.business.MoreMenuInfo;
 import com.recaring.moremenu.business.MoreMenuItemInfo;
+import com.recaring.moremenu.business.MoreMenuItemKey;
 import com.recaring.moremenu.business.MoreMenuSectionInfo;
 import com.recaring.moremenu.business.MoreMenuSectionKey;
 import com.recaring.moremenu.business.MoreMenuTargetType;
@@ -119,7 +120,7 @@ class MoreMenuFactoryTest {
                 .orElseThrow();
     }
 
-    private MoreMenuItemInfo find(List<MoreMenuItemInfo> items, com.recaring.moremenu.business.MoreMenuItemKey itemKey) {
+    private MoreMenuItemInfo find(List<MoreMenuItemInfo> items, MoreMenuItemKey itemKey) {
         return items.stream()
                 .filter(item -> item.itemKey() == itemKey)
                 .findFirst()

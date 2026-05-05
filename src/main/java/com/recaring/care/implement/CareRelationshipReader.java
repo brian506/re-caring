@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Component
 @RequiredArgsConstructor
@@ -60,7 +61,7 @@ public class CareRelationshipReader {
     public CareRole findCareRole(String wardKey, String caregiverKey) {
         return careRelationshipRepository.findAllByWardMemberKey(wardKey)
                 .stream()
-                .filter(relationship -> caregiverKey.equals(relationship.getCaregiverMemberKey()))
+                .filter(relationship -> Objects.equals(caregiverKey, relationship.getCaregiverMemberKey()))
                 .map(CareRelationship::getCareRole)
                 .findFirst()
                 .orElseThrow(() -> new AppException(ErrorType.NOT_CARE_RELATED_WARD));
