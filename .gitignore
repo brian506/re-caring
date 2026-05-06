@@ -49,3 +49,7 @@ crash.log
 override.tf
 override.tf.json
 .claude/worktrees/
+
+# local ignored files
+CLAUDE.md
+docs/git.md
