@@ -31,4 +31,15 @@ public class LocationValidator {
             throw new AppException(ErrorType.NOT_CARE_RELATED_WARD);
         }
     }
+
+    public void validateGuardianAccess(String caregiverKey, String wardKey) {
+        boolean isGuardian = careRelationshipRepository.existsByWardKeyAndCaregiverKeyAndCareRole(
+                wardKey,
+                caregiverKey,
+                CareRole.GUARDIAN
+        );
+        if (!isGuardian) {
+            throw new AppException(ErrorType.NOT_GUARDIAN_OF_WARD);
+        }
+    }
 }

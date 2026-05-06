@@ -70,4 +70,28 @@ class LocationValidatorTest {
                 .isInstanceOf(AppException.class)
                 .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_CARE_RELATED_WARD);
     }
+
+    @Test
+    @DisplayName("GUARDIAN 관계가 있으면 위치 수집 설정 권한 검증을 통과한다")
+    void validateGuardianAccess_passes_for_guardian() {
+        given(careRelationshipRepository.existsByWardKeyAndCaregiverKeyAndCareRole(
+                LocationFixture.WARD_KEY, LocationFixture.GUARDIAN_KEY, CareRole.GUARDIAN))
+                .willReturn(true);
+
+        assertThatNoException().isThrownBy(() ->
+                locationValidator.validateGuardianAccess(LocationFixture.GUARDIAN_KEY, LocationFixture.WARD_KEY));
+    }
+
+    @Test
+    @DisplayName("GUARDIAN 관계가 없으면 위치 수집 설정 권한 예외가 발생한다")
+    void validateGuardianAccess_throws_when_not_guardian() {
+        given(careRelationshipRepository.existsByWardKeyAndCaregiverKeyAndCareRole(
+                LocationFixture.WARD_KEY, LocationFixture.MANAGER_KEY, CareRole.GUARDIAN))
+                .willReturn(false);
+
+        assertThatThrownBy(() ->
+                locationValidator.validateGuardianAccess(LocationFixture.MANAGER_KEY, LocationFixture.WARD_KEY))
+                .isInstanceOf(AppException.class)
+                .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_GUARDIAN_OF_WARD);
+    }
 }
