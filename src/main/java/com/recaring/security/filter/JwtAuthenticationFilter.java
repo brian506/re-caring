@@ -29,13 +29,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     static final String EXCEPTION_ATTRIBUTE = "jwtException";
 
     private static final String GPS_PATH = "/api/v1/location/gps";
+    private static final String LOCATION_INTERVAL_ME_PATH = "/api/v1/location/settings/collection-interval/me";
 
     private final JwtValidator jwtValidator;
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return GPS_PATH.equals(request.getRequestURI())
-                && HttpMethod.POST.name().equals(request.getMethod());
+        return (GPS_PATH.equals(request.getRequestURI())
+                && HttpMethod.POST.name().equals(request.getMethod()))
+                || (LOCATION_INTERVAL_ME_PATH.equals(request.getRequestURI())
+                && HttpMethod.GET.name().equals(request.getMethod()));
     }
 
     @Override

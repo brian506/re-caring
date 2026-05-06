@@ -29,14 +29,21 @@ public class DeviceTokenAuthFilter extends OncePerRequestFilter {
 
     private static final String DEVICE_PREFIX = "Device ";
     private static final String GPS_PATH = "/api/v1/location/gps";
+    private static final String LOCATION_INTERVAL_ME_PATH = "/api/v1/location/settings/collection-interval/me";
 
     private final WardDeviceTokenReader wardDeviceTokenReader;
     private final ObjectMapper objectMapper;
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return !(GPS_PATH.equals(request.getRequestURI())
-                && HttpMethod.POST.name().equals(request.getMethod()));
+        return !isDeviceAuthenticatedEndpoint(request);
+    }
+
+    private boolean isDeviceAuthenticatedEndpoint(HttpServletRequest request) {
+        return (GPS_PATH.equals(request.getRequestURI())
+                && HttpMethod.POST.name().equals(request.getMethod()))
+                || (LOCATION_INTERVAL_ME_PATH.equals(request.getRequestURI())
+                && HttpMethod.GET.name().equals(request.getMethod()));
     }
 
     @Override

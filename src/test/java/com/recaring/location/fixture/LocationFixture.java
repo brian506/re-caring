@@ -11,6 +11,7 @@ public class LocationFixture {
 
     public static final String WARD_KEY = "ward-member-key-001";
     public static final String GUARDIAN_KEY = "guardian-member-key-001";
+    public static final String MANAGER_KEY = "manager-member-key-001";
     public static final double LATITUDE = 37.5665;
     public static final double LONGITUDE = 126.9780;
 
@@ -31,6 +32,17 @@ public class LocationFixture {
                 .name("보호자")
                 .birth(LocalDate.of(1980, 1, 1))
                 .gender(Gender.FEMALE)
+                .role(MemberRole.GUARDIAN)
+                .signUpType(SignUpType.LOCAL)
+                .build();
+    }
+
+    public static Member createManager() {
+        return Member.builder()
+                .phone("01055556666")
+                .name("관리자")
+                .birth(LocalDate.of(1975, 1, 1))
+                .gender(Gender.MALE)
                 .role(MemberRole.GUARDIAN)
                 .signUpType(SignUpType.LOCAL)
                 .build();

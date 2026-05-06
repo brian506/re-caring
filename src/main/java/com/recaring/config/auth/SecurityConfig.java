@@ -72,6 +72,7 @@ public class SecurityConfig {
                         // WARD 전용
                         .requestMatchers(
                                 mvc.matcher(HttpMethod.POST, "/api/v1/location/gps"),
+                                mvc.matcher(HttpMethod.GET,  "/api/v1/location/settings/collection-interval/me"),
                                 mvc.matcher(HttpMethod.POST, "/api/v1/device/token")
                         ).hasRole("WARD")
 
@@ -79,7 +80,9 @@ public class SecurityConfig {
                         .requestMatchers(
                                 mvc.matcher(HttpMethod.POST, "/api/v1/care/requests"),
                                 mvc.matcher(HttpMethod.GET,  "/api/v1/care/wards"),
-                                mvc.matcher(HttpMethod.POST, "/api/v1/members/phones")
+                                mvc.matcher(HttpMethod.POST, "/api/v1/members/phones"),
+                                mvc.matcher(HttpMethod.GET,  "/api/v1/location/settings/{wardKey}/collection-interval"),
+                                mvc.matcher(HttpMethod.PATCH, "/api/v1/location/settings/{wardKey}/collection-interval")
                         ).hasRole("GUARDIAN")
 
                         // GUARDIAN + WARD 모두 접근 가능
