@@ -50,6 +50,12 @@ log.error("[Redis 캐시 : 직렬화 실패]: wardKey={} | error={}", wardKey, e
 - 추가 정보: `key=value | key=value` 형식으로 컨텍스트 추가
 - 레벨 선택: 정상 흐름 → `info`, 비즈니스 예외 → `warn`, 시스템 오류 → `error`, 디버그 → `debug`
 
+## 인프라 접근 규칙
+
+EC2 서버 접근은 **SSH가 아닌 AWS SSM Session Manager**로만 한다. SSH 키·포트 22를 쓰지 않는다.
+
+인스턴스 ID는 태그(`Name=recaring-app-server`)로 동적 조회한다. 하드코딩 금지.
+
 ## 인덱스 규칙
 
 Entity `@Table`의 `indexes` 속성을 사용하지 않는다. 인덱스는 별도 DDL 쿼리로 관리하며, 필요한 위치에 TODO 주석으로 표시한다.

@@ -1,16 +1,18 @@
 #!/bin/bash
 # GitHub 이슈를 생성하고 이슈 번호를 출력한다
-# Usage: bash create-issue.sh "이슈 제목" "이슈 본문"
+# Usage: bash create-issue.sh "이슈 제목" "이슈 본문" [label]
+# label 기본값: feature
 
 set -euo pipefail
 
 if [ -z "${1:-}" ] || [ -z "${2:-}" ]; then
-  echo "Usage: bash create-issue.sh \"이슈 제목\" \"이슈 본문\"" >&2
+  echo "Usage: bash create-issue.sh \"이슈 제목\" \"이슈 본문\" [label]" >&2
   exit 1
 fi
 
 TITLE="$1"
 BODY="$2"
+LABEL="${3:-feature}"
 REPO="brian506/re-caring"
 ASSIGNEE=$(gh api user --jq '.login')
 
@@ -18,7 +20,7 @@ ISSUE_URL=$(gh issue create \
   --repo "$REPO" \
   --title "$TITLE" \
   --body "$BODY" \
-  --label "feature" \
+  --label "$LABEL" \
   --assignee "$ASSIGNEE")
 
 echo "Created issue: $ISSUE_URL"

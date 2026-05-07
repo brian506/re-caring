@@ -1,6 +1,6 @@
 ---
 name: test-write
-description: 구현된 기능에 대한 테스트 코드를 작성하고 로컬 빌드로 검증한다. 사용자가 "테스트 작성해줘", "테스트 코드 짜줘" 라고 하면 실행.
+description: Writes unit and integration tests for implemented features and verifies with local build. Does not modify src/main/. Trigger on: '테스트 작성해줘', '테스트 코드 짜줘', '테스트 써줘'.
 allowed-tools: Bash(./gradlew *) Bash(git *) Read Grep Glob Edit Write
 argument-hint: "[테스트 대상 기능 또는 클래스명]"
 ---
@@ -28,14 +28,13 @@ git diff --name-only develop...HEAD -- 'src/main/**'
 find src/test -name "*.java" | head -10
 ```
 
-기존 테스트 파일 중 1~2개를 읽어 Given-When-Then 구조, Mock 방식, Fixture 패턴을 파악한다.
+기존 테스트 파일 중 1~2개를 읽어 Mock 방식, Fixture 패턴, 네이밍 컨벤션을 파악한다.
 
 ## Step 3: 테스트 작성
 
 ### 단위 테스트 (Implement 계층)
 - 대상: `*Reader`, `*Writer`, `*Manager`, `*Validator` 등
 - Mock 대상: 외부 의존성(Repository, 외부 서비스)만
-- Given-When-Then 구조 준수
 - 파일 위치: `src/test/java/com/recaring/{domain}/implement/`
 
 ### 단위 테스트 (Business 계층)
@@ -58,7 +57,14 @@ find src/test -name "*.java" | head -10
 ./gradlew test 2>&1 | tail -80
 ```
 
-실패 시 에러 로그를 분석해 수정한다. 3회 반복 후에도 실패하면 사용자에게 보고하고 중단한다.
+실패 시 에러 로그를 분석해 수정한다. 반복 실패 시 사용자에게 보고하고 중단한다.
+
+## Gotchas
+
+- 동일 도메인에 기존 Fixture 클래스가 있는데 새 파일을 만들면 중복 — 반드시 먼저 확인 후 기존 파일에 추가
+- `@Tag("integration")` 누락 시 DB 연동 테스트가 단위 테스트 suite에 섞여 실행 시간이 급격히 증가
+- 테스트를 통과시키기 위해 `src/main/` 코드를 수정하는 것은 금지 — 구현 코드 버그라면 `/feature-dev`로 수정
+- Business 계층 테스트에서 Implement 클래스가 아닌 Repository를 직접 Mock하면 아키텍처 위반
 
 ## 완료 보고
 

@@ -26,8 +26,6 @@
       "Bash(gh run view *)",
       "Bash(gh run watch *)",
       "Bash(gh auth status)",
-      "Bash(curl -s https://re-caring.duckdns.org/*)",
-      "Bash(curl -s --max-time * https://re-caring.duckdns.org/*)",
       "Bash(sleep *)",
       "Bash(bash .claude/skills/deploy/scripts/*)",
       "Bash(bash scripts/*)",
