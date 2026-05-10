@@ -22,6 +22,9 @@ public enum ErrorCode {
     E6000, E6001, E6002,
 
     // Device (E7xxx) - Device Token
-    E7000
+    E7000,
+
+    // Notification (E8xxx)
+    E8000, E8001
 
 }

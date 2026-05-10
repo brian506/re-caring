@@ -70,7 +70,11 @@ public enum ErrorType {
     INVALID_LOCATION_COLLECTION_INTERVAL(HttpStatus.BAD_REQUEST, ErrorCode.E6002, "지원하지 않는 위치 수집 주기입니다.", LogLevel.WARN),
 
     // Device (E7xxx)
-    INVALID_DEVICE_TOKEN(HttpStatus.UNAUTHORIZED, ErrorCode.E7000, "유효하지 않은 Device Token입니다.", LogLevel.WARN);
+    INVALID_DEVICE_TOKEN(HttpStatus.UNAUTHORIZED, ErrorCode.E7000, "유효하지 않은 Device Token입니다.", LogLevel.WARN),
+
+    // Notification (E8xxx)
+    INVALID_NOTIFICATION_SENSITIVITY(HttpStatus.BAD_REQUEST, ErrorCode.E8000, "Unsupported notification sensitivity.", LogLevel.WARN),
+    INVALID_BATTERY_THRESHOLD(HttpStatus.BAD_REQUEST, ErrorCode.E8001, "Unsupported battery threshold.", LogLevel.WARN);
 
     private final HttpStatus status;
     private final ErrorCode errorCode;
