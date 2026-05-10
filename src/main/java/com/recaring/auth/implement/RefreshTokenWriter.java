@@ -1,33 +1,26 @@
 package com.recaring.auth.implement;
 
+import com.recaring.auth.dataaccess.entity.RefreshToken;
+import com.recaring.auth.dataaccess.repository.RefreshTokenRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
-
-import java.util.concurrent.TimeUnit;
 
 @Component
 @RequiredArgsConstructor
 public class RefreshTokenWriter {
 
-    private static final String KEY_PREFIX = "refresh:token:";
-
     @Value("${jwt.refresh.expiration}")
     private long refreshExpiration; // ms 단위
 
-    private final StringRedisTemplate redisTemplate;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     public void save(String refreshToken, String memberKey) {
-        redisTemplate.opsForValue().set(
-                KEY_PREFIX + refreshToken,
-                memberKey,
-                refreshExpiration,
-                TimeUnit.MILLISECONDS
-        );
+        RefreshToken entity = RefreshToken.of(memberKey, refreshToken, refreshExpiration);
+        refreshTokenRepository.save(entity);
     }
 
     public void delete(String refreshToken) {
-        redisTemplate.delete(KEY_PREFIX + refreshToken);
+        refreshTokenRepository.deleteByToken(refreshToken);
     }
 }
