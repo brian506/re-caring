@@ -12,4 +12,6 @@ public interface CareRelationshipRepositoryCustom {
     List<CareRelationship> findAllByCaregiverMemberKey(String caregiverMemberKey);
 
     boolean existsByWardKeyAndCaregiverKeyAndCareRole(String wardKey, String caregiverKey, CareRole careRole);
+
+    boolean existsByWardKeyAndCaregiverKey(String wardKey, String caregiverKey);
 }

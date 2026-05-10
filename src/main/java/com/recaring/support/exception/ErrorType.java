@@ -70,7 +70,11 @@ public enum ErrorType {
     INVALID_LOCATION_COLLECTION_INTERVAL(HttpStatus.BAD_REQUEST, ErrorCode.E6002, "지원하지 않는 위치 수집 주기입니다.", LogLevel.WARN),
 
     // Device (E7xxx)
-    INVALID_DEVICE_TOKEN(HttpStatus.UNAUTHORIZED, ErrorCode.E7000, "유효하지 않은 Device Token입니다.", LogLevel.WARN);
+    INVALID_DEVICE_TOKEN(HttpStatus.UNAUTHORIZED, ErrorCode.E7000, "유효하지 않은 Device Token입니다.", LogLevel.WARN),
+
+    // SafeZone (E8xxx)
+    NOT_FOUND_SAFE_ZONE(HttpStatus.BAD_REQUEST, ErrorCode.E8000, "존재하지 않는 안심존입니다.", LogLevel.WARN),
+    NOT_CAREGIVER_OF_WARD(HttpStatus.FORBIDDEN, ErrorCode.E8001, "해당 보호 대상자의 보호자/관계자가 아닙니다.", LogLevel.WARN);
 
     private final HttpStatus status;
     private final ErrorCode errorCode;
