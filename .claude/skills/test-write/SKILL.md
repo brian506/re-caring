@@ -63,7 +63,7 @@ find src/test -name "*.java" | head -10
 
 - 동일 도메인에 기존 Fixture 클래스가 있는데 새 파일을 만들면 중복 — 반드시 먼저 확인 후 기존 파일에 추가
 - `@Tag("integration")` 누락 시 DB 연동 테스트가 단위 테스트 suite에 섞여 실행 시간이 급격히 증가
-- 테스트를 통과시키기 위해 `src/main/` 코드를 수정하는 것은 금지 — 구현 코드 버그라면 `/feature-dev`로 수정
+- 테스트를 통과시키기 위해 `src/main/` 코드를 수정하는 것은 금지 — 구현 코드 버그라면 `/feature`로 수정
 - Business 계층 테스트에서 Implement 클래스가 아닌 Repository를 직접 Mock하면 아키텍처 위반
 
 ## 완료 보고

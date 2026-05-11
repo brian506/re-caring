@@ -1,7 +1,7 @@
 ---
 name: deploy
 description: Automates feature branch deployment pipeline (commit → PR → CI → merge → deploy). Only runs on feature/{N} branches. Trigger on: '배포해줘', '커밋해줘', 'PR 올려줘', 'deploy', 'merge해줘'.
-allowed-tools: Agent Bash(git branch *)
+allowed-tools: Agent Bash(git branch *) Bash(gh issue view *)
 argument-hint: "[커밋 설명]"
 ---
 
@@ -28,6 +28,26 @@ git branch --show-current
 ```
 
 브랜치가 `feature/{N}` 형태인 경우에만 아래를 계속 진행한다.
+
+---
+
+## 이슈 존재 확인 (필수 — 없으면 즉시 중단)
+
+브랜치 번호 N을 추출해 이슈가 실제로 존재하는지 확인한다.
+
+```bash
+gh issue view {N} --json number,title,state 2>&1
+```
+
+이슈가 존재하지 않으면 즉시 중단하고 아래 메시지를 출력한다. subagent를 spawn하지 않는다.
+
+```
+[배포 중단] 이슈 #{N}이 GitHub에 존재하지 않습니다.
+/deploy는 이미 이슈가 생성된 feature 브랜치에서만 실행할 수 있습니다.
+/feature-dev로 이슈와 브랜치를 먼저 생성하세요.
+```
+
+이슈가 존재하면 아래를 계속 진행한다.
 
 ---
 

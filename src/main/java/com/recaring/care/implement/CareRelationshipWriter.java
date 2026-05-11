@@ -1,8 +1,8 @@
 package com.recaring.care.implement;
 
-import com.recaring.care.dataaccess.entity.CareInvitation;
 import com.recaring.care.dataaccess.entity.CareRelationship;
 import com.recaring.care.dataaccess.repository.CareRelationshipRepository;
+import com.recaring.care.vo.CareRelationshipRegistration;
 import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.dataaccess.entity.MemberRole;
 import com.recaring.member.implement.MemberReader;
@@ -19,12 +19,14 @@ public class CareRelationshipWriter {
     private final CareRelationshipValidator relationshipValidator;
 
     @Transactional
-    public void register(CareInvitation invitation, String memberKey) {
+    public void register(CareRelationshipRegistration registration, String memberKey) {
         Member member = memberReader.findMemberByLock(memberKey);
-        if(member.getRole() == MemberRole.GUARDIAN) {
-            relationshipValidator.validateCanAddWard(memberKey, invitation.getWardMemberKey());
+        if (member.getRole() == MemberRole.GUARDIAN) {
+            relationshipValidator.validateCanAddWard(memberKey, registration.wardMemberKey());
         }
         //todo 보호 대상자의 보호자 수 제한?
-        careRelationshipRepository.save(CareRelationship.of(invitation.getWardMemberKey(), invitation.getCaregiverKey(), invitation.getCareRole()));
+        careRelationshipRepository.save(
+                CareRelationship.of(registration.wardMemberKey(), registration.caregiverKey(), registration.careRole())
+        );
     }
 }

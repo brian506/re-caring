@@ -12,10 +12,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 개선점, 아키텍처 조언, 전체 프로젝트 분석 요청 시 → **절대로** 전체 코드베이스를 스캔하지 않는다. 아래 파일을 읽는 것으로 충분하다. Explore 에이전트를 쓸 때도 이 파일들만 읽도록 프롬프트에 명시한다.
 
 - **인프라/시스템 구조**: `docs/architecture.md`
-- **코드 아키텍처 규칙**: `.claude/skills/feature-dev/references/architecture.md`
-- **API·엔티티·기술 부채 현황**: `.claude/skills/feature-dev/references/snapshot.md`
+- **코드 아키텍처 규칙**: `.claude/rules/architecture.md`
+- **API·엔티티·기술 부채 현황**: `.claude/skills/feature/references/snapshot.md`
 
-기능 구현 후 새 API·엔티티·알려진 이슈가 생기면 `.claude/skills/feature-dev/references/snapshot.md`의 해당 섹션을 함께 갱신한다.
+기능 구현 후 새 API·엔티티·알려진 이슈가 생기면 `.claude/skills/feature/references/snapshot.md`의 해당 섹션을 함께 갱신한다.
 
 ## 빌드 및 실행 명령어
 

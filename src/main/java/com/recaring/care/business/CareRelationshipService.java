@@ -2,6 +2,8 @@ package com.recaring.care.business;
 
 import com.recaring.care.implement.CareRelationshipReader;
 import com.recaring.care.implement.CareRelationshipValidator;
+import com.recaring.care.vo.CaregiverInfo;
+import com.recaring.care.vo.WardInfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
