@@ -30,22 +30,30 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
     @Autowired private PasswordEncoder passwordEncoder;
 
     private Member guardian;
+    private Member manager;
     private Member ward;
     private String guardianToken;
+    private String managerToken;
     private CareRelationship relationship;
     private SafeZone savedZone;
 
     @BeforeEach
     void setUp() {
         guardian = memberRepository.save(CareFixture.createGuardianMember());
+        manager = memberRepository.save(CareFixture.createGuardianMember(CareFixture.MANAGER_PHONE));
         ward = memberRepository.save(CareFixture.createWardMember());
 
         String encoded = passwordEncoder.encode("Password1");
         localAuthRepository.save(LocalAuth.of(guardian.getMemberKey(), "guardian@test.com", encoded));
+        localAuthRepository.save(LocalAuth.of(manager.getMemberKey(), "manager@test.com", encoded));
 
         guardianToken = extractAccessToken("guardian@test.com", "Password1");
+        managerToken = extractAccessToken("manager@test.com", "Password1");
+
         relationship = careRelationshipRepository.save(
                 CareFixture.createGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+        careRelationshipRepository.save(
+                CareFixture.createManagerRelationship(ward.getMemberKey(), manager.getMemberKey()));
         savedZone = safeZoneRepository.save(SafeZoneFixture.createSafeZone(ward.getMemberKey()));
     }
 
@@ -99,6 +107,20 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @DisplayName("POST - 관계자가 안심존 추가 시 403이 반환된다")
+    void addSafeZone_returns_403_when_manager() {
+        client.post()
+                .uri("/api/v1/care/wards/" + ward.getMemberKey() + "/safe-zones")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + managerToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"name": "학교", "address": "서울시", "latitude": 37.5, "longitude": 127.0, "radius": "SMALL"}
+                        """)
+                .exchange()
+                .expectStatus().isForbidden();
+    }
+
+    @Test
     @DisplayName("POST - 인증 없이 요청하면 401이 반환된다")
     void addSafeZone_without_auth_returns_401() {
         client.post()
@@ -134,7 +156,7 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
 
     @Test
     @DisplayName("GET 목록 - 보호자가 조회하면 안심존 목록이 반환된다")
-    void getSafeZones_returns_list() {
+    void getSafeZones_returns_list_when_guardian() {
         client.get()
                 .uri("/api/v1/care/wards/" + ward.getMemberKey() + "/safe-zones")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + guardianToken)
@@ -145,6 +167,20 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
                 .jsonPath("$.data").isArray()
                 .jsonPath("$.data[0].name").isEqualTo(SafeZoneFixture.NAME)
                 .jsonPath("$.data[0].safeZoneKey").isNotEmpty();
+    }
+
+    @Test
+    @DisplayName("GET 목록 - 관계자가 조회하면 안심존 목록이 반환된다")
+    void getSafeZones_returns_list_when_manager() {
+        client.get()
+                .uri("/api/v1/care/wards/" + ward.getMemberKey() + "/safe-zones")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + managerToken)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.resultType").isEqualTo("SUCCESS")
+                .jsonPath("$.data").isArray()
+                .jsonPath("$.data[0].name").isEqualTo(SafeZoneFixture.NAME);
     }
 
     @Test
@@ -160,7 +196,7 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
 
     @Test
     @DisplayName("GET 상세 - 보호자가 조회하면 안심존 상세가 반환된다")
-    void getSafeZone_returns_detail() {
+    void getSafeZone_returns_detail_when_guardian() {
         client.get()
                 .uri("/api/v1/care/wards/" + ward.getMemberKey() + "/safe-zones/" + savedZone.getSafeZoneKey())
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + guardianToken)
@@ -171,6 +207,19 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
                 .jsonPath("$.data.name").isEqualTo(SafeZoneFixture.NAME)
                 .jsonPath("$.data.address").isEqualTo(SafeZoneFixture.ADDRESS)
                 .jsonPath("$.data.radiusMeters").isEqualTo(SafeZoneFixture.RADIUS.getMeters());
+    }
+
+    @Test
+    @DisplayName("GET 상세 - 관계자가 조회하면 안심존 상세가 반환된다")
+    void getSafeZone_returns_detail_when_manager() {
+        client.get()
+                .uri("/api/v1/care/wards/" + ward.getMemberKey() + "/safe-zones/" + savedZone.getSafeZoneKey())
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + managerToken)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.resultType").isEqualTo("SUCCESS")
+                .jsonPath("$.data.name").isEqualTo(SafeZoneFixture.NAME);
     }
 
     @Test
@@ -208,6 +257,20 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @DisplayName("PATCH - 관계자가 안심존 수정 시 403이 반환된다")
+    void updateSafeZone_returns_403_when_manager() {
+        client.patch()
+                .uri("/api/v1/care/wards/" + ward.getMemberKey() + "/safe-zones/" + savedZone.getSafeZoneKey())
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + managerToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"name": "직장", "address": "서울시", "latitude": 37.5, "longitude": 127.0, "radius": "LARGE"}
+                        """)
+                .exchange()
+                .expectStatus().isForbidden();
+    }
+
+    @Test
     @DisplayName("PATCH - 케어 관계가 없는 보호자가 수정하면 403이 반환된다")
     void updateSafeZone_returns_403_when_not_caregiver() {
         Member stranger = memberRepository.save(CareFixture.createGuardianMember("01088889999"));
@@ -238,6 +301,16 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
                 .expectStatus().isOk()
                 .expectBody()
                 .jsonPath("$.resultType").isEqualTo("SUCCESS");
+    }
+
+    @Test
+    @DisplayName("DELETE - 관계자가 안심존 삭제 시 403이 반환된다")
+    void deleteSafeZone_returns_403_when_manager() {
+        client.delete()
+                .uri("/api/v1/care/wards/" + ward.getMemberKey() + "/safe-zones/" + savedZone.getSafeZoneKey())
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + managerToken)
+                .exchange()
+                .expectStatus().isForbidden();
     }
 
     @Test

@@ -1,5 +1,6 @@
 package com.recaring.safezone.business;
 
+import com.recaring.care.dataaccess.entity.CareRole;
 import com.recaring.care.dataaccess.repository.CareRelationshipRepository;
 import com.recaring.safezone.controller.request.CreateSafeZoneCommand;
 import com.recaring.safezone.controller.request.UpdateSafeZoneCommand;
@@ -25,7 +26,7 @@ public class SafeZoneService {
 
     @Transactional
     public void addSafeZone(String requesterKey, CreateSafeZoneCommand command) {
-        validateCareAccess(requesterKey, command.wardMemberKey());
+        validateGuardianAccess(requesterKey, command.wardMemberKey());
         safeZoneWriter.register(command);
     }
 
@@ -43,14 +44,14 @@ public class SafeZoneService {
 
     @Transactional
     public void updateSafeZone(String requesterKey, String wardKey, String safeZoneKey, UpdateSafeZoneCommand command) {
-        validateCareAccess(requesterKey, wardKey);
+        validateGuardianAccess(requesterKey, wardKey);
         SafeZone zone = safeZoneReader.getEntity(safeZoneKey);
         safeZoneWriter.update(zone, command);
     }
 
     @Transactional
     public void deleteSafeZone(String requesterKey, String wardKey, String safeZoneKey) {
-        validateCareAccess(requesterKey, wardKey);
+        validateGuardianAccess(requesterKey, wardKey);
         SafeZone zone = safeZoneReader.getEntity(safeZoneKey);
         safeZoneWriter.delete(zone);
     }
@@ -58,6 +59,12 @@ public class SafeZoneService {
     private void validateCareAccess(String requesterKey, String wardKey) {
         if (!careRelationshipRepository.existsByWardKeyAndCaregiverKey(wardKey, requesterKey)) {
             throw new AppException(ErrorType.NOT_CAREGIVER_OF_WARD);
+        }
+    }
+
+    private void validateGuardianAccess(String requesterKey, String wardKey) {
+        if (!careRelationshipRepository.existsByWardKeyAndCaregiverKeyAndCareRole(wardKey, requesterKey, CareRole.GUARDIAN)) {
+            throw new AppException(ErrorType.NOT_GUARDIAN_OF_WARD);
         }
     }
 }
