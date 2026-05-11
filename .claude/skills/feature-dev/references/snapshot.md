@@ -38,11 +38,11 @@
 | Location | GET | `/api/v1/location/stream/{wardKey}` | SSE 실시간 위치 스트림 (GUARDIAN) |
 | Location | GET | `/api/v1/location/history/{wardKey}` | 날짜별 이동 경로 히스토리 |
 | Member | GET/PATCH | `/api/v1/member/...` | 회원 정보 조회/수정 |
-| SafeZone | POST | `/api/v1/care/wards/{wardKey}/safe-zones` | 안심존 추가 (GUARDIAN) |
-| SafeZone | GET | `/api/v1/care/wards/{wardKey}/safe-zones` | 안심존 목록 조회 (GUARDIAN) |
-| SafeZone | GET | `/api/v1/care/wards/{wardKey}/safe-zones/{safeZoneKey}` | 안심존 상세 조회 (GUARDIAN) |
-| SafeZone | PATCH | `/api/v1/care/wards/{wardKey}/safe-zones/{safeZoneKey}` | 안심존 수정 (GUARDIAN) |
-| SafeZone | DELETE | `/api/v1/care/wards/{wardKey}/safe-zones/{safeZoneKey}` | 안심존 삭제 (GUARDIAN) |
+| SafeZone | POST | `/api/v1/care/wards/{wardKey}/safe-zones` | 안심존 추가 (GUARDIAN only) |
+| SafeZone | GET | `/api/v1/care/wards/{wardKey}/safe-zones` | 안심존 목록 조회 (GUARDIAN, MANAGER) |
+| SafeZone | GET | `/api/v1/care/wards/{wardKey}/safe-zones/{safeZoneKey}` | 안심존 상세 조회 (GUARDIAN, MANAGER) |
+| SafeZone | PATCH | `/api/v1/care/wards/{wardKey}/safe-zones/{safeZoneKey}` | 안심존 수정 (GUARDIAN only) |
+| SafeZone | DELETE | `/api/v1/care/wards/{wardKey}/safe-zones/{safeZoneKey}` | 안심존 삭제 (GUARDIAN only) |
 | SMS | POST | `/api/v1/sms/verification/send` | SMS 인증코드 발송 |
 | SMS | POST | `/api/v1/sms/verification/verify` | SMS 인증코드 검증 |
 
