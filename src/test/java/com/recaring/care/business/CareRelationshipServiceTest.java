@@ -3,6 +3,8 @@ package com.recaring.care.business;
 import com.recaring.care.fixture.CareFixture;
 import com.recaring.care.implement.CareRelationshipReader;
 import com.recaring.care.implement.CareRelationshipValidator;
+import com.recaring.care.vo.CaregiverInfo;
+import com.recaring.care.vo.WardInfo;
 import com.recaring.support.exception.AppException;
 import com.recaring.support.exception.ErrorType;
 import org.junit.jupiter.api.DisplayName;

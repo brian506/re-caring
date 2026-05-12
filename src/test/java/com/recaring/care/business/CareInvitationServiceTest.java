@@ -3,6 +3,7 @@ package com.recaring.care.business;
 import com.recaring.care.fixture.CareFixture;
 import com.recaring.care.implement.CareInvitationManager;
 import com.recaring.care.implement.CareInvitationReader;
+import com.recaring.care.vo.ReceivedRequestInfo;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

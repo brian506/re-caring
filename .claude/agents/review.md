@@ -19,7 +19,7 @@ git diff develop...HEAD --name-only -- 'src/main/**'
 
 ## Step 2: 아키텍처 규칙 로드
 
-`.claude/skills/feature-dev/references/architecture.md`와 `.claude/skills/feature-dev/references/patterns.md`를 읽는다.
+`.claude/rules/architecture.md`와 `.claude/rules/patterns.md`를 읽는다.
 
 ## Step 3: 변경 파일 코드 검토
 
@@ -63,7 +63,7 @@ git diff develop...HEAD --name-only -- 'src/main/**'
 - [ ] entity → VO 변환이 VO의 `from()` 팩토리 메서드에서 이뤄지는가
 
 ### [ErrorCode]
-- [ ] 새 ErrorCode가 도메인 범위를 벗어나지 않는가 (`references/error-codes.md` 참고)
+- [ ] 새 ErrorCode가 도메인 범위를 벗어나지 않는가 (`.claude/rules/error-codes.md` 참고)
 - [ ] ErrorType이 적절한 LogLevel을 사용하는가
 
 ### [인덱스]

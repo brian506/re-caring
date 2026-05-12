@@ -1,6 +1,6 @@
 # 프로젝트 스냅샷
 
-> 마지막 업데이트: 2026-05-10. 기능 추가·수정 시 해당 섹션을 갱신한다.
+> 마지막 업데이트: 2026-05-11. 기능 추가·수정 시 해당 섹션을 갱신한다.
 
 ## 도메인별 패키지 현황
 
@@ -13,6 +13,7 @@
 | `member` | MemberService | MemberReader/Writer/Validator |
 | `safezone` | SafeZoneService | SafeZoneReader, SafeZoneWriter |
 | `sms` | PhoneVerificationService | SmsClient, SmsCodeGenerator, PhoneVerificationReader/Writer |
+| `alert` | AlertService, AlertResolutionService | AlertInvestigationOrchestrator, AlertInvestigationAgent(Tool Use Loop), SsmContextFetcher, PrometheusContextFetcher, ErrorHistoryFetcher, RunbookService, SlackAlertNotifier, GitHubPrCreator, AlertRetryHandler |
 
 ## API 엔드포인트
 
@@ -60,13 +61,15 @@
 | WardDeviceToken | ward_device_tokens | wardKey(UUID, UNIQUE), token(UUID, UNIQUE), createdAt, expiresAt |
 | MembersTermsAgreement | members_terms_agreements | memberKey, agreedAt |
 | SafeZone | safe_zones | safeZoneKey(UUID), wardMemberKey, name, address, latitude, longitude, radius(SMALL/MEDIUM/LARGE/XLARGE) |
+| AlertRunbook | alert_runbooks | errorSignature, commands(jsonb), resolutionContext, successCount, isValid |
+| AlertInvestigation | alert_investigations | fingerprint, alertName, severity, threadTs, status, fixCommands(jsonb) |
 
 ## Redis 키 구조
 
 ```
-refresh:{memberKey}       RefreshToken          TTL: 7일
-sms:{phone}               SMS 인증코드          TTL: 3분
-gps:latest:{memberKey}    GPS 최신 위치         TTL: 5분  { lat, lng, timestamp }
+sms:{phone}                    SMS 인증코드          TTL: 3분
+gps:latest:{memberKey}         GPS 최신 위치         TTL: 5분  { lat, lng, timestamp }
+investigation:{fingerprint}    Alert 조사 상태       TTL: 10분  { threadTs, status, startedAt, fixCommands }
 ```
 
 ## SqsPublisher 전략 패턴

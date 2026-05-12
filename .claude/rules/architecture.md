@@ -95,6 +95,24 @@ public class Entity extends BaseEntity { ... }
 - 회원: `memberKey` (UUID) — DB PK 외부 노출 절대 금지
 - CareInvitation: `requestKey` (UUID)
 
+## 중첩 타입 금지
+
+클래스·record·interface 안에 또 다른 클래스·record·enum·interface를 선언하지 않는다.
+
+```java
+// 금지
+public class FooRequest {
+    public record Bar(String value) {} // 내부 record 금지
+    public enum Status { ACTIVE, INACTIVE } // 내부 enum 금지
+}
+
+// 허용 — 별도 파일로 분리
+// FooRequest.java, FooStatus.java 각각 독립 파일
+```
+
+- 모든 타입은 독립된 파일로 분리한다
+- enum도 별도 파일(`{도메인}/{패키지}/{Name}.java`)로 선언한다
+
 ## 인덱스 규칙
 
 `@Table(indexes = {...})` 금지. 인덱스는 별도 DDL로 관리하며 Entity에 TODO 주석으로 표시한다 (CLAUDE.md 참고).

@@ -2,9 +2,10 @@ package com.recaring.care.implement;
 
 import com.recaring.care.dataaccess.entity.CareInvitation;
 import com.recaring.care.dataaccess.entity.CareRole;
- import com.recaring.care.event.CareInvitationAcceptedEvent;
+import com.recaring.care.event.CareInvitationAcceptedEvent;
 import com.recaring.care.event.CareInvitationSentEvent;
 import com.recaring.care.vo.Caregiver;
+import com.recaring.care.vo.CareRelationshipRegistration;
 import com.recaring.care.vo.NewCareInvitation;
 import com.recaring.care.vo.Ward;
 import com.recaring.member.dataaccess.entity.Member;
@@ -64,14 +65,21 @@ public class CareInvitationManager {
     public void accept(String requestKey, String memberKey) {
         CareInvitation invitation = careInvitationReader.findByRequestKeyAndMemberKey(requestKey, memberKey);
 
-        careRelationshipWriter.register(invitation, memberKey);
-        careInvitationWriter.accept(invitation);
+        careRelationshipWriter.register(
+                new CareRelationshipRegistration(
+                        invitation.getWardMemberKey(),
+                        invitation.getCaregiverKey(),
+                        invitation.getCareRole()
+                ),
+                memberKey
+        );
+        careInvitationWriter.accept(invitation.getRequestKey());
         eventPublisher.publishEvent(new CareInvitationAcceptedEvent(invitation.getRequestKey(), memberKey));
     }
 
     @Transactional
     public void reject(String requestKey, String memberKey) {
         CareInvitation request = careInvitationReader.findByRequestKeyAndMemberKey(requestKey, memberKey);
-        careInvitationWriter.reject(request);
+        careInvitationWriter.reject(request.getRequestKey());
     }
 }

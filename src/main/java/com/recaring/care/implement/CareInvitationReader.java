@@ -1,6 +1,6 @@
 package com.recaring.care.implement;
 
-import com.recaring.care.business.ReceivedRequestInfo;
+import com.recaring.care.vo.ReceivedRequestInfo;
 import com.recaring.care.dataaccess.entity.CareInvitation;
 import com.recaring.care.dataaccess.repository.CareInvitationRepository;
 import com.recaring.member.dataaccess.entity.Member;

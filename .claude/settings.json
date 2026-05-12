@@ -28,7 +28,7 @@
       "Bash(gh auth status)",
       "Bash(sleep *)",
       "Bash(bash .claude/skills/deploy/scripts/*)",
-      "Bash(bash scripts/*)",
+      "Bash(bash .claude/skills/feature/scripts/*)",
       "Bash(find *)",
       "Bash(grep *)",
       "Bash(docker compose *)"
