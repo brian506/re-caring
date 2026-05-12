@@ -41,4 +41,16 @@ public class CareRelationshipRepositoryCustomImpl extends QuerydslRepositorySupp
                 .fetchFirst();
         return result != null;
     }
+
+    @Override
+    public boolean existsByWardKeyAndCaregiverKey(String wardKey, String caregiverKey) {
+        Integer result = selectOne()
+                .from(careRelationship)
+                .where(
+                        careRelationship.wardMemberKey.eq(wardKey),
+                        careRelationship.caregiverMemberKey.eq(caregiverKey)
+                )
+                .fetchFirst();
+        return result != null;
+    }
 }

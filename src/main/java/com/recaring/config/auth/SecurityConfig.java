@@ -82,7 +82,13 @@ public class SecurityConfig {
                                 mvc.matcher(HttpMethod.GET,  "/api/v1/care/wards"),
                                 mvc.matcher(HttpMethod.POST, "/api/v1/members/phones"),
                                 mvc.matcher(HttpMethod.GET,  "/api/v1/location/settings/{wardKey}/collection-interval"),
-                                mvc.matcher(HttpMethod.PATCH, "/api/v1/location/settings/{wardKey}/collection-interval")
+                                mvc.matcher(HttpMethod.PATCH, "/api/v1/location/settings/{wardKey}/collection-interval"),
+                                // SafeZone (GUARDIAN/MANAGER 모두 MemberRole.GUARDIAN)
+                                mvc.matcher(HttpMethod.POST,   "/api/v1/care/wards/{wardKey}/safe-zones"),
+                                mvc.matcher(HttpMethod.GET,    "/api/v1/care/wards/{wardKey}/safe-zones"),
+                                mvc.matcher(HttpMethod.GET,    "/api/v1/care/wards/{wardKey}/safe-zones/{safeZoneKey}"),
+                                mvc.matcher(HttpMethod.PATCH,  "/api/v1/care/wards/{wardKey}/safe-zones/{safeZoneKey}"),
+                                mvc.matcher(HttpMethod.DELETE, "/api/v1/care/wards/{wardKey}/safe-zones/{safeZoneKey}")
                         ).hasRole("GUARDIAN")
 
                         // GUARDIAN + WARD 모두 접근 가능
