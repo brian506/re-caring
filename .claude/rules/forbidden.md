@@ -37,6 +37,13 @@
   - `spring.jpa.hibernate.ddl-auto=validate` — 스키마 불일치 시 시작 즉시 충돌
   - `apply-ddl.sh` 실행 후 `Status: Success` 확인 전까지 다음 단계 진행 금지
 
+## Swagger / API Documentation
+
+- **Controller 메서드에 `@ApiResponses`를 사용하면 안 된다**
+  - 에러 응답은 `ErrorType`에 집중 관리하며, Swagger에 개별 응답 코드를 나열하지 않는다
+  - `@Operation(summary, description)`만 허용
+  - 탐지: Controller 파일에서 `@ApiResponses` 패턴
+
 ## Code Structure
 
 - **클래스 내부에 중첩 타입을 선언하면 안 된다**

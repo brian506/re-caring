@@ -63,6 +63,8 @@ public enum ErrorType {
     INVALID_CAREGIVER_ROLE(HttpStatus.BAD_REQUEST, ErrorCode.E5008, "보호자로 가입한 회원만 보호자/관리자로 추가할 수 있습니다.", LogLevel.WARN),
     ALREADY_PENDING_CARE_REQUEST(HttpStatus.BAD_REQUEST, ErrorCode.E5009, "이미 대기 중인 케어 요청이 존재합니다.", LogLevel.WARN),
     WARD_KEY_REQUIRED(HttpStatus.BAD_REQUEST, ErrorCode.E5010, "보호자를 추가하려면 보호 대상자 키가 필요합니다.", LogLevel.WARN),
+    NOT_FOUND_CARE_RELATIONSHIP(HttpStatus.BAD_REQUEST, ErrorCode.E5011, "존재하지 않는 케어 관계입니다.", LogLevel.WARN),
+    NOT_GUARDIAN_ROLE_IN_CARE(HttpStatus.FORBIDDEN, ErrorCode.E5012, "해당 보호 대상자의 보호자(GUARDIAN) 역할이 아닙니다.", LogLevel.WARN),
 
     // Location (E6xxx)
     NOT_WARD_MEMBER(HttpStatus.FORBIDDEN, ErrorCode.E6000, "보호 대상자로 가입한 회원만 GPS를 전송할 수 있습니다.", LogLevel.WARN),

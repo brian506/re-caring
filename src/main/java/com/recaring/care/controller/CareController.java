@@ -11,7 +11,6 @@ import com.recaring.security.vo.AuthMember;
 import com.recaring.support.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -138,5 +137,32 @@ public class CareController {
                 .map(CaregiverResponse::from)
                 .toList();
         return ResponseEntity.ok(ApiResponse.success(responses));
+    }
+
+    @Operation(
+            summary = "보호 대상자(Ward) 케어 관계 삭제",
+            description = "보호자/관리자가 특정 보호 대상자와의 케어 관계를 삭제합니다. [GUARDIAN 전용]"
+    )
+    @DeleteMapping("/wards/{wardKey}")
+    public ResponseEntity<ApiResponse<Void>> removeWard(
+            @AuthMember String memberKey,
+            @Parameter(description = "보호 대상자 memberKey") @PathVariable String wardKey
+    ) {
+        careRelationshipService.removeWard(memberKey, wardKey);
+        return ResponseEntity.ok(ApiResponse.success());
+    }
+
+    @Operation(
+            summary = "보호자/관리자(Caregiver) 케어 관계 삭제",
+            description = "보호자(GUARDIAN CareRole)가 특정 보호 대상자에 연결된 보호자 또는 관리자를 케어 관계에서 삭제합니다. [GUARDIAN 전용]"
+    )
+    @DeleteMapping("/wards/{wardKey}/caregivers/{caregiverKey}")
+    public ResponseEntity<ApiResponse<Void>> removeCaregiver(
+            @AuthMember String memberKey,
+            @Parameter(description = "보호 대상자 memberKey") @PathVariable String wardKey,
+            @Parameter(description = "삭제할 보호자/관리자 memberKey") @PathVariable String caregiverKey
+    ) {
+        careRelationshipService.removeCaregiver(memberKey, wardKey, caregiverKey);
+        return ResponseEntity.ok(ApiResponse.success());
     }
 }
