@@ -3,6 +3,7 @@ package com.recaring.care.business;
 import com.recaring.care.fixture.CareFixture;
 import com.recaring.care.implement.CareRelationshipReader;
 import com.recaring.care.implement.CareRelationshipValidator;
+import com.recaring.care.implement.CareRelationshipWriter;
 import com.recaring.care.vo.CaregiverInfo;
 import com.recaring.care.vo.WardInfo;
 import com.recaring.support.exception.AppException;
@@ -30,6 +31,9 @@ class CareRelationshipServiceTest {
 
     @Mock
     private CareRelationshipReader careRelationshipReader;
+
+    @Mock
+    private CareRelationshipWriter careRelationshipWriter;
 
     @Mock
     private CareRelationshipValidator careRelationshipValidator;
@@ -77,5 +81,63 @@ class CareRelationshipServiceTest {
                 .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_GUARDIAN_OF_WARD);
 
         then(careRelationshipReader).should(times(0)).findCaregiverInfos(any());
+    }
+
+    // ── removeWard ─────────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("보호 대상자 케어 관계 삭제 - 검증 통과 후 Writer의 delete가 호출된다")
+    void removeWard_validates_then_deletes() {
+        careRelationshipService.removeWard(CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY);
+
+        then(careRelationshipValidator).should(times(1))
+                .validateIsCaregiver(CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY);
+        then(careRelationshipWriter).should(times(1))
+                .delete(CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY);
+    }
+
+    @Test
+    @DisplayName("보호 대상자 케어 관계 삭제 - 케어 관계가 없으면 예외가 전파된다")
+    void removeWard_propagates_exception_when_not_caregiver() {
+        willThrow(new AppException(ErrorType.NOT_FOUND_CARE_RELATIONSHIP))
+                .given(careRelationshipValidator)
+                .validateIsCaregiver(CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY);
+
+        assertThatThrownBy(() ->
+                careRelationshipService.removeWard(CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY))
+                .isInstanceOf(AppException.class)
+                .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_FOUND_CARE_RELATIONSHIP);
+
+        then(careRelationshipWriter).should(times(0)).delete(any(), any());
+    }
+
+    // ── removeCaregiver ────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("보호자/관계자 케어 관계 삭제 - GUARDIAN 역할 검증 후 Writer의 delete가 호출된다")
+    void removeCaregiver_validates_guardian_role_then_deletes() {
+        careRelationshipService.removeCaregiver(
+                CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY);
+
+        then(careRelationshipValidator).should(times(1))
+                .validateIsGuardianRole(CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY);
+        then(careRelationshipWriter).should(times(1))
+                .delete(CareFixture.WARD_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY);
+    }
+
+    @Test
+    @DisplayName("보호자/관계자 케어 관계 삭제 - 요청자가 GUARDIAN 역할이 아니면 예외가 전파된다")
+    void removeCaregiver_propagates_exception_when_not_guardian_role() {
+        willThrow(new AppException(ErrorType.NOT_GUARDIAN_ROLE_IN_CARE))
+                .given(careRelationshipValidator)
+                .validateIsGuardianRole(CareFixture.MANAGER_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY);
+
+        assertThatThrownBy(() ->
+                careRelationshipService.removeCaregiver(
+                        CareFixture.MANAGER_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY))
+                .isInstanceOf(AppException.class)
+                .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_GUARDIAN_ROLE_IN_CARE);
+
+        then(careRelationshipWriter).should(times(0)).delete(any(), any());
     }
 }

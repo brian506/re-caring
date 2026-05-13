@@ -2,6 +2,7 @@ package com.recaring.care.business;
 
 import com.recaring.care.implement.CareRelationshipReader;
 import com.recaring.care.implement.CareRelationshipValidator;
+import com.recaring.care.implement.CareRelationshipWriter;
 import com.recaring.care.vo.CaregiverInfo;
 import com.recaring.care.vo.WardInfo;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,7 @@ import java.util.List;
 public class CareRelationshipService {
 
     private final CareRelationshipReader careRelationshipReader;
+    private final CareRelationshipWriter careRelationshipWriter;
     private final CareRelationshipValidator careRelationshipValidator;
 
     public List<WardInfo> getMyWards(String memberKey) {
@@ -23,5 +25,15 @@ public class CareRelationshipService {
     public List<CaregiverInfo> getCaregivers(String wardKey, String requesterKey) {
         careRelationshipValidator.validateCaregiverViewAccess(requesterKey, wardKey);
         return careRelationshipReader.findCaregiverInfos(wardKey);
+    }
+
+    public void removeWard(String guardianKey, String wardKey) {
+        careRelationshipValidator.validateIsCaregiver(guardianKey, wardKey);
+        careRelationshipWriter.delete(wardKey, guardianKey);
+    }
+
+    public void removeCaregiver(String guardianKey, String wardKey, String caregiverKey) {
+        careRelationshipValidator.validateIsGuardianRole(guardianKey, wardKey);
+        careRelationshipWriter.delete(wardKey, caregiverKey);
     }
 }

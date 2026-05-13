@@ -6,6 +6,8 @@ import com.recaring.care.vo.CareRelationshipRegistration;
 import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.dataaccess.entity.MemberRole;
 import com.recaring.member.implement.MemberReader;
+import com.recaring.support.exception.AppException;
+import com.recaring.support.exception.ErrorType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,5 +30,13 @@ public class CareRelationshipWriter {
         careRelationshipRepository.save(
                 CareRelationship.of(registration.wardMemberKey(), registration.caregiverKey(), registration.careRole())
         );
+    }
+
+    @Transactional
+    public void delete(String wardKey, String caregiverKey) {
+        CareRelationship relationship = careRelationshipRepository
+                .findByWardKeyAndCaregiverKey(wardKey, caregiverKey)
+                .orElseThrow(() -> new AppException(ErrorType.NOT_FOUND_CARE_RELATIONSHIP));
+        relationship.delete();
     }
 }
