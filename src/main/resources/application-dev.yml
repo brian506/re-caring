@@ -3,14 +3,6 @@ spring:
     activate:
       on-profile: dev
 
-  ai:
-    anthropic:
-      api-key: ${ANTHROPIC_API_KEY}
-      chat:
-        options:
-          model: claude-sonnet-4-6
-          max-tokens: 4096
-
   datasource:
       driver-class-name: org.postgresql.Driver
       url: ${DB_URL}
@@ -78,16 +70,6 @@ springdoc:
 alert:
   webhook:
     secret: ${ALERT_WEBHOOK_SECRET}
-  slack:
-    bot-token: ${SLACK_BOT_TOKEN}
-    signing-secret: ${SLACK_SIGNING_SECRET}
-    channel-id: ${SLACK_CHANNEL_ID}
-  github:
-    token: ${GITHUB_TOKEN}
-    owner: ${GITHUB_OWNER}
-    repo: ${GITHUB_REPO}
-  prometheus:
-    base-url: ${PROMETHEUS_BASE_URL}
   aws:
     ssm:
       instance-tag: recaring-app-server
