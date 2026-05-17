@@ -3,8 +3,13 @@ spring:
     activate:
       on-profile: dev
 
-  jmx:
-    enabled: true
+  ai:
+    anthropic:
+      api-key: ${ANTHROPIC_API_KEY}
+      chat:
+        options:
+          model: claude-sonnet-4-6
+          max-tokens: 4096
 
   datasource:
       driver-class-name: org.postgresql.Driver
@@ -19,6 +24,10 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
 
 management:
   endpoints:
@@ -47,20 +56,38 @@ coolsms:
 client:
   url: re-caring.com
 
+aws:
+  access-key: ${AWS_ACCESS_KEY}
+  secret-key: ${AWS_SECRET_KEY}
+  region: ${AWS_REGION:ap-northeast-2}
+  sqs:
+    gps-queue-url: ${AWS_SQS_GPS_QUEUE_URL}
+
+gps:
+  pattern:
+    analysis:
+      interval-ms: ${GPS_PATTERN_INTERVAL_MS:1800000}
+
 springdoc:
   swagger-ui:
-    disable-swagger-default-url: true
+    enabled: true
+    path: /swagger-ui/index.html
   api-docs:
     enabled: true
-    path: /v3/api-docs
-  default-consumes-media-type: application/json
-  default-produces-media-type: application/json
 
-logging:
-  file:
-    path: /app/logs
-  logback:
-    rollingpolicy:
-      max-file-size: 10MB
-      max-history: 30
-      total-size-cap: 1GB
+alert:
+  webhook:
+    secret: ${ALERT_WEBHOOK_SECRET}
+  slack:
+    bot-token: ${SLACK_BOT_TOKEN}
+    signing-secret: ${SLACK_SIGNING_SECRET}
+    channel-id: ${SLACK_CHANNEL_ID}
+  github:
+    token: ${GITHUB_TOKEN}
+    owner: ${GITHUB_OWNER}
+    repo: ${GITHUB_REPO}
+  prometheus:
+    base-url: ${PROMETHEUS_BASE_URL}
+  aws:
+    ssm:
+      instance-tag: recaring-app-server
