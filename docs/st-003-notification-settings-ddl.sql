@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS notification_settings (
     created_at TIMESTAMP(6),
     updated_at TIMESTAMP(6),
     deleted_at TIMESTAMP(6),
+    version BIGINT NOT NULL DEFAULT 0,
     ward_member_key VARCHAR(255) NOT NULL,
     safe_zone_entry_enabled BOOLEAN NOT NULL,
     safe_zone_exit_enabled BOOLEAN NOT NULL,
@@ -15,3 +16,6 @@ CREATE TABLE IF NOT EXISTS notification_settings (
     battery_threshold_percent INTEGER NOT NULL,
     CONSTRAINT uk_notification_settings_ward_member_key UNIQUE (ward_member_key)
 );
+
+ALTER TABLE notification_settings
+    ADD COLUMN IF NOT EXISTS version BIGINT NOT NULL DEFAULT 0;

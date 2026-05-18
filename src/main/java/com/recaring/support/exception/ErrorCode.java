@@ -25,6 +25,6 @@ public enum ErrorCode {
     E7000,
 
     // Notification (E8xxx)
-    E8000, E8001
+    E8000, E8001, E8002
 
 }

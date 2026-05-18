@@ -1,7 +1,7 @@
 package com.recaring.notification.implement;
 
 import com.recaring.care.dataaccess.entity.CareRole;
-import com.recaring.care.dataaccess.repository.CareRelationshipRepository;
+import com.recaring.care.implement.CareRelationshipReader;
 import com.recaring.member.implement.MemberReader;
 import com.recaring.notification.fixture.NotificationFixture;
 import com.recaring.support.exception.AppException;
@@ -18,7 +18,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("NotificationSettingValidator 단위 테스트")
+@DisplayName("NotificationSettingValidator unit test")
 class NotificationSettingValidatorTest {
 
     @InjectMocks
@@ -27,10 +27,10 @@ class NotificationSettingValidatorTest {
     @Mock
     private MemberReader memberReader;
     @Mock
-    private CareRelationshipRepository careRelationshipRepository;
+    private CareRelationshipReader careRelationshipReader;
 
     @Test
-    @DisplayName("대상자 본인은 알림 설정 접근 권한 검증을 통과한다")
+    @DisplayName("Passes when requester is the ward")
     void validateSettingAccess_passes_for_ward_self() {
         given(memberReader.findByMemberKey(NotificationFixture.WARD_KEY))
                 .willReturn(NotificationFixture.createWard());
@@ -40,17 +40,17 @@ class NotificationSettingValidatorTest {
                 NotificationFixture.WARD_KEY
         );
 
-        then(careRelationshipRepository).shouldHaveNoInteractions();
+        then(careRelationshipReader).shouldHaveNoInteractions();
     }
 
     @Test
-    @DisplayName("주보호자 케어 관계가 있으면 알림 설정 접근 권한 검증을 통과한다")
+    @DisplayName("Passes when requester is the guardian")
     void validateSettingAccess_passes_for_guardian_relationship() {
         given(memberReader.findByMemberKey(NotificationFixture.GUARDIAN_KEY))
                 .willReturn(NotificationFixture.createGuardian());
         given(memberReader.findByMemberKey(NotificationFixture.WARD_KEY))
                 .willReturn(NotificationFixture.createWard());
-        given(careRelationshipRepository.existsByWardKeyAndCaregiverKeyAndCareRole(
+        given(careRelationshipReader.existsWithCareRole(
                 NotificationFixture.WARD_KEY,
                 NotificationFixture.GUARDIAN_KEY,
                 CareRole.GUARDIAN
@@ -61,7 +61,7 @@ class NotificationSettingValidatorTest {
                 NotificationFixture.WARD_KEY
         );
 
-        then(careRelationshipRepository).should().existsByWardKeyAndCaregiverKeyAndCareRole(
+        then(careRelationshipReader).should().existsWithCareRole(
                 NotificationFixture.WARD_KEY,
                 NotificationFixture.GUARDIAN_KEY,
                 CareRole.GUARDIAN
@@ -69,18 +69,18 @@ class NotificationSettingValidatorTest {
     }
 
     @Test
-    @DisplayName("관계자 케어 관계가 있으면 알림 설정 접근 권한 검증을 통과한다")
+    @DisplayName("Passes when requester is the manager")
     void validateSettingAccess_passes_for_manager_relationship() {
         given(memberReader.findByMemberKey(NotificationFixture.MANAGER_KEY))
                 .willReturn(NotificationFixture.createManager());
         given(memberReader.findByMemberKey(NotificationFixture.WARD_KEY))
                 .willReturn(NotificationFixture.createWard());
-        given(careRelationshipRepository.existsByWardKeyAndCaregiverKeyAndCareRole(
+        given(careRelationshipReader.existsWithCareRole(
                 NotificationFixture.WARD_KEY,
                 NotificationFixture.MANAGER_KEY,
                 CareRole.GUARDIAN
         )).willReturn(false);
-        given(careRelationshipRepository.existsByWardKeyAndCaregiverKeyAndCareRole(
+        given(careRelationshipReader.existsWithCareRole(
                 NotificationFixture.WARD_KEY,
                 NotificationFixture.MANAGER_KEY,
                 CareRole.MANAGER
@@ -91,7 +91,12 @@ class NotificationSettingValidatorTest {
                 NotificationFixture.WARD_KEY
         );
 
-        then(careRelationshipRepository).should().existsByWardKeyAndCaregiverKeyAndCareRole(
+        then(careRelationshipReader).should().existsWithCareRole(
+                NotificationFixture.WARD_KEY,
+                NotificationFixture.MANAGER_KEY,
+                CareRole.GUARDIAN
+        );
+        then(careRelationshipReader).should().existsWithCareRole(
                 NotificationFixture.WARD_KEY,
                 NotificationFixture.MANAGER_KEY,
                 CareRole.MANAGER
@@ -99,7 +104,7 @@ class NotificationSettingValidatorTest {
     }
 
     @Test
-    @DisplayName("케어 관계가 없으면 알림 설정 접근 권한 검증에 실패한다")
+    @DisplayName("Throws when requester is not related to the ward")
     void validateSettingAccess_throws_for_unrelated_member() {
         given(memberReader.findByMemberKey(NotificationFixture.OTHER_GUARDIAN_KEY))
                 .willReturn(NotificationFixture.createOtherGuardian());

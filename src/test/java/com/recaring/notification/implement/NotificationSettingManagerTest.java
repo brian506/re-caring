@@ -13,14 +13,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Optional;
-
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("NotificationSettingManager 단위 테스트")
+@DisplayName("NotificationSettingManager unit test")
 class NotificationSettingManagerTest {
 
     @InjectMocks
@@ -30,31 +27,36 @@ class NotificationSettingManagerTest {
     private NotificationSettingRepository notificationSettingRepository;
 
     @Test
-    @DisplayName("저장된 설정이 없으면 기본 설정을 생성하고 안심존 설정을 저장한다")
-    void updateSafeZone_creates_default_setting_when_absent() {
-        given(notificationSettingRepository.findByWardMemberKey(NotificationFixture.WARD_KEY))
-                .willReturn(Optional.empty());
+    @DisplayName("Creates a default setting row when absent")
+    void addDefaultIfAbsent_inserts_default_setting() {
+        notificationSettingManager.addDefaultIfAbsent(NotificationFixture.WARD_KEY);
 
-        notificationSettingManager.updateSafeZone(NotificationFixture.WARD_KEY, false, true);
+        then(notificationSettingRepository).should().insertDefaultIfAbsent(NotificationFixture.WARD_KEY);
+    }
+
+    @Test
+    @DisplayName("Updates safe zone settings")
+    void updateSafeZone_updates_setting() {
+        NotificationSetting setting = NotificationFixture.createSetting(NotificationFixture.WARD_KEY);
+
+        notificationSettingManager.updateSafeZone(setting, false, true);
 
         ArgumentCaptor<NotificationSetting> captor = ArgumentCaptor.forClass(NotificationSetting.class);
         then(notificationSettingRepository).should().save(captor.capture());
         assertThat(captor.getValue().getWardMemberKey()).isEqualTo(NotificationFixture.WARD_KEY);
         assertThat(captor.getValue().isSafeZoneEntryEnabled()).isFalse();
         assertThat(captor.getValue().isSafeZoneExitEnabled()).isTrue();
-        assertThat(captor.getValue().getAnomalySensitivity()).isEqualTo(AnomalySensitivity.NORMAL);
-        assertThat(captor.getValue().getBatteryThresholdPercent()).isEqualTo(25);
+        assertThat(captor.getValue().getAnomalySensitivity()).isEqualTo(AnomalySensitivity.HIGH);
+        assertThat(captor.getValue().getBatteryThresholdPercent()).isEqualTo(40);
     }
 
     @Test
-    @DisplayName("저장된 설정이 있으면 이상탐지 설정을 수정한다")
+    @DisplayName("Updates anomaly settings")
     void updateAnomaly_updates_existing_setting() {
         NotificationSetting setting = NotificationFixture.createSetting(NotificationFixture.WARD_KEY);
-        given(notificationSettingRepository.findByWardMemberKey(NotificationFixture.WARD_KEY))
-                .willReturn(Optional.of(setting));
 
         notificationSettingManager.updateAnomaly(
-                NotificationFixture.WARD_KEY,
+                setting,
                 false,
                 true,
                 false,
@@ -69,14 +71,12 @@ class NotificationSettingManagerTest {
     }
 
     @Test
-    @DisplayName("저장된 설정이 있으면 배터리 알림 설정을 수정한다")
+    @DisplayName("Updates battery settings")
     void updateBattery_updates_existing_setting() {
         NotificationSetting setting = NotificationFixture.createSetting(NotificationFixture.WARD_KEY);
-        given(notificationSettingRepository.findByWardMemberKey(NotificationFixture.WARD_KEY))
-                .willReturn(Optional.of(setting));
 
         notificationSettingManager.updateBattery(
-                NotificationFixture.WARD_KEY,
+                setting,
                 true,
                 new BatteryThreshold(30)
         );

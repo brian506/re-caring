@@ -22,7 +22,7 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.times;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("케어 관계 Reader 단위 테스트")
+@DisplayName("CareRelationshipReader unit test")
 class CareRelationshipReaderTest {
 
     @InjectMocks
@@ -35,7 +35,7 @@ class CareRelationshipReaderTest {
     private MemberReader memberReader;
 
     @Test
-    @DisplayName("대상자에 대한 케어 관계 역할을 조회한다")
+    @DisplayName("Returns the care role between a ward and caregiver")
     void findCareRole_returns_role() {
         given(careRelationshipRepository.findAllByWardMemberKey(CareFixture.WARD_MEMBER_KEY))
                 .willReturn(List.of(
@@ -53,7 +53,7 @@ class CareRelationshipReaderTest {
     }
 
     @Test
-    @DisplayName("대상자와 관계가 없으면 예외가 발생한다")
+    @DisplayName("Throws when the ward and caregiver are unrelated")
     void findCareRole_throws_exception_when_not_related() {
         given(careRelationshipRepository.findAllByWardMemberKey(CareFixture.WARD_MEMBER_KEY))
                 .willReturn(List.of(
@@ -66,5 +66,23 @@ class CareRelationshipReaderTest {
         ))
                 .isInstanceOf(AppException.class)
                 .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_CARE_RELATED_WARD);
+    }
+
+    @Test
+    @DisplayName("Checks whether caregiver has the requested care role")
+    void existsWithCareRole_returns_relationship_existence() {
+        given(careRelationshipRepository.existsByWardKeyAndCaregiverKeyAndCareRole(
+                CareFixture.WARD_MEMBER_KEY,
+                CareFixture.MANAGER_MEMBER_KEY,
+                CareRole.MANAGER
+        )).willReturn(true);
+
+        boolean result = careRelationshipReader.existsWithCareRole(
+                CareFixture.WARD_MEMBER_KEY,
+                CareFixture.MANAGER_MEMBER_KEY,
+                CareRole.MANAGER
+        );
+
+        assertThat(result).isTrue();
     }
 }

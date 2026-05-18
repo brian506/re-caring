@@ -39,6 +39,7 @@ public class NotificationFixture {
     }
 
     public static Member createManager() {
+        // A manager in a care relationship still uses the GUARDIAN member role.
         return Member.builder()
                 .phone("01055556666")
                 .name("Manager")

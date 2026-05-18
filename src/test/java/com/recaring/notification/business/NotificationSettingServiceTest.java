@@ -4,6 +4,7 @@ import com.recaring.notification.business.command.UpdateAnomalyNotificationSetti
 import com.recaring.notification.business.command.UpdateBatteryNotificationSettingCommand;
 import com.recaring.notification.business.command.UpdateEmergencyCallNotificationSettingCommand;
 import com.recaring.notification.business.command.UpdateSafeZoneNotificationSettingCommand;
+import com.recaring.notification.dataaccess.entity.NotificationSetting;
 import com.recaring.notification.fixture.NotificationFixture;
 import com.recaring.notification.implement.NotificationSettingManager;
 import com.recaring.notification.implement.NotificationSettingReader;
@@ -21,7 +22,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("NotificationSettingService 단위 테스트")
+@DisplayName("NotificationSettingService unit test")
 class NotificationSettingServiceTest {
 
     @InjectMocks
@@ -35,7 +36,7 @@ class NotificationSettingServiceTest {
     private NotificationSettingValidator notificationSettingValidator;
 
     @Test
-    @DisplayName("알림 설정 조회 시 접근 권한을 검증하고 설정 정보를 반환한다")
+    @DisplayName("Validates access and returns notification settings")
     void getSetting_validates_access_and_returns_setting() {
         NotificationSettingInfo expected = NotificationSettingInfo.from(
                 NotificationFixture.createSetting(NotificationFixture.WARD_KEY)
@@ -50,23 +51,27 @@ class NotificationSettingServiceTest {
     }
 
     @Test
-    @DisplayName("안심존 알림 설정 수정 시 접근 권한을 검증하고 설정을 저장한다")
+    @DisplayName("Validates access, prepares a row, and updates safe zone settings")
     void updateSafeZone_validates_access_and_updates_setting() {
         UpdateSafeZoneNotificationSettingCommand command = new UpdateSafeZoneNotificationSettingCommand(
                 NotificationFixture.WARD_KEY,
                 false,
                 true
         );
+        NotificationSetting setting = NotificationFixture.createSetting(NotificationFixture.WARD_KEY);
+        given(notificationSettingReader.findExistingSetting(NotificationFixture.WARD_KEY)).willReturn(setting);
 
         notificationSettingService.updateSafeZone(NotificationFixture.GUARDIAN_KEY, command);
 
         then(notificationSettingValidator).should()
                 .validateSettingAccess(NotificationFixture.GUARDIAN_KEY, NotificationFixture.WARD_KEY);
-        then(notificationSettingManager).should().updateSafeZone(NotificationFixture.WARD_KEY, false, true);
+        then(notificationSettingManager).should().addDefaultIfAbsent(NotificationFixture.WARD_KEY);
+        then(notificationSettingReader).should().findExistingSetting(NotificationFixture.WARD_KEY);
+        then(notificationSettingManager).should().updateSafeZone(setting, false, true);
     }
 
     @Test
-    @DisplayName("이상탐지 알림 설정 수정 시 접근 권한을 검증하고 설정을 저장한다")
+    @DisplayName("Validates access, prepares a row, and updates anomaly settings")
     void updateAnomaly_validates_access_and_updates_setting() {
         UpdateAnomalyNotificationSettingCommand command = new UpdateAnomalyNotificationSettingCommand(
                 NotificationFixture.WARD_KEY,
@@ -75,13 +80,17 @@ class NotificationSettingServiceTest {
                 true,
                 AnomalySensitivity.HIGH
         );
+        NotificationSetting setting = NotificationFixture.createSetting(NotificationFixture.WARD_KEY);
+        given(notificationSettingReader.findExistingSetting(NotificationFixture.WARD_KEY)).willReturn(setting);
 
         notificationSettingService.updateAnomaly(NotificationFixture.MANAGER_KEY, command);
 
         then(notificationSettingValidator).should()
                 .validateSettingAccess(NotificationFixture.MANAGER_KEY, NotificationFixture.WARD_KEY);
+        then(notificationSettingManager).should().addDefaultIfAbsent(NotificationFixture.WARD_KEY);
+        then(notificationSettingReader).should().findExistingSetting(NotificationFixture.WARD_KEY);
         then(notificationSettingManager).should().updateAnomaly(
-                NotificationFixture.WARD_KEY,
+                setting,
                 true,
                 false,
                 true,
@@ -90,32 +99,40 @@ class NotificationSettingServiceTest {
     }
 
     @Test
-    @DisplayName("응급호출 알림 설정 수정 시 접근 권한을 검증하고 설정을 저장한다")
+    @DisplayName("Validates access, prepares a row, and updates emergency call settings")
     void updateEmergencyCall_validates_access_and_updates_setting() {
         UpdateEmergencyCallNotificationSettingCommand command =
                 new UpdateEmergencyCallNotificationSettingCommand(NotificationFixture.WARD_KEY, false);
+        NotificationSetting setting = NotificationFixture.createSetting(NotificationFixture.WARD_KEY);
+        given(notificationSettingReader.findExistingSetting(NotificationFixture.WARD_KEY)).willReturn(setting);
 
         notificationSettingService.updateEmergencyCall(NotificationFixture.WARD_KEY, command);
 
         then(notificationSettingValidator).should()
                 .validateSettingAccess(NotificationFixture.WARD_KEY, NotificationFixture.WARD_KEY);
-        then(notificationSettingManager).should().updateEmergencyCall(NotificationFixture.WARD_KEY, false);
+        then(notificationSettingManager).should().addDefaultIfAbsent(NotificationFixture.WARD_KEY);
+        then(notificationSettingReader).should().findExistingSetting(NotificationFixture.WARD_KEY);
+        then(notificationSettingManager).should().updateEmergencyCall(setting, false);
     }
 
     @Test
-    @DisplayName("배터리 알림 설정 수정 시 접근 권한을 검증하고 설정을 저장한다")
+    @DisplayName("Validates access, prepares a row, and updates battery settings")
     void updateBattery_validates_access_and_updates_setting() {
         UpdateBatteryNotificationSettingCommand command = new UpdateBatteryNotificationSettingCommand(
                 NotificationFixture.WARD_KEY,
                 true,
                 new BatteryThreshold(30)
         );
+        NotificationSetting setting = NotificationFixture.createSetting(NotificationFixture.WARD_KEY);
+        given(notificationSettingReader.findExistingSetting(NotificationFixture.WARD_KEY)).willReturn(setting);
 
         notificationSettingService.updateBattery(NotificationFixture.WARD_KEY, command);
 
         then(notificationSettingValidator).should()
                 .validateSettingAccess(NotificationFixture.WARD_KEY, NotificationFixture.WARD_KEY);
+        then(notificationSettingManager).should().addDefaultIfAbsent(NotificationFixture.WARD_KEY);
+        then(notificationSettingReader).should().findExistingSetting(NotificationFixture.WARD_KEY);
         then(notificationSettingManager).should()
-                .updateBattery(NotificationFixture.WARD_KEY, true, new BatteryThreshold(30));
+                .updateBattery(setting, true, new BatteryThreshold(30));
     }
 }

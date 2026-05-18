@@ -15,41 +15,37 @@ public class NotificationSettingManager {
     private final NotificationSettingRepository notificationSettingRepository;
 
     @Transactional
-    public void updateSafeZone(String wardKey, boolean entryEnabled, boolean exitEnabled) {
-        NotificationSetting setting = findOrCreate(wardKey);
+    public void addDefaultIfAbsent(String wardKey) {
+        notificationSettingRepository.insertDefaultIfAbsent(wardKey);
+    }
+
+    @Transactional
+    public void updateSafeZone(NotificationSetting setting, boolean entryEnabled, boolean exitEnabled) {
         setting.updateSafeZone(entryEnabled, exitEnabled);
         notificationSettingRepository.save(setting);
     }
 
     @Transactional
     public void updateAnomaly(
-            String wardKey,
+            NotificationSetting setting,
             boolean routeDeviationEnabled,
             boolean speedAnomalyEnabled,
             boolean wanderingAnomalyEnabled,
             AnomalySensitivity sensitivity
     ) {
-        NotificationSetting setting = findOrCreate(wardKey);
         setting.updateAnomaly(routeDeviationEnabled, speedAnomalyEnabled, wanderingAnomalyEnabled, sensitivity);
         notificationSettingRepository.save(setting);
     }
 
     @Transactional
-    public void updateEmergencyCall(String wardKey, boolean enabled) {
-        NotificationSetting setting = findOrCreate(wardKey);
+    public void updateEmergencyCall(NotificationSetting setting, boolean enabled) {
         setting.updateEmergencyCall(enabled);
         notificationSettingRepository.save(setting);
     }
 
     @Transactional
-    public void updateBattery(String wardKey, boolean lowBatteryEnabled, BatteryThreshold threshold) {
-        NotificationSetting setting = findOrCreate(wardKey);
+    public void updateBattery(NotificationSetting setting, boolean lowBatteryEnabled, BatteryThreshold threshold) {
         setting.updateBattery(lowBatteryEnabled, threshold);
         notificationSettingRepository.save(setting);
-    }
-
-    private NotificationSetting findOrCreate(String wardKey) {
-        return notificationSettingRepository.findByWardMemberKey(wardKey)
-                .orElseGet(() -> NotificationSetting.defaultFor(wardKey));
     }
 }

@@ -74,7 +74,8 @@ public enum ErrorType {
 
     // Notification (E8xxx)
     INVALID_NOTIFICATION_SENSITIVITY(HttpStatus.BAD_REQUEST, ErrorCode.E8000, "Unsupported notification sensitivity.", LogLevel.WARN),
-    INVALID_BATTERY_THRESHOLD(HttpStatus.BAD_REQUEST, ErrorCode.E8001, "Unsupported battery threshold.", LogLevel.WARN);
+    INVALID_BATTERY_THRESHOLD(HttpStatus.BAD_REQUEST, ErrorCode.E8001, "Unsupported battery threshold.", LogLevel.WARN),
+    NOTIFICATION_SETTING_UPDATE_CONFLICT(HttpStatus.CONFLICT, ErrorCode.E8002, "Notification setting was updated by another request. Please retry.", LogLevel.WARN);
 
     private final HttpStatus status;
     private final ErrorCode errorCode;

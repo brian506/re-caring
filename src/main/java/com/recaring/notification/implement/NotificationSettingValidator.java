@@ -1,7 +1,7 @@
 package com.recaring.notification.implement;
 
 import com.recaring.care.dataaccess.entity.CareRole;
-import com.recaring.care.dataaccess.repository.CareRelationshipRepository;
+import com.recaring.care.implement.CareRelationshipReader;
 import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.dataaccess.entity.MemberRole;
 import com.recaring.member.implement.MemberReader;
@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 public class NotificationSettingValidator {
 
     private final MemberReader memberReader;
-    private final CareRelationshipRepository careRelationshipRepository;
+    private final CareRelationshipReader careRelationshipReader;
 
     public void validateSettingAccess(String requesterKey, String wardKey) {
         Member requester = memberReader.findByMemberKey(requesterKey);
@@ -40,8 +40,8 @@ public class NotificationSettingValidator {
 
     private void validateCaregiverAccess(String caregiverKey, String wardKey) {
         boolean hasRelationship =
-                careRelationshipRepository.existsByWardKeyAndCaregiverKeyAndCareRole(wardKey, caregiverKey, CareRole.GUARDIAN) ||
-                        careRelationshipRepository.existsByWardKeyAndCaregiverKeyAndCareRole(wardKey, caregiverKey, CareRole.MANAGER);
+                careRelationshipReader.existsWithCareRole(wardKey, caregiverKey, CareRole.GUARDIAN) ||
+                        careRelationshipReader.existsWithCareRole(wardKey, caregiverKey, CareRole.MANAGER);
         if (!hasRelationship) {
             throw new AppException(ErrorType.NOT_CARE_RELATED_WARD);
         }

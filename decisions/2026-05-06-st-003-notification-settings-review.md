@@ -107,7 +107,7 @@ PATCH /api/v1/notifications/settings/{wardKey}/battery
 
 ## Confirm Before Implementation
 
-### Planner / PM
+### Planner / PM - Battery Threshold Options
 
 - Topic: 배터리 임계값 옵션
 - Current plan: 배터리 임계값은 10%부터 100%까지 5% 단위 단일 선택으로 저장한다.
@@ -117,7 +117,7 @@ PATCH /api/v1/notifications/settings/{wardKey}/battery
 - Owner: PM
 - Status: Blocking
 
-### Planner / PM
+### Planner / PM - Initial Defaults
 
 - Topic: 초기 기본값
 - Current plan: 설정 row가 없으면 기본 설정을 반환하고, 첫 수정 시 row를 생성한다.
@@ -127,7 +127,7 @@ PATCH /api/v1/notifications/settings/{wardKey}/battery
 - Owner: PM
 - Status: Blocking
 
-### Planner / PM
+### Planner / PM - Manager Update Permission
 
 - Topic: 관계자 수정 권한
 - Current plan: 주보호자, 관계자, 대상자 본인 모두 조회와 수정이 가능하다.

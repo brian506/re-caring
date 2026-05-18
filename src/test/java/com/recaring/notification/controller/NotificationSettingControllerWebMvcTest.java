@@ -18,6 +18,7 @@ import org.springframework.core.MethodParameter;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.context.request.RequestAttributes;
@@ -26,6 +27,7 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -34,7 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("NotificationSettingController MVC 테스트")
+@DisplayName("NotificationSettingController MVC test")
 class NotificationSettingControllerWebMvcTest {
 
     private static final String MEMBER_KEY = "member-key";
@@ -47,14 +49,17 @@ class NotificationSettingControllerWebMvcTest {
 
     @BeforeEach
     void setUp() {
+        LocalValidatorFactoryBean validator = new LocalValidatorFactoryBean();
+        validator.afterPropertiesSet();
         mockMvc = MockMvcBuilders.standaloneSetup(new NotificationSettingController(notificationSettingService))
                 .setControllerAdvice(new ApiControllerAdvice())
                 .setCustomArgumentResolvers(authMemberArgumentResolver())
+                .setValidator(validator)
                 .build();
     }
 
     @Test
-    @DisplayName("GET /api/v1/notifications/settings/{wardKey} - 알림 설정 전체를 반환한다")
+    @DisplayName("Returns all notification settings")
     void getSetting_returns_notification_setting() throws Exception {
         given(notificationSettingService.getSetting(MEMBER_KEY, WARD_KEY))
                 .willReturn(NotificationSettingInfo.from(setting()));
@@ -77,7 +82,7 @@ class NotificationSettingControllerWebMvcTest {
     }
 
     @Test
-    @DisplayName("PATCH /safe-zone - 안심존 알림 설정을 즉시 저장한다")
+    @DisplayName("Updates safe zone notification settings")
     void updateSafeZone_updates_setting() throws Exception {
         mockMvc.perform(patch("/api/v1/notifications/settings/{wardKey}/safe-zone", WARD_KEY)
                         .requestAttr("memberKey", MEMBER_KEY)
@@ -89,7 +94,7 @@ class NotificationSettingControllerWebMvcTest {
                 .andExpect(jsonPath("$.resultType").value("SUCCESS"));
 
         then(notificationSettingService).should().updateSafeZone(
-                org.mockito.ArgumentMatchers.eq(MEMBER_KEY),
+                eq(MEMBER_KEY),
                 argThat(command -> command.wardKey().equals(WARD_KEY)
                         && !command.entryEnabled()
                         && command.exitEnabled())
@@ -97,7 +102,22 @@ class NotificationSettingControllerWebMvcTest {
     }
 
     @Test
-    @DisplayName("PATCH /anomaly - 이상탐지 알림 설정을 즉시 저장한다")
+    @DisplayName("Returns 400 when a required safe zone boolean is missing")
+    void updateSafeZone_returns_400_when_boolean_is_missing() throws Exception {
+        mockMvc.perform(patch("/api/v1/notifications/settings/{wardKey}/safe-zone", WARD_KEY)
+                        .requestAttr("memberKey", MEMBER_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"exitEnabled": true}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.resultType").value("ERROR"));
+
+        then(notificationSettingService).shouldHaveNoInteractions();
+    }
+
+    @Test
+    @DisplayName("Updates anomaly notification settings")
     void updateAnomaly_updates_setting() throws Exception {
         mockMvc.perform(patch("/api/v1/notifications/settings/{wardKey}/anomaly", WARD_KEY)
                         .requestAttr("memberKey", MEMBER_KEY)
@@ -114,7 +134,7 @@ class NotificationSettingControllerWebMvcTest {
                 .andExpect(jsonPath("$.resultType").value("SUCCESS"));
 
         then(notificationSettingService).should().updateAnomaly(
-                org.mockito.ArgumentMatchers.eq(MEMBER_KEY),
+                eq(MEMBER_KEY),
                 argThat(command -> command.wardKey().equals(WARD_KEY)
                         && command.routeDeviationEnabled()
                         && !command.speedAnomalyEnabled()
@@ -124,7 +144,7 @@ class NotificationSettingControllerWebMvcTest {
     }
 
     @Test
-    @DisplayName("PATCH /battery - 지원하지 않는 배터리 임계값이면 400을 반환한다")
+    @DisplayName("Returns 400 when battery threshold is invalid")
     void updateBattery_returns_400_for_invalid_threshold() throws Exception {
         mockMvc.perform(patch("/api/v1/notifications/settings/{wardKey}/battery", WARD_KEY)
                         .requestAttr("memberKey", MEMBER_KEY)
@@ -138,7 +158,7 @@ class NotificationSettingControllerWebMvcTest {
     }
 
     @Test
-    @DisplayName("응답 DTO는 비즈니스 정보를 API 응답으로 변환한다")
+    @DisplayName("Maps business info to API response")
     void response_from_maps_business_info() {
         NotificationSettingResponse response = NotificationSettingResponse.from(
                 NotificationSettingInfo.from(setting())
