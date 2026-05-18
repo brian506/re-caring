@@ -26,6 +26,9 @@ public enum ErrorCode {
     E7000,
 
     // SafeZone (E8xxx) - 안심존
-    E8000, E8001
+    E8000, E8001,
+
+    // Notification (E9xxx)
+    E9000, E9001, E9002
 
 }

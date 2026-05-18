@@ -10,6 +10,7 @@ import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -23,6 +24,13 @@ public class ApiControllerAdvice {
         printAppExceptionLog(e);
 
         return new ResponseEntity<>(ApiResponse.error(e.getErrorType(), e.getData()), e.getErrorType().getStatus());
+    }
+
+    @NullMarked
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    public ResponseEntity<ApiResponse<@Nullable Object>> handleOptimisticLockException(ObjectOptimisticLockingFailureException e) {
+        log.warn("[OptimisticLockException]: message={}", e.getMessage());
+        return new ResponseEntity<>(ApiResponse.error(ErrorType.NOTIFICATION_SETTING_UPDATE_CONFLICT, null), HttpStatus.CONFLICT);
     }
 
     @NullMarked

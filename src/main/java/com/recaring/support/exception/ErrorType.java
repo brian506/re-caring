@@ -76,7 +76,12 @@ public enum ErrorType {
 
     // SafeZone (E8xxx)
     NOT_FOUND_SAFE_ZONE(HttpStatus.BAD_REQUEST, ErrorCode.E8000, "존재하지 않는 안심존입니다.", LogLevel.WARN),
-    NOT_CAREGIVER_OF_WARD(HttpStatus.FORBIDDEN, ErrorCode.E8001, "해당 보호 대상자의 보호자/관계자가 아닙니다.", LogLevel.WARN);
+    NOT_CAREGIVER_OF_WARD(HttpStatus.FORBIDDEN, ErrorCode.E8001, "해당 보호 대상자의 보호자/관계자가 아닙니다.", LogLevel.WARN),
+
+    // Notification (E9xxx)
+    INVALID_NOTIFICATION_SENSITIVITY(HttpStatus.BAD_REQUEST, ErrorCode.E9000, "Unsupported notification sensitivity.", LogLevel.WARN),
+    INVALID_BATTERY_THRESHOLD(HttpStatus.BAD_REQUEST, ErrorCode.E9001, "Unsupported battery threshold.", LogLevel.WARN),
+    NOTIFICATION_SETTING_UPDATE_CONFLICT(HttpStatus.CONFLICT, ErrorCode.E9002, "Notification setting was updated by another request. Please retry.", LogLevel.WARN);
 
     private final HttpStatus status;
     private final ErrorCode errorCode;
