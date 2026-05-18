@@ -20,15 +20,24 @@
   "editable": true,
   "refresh": "30s",
   "schemaVersion": 42,
-  "time": { "from": "now-6h", "to": "now" },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
   "timepicker": {},
   "timezone": "browser",
-  "tags": ["re-caring", "spring-boot"],
+  "tags": [
+    "re-caring",
+    "spring-boot"
+  ],
   "annotations": {
     "list": [
       {
         "builtIn": 1,
-        "datasource": { "type": "datasource", "uid": "grafana" },
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
         "enable": true,
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
@@ -38,497 +47,1656 @@
     ]
   },
   "panels": [
-
-    { "type": "row", "title": "📊 Overview", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 }, "id": 100, "collapsed": false },
-
     {
-      "id": 1, "type": "stat", "title": "Total Requests (24h)",
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 1 },
-      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
-      "fieldConfig": { "defaults": { "unit": "short", "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": 0 }] } }, "overrides": [] },
-      "targets": [{
-        "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-        "expr": "sum(http_server_requests_seconds_count{job=\"recaring\", uri!=\"/actuator/prometheus\"})",
-        "instant": true, "refId": "A"
-      }]
+      "type": "row",
+      "title": "📊 Overview",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 100,
+      "collapsed": false
     },
-
     {
-      "id": 2, "type": "stat", "title": "Request Per Second (현재)",
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-      "gridPos": { "h": 5, "w": 6, "x": 6, "y": 1 },
-      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
-      "fieldConfig": { "defaults": { "unit": "reqps", "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": 0 }] } }, "overrides": [] },
-      "targets": [{
-        "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-        "expr": "sum(rate(http_server_requests_seconds_count{job=\"recaring\", uri!=\"/actuator/prometheus\"}[1m]))",
-        "instant": true, "refId": "A"
-      }]
-    },
-
-    {
-      "id": 3, "type": "stat", "title": "Total 5xx Errors (24h)",
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-      "gridPos": { "h": 5, "w": 6, "x": 12, "y": 1 },
-      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "id": 1,
+      "type": "stat",
+      "title": "Total Requests (24h)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 0,
+        "y": 1
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
       "fieldConfig": {
         "defaults": {
           "unit": "short",
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": 0 }, { "color": "red", "value": 1 }] }
-        }, "overrides": []
-      },
-      "targets": [{
-        "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-        "expr": "sum(http_server_requests_seconds_count{job=\"recaring\", status=~\"5..\"})",
-        "instant": true, "refId": "A"
-      }]
-    },
-
-    {
-      "id": 4, "type": "gauge", "title": "JVM Heap 사용률",
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-      "gridPos": { "h": 5, "w": 6, "x": 18, "y": 1 },
-      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "showThresholdLabels": false, "showThresholdMarkers": true },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "percentunit", "min": 0, "max": 1,
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": 0 }, { "color": "yellow", "value": 0.7 }, { "color": "red", "value": 0.85 }] }
-        }, "overrides": []
-      },
-      "targets": [{
-        "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-        "expr": "sum(jvm_memory_used_bytes{job=\"recaring\", area=\"heap\"}) / sum(jvm_memory_max_bytes{job=\"recaring\", area=\"heap\"})",
-        "instant": true, "refId": "A"
-      }]
-    },
-
-    { "type": "row", "title": "🌐 HTTP 요청 분석", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 6 }, "id": 101, "collapsed": false },
-
-    {
-      "id": 5, "type": "timeseries", "title": "Request Per Second (URI별)",
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 7 },
-      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single" } },
-      "fieldConfig": { "defaults": { "unit": "reqps", "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 10, "showPoints": "auto" } }, "overrides": [] },
-      "targets": [{
-        "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-        "expr": "sum by(uri, method) (rate(http_server_requests_seconds_count{job=\"recaring\", uri!=\"/actuator/prometheus\"}[1m]))",
-        "legendFormat": "[{{method}}] {{uri}}", "refId": "A"
-      }]
-    },
-
-    {
-      "id": 6, "type": "timeseries", "title": "P95 응답시간",
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 7 },
-      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single" } },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "s",
-          "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 0, "showPoints": "auto" },
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": 0 }, { "color": "yellow", "value": 0.5 }, { "color": "red", "value": 1 }] }
-        }, "overrides": []
-      },
-      "targets": [{
-        "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-        "expr": "histogram_quantile(0.95, sum by(uri, le) (rate(http_server_requests_seconds_bucket{job=\"recaring\", uri!=\"/actuator/prometheus\"}[1m])))",
-        "legendFormat": "{{uri}}", "refId": "A"
-      }]
-    },
-
-    {
-      "id": 7, "type": "timeseries", "title": "P99 응답시간",
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 15 },
-      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single" } },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "s",
-          "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 0, "showPoints": "auto" }
-        }, "overrides": []
-      },
-      "targets": [{
-        "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-        "expr": "histogram_quantile(0.99, sum by(uri, le) (rate(http_server_requests_seconds_bucket{job=\"recaring\", uri!=\"/actuator/prometheus\"}[1m])))",
-        "legendFormat": "{{uri}}", "refId": "A"
-      }]
-    },
-
-    {
-      "id": 8, "type": "timeseries", "title": "5xx 에러율 (%)",
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 15 },
-      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single" } },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "percentunit", "min": 0, "max": 1,
-          "custom": { "drawStyle": "line", "lineWidth": 1, "thresholdsStyle": { "mode": "area" } },
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": 0 }, { "color": "red", "value": 0.01 }] }
-        }, "overrides": []
-      },
-      "targets": [{
-        "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-        "expr": "sum by(uri) (rate(http_server_requests_seconds_count{job=\"recaring\", status=~\"5..\", uri!=\"/actuator/prometheus\"}[1m])) / sum by(uri) (rate(http_server_requests_seconds_count{job=\"recaring\", uri!=\"/actuator/prometheus\"}[1m]))",
-        "legendFormat": "{{uri}}", "refId": "A"
-      }]
-    },
-
-    {
-      "id": 9, "type": "bargauge", "title": "URI별 평균 응답시간",
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 15 },
-      "options": { "displayMode": "lcd", "orientation": "horizontal", "reduceOptions": { "calcs": ["lastNotNull"] }, "showUnfilled": true },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "s", "color": { "mode": "continuous-GrYlRd" },
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": 0 }, { "color": "yellow", "value": 0.3 }, { "color": "red", "value": 1 }] }
-        }, "overrides": []
-      },
-      "targets": [{
-        "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-        "expr": "sum by(uri, method) (http_server_requests_seconds_sum{job=\"recaring\", uri!=\"/actuator/prometheus\"}) / sum by(uri, method) (http_server_requests_seconds_count{job=\"recaring\", uri!=\"/actuator/prometheus\"})",
-        "legendFormat": "[{{method}}] {{uri}}", "instant": true, "refId": "A"
-      }]
-    },
-
-    {
-      "id": 24, "type": "bargauge", "title": "경로당 총 요청 수",
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 23 },
-      "options": { "displayMode": "gradient", "orientation": "horizontal", "reduceOptions": { "calcs": ["lastNotNull"] }, "showUnfilled": true },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short", "color": { "mode": "continuous-BlPu" },
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": 0 }] }
-        }, "overrides": []
-      },
-      "targets": [{
-        "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-        "expr": "sort_desc(sum by(uri, method) (http_server_requests_seconds_count{job=\"recaring\", uri!=\"/actuator/prometheus\"}))",
-        "legendFormat": "[{{method}}] {{uri}}", "instant": true, "refId": "A"
-      }]
-    },
-
-    { "type": "row", "title": "⚙️ JVM / 시스템 리소스", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 31 }, "id": 102, "collapsed": false },
-
-    {
-      "id": 10, "type": "timeseries", "title": "CPU 사용률",
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 32 },
-      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single" } },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "percentunit", "min": 0, "max": 1,
-          "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 20 },
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": 0 }, { "color": "yellow", "value": 0.6 }, { "color": "red", "value": 0.8 }] }
-        }, "overrides": []
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          }
+        },
+        "overrides": []
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-          "expr": "process_cpu_usage{job=\"recaring\"}",
-          "legendFormat": "Process CPU", "refId": "A"
-        },
-        {
-          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-          "expr": "system_cpu_usage{job=\"recaring\"}",
-          "legendFormat": "System CPU", "refId": "B"
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "sum(http_server_requests_seconds_count{job=\"recaring\", uri!=\"/actuator/prometheus\"})",
+          "instant": true,
+          "refId": "A"
         }
       ]
     },
-
     {
-      "id": 11, "type": "timeseries", "title": "JVM Heap 메모리",
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 32 },
-      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single" } },
+      "id": 2,
+      "type": "stat",
+      "title": "Request Per Second (현재)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 6,
+        "y": 1
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "sum(rate(http_server_requests_seconds_count{job=\"recaring\", uri!=\"/actuator/prometheus\"}[1m]))",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Total 5xx Errors (24h)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 12,
+        "y": 1
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "sum(http_server_requests_seconds_count{job=\"recaring\", status=~\"5..\"})",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "gauge",
+      "title": "JVM Heap 사용률",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 18,
+        "y": 1
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "yellow",
+                "value": 0.7
+              },
+              {
+                "color": "red",
+                "value": 0.85
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "sum(jvm_memory_used_bytes{job=\"recaring\", area=\"heap\"}) / sum(jvm_memory_max_bytes{job=\"recaring\", area=\"heap\"})",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "🌐 HTTP 요청 분석",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 6
+      },
+      "id": 101,
+      "collapsed": false
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Request Per Second (URI별)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 7
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "auto"
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "sum by(uri, method) (rate(http_server_requests_seconds_count{job=\"recaring\", uri!=\"/actuator/prometheus\"}[1m]))",
+          "legendFormat": "[{{method}}] {{uri}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "P95 응답시간",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 7
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "showPoints": "auto"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "yellow",
+                "value": 0.5
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "histogram_quantile(0.95, sum by(uri, le) (rate(http_server_requests_seconds_bucket{job=\"recaring\", uri!=\"/actuator/prometheus\"}[1m])))",
+          "legendFormat": "{{uri}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "P99 응답시간",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 15
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 0,
+            "showPoints": "auto"
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "histogram_quantile(0.99, sum by(uri, le) (rate(http_server_requests_seconds_bucket{job=\"recaring\", uri!=\"/actuator/prometheus\"}[1m])))",
+          "legendFormat": "{{uri}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "5xx 에러율 (%)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 15
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "thresholdsStyle": {
+              "mode": "area"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 0.01
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "sum by(uri) (rate(http_server_requests_seconds_count{job=\"recaring\", status=~\"5..\", uri!=\"/actuator/prometheus\"}[1m])) / sum by(uri) (rate(http_server_requests_seconds_count{job=\"recaring\", uri!=\"/actuator/prometheus\"}[1m]))",
+          "legendFormat": "{{uri}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "type": "bargauge",
+      "title": "URI별 평균 응답시간",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 15
+      },
+      "options": {
+        "displayMode": "lcd",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "showUnfilled": true
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "color": {
+            "mode": "continuous-GrYlRd"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "yellow",
+                "value": 0.3
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "sum by(uri, method) (http_server_requests_seconds_sum{job=\"recaring\", uri!=\"/actuator/prometheus\"}) / sum by(uri, method) (http_server_requests_seconds_count{job=\"recaring\", uri!=\"/actuator/prometheus\"})",
+          "legendFormat": "[{{method}}] {{uri}}",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 24,
+      "type": "bargauge",
+      "title": "경로당 총 요청 수",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 23
+      },
+      "options": {
+        "displayMode": "gradient",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "showUnfilled": true
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "continuous-BlPu"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": 0
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "sort_desc(sum by(uri, method) (http_server_requests_seconds_count{job=\"recaring\", uri!=\"/actuator/prometheus\"}))",
+          "legendFormat": "[{{method}}] {{uri}}",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "⚙️ JVM / 시스템 리소스",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 31
+      },
+      "id": 102,
+      "collapsed": false
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "CPU 사용률",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 32
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 20
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "yellow",
+                "value": 0.6
+              },
+              {
+                "color": "red",
+                "value": 0.8
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "process_cpu_usage{job=\"recaring\"}",
+          "legendFormat": "Process CPU",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "system_cpu_usage{job=\"recaring\"}",
+          "legendFormat": "System CPU",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "JVM Heap 메모리",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 32
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
       "fieldConfig": {
         "defaults": {
           "unit": "bytes",
-          "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 20 }
-        }, "overrides": []
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 20
+          }
+        },
+        "overrides": []
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
           "expr": "sum(jvm_memory_used_bytes{job=\"recaring\", area=\"heap\"})",
-          "legendFormat": "Heap Used", "refId": "A"
+          "legendFormat": "Heap Used",
+          "refId": "A"
         },
         {
-          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
           "expr": "sum(jvm_memory_max_bytes{job=\"recaring\", area=\"heap\"})",
-          "legendFormat": "Heap Max", "refId": "B"
+          "legendFormat": "Heap Max",
+          "refId": "B"
         }
       ]
     },
-
     {
-      "id": 12, "type": "timeseries", "title": "GC Pause 시간",
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 32 },
-      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single" } },
+      "id": 12,
+      "type": "timeseries",
+      "title": "GC Pause 시간",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 32
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
       "fieldConfig": {
         "defaults": {
           "unit": "s",
-          "custom": { "drawStyle": "bars", "lineWidth": 1, "fillOpacity": 80 }
-        }, "overrides": []
-      },
-      "targets": [{
-        "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-        "expr": "rate(jvm_gc_pause_seconds_sum{job=\"recaring\"}[1m])",
-        "legendFormat": "{{action}} {{cause}}", "refId": "A"
-      }]
-    },
-
-    { "type": "row", "title": "🐳 ECS 컨테이너", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 40 }, "id": 104, "collapsed": false },
-
-    {
-      "id": 17, "type": "timeseries", "title": "ECS CPU 사용률 (%)",
-      "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 41 },
-      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single" } },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "percent", "min": 0, "max": 100,
-          "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 20 },
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": 0 }, { "color": "yellow", "value": 60 }, { "color": "red", "value": 80 }] }
-        }, "overrides": []
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 1,
+            "fillOpacity": 80
+          }
+        },
+        "overrides": []
       },
       "targets": [
         {
-          "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
-          "queryMode": "Metrics", "metricQueryType": 0, "metricEditorMode": 0,
-          "namespace": "AWS/ECS", "metricName": "CPUUtilization",
-          "dimensions": { "ClusterName": ["recaring-cluster"], "ServiceName": ["recaring-service"] },
-          "matchExact": true, "statistic": "Average", "period": "", "region": "default",
-          "legendFormat": "Spring App CPU", "refId": "A"
-        },
-        {
-          "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
-          "queryMode": "Metrics", "metricQueryType": 0, "metricEditorMode": 0,
-          "namespace": "AWS/ECS", "metricName": "CPUUtilization",
-          "dimensions": { "ClusterName": ["recaring-cluster"], "ServiceName": ["recaring-monitoring-service"] },
-          "matchExact": true, "statistic": "Average", "period": "", "region": "default",
-          "legendFormat": "Monitoring CPU", "refId": "B"
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "rate(jvm_gc_pause_seconds_sum{job=\"recaring\"}[1m])",
+          "legendFormat": "{{action}} {{cause}}",
+          "refId": "A"
         }
       ]
     },
-
     {
-      "id": 18, "type": "timeseries", "title": "ECS 메모리 사용률 (%)",
-      "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 41 },
-      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single" } },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "percent", "min": 0, "max": 100,
-          "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 20 },
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": 0 }, { "color": "yellow", "value": 70 }, { "color": "red", "value": 85 }] }
-        }, "overrides": []
+      "type": "row",
+      "title": "🐳 ECS 컨테이너",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 40
       },
-      "targets": [
-        {
-          "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
-          "queryMode": "Metrics", "metricQueryType": 0, "metricEditorMode": 0,
-          "namespace": "AWS/ECS", "metricName": "MemoryUtilization",
-          "dimensions": { "ClusterName": ["recaring-cluster"], "ServiceName": ["recaring-service"] },
-          "matchExact": true, "statistic": "Average", "period": "", "region": "default",
-          "legendFormat": "Spring App Memory", "refId": "A"
-        },
-        {
-          "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
-          "queryMode": "Metrics", "metricQueryType": 0, "metricEditorMode": 0,
-          "namespace": "AWS/ECS", "metricName": "MemoryUtilization",
-          "dimensions": { "ClusterName": ["recaring-cluster"], "ServiceName": ["recaring-monitoring-service"] },
-          "matchExact": true, "statistic": "Average", "period": "", "region": "default",
-          "legendFormat": "Monitoring Memory", "refId": "B"
-        }
-      ]
+      "id": 104,
+      "collapsed": false
     },
-
-    { "type": "row", "title": "🖥️ EC2 호스트", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 49 }, "id": 105, "collapsed": false },
-
     {
-      "id": 19, "type": "timeseries", "title": "EC2 메모리 사용률 (%)",
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-      "gridPos": { "h": 8, "w": 16, "x": 0, "y": 50 },
-      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single" } },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "percent", "min": 0, "max": 100,
-          "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 20 },
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": 0 }, { "color": "yellow", "value": 70 }, { "color": "red", "value": 85 }] }
-        }, "overrides": []
+      "id": 17,
+      "type": "timeseries",
+      "title": "ECS CPU 사용률 (%)",
+      "datasource": {
+        "type": "cloudwatch",
+        "uid": "${DS_CLOUDWATCH}"
       },
-      "targets": [{
-        "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-        "expr": "(1 - node_memory_MemAvailable_bytes{job=\"node\"} / node_memory_MemTotal_bytes{job=\"node\"}) * 100",
-        "legendFormat": "{{instance}}", "refId": "A"
-      }]
-    },
-
-    {
-      "id": 20, "type": "stat", "title": "EC2 가용 메모리",
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 50 },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 41
+      },
       "options": {
-        "colorMode": "background", "graphMode": "none",
-        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 20
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "yellow",
+                "value": 60
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "${DS_CLOUDWATCH}"
+          },
+          "queryMode": "Metrics",
+          "metricQueryType": 0,
+          "metricEditorMode": 0,
+          "namespace": "AWS/ECS",
+          "metricName": "CPUUtilization",
+          "dimensions": {
+            "ClusterName": [
+              "recaring-cluster"
+            ],
+            "ServiceName": [
+              "recaring-service"
+            ]
+          },
+          "matchExact": true,
+          "statistic": "Average",
+          "period": "",
+          "region": "default",
+          "legendFormat": "Spring App CPU",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "${DS_CLOUDWATCH}"
+          },
+          "queryMode": "Metrics",
+          "metricQueryType": 0,
+          "metricEditorMode": 0,
+          "namespace": "AWS/ECS",
+          "metricName": "CPUUtilization",
+          "dimensions": {
+            "ClusterName": [
+              "recaring-cluster"
+            ],
+            "ServiceName": [
+              "recaring-monitoring-service"
+            ]
+          },
+          "matchExact": true,
+          "statistic": "Average",
+          "period": "",
+          "region": "default",
+          "legendFormat": "Monitoring CPU",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "type": "timeseries",
+      "title": "ECS 메모리 사용률 (%)",
+      "datasource": {
+        "type": "cloudwatch",
+        "uid": "${DS_CLOUDWATCH}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 41
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 20
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "yellow",
+                "value": 70
+              },
+              {
+                "color": "red",
+                "value": 85
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "${DS_CLOUDWATCH}"
+          },
+          "queryMode": "Metrics",
+          "metricQueryType": 0,
+          "metricEditorMode": 0,
+          "namespace": "AWS/ECS",
+          "metricName": "MemoryUtilization",
+          "dimensions": {
+            "ClusterName": [
+              "recaring-cluster"
+            ],
+            "ServiceName": [
+              "recaring-service"
+            ]
+          },
+          "matchExact": true,
+          "statistic": "Average",
+          "period": "",
+          "region": "default",
+          "legendFormat": "Spring App Memory",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "${DS_CLOUDWATCH}"
+          },
+          "queryMode": "Metrics",
+          "metricQueryType": 0,
+          "metricEditorMode": 0,
+          "namespace": "AWS/ECS",
+          "metricName": "MemoryUtilization",
+          "dimensions": {
+            "ClusterName": [
+              "recaring-cluster"
+            ],
+            "ServiceName": [
+              "recaring-monitoring-service"
+            ]
+          },
+          "matchExact": true,
+          "statistic": "Average",
+          "period": "",
+          "region": "default",
+          "legendFormat": "Monitoring Memory",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "id": 27,
+      "type": "stat",
+      "title": "ECS 서비스 구동 상태 (Running Tasks)",
+      "datasource": {
+        "type": "cloudwatch",
+        "uid": "${DS_CLOUDWATCH}"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 24,
+        "x": 0,
+        "y": 49
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "orientation": "horizontal",
+        "textMode": "value_and_name",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": 0
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "${DS_CLOUDWATCH}"
+          },
+          "queryMode": "Metrics",
+          "metricQueryType": 0,
+          "metricEditorMode": 0,
+          "namespace": "AWS/ECS",
+          "metricName": "RunningTaskCount",
+          "dimensions": {
+            "ClusterName": [
+              "recaring-cluster"
+            ],
+            "ServiceName": [
+              "recaring-service"
+            ]
+          },
+          "matchExact": true,
+          "statistic": "Maximum",
+          "period": "60",
+          "region": "default",
+          "legendFormat": "recaring-service",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "${DS_CLOUDWATCH}"
+          },
+          "queryMode": "Metrics",
+          "metricQueryType": 0,
+          "metricEditorMode": 0,
+          "namespace": "AWS/ECS",
+          "metricName": "RunningTaskCount",
+          "dimensions": {
+            "ClusterName": [
+              "recaring-cluster"
+            ],
+            "ServiceName": [
+              "recaring-monitoring-service"
+            ]
+          },
+          "matchExact": true,
+          "statistic": "Maximum",
+          "period": "60",
+          "region": "default",
+          "legendFormat": "recaring-monitoring-service",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "🖥️ EC2 호스트",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 54
+      },
+      "id": 105,
+      "collapsed": false
+    },
+    {
+      "id": 19,
+      "type": "timeseries",
+      "title": "EC2 메모리 사용률 (%)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 16,
+        "x": 0,
+        "y": 55
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 20
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "yellow",
+                "value": 70
+              },
+              {
+                "color": "red",
+                "value": 85
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "(1 - node_memory_MemAvailable_bytes{job=\"node\"} / node_memory_MemTotal_bytes{job=\"node\"}) * 100",
+          "legendFormat": "{{instance}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "type": "stat",
+      "title": "EC2 가용 메모리",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 55
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
         "orientation": "vertical"
       },
       "fieldConfig": {
         "defaults": {
           "unit": "bytes",
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": 0 }, { "color": "yellow", "value": 200000000 }, { "color": "green", "value": 500000000 }] }
-        }, "overrides": []
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": 0
+              },
+              {
+                "color": "yellow",
+                "value": 200000000
+              },
+              {
+                "color": "green",
+                "value": 500000000
+              }
+            ]
+          }
+        },
+        "overrides": []
       },
-      "targets": [{
-        "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-        "expr": "node_memory_MemAvailable_bytes{job=\"node\"}",
-        "legendFormat": "{{instance}}", "instant": true, "refId": "A"
-      }]
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "node_memory_MemAvailable_bytes{job=\"node\"}",
+          "legendFormat": "{{instance}}",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
     },
-
-    { "type": "row", "title": "🔴 Redis", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 58 }, "id": 106, "collapsed": false },
-
     {
-      "id": 21, "type": "timeseries", "title": "Redis 메모리 사용량",
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 59 },
-      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single" } },
+      "type": "row",
+      "title": "🔴 Redis",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 63
+      },
+      "id": 106,
+      "collapsed": false
+    },
+    {
+      "id": 21,
+      "type": "timeseries",
+      "title": "Redis 메모리 사용량",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 64
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
       "fieldConfig": {
         "defaults": {
           "unit": "bytes",
-          "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 20 }
-        }, "overrides": []
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 20
+          }
+        },
+        "overrides": []
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
           "expr": "redis_memory_used_bytes{job=\"redis\"}",
-          "legendFormat": "Used", "refId": "A"
+          "legendFormat": "Used",
+          "refId": "A"
         },
         {
-          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
           "expr": "redis_memory_max_bytes{job=\"redis\"}",
-          "legendFormat": "Max", "refId": "B"
+          "legendFormat": "Max",
+          "refId": "B"
         }
       ]
     },
-
     {
-      "id": 22, "type": "stat", "title": "Redis 히트율",
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 59 },
-      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "id": 22,
+      "type": "stat",
+      "title": "Redis 히트율",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 12,
+        "y": 64
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
       "fieldConfig": {
         "defaults": {
-          "unit": "percentunit", "min": 0, "max": 1,
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": 0 }, { "color": "yellow", "value": 0.8 }, { "color": "green", "value": 0.95 }] }
-        }, "overrides": []
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": 0
+              },
+              {
+                "color": "yellow",
+                "value": 0.8
+              },
+              {
+                "color": "green",
+                "value": 0.95
+              }
+            ]
+          }
+        },
+        "overrides": []
       },
-      "targets": [{
-        "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-        "expr": "rate(redis_keyspace_hits_total{job=\"redis\"}[5m]) / (rate(redis_keyspace_hits_total{job=\"redis\"}[5m]) + rate(redis_keyspace_misses_total{job=\"redis\"}[5m]))",
-        "instant": true, "refId": "A"
-      }]
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "rate(redis_keyspace_hits_total{job=\"redis\"}[5m]) / (rate(redis_keyspace_hits_total{job=\"redis\"}[5m]) + rate(redis_keyspace_misses_total{job=\"redis\"}[5m]))",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
     },
-
     {
-      "id": 23, "type": "timeseries", "title": "Redis 연결 수 / Ops",
-      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 59 },
-      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single" } },
+      "id": 23,
+      "type": "timeseries",
+      "title": "Redis 연결 수 / Ops",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 18,
+        "y": 64
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
       "fieldConfig": {
         "defaults": {
           "unit": "short",
-          "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 10 }
-        }, "overrides": []
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10
+          }
+        },
+        "overrides": []
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
           "expr": "redis_connected_clients{job=\"redis\"}",
-          "legendFormat": "Clients", "refId": "A"
+          "legendFormat": "Clients",
+          "refId": "A"
         },
         {
-          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
           "expr": "redis_instantaneous_ops_per_sec{job=\"redis\"}",
-          "legendFormat": "Ops/sec", "refId": "B"
+          "legendFormat": "Ops/sec",
+          "refId": "B"
         }
       ]
     },
-
-    { "type": "row", "title": "📋 로그 (CloudWatch)", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 67 }, "id": 103, "collapsed": false },
-
     {
-      "id": 13, "type": "timeseries", "title": "로그 레벨 발생 빈도",
-      "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
-      "gridPos": { "h": 8, "w": 6, "x": 0, "y": 68 },
-      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single" } },
+      "type": "row",
+      "title": "📋 로그 (CloudWatch)",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 72
+      },
+      "id": 103,
+      "collapsed": false
+    },
+    {
+      "id": 13,
+      "type": "timeseries",
+      "title": "로그 레벨 발생 빈도",
+      "datasource": {
+        "type": "cloudwatch",
+        "uid": "${DS_CLOUDWATCH}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 0,
+        "y": 73
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
       "fieldConfig": {
-        "defaults": { "custom": { "drawStyle": "bars", "fillOpacity": 80, "stacking": { "mode": "normal", "group": "A" } } },
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            }
+          }
+        },
         "overrides": [
-          { "matcher": { "id": "byName", "options": "ERROR" }, "properties": [{ "id": "color", "value": { "fixedColor": "red",    "mode": "fixed" } }] },
-          { "matcher": { "id": "byName", "options": "WARN"  }, "properties": [{ "id": "color", "value": { "fixedColor": "orange", "mode": "fixed" } }] },
-          { "matcher": { "id": "byName", "options": "INFO"  }, "properties": [{ "id": "color", "value": { "fixedColor": "green",  "mode": "fixed" } }] }
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "ERROR"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "WARN"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "orange",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "INFO"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
         ]
       },
-      "targets": [{
-        "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
-        "queryMode": "Logs",
-        "logGroups": [{ "name": "/ecs/recaring" }],
-        "expression": "fields @timestamp, @message | parse @message /\\s{2}(?P<level>ERROR|WARN|INFO)\\s/ | stats count(*) as count by level, bin(5m) | sort bin(5m) asc",
-        "region": "default",
-        "refId": "A"
-      }]
+      "targets": [
+        {
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "${DS_CLOUDWATCH}"
+          },
+          "queryMode": "Logs",
+          "logGroups": [
+            {
+              "name": "/ecs/recaring"
+            }
+          ],
+          "expression": "fields @timestamp, @message | parse @message /\\s{2}(?P<level>ERROR|WARN|INFO)\\s/ | stats count(*) as count by level, bin(5m) | sort bin(5m) asc",
+          "region": "default",
+          "refId": "A"
+        }
+      ]
     },
-
     {
-      "id": 14, "type": "logs", "title": "전체 로그 (INFO / WARN / ERROR)",
-      "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
-      "gridPos": { "h": 8, "w": 18, "x": 6, "y": 68 },
-      "options": { "dedupStrategy": "none", "enableLogDetails": true, "fontSize": "small", "showTime": true, "sortOrder": "Descending", "wrapLogMessage": true },
-      "targets": [{
-        "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
-        "queryMode": "Logs",
-        "logGroups": [{ "name": "/ecs/recaring" }],
-        "expression": "fields @timestamp, @message | sort @timestamp desc | limit 200",
-        "region": "default",
-        "refId": "A"
-      }]
+      "id": 14,
+      "type": "logs",
+      "title": "전체 로그 (INFO / WARN / ERROR)",
+      "datasource": {
+        "type": "cloudwatch",
+        "uid": "${DS_CLOUDWATCH}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 18,
+        "x": 6,
+        "y": 73
+      },
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "fontSize": "small",
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "${DS_CLOUDWATCH}"
+          },
+          "queryMode": "Logs",
+          "logGroups": [
+            {
+              "name": "/ecs/recaring"
+            }
+          ],
+          "expression": "fields @timestamp, @message | sort @timestamp desc | limit 200",
+          "region": "default",
+          "refId": "A"
+        }
+      ]
     },
-
     {
-      "id": 15, "type": "logs", "title": "ERROR 로그",
-      "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 76 },
-      "options": { "dedupStrategy": "none", "enableLogDetails": true, "fontSize": "small", "showTime": true, "sortOrder": "Descending", "wrapLogMessage": false },
-      "targets": [{
-        "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
-        "queryMode": "Logs",
-        "logGroups": [{ "name": "/ecs/recaring" }],
-        "expression": "fields @timestamp, @message | filter @message like /\\sERROR\\s/ | sort @timestamp desc | limit 200",
-        "region": "default",
-        "refId": "A"
-      }]
+      "id": 15,
+      "type": "logs",
+      "title": "ERROR 로그",
+      "datasource": {
+        "type": "cloudwatch",
+        "uid": "${DS_CLOUDWATCH}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 81
+      },
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "fontSize": "small",
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": false
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "${DS_CLOUDWATCH}"
+          },
+          "queryMode": "Logs",
+          "logGroups": [
+            {
+              "name": "/ecs/recaring"
+            }
+          ],
+          "expression": "fields @timestamp, @message | filter @message like /\\sERROR\\s/ | sort @timestamp desc | limit 200",
+          "region": "default",
+          "refId": "A"
+        }
+      ]
     },
-
     {
-      "id": 16, "type": "logs", "title": "WARN 로그",
-      "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 76 },
-      "options": { "dedupStrategy": "none", "enableLogDetails": true, "fontSize": "small", "showTime": true, "sortOrder": "Descending", "wrapLogMessage": false },
-      "targets": [{
-        "datasource": { "type": "cloudwatch", "uid": "${DS_CLOUDWATCH}" },
-        "queryMode": "Logs",
-        "logGroups": [{ "name": "/ecs/recaring" }],
-        "expression": "fields @timestamp, @message | filter @message like /\\sWARN\\s/ | sort @timestamp desc | limit 200",
-        "region": "default",
-        "refId": "A"
-      }]
+      "id": 16,
+      "type": "logs",
+      "title": "WARN 로그",
+      "datasource": {
+        "type": "cloudwatch",
+        "uid": "${DS_CLOUDWATCH}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 81
+      },
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "fontSize": "small",
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": false
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "${DS_CLOUDWATCH}"
+          },
+          "queryMode": "Logs",
+          "logGroups": [
+            {
+              "name": "/ecs/recaring"
+            }
+          ],
+          "expression": "fields @timestamp, @message | filter @message like /\\sWARN\\s/ | sort @timestamp desc | limit 200",
+          "region": "default",
+          "refId": "A"
+        }
+      ]
     }
-
   ]
 }

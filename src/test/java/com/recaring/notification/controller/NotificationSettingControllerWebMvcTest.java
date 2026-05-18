@@ -154,7 +154,7 @@ class NotificationSettingControllerWebMvcTest {
                                 """))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.resultType").value("ERROR"))
-                .andExpect(jsonPath("$.error.errorCode").value("E8001"));
+                .andExpect(jsonPath("$.error.errorCode").value("E9001"));
     }
 
     @Test

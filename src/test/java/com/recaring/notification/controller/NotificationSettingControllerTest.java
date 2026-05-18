@@ -222,7 +222,7 @@ class NotificationSettingControllerTest extends AbstractIntegrationTest {
                 .expectStatus().isBadRequest()
                 .expectBody()
                 .jsonPath("$.resultType").isEqualTo("ERROR")
-                .jsonPath("$.error.errorCode").isEqualTo("E8000");
+                .jsonPath("$.error.errorCode").isEqualTo("E9000");
     }
 
     @Test
@@ -239,7 +239,7 @@ class NotificationSettingControllerTest extends AbstractIntegrationTest {
                 .expectStatus().isBadRequest()
                 .expectBody()
                 .jsonPath("$.resultType").isEqualTo("ERROR")
-                .jsonPath("$.error.errorCode").isEqualTo("E8001");
+                .jsonPath("$.error.errorCode").isEqualTo("E9001");
     }
 
     @Test

@@ -5,6 +5,7 @@ import com.recaring.care.dataaccess.entity.CareRole;
 import com.recaring.support.repository.QuerydslRepositorySupport;
 
 import java.util.List;
+import java.util.Optional;
 
 import static com.recaring.care.dataaccess.entity.QCareRelationship.careRelationship;
 
@@ -40,5 +41,28 @@ public class CareRelationshipRepositoryCustomImpl extends QuerydslRepositorySupp
                 )
                 .fetchFirst();
         return result != null;
+    }
+
+    @Override
+    public boolean existsByWardKeyAndCaregiverKey(String wardKey, String caregiverKey) {
+        Integer result = selectOne()
+                .from(careRelationship)
+                .where(
+                        careRelationship.wardMemberKey.eq(wardKey),
+                        careRelationship.caregiverMemberKey.eq(caregiverKey)
+                )
+                .fetchFirst();
+        return result != null;
+    }
+
+    @Override
+    public Optional<CareRelationship> findByWardKeyAndCaregiverKey(String wardKey, String caregiverKey) {
+        CareRelationship result = selectFrom(careRelationship)
+                .where(
+                        careRelationship.wardMemberKey.eq(wardKey),
+                        careRelationship.caregiverMemberKey.eq(caregiverKey)
+                )
+                .fetchFirst();
+        return Optional.ofNullable(result);
     }
 }

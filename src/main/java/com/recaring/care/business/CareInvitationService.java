@@ -2,6 +2,7 @@ package com.recaring.care.business;
 
 import com.recaring.care.implement.CareInvitationManager;
 import com.recaring.care.implement.CareInvitationReader;
+import com.recaring.care.vo.ReceivedRequestInfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

@@ -4,6 +4,7 @@ import com.recaring.care.dataaccess.entity.CareInvitation;
 import com.recaring.care.event.CareInvitationAcceptedEvent;
 import com.recaring.care.event.CareInvitationSentEvent;
 import com.recaring.care.fixture.CareFixture;
+import com.recaring.care.vo.CareRelationshipRegistration;
 import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.implement.MemberReader;
 import com.recaring.sms.vo.PhoneNumber;
@@ -122,8 +123,8 @@ class CareInvitationManagerTest {
 
         careInvitationManager.accept(CareFixture.REQUEST_KEY, CareFixture.WARD_MEMBER_KEY);
 
-        then(careRelationshipWriter).should(times(1)).register(eq(invitation), eq(CareFixture.WARD_MEMBER_KEY));
-        then(careInvitationWriter).should(times(1)).accept(invitation);
+        then(careRelationshipWriter).should(times(1)).register(any(CareRelationshipRegistration.class), eq(CareFixture.WARD_MEMBER_KEY));
+        then(careInvitationWriter).should(times(1)).accept(anyString());
         then(eventPublisher).should(times(1)).publishEvent(any(CareInvitationAcceptedEvent.class));
     }
 
@@ -137,7 +138,7 @@ class CareInvitationManagerTest {
 
         careInvitationManager.reject(CareFixture.REQUEST_KEY, CareFixture.WARD_MEMBER_KEY);
 
-        then(careInvitationWriter).should(times(1)).reject(invitation);
+        then(careInvitationWriter).should(times(1)).reject(anyString());
         then(careRelationshipWriter).should(times(0)).register(any(), any());
     }
 }

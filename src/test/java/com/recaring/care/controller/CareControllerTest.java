@@ -19,6 +19,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+@org.junit.jupiter.api.Tag("integration")
 @DisplayName("CareController HTTP 통합 테스트")
 class CareControllerTest extends AbstractIntegrationTest {
 
@@ -236,5 +237,94 @@ class CareControllerTest extends AbstractIntegrationTest {
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + strangerToken)
                 .exchange()
                 .expectStatus().isForbidden();
+    }
+
+    // ── 보호 대상자 케어 관계 삭제 ─────────────────────────────────────────
+
+    @Test
+    @DisplayName("DELETE /api/v1/care/wards/{wardKey} - 보호자가 대상자와의 케어 관계를 삭제한다")
+    void removeWard_success() {
+        CareRelationship relationship = CareFixture.createGuardianRelationship(
+                ward.getMemberKey(), guardian.getMemberKey());
+        careRelationshipRepository.save(relationship);
+
+        client.delete()
+                .uri("/api/v1/care/wards/" + ward.getMemberKey())
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + guardianToken)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.resultType").isEqualTo("SUCCESS");
+    }
+
+    @Test
+    @DisplayName("DELETE /api/v1/care/wards/{wardKey} - 케어 관계가 없으면 4xx가 반환된다")
+    void removeWard_fails_when_relationship_not_found() {
+        client.delete()
+                .uri("/api/v1/care/wards/" + ward.getMemberKey())
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + guardianToken)
+                .exchange()
+                .expectStatus().is4xxClientError();
+    }
+
+    @Test
+    @DisplayName("DELETE /api/v1/care/wards/{wardKey} - 인증 없이 요청하면 401이 반환된다")
+    void removeWard_without_auth_returns_401() {
+        client.delete()
+                .uri("/api/v1/care/wards/" + ward.getMemberKey())
+                .exchange()
+                .expectStatus().isUnauthorized();
+    }
+
+    // ── 보호자/관계자 케어 관계 삭제 ───────────────────────────────────────
+
+    @Test
+    @DisplayName("DELETE /api/v1/care/wards/{wardKey}/caregivers/{caregiverKey} - GUARDIAN이 관리자를 삭제한다")
+    void removeCaregiver_success() {
+        Member manager = memberRepository.save(CareFixture.createGuardianMember(CareFixture.MANAGER_PHONE));
+        localAuthRepository.save(LocalAuth.of(manager.getMemberKey(), "manager@test.com",
+                passwordEncoder.encode("password1!")));
+
+        careRelationshipRepository.save(
+                CareFixture.createGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+        careRelationshipRepository.save(
+                CareFixture.createManagerRelationship(ward.getMemberKey(), manager.getMemberKey()));
+
+        client.delete()
+                .uri("/api/v1/care/wards/" + ward.getMemberKey() + "/caregivers/" + manager.getMemberKey())
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + guardianToken)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.resultType").isEqualTo("SUCCESS");
+    }
+
+    @Test
+    @DisplayName("DELETE /api/v1/care/wards/{wardKey}/caregivers/{caregiverKey} - GUARDIAN 역할이 아니면 4xx가 반환된다")
+    void removeCaregiver_fails_when_not_guardian_role() {
+        Member manager = memberRepository.save(CareFixture.createGuardianMember(CareFixture.MANAGER_PHONE));
+        localAuthRepository.save(LocalAuth.of(manager.getMemberKey(), "manager@test.com",
+                passwordEncoder.encode("password1!")));
+        String managerToken = extractAccessToken("manager@test.com", "password1!");
+
+        careRelationshipRepository.save(
+                CareFixture.createGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+        careRelationshipRepository.save(
+                CareFixture.createManagerRelationship(ward.getMemberKey(), manager.getMemberKey()));
+
+        client.delete()
+                .uri("/api/v1/care/wards/" + ward.getMemberKey() + "/caregivers/" + guardian.getMemberKey())
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + managerToken)
+                .exchange()
+                .expectStatus().is4xxClientError();
+    }
+
+    @Test
+    @DisplayName("DELETE /api/v1/care/wards/{wardKey}/caregivers/{caregiverKey} - 인증 없이 요청하면 401이 반환된다")
+    void removeCaregiver_without_auth_returns_401() {
+        client.delete()
+                .uri("/api/v1/care/wards/" + ward.getMemberKey() + "/caregivers/" + guardian.getMemberKey())
+                .exchange()
+                .expectStatus().isUnauthorized();
     }
 }

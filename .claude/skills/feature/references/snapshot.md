@@ -1,6 +1,6 @@
 # 프로젝트 스냅샷
 
-> 마지막 업데이트: 2026-05-04. 기능 추가·수정 시 해당 섹션을 갱신한다.
+> 마지막 업데이트: 2026-05-13. 기능 추가·수정 시 해당 섹션을 갱신한다.
 
 ## 도메인별 패키지 현황
 
@@ -11,7 +11,9 @@
 | `device` | DeviceTokenService | WardDeviceTokenManager, WardDeviceTokenReader |
 | `location` | LocationService | GpsHistoryReader/Writer, GpsLatestCacheReader/Writer, SseEmitterManager, LocationValidator, GpsPatternAnalysisScheduler(SQS 발행) |
 | `member` | MemberService | MemberReader/Writer/Validator |
+| `safezone` | SafeZoneService | SafeZoneReader, SafeZoneWriter |
 | `sms` | PhoneVerificationService | SmsClient, SmsCodeGenerator, PhoneVerificationReader/Writer |
+| `alert` | AlertService, AlertResolutionService | AlertInvestigationOrchestrator, AlertInvestigationAgent(Tool Use Loop), SsmContextFetcher, PrometheusContextFetcher, ErrorHistoryFetcher, RunbookService, SlackAlertNotifier, GitHubPrCreator, AlertRetryHandler |
 
 ## API 엔드포인트
 
@@ -32,11 +34,18 @@
 | Care | PATCH | `/api/v1/care/requests/{key}/reject` | 케어 요청 거절 |
 | Care | GET | `/api/v1/care/wards` | 내 보호대상자 목록 |
 | Care | GET | `/api/v1/care/wards/{wardKey}/caregivers` | 보호자/관리자 목록 |
+| Care | DELETE | `/api/v1/care/wards/{wardKey}` | 보호 대상자 케어 관계 삭제 (GUARDIAN, MANAGER) |
+| Care | DELETE | `/api/v1/care/wards/{wardKey}/caregivers/{caregiverKey}` | 특정 보호자/관리자 케어 관계 삭제 (GUARDIAN only) |
 | Device | POST | `/api/v1/device/token` | Device Token 발급 (WARD, JWT 인증) |
 | Location | POST | `/api/v1/location/gps` | GPS 좌표 전송 (WARD, Device Token 인증) |
 | Location | GET | `/api/v1/location/stream/{wardKey}` | SSE 실시간 위치 스트림 (GUARDIAN) |
 | Location | GET | `/api/v1/location/history/{wardKey}` | 날짜별 이동 경로 히스토리 |
 | Member | GET/PATCH | `/api/v1/member/...` | 회원 정보 조회/수정 |
+| SafeZone | POST | `/api/v1/care/wards/{wardKey}/safe-zones` | 안심존 추가 (GUARDIAN only) |
+| SafeZone | GET | `/api/v1/care/wards/{wardKey}/safe-zones` | 안심존 목록 조회 (GUARDIAN, MANAGER) |
+| SafeZone | GET | `/api/v1/care/wards/{wardKey}/safe-zones/{safeZoneKey}` | 안심존 상세 조회 (GUARDIAN, MANAGER) |
+| SafeZone | PATCH | `/api/v1/care/wards/{wardKey}/safe-zones/{safeZoneKey}` | 안심존 수정 (GUARDIAN only) |
+| SafeZone | DELETE | `/api/v1/care/wards/{wardKey}/safe-zones/{safeZoneKey}` | 안심존 삭제 (GUARDIAN only) |
 | SMS | POST | `/api/v1/sms/verification/send` | SMS 인증코드 발송 |
 | SMS | POST | `/api/v1/sms/verification/verify` | SMS 인증코드 검증 |
 
@@ -53,13 +62,16 @@
 | GpsHistory | gps_histories | wardMemberKey, latitude, longitude, recordedAt |
 | WardDeviceToken | ward_device_tokens | wardKey(UUID, UNIQUE), token(UUID, UNIQUE), createdAt, expiresAt |
 | MembersTermsAgreement | members_terms_agreements | memberKey, agreedAt |
+| SafeZone | safe_zones | safeZoneKey(UUID), wardMemberKey, name, address, latitude, longitude, radius(SMALL/MEDIUM/LARGE/XLARGE) |
+| AlertRunbook | alert_runbooks | errorSignature, commands(jsonb), resolutionContext, successCount, isValid |
+| AlertInvestigation | alert_investigations | fingerprint, alertName, severity, threadTs, status, fixCommands(jsonb) |
 
 ## Redis 키 구조
 
 ```
-refresh:{memberKey}       RefreshToken          TTL: 7일
-sms:{phone}               SMS 인증코드          TTL: 3분
-gps:latest:{memberKey}    GPS 최신 위치         TTL: 5분  { lat, lng, timestamp }
+sms:{phone}                    SMS 인증코드          TTL: 3분
+gps:latest:{memberKey}         GPS 최신 위치         TTL: 5분  { lat, lng, timestamp }
+investigation:{fingerprint}    Alert 조사 상태       TTL: 10분  { threadTs, status, startedAt, fixCommands }
 ```
 
 ## SqsPublisher 전략 패턴

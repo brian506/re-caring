@@ -1,6 +1,7 @@
 package com.recaring.auth.fixture;
 
 import com.recaring.auth.business.command.SignUpCommand;
+import com.recaring.auth.dataaccess.entity.RefreshToken;
 import com.recaring.auth.vo.EncodedPassword;
 import com.recaring.auth.vo.LocalEmail;
 import com.recaring.auth.vo.Password;
@@ -17,6 +18,12 @@ public class AuthFixture {
     public static final String ENCODED_PASSWORD = "$2a$10$encoded";
     public static final String ACCESS_TOKEN = "access-token";
     public static final String REFRESH_TOKEN = "refresh-token";
+    public static final String MEMBER_KEY = "test-member-key-uuid";
+    private static final long REFRESH_EXPIRATION_MS = 1209600000L; // 14 days
+
+    public static RefreshToken createRefreshToken() {
+        return RefreshToken.of(MEMBER_KEY, REFRESH_TOKEN, REFRESH_EXPIRATION_MS);
+    }
 
     public static LocalEmail createLocalEmail() {
         return new LocalEmail(EMAIL);

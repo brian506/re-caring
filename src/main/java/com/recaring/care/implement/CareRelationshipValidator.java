@@ -61,6 +61,20 @@ public class CareRelationshipValidator {
         }
     }
 
+    public void validateIsCaregiver(String requesterKey, String wardKey) {
+        boolean isCaregiver = careRelationshipRepository.existsByWardKeyAndCaregiverKey(wardKey, requesterKey);
+        if (!isCaregiver) {
+            throw new AppException(ErrorType.NOT_FOUND_CARE_RELATIONSHIP);
+        }
+    }
+
+    public void validateIsGuardianRole(String requesterKey, String wardKey) {
+        boolean isGuardian = careRelationshipRepository.existsByWardKeyAndCaregiverKeyAndCareRole(wardKey, requesterKey, CareRole.GUARDIAN);
+        if (!isGuardian) {
+            throw new AppException(ErrorType.NOT_GUARDIAN_ROLE_IN_CARE);
+        }
+    }
+
     private void checkRoleLimit(List<CareRelationship> relationships, CareRole role, int maxCount) {
         long count = relationships.stream()
                 .filter(r -> r.getCareRole() == role)

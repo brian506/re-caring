@@ -3,6 +3,8 @@ package com.recaring.care.implement;
 import com.recaring.care.dataaccess.entity.CareInvitation;
 import com.recaring.care.dataaccess.repository.CareInvitationRepository;
 import com.recaring.care.vo.NewCareInvitation;
+import com.recaring.support.exception.AppException;
+import com.recaring.support.exception.ErrorType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,12 +21,16 @@ public class CareInvitationWriter {
     }
 
     @Transactional
-    public void accept(CareInvitation request) {
+    public void accept(String requestKey) {
+        CareInvitation request = careInvitationRepository.findByRequestKey(requestKey)
+                .orElseThrow(() -> new AppException(ErrorType.NOT_FOUND_CARE_REQUEST));
         request.accept();
     }
 
     @Transactional
-    public void reject(CareInvitation request) {
+    public void reject(String requestKey) {
+        CareInvitation request = careInvitationRepository.findByRequestKey(requestKey)
+                .orElseThrow(() -> new AppException(ErrorType.NOT_FOUND_CARE_REQUEST));
         request.reject();
     }
 }

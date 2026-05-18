@@ -12,10 +12,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 개선점, 아키텍처 조언, 전체 프로젝트 분석 요청 시 → **절대로** 전체 코드베이스를 스캔하지 않는다. 아래 파일을 읽는 것으로 충분하다. Explore 에이전트를 쓸 때도 이 파일들만 읽도록 프롬프트에 명시한다.
 
 - **인프라/시스템 구조**: `docs/architecture.md`
-- **코드 아키텍처 규칙**: `.claude/skills/feature-dev/references/architecture.md`
-- **API·엔티티·기술 부채 현황**: `.claude/skills/feature-dev/references/snapshot.md`
+- **코드 아키텍처 규칙**: `.claude/rules/architecture.md`
+- **API·엔티티·기술 부채 현황**: `.claude/skills/feature/references/snapshot.md`
 
-기능 구현 후 새 API·엔티티·알려진 이슈가 생기면 `.claude/skills/feature-dev/references/snapshot.md`의 해당 섹션을 함께 갱신한다.
+기능 구현 후 새 API·엔티티·알려진 이슈가 생기면 `.claude/skills/feature/references/snapshot.md`의 해당 섹션을 함께 갱신한다.
 
 ## 빌드 및 실행 명령어
 
@@ -49,6 +49,12 @@ log.error("[Redis 캐시 : 직렬화 실패]: wardKey={} | error={}", wardKey, e
 - 상세내용: 동작 결과 (예: `저장 완료`, `전송 실패`, `연결 종료`)
 - 추가 정보: `key=value | key=value` 형식으로 컨텍스트 추가
 - 레벨 선택: 정상 흐름 → `info`, 비즈니스 예외 → `warn`, 시스템 오류 → `error`, 디버그 → `debug`
+
+## 인프라 접근 규칙
+
+EC2 서버 접근은 **SSH가 아닌 AWS SSM Session Manager**로만 한다. SSH 키·포트 22를 쓰지 않는다.
+
+인스턴스 ID는 태그(`Name=recaring-app-server`)로 동적 조회한다. 하드코딩 금지.
 
 ## 인덱스 규칙
 

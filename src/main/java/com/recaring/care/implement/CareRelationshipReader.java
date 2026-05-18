@@ -1,7 +1,7 @@
 package com.recaring.care.implement;
 
-import com.recaring.care.business.CaregiverInfo;
-import com.recaring.care.business.WardInfo;
+import com.recaring.care.vo.CaregiverInfo;
+import com.recaring.care.vo.WardInfo;
 import com.recaring.care.dataaccess.entity.CareRelationship;
 import com.recaring.care.dataaccess.entity.CareRole;
 import com.recaring.care.dataaccess.repository.CareRelationshipRepository;

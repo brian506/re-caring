@@ -17,6 +17,7 @@ public enum ErrorCode {
 
     // Care (E5xxx) - 케어 관계, 초대
     E5000, E5001, E5002, E5003, E5004, E5005, E5006, E5007, E5008, E5009, E5010,
+    E5011, E5012,
 
     // Location (E6xxx) - GPS, SSE
     E6000, E6001, E6002,
@@ -24,7 +25,10 @@ public enum ErrorCode {
     // Device (E7xxx) - Device Token
     E7000,
 
-    // Notification (E8xxx)
-    E8000, E8001, E8002
+    // SafeZone (E8xxx) - 안심존
+    E8000, E8001,
+
+    // Notification (E9xxx)
+    E9000, E9001, E9002
 
 }

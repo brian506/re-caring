@@ -1,5 +1,8 @@
 package com.recaring.auth.implement;
 
+import com.recaring.auth.dataaccess.entity.RefreshToken;
+import com.recaring.auth.dataaccess.repository.RefreshTokenRepository;
+import com.recaring.auth.fixture.AuthFixture;
 import com.recaring.support.exception.AppException;
 import com.recaring.support.exception.ErrorType;
 import org.junit.jupiter.api.DisplayName;
@@ -8,12 +11,16 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import java.time.LocalDateTime;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.times;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("RefreshTokenReader 단위 테스트")
@@ -23,60 +30,46 @@ class RefreshTokenReaderTest {
     private RefreshTokenReader refreshTokenReader;
 
     @Mock
-    private StringRedisTemplate redisTemplate;
-
-    @Mock
-    private ValueOperations<String, String> valueOperations;
+    private RefreshTokenRepository refreshTokenRepository;
 
     @Test
-    @DisplayName("리프레시 토큰으로 memberKey 조회 성공")
+    @DisplayName("유효한 토큰으로 memberKey 조회 성공")
     void findMemberKey_success() {
         // given
-        String refreshToken = "valid-refresh-token";
-        String memberKey = "member-key-123";
-        String redisKey = "refresh:token:" + refreshToken;
-
-        given(redisTemplate.opsForValue()).willReturn(valueOperations);
-        given(valueOperations.get(redisKey)).willReturn(memberKey);
+        RefreshToken entity = AuthFixture.createRefreshToken();
+        given(refreshTokenRepository.findByToken(AuthFixture.REFRESH_TOKEN)).willReturn(Optional.of(entity));
 
         // when
-        String result = refreshTokenReader.findMemberKey(refreshToken);
+        String result = refreshTokenReader.findMemberKey(AuthFixture.REFRESH_TOKEN);
 
         // then
-        assertThat(result).isEqualTo(memberKey);
+        assertThat(result).isEqualTo(AuthFixture.MEMBER_KEY);
     }
 
     @Test
-    @DisplayName("리프레시 토큰으로 memberKey 조회 실패 - 만료된 토큰")
-    void findMemberKey_fail_expired_token() {
+    @DisplayName("DB에 존재하지 않는 토큰이면 EXPIRED_JWT 예외가 발생한다")
+    void findMemberKey_fail_when_not_found() {
         // given
-        String expiredToken = "expired-refresh-token";
-        String redisKey = "refresh:token:" + expiredToken;
-
-        given(redisTemplate.opsForValue()).willReturn(valueOperations);
-        given(valueOperations.get(redisKey)).willReturn(null);
+        given(refreshTokenRepository.findByToken(AuthFixture.REFRESH_TOKEN)).willReturn(Optional.empty());
 
         // when & then
-        assertThatThrownBy(() -> refreshTokenReader.findMemberKey(expiredToken))
-            .isInstanceOf(AppException.class)
-            .hasFieldOrPropertyWithValue("errorType", ErrorType.EXPIRED_JWT);
+        assertThatThrownBy(() -> refreshTokenReader.findMemberKey(AuthFixture.REFRESH_TOKEN))
+                .isInstanceOf(AppException.class)
+                .hasFieldOrPropertyWithValue("errorType", ErrorType.EXPIRED_JWT);
     }
 
     @Test
-    @DisplayName("리프레시 토큰으로 memberKey 조회 - Redis 키 프리픽스 검증")
-    void findMemberKey_redis_key_prefix() {
+    @DisplayName("만료된 토큰이면 DB에서 삭제 후 EXPIRED_JWT 예외가 발생한다")
+    void findMemberKey_fail_when_expired() {
         // given
-        String refreshToken = "token-abc-123";
-        String memberKey = "member-xyz-789";
-        String expectedRedisKey = "refresh:token:token-abc-123";
+        RefreshToken expiredToken = AuthFixture.createRefreshToken();
+        ReflectionTestUtils.setField(expiredToken, "expiredAt", LocalDateTime.now().minusDays(1));
+        given(refreshTokenRepository.findByToken(AuthFixture.REFRESH_TOKEN)).willReturn(Optional.of(expiredToken));
 
-        given(redisTemplate.opsForValue()).willReturn(valueOperations);
-        given(valueOperations.get(expectedRedisKey)).willReturn(memberKey);
-
-        // when
-        String result = refreshTokenReader.findMemberKey(refreshToken);
-
-        // then
-        assertThat(result).isEqualTo(memberKey);
+        // when & then
+        assertThatThrownBy(() -> refreshTokenReader.findMemberKey(AuthFixture.REFRESH_TOKEN))
+                .isInstanceOf(AppException.class)
+                .hasFieldOrPropertyWithValue("errorType", ErrorType.EXPIRED_JWT);
+        then(refreshTokenRepository).should(times(1)).deleteByToken(AuthFixture.REFRESH_TOKEN);
     }
 }
