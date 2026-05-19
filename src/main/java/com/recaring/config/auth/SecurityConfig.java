@@ -81,6 +81,7 @@ public class SecurityConfig {
                                 mvc.matcher(HttpMethod.POST, "/api/v1/care/requests"),
                                 mvc.matcher(HttpMethod.GET,  "/api/v1/care/wards"),
                                 mvc.matcher(HttpMethod.POST, "/api/v1/members/phones"),
+                                mvc.matcher(HttpMethod.PUT,  "/api/v1/notifications/device-tokens"),
                                 mvc.matcher(HttpMethod.GET,  "/api/v1/location/settings/{wardKey}/collection-interval"),
                                 mvc.matcher(HttpMethod.PATCH, "/api/v1/location/settings/{wardKey}/collection-interval"),
                                 // SafeZone (GUARDIAN/MANAGER 모두 MemberRole.GUARDIAN)

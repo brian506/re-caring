@@ -8,3 +8,7 @@ logging:
   level:
     root: INFO
 
+firebase:
+  enabled: ${FIREBASE_ENABLED:false}
+  service-account-json-base64: ${FIREBASE_SERVICE_ACCOUNT_JSON_BASE64:}
+

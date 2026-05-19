@@ -60,6 +60,9 @@ dependencies {
 	// coolSMS
 	implementation 'net.nurigo:sdk:4.3.0'
 
+	// Firebase
+	implementation 'com.google.firebase:firebase-admin:9.8.0'
+
 	// AWS SDK v2
 	implementation platform('software.amazon.awssdk:bom:2.25.60')
 	implementation 'software.amazon.awssdk:sns'

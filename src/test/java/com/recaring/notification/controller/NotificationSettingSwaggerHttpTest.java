@@ -74,6 +74,8 @@ class NotificationSettingSwaggerHttpTest {
         assertThat(response.body()).contains("\"summary\":\"Update emergency call notification settings\"");
         assertThat(response.body()).contains("\"/api/v1/notifications/settings/{wardKey}/battery\"");
         assertThat(response.body()).contains("\"summary\":\"Update battery notification settings\"");
+        assertThat(response.body()).contains("\"/api/v1/notifications/device-tokens\"");
+        assertThat(response.body()).contains("\"summary\":\"Upsert FCM device token\"");
     }
 
     @Test
@@ -97,6 +99,7 @@ class NotificationSettingSwaggerHttpTest {
     @EnableAutoConfiguration
     @Import({
             NotificationSettingController.class,
+            FcmDeviceTokenController.class,
             SwaggerConfig.class
     })
     @ImportAutoConfiguration(classes = {
@@ -113,6 +116,11 @@ class NotificationSettingSwaggerHttpTest {
         @Bean
         NotificationSettingService notificationSettingService() {
             return Mockito.mock(NotificationSettingService.class);
+        }
+
+        @Bean
+        com.recaring.notification.business.FcmDeviceTokenService fcmDeviceTokenService() {
+            return Mockito.mock(com.recaring.notification.business.FcmDeviceTokenService.class);
         }
     }
 }

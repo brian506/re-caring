@@ -259,7 +259,9 @@ class NotificationSettingControllerTest extends AbstractIntegrationTest {
                 .jsonPath("$.paths['/api/v1/notifications/settings/{wardKey}/emergency-call'].patch.summary")
                 .isEqualTo("Update emergency call notification settings")
                 .jsonPath("$.paths['/api/v1/notifications/settings/{wardKey}/battery'].patch.summary")
-                .isEqualTo("Update battery notification settings");
+                .isEqualTo("Update battery notification settings")
+                .jsonPath("$.paths['/api/v1/notifications/device-tokens'].put.summary")
+                .isEqualTo("Upsert FCM device token");
     }
 
     @Test
