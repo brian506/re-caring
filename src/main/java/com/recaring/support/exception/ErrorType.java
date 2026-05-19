@@ -81,7 +81,9 @@ public enum ErrorType {
     // Notification (E9xxx)
     INVALID_NOTIFICATION_SENSITIVITY(HttpStatus.BAD_REQUEST, ErrorCode.E9000, "Unsupported notification sensitivity.", LogLevel.WARN),
     INVALID_BATTERY_THRESHOLD(HttpStatus.BAD_REQUEST, ErrorCode.E9001, "Unsupported battery threshold.", LogLevel.WARN),
-    NOTIFICATION_SETTING_UPDATE_CONFLICT(HttpStatus.CONFLICT, ErrorCode.E9002, "Notification setting was updated by another request. Please retry.", LogLevel.WARN);
+    NOTIFICATION_SETTING_UPDATE_CONFLICT(HttpStatus.CONFLICT, ErrorCode.E9002, "Notification setting was updated by another request. Please retry.", LogLevel.WARN),
+    INVALID_FCM_DEVICE_TOKEN(HttpStatus.BAD_REQUEST, ErrorCode.E9003, "Invalid FCM device token.", LogLevel.WARN),
+    NOTIFICATION_PAYLOAD_SERIALIZATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, ErrorCode.E9004, "Notification payload serialization failed.", LogLevel.ERROR);
 
     private final HttpStatus status;
     private final ErrorCode errorCode;
