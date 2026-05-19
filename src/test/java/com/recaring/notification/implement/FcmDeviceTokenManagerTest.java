@@ -24,7 +24,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("FcmDeviceTokenManager unit test")
+@DisplayName("FCM 디바이스 토큰 매니저 단위 테스트")
 class FcmDeviceTokenManagerTest {
 
     @InjectMocks
@@ -34,7 +34,7 @@ class FcmDeviceTokenManagerTest {
     private FcmDeviceTokenRepository fcmDeviceTokenRepository;
 
     @Test
-    @DisplayName("Registers a new FCM device token")
+    @DisplayName("새 FCM 디바이스 토큰을 등록한다")
     void upsert_saves_new_token_when_absent() {
         UpsertFcmDeviceTokenCommand command =
                 NotificationFixture.guardianTokenCommand(NotificationFixture.GUARDIAN_FCM_TOKEN);
@@ -52,7 +52,7 @@ class FcmDeviceTokenManagerTest {
     }
 
     @Test
-    @DisplayName("Reassigns an existing token and reactivates it")
+    @DisplayName("기존 토큰을 재할당하고 활성화한다")
     void upsert_reassigns_existing_token() {
         FcmDeviceToken existing = NotificationFixture.guardianFcmDeviceToken(NotificationFixture.GUARDIAN_FCM_TOKEN);
         existing.deactivate("OLD");
@@ -75,7 +75,7 @@ class FcmDeviceTokenManagerTest {
     }
 
     @Test
-    @DisplayName("Deactivates invalid FCM tokens")
+    @DisplayName("유효하지 않은 FCM 토큰을 비활성화한다")
     void deactivateInvalidTokens_deactivates_tokens() {
         FcmDeviceToken token = NotificationFixture.guardianFcmDeviceToken(NotificationFixture.GUARDIAN_FCM_TOKEN);
         given(fcmDeviceTokenRepository.findByToken(NotificationFixture.GUARDIAN_FCM_TOKEN))
@@ -88,7 +88,7 @@ class FcmDeviceTokenManagerTest {
     }
 
     @Test
-    @DisplayName("Rejects blank FCM tokens")
+    @DisplayName("빈 FCM 토큰을 거부한다")
     void upsert_rejects_blank_token() {
         UpsertFcmDeviceTokenCommand command = NotificationFixture.guardianTokenCommand(" ");
 
@@ -98,5 +98,17 @@ class FcmDeviceTokenManagerTest {
                 .isEqualTo(ErrorType.INVALID_FCM_DEVICE_TOKEN);
 
         then(fcmDeviceTokenRepository).shouldHaveNoInteractions();
+    }
+
+    @Test
+    @DisplayName("발송에 사용한 FCM 토큰의 마지막 사용 시각을 갱신한다")
+    void touchLastUsedAt_updates_tokens() {
+        FcmDeviceToken token = NotificationFixture.guardianFcmDeviceToken(NotificationFixture.GUARDIAN_FCM_TOKEN);
+        given(fcmDeviceTokenRepository.findAllByTokenIn(List.of(NotificationFixture.GUARDIAN_FCM_TOKEN)))
+                .willReturn(List.of(token));
+
+        fcmDeviceTokenManager.touchLastUsedAt(List.of(NotificationFixture.GUARDIAN_FCM_TOKEN));
+
+        assertThat(token.getLastUsedAt()).isNotNull();
     }
 }

@@ -12,6 +12,8 @@ public interface FcmDeviceTokenRepository extends JpaRepository<FcmDeviceToken, 
 
     Optional<FcmDeviceToken> findByToken(String token);
 
+    List<FcmDeviceToken> findAllByTokenIn(Collection<String> tokens);
+
     List<FcmDeviceToken> findAllByMemberKeyInAndRecipientTypeAndActiveTrue(
             Collection<String> memberKeys,
             NotificationRecipientType recipientType

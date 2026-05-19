@@ -43,7 +43,13 @@ public class NotificationDeliveryManager {
         deliveries.forEach(delivery -> {
             FcmTokenSendResult result = resultByToken.get(delivery.getTokenSnapshot());
             if (result == null) {
-                delivery.markFailed("MISSING_FCM_RESULT", "FCM result was not returned.", 1, true, nextRetryAt());
+                delivery.markFailed(
+                        "MISSING_FCM_RESULT",
+                        "FCM result was not returned.",
+                        delivery.getAttemptCount() + 1,
+                        true,
+                        nextRetryAt()
+                );
                 return;
             }
             if (result.success()) {
@@ -58,6 +64,7 @@ public class NotificationDeliveryManager {
                     result.retryable() ? nextRetryAt() : null
             );
         });
+        notificationDeliveryRepository.saveAll(deliveries);
     }
 
     public List<NotificationDelivery> findRetryTargets(LocalDateTime now) {

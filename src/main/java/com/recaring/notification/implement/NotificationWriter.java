@@ -32,6 +32,7 @@ public class NotificationWriter {
     @Transactional
     public void markFailedForNoActiveToken(Notification notification) {
         notification.markFailed(NO_ACTIVE_TOKEN, "No active FCM device token was found.");
+        notificationRepository.save(notification);
     }
 
     @Transactional
@@ -45,12 +46,15 @@ public class NotificationWriter {
 
         if (sentCount > 0 && failedCount == 0) {
             notification.markSent();
+            notificationRepository.save(notification);
             return;
         }
         if (sentCount > 0) {
             notification.markPartial(DELIVERY_FAILED, failedCount + " deliveries failed.");
+            notificationRepository.save(notification);
             return;
         }
         notification.markFailed(DELIVERY_FAILED, "All deliveries failed.");
+        notificationRepository.save(notification);
     }
 }

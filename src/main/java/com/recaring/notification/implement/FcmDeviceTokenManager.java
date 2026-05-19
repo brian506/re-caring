@@ -41,6 +41,15 @@ public class FcmDeviceTokenManager {
                 .ifPresent(deviceToken -> deviceToken.deactivate(UNREGISTERED_REASON)));
     }
 
+    @Transactional
+    public void touchLastUsedAt(Collection<String> tokens) {
+        if (tokens == null || tokens.isEmpty()) {
+            return;
+        }
+        fcmDeviceTokenRepository.findAllByTokenIn(tokens)
+                .forEach(FcmDeviceToken::touchLastUsedAt);
+    }
+
     private void validate(UpsertFcmDeviceTokenCommand command) {
         if (command.token() == null || command.token().isBlank()) {
             throw new AppException(ErrorType.INVALID_FCM_DEVICE_TOKEN);

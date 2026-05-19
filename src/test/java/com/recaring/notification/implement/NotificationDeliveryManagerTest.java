@@ -21,7 +21,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("NotificationDeliveryManager unit test")
+@DisplayName("알림 전달 매니저 단위 테스트")
 class NotificationDeliveryManagerTest {
 
     @InjectMocks
@@ -31,7 +31,7 @@ class NotificationDeliveryManagerTest {
     private NotificationDeliveryRepository notificationDeliveryRepository;
 
     @Test
-    @DisplayName("Creates requested deliveries for tokens")
+    @DisplayName("토큰별 요청 상태 전달 이력을 생성한다")
     void addRequested_creates_requested_deliveries() {
         Notification notification = notification();
         FcmDeviceToken guardianToken =
@@ -49,7 +49,7 @@ class NotificationDeliveryManagerTest {
     }
 
     @Test
-    @DisplayName("Applies sent and retryable failed FCM results")
+    @DisplayName("성공 및 재시도 가능한 실패 FCM 결과를 반영한다")
     void applyResults_marks_sent_and_retryable_failed() {
         Notification notification = notification();
         NotificationDelivery sentDelivery = NotificationDelivery.requested(
@@ -78,7 +78,7 @@ class NotificationDeliveryManagerTest {
     }
 
     @Test
-    @DisplayName("Applies non-retryable invalid token FCM result")
+    @DisplayName("재시도 불가능한 유효하지 않은 토큰 결과를 반영한다")
     void applyResults_marks_invalid_token_failed_without_retry() {
         Notification notification = notification();
         NotificationDelivery delivery = NotificationDelivery.requested(
@@ -95,6 +95,25 @@ class NotificationDeliveryManagerTest {
         assertThat(delivery.getFailureCode()).isEqualTo("UNREGISTERED");
         assertThat(delivery.isRetryable()).isFalse();
         assertThat(delivery.getNextRetryAt()).isNull();
+    }
+
+    @Test
+    @DisplayName("FCM 결과가 누락되면 기존 시도 횟수에서 증가시킨다")
+    void applyResults_increments_attempt_count_when_result_is_missing() {
+        Notification notification = notification();
+        NotificationDelivery delivery = NotificationDelivery.requested(
+                notification,
+                NotificationFixture.guardianFcmDeviceToken(NotificationFixture.GUARDIAN_FCM_TOKEN)
+        );
+        delivery.markFailed("OLD_FAILURE", "old failure", 2, true, LocalDateTime.now());
+        FcmSendResult sendResult = new FcmSendResult(List.of());
+
+        notificationDeliveryManager.applyResults(List.of(delivery), sendResult);
+
+        assertThat(delivery.getStatus()).isEqualTo(NotificationDeliveryStatus.FAILED);
+        assertThat(delivery.getFailureCode()).isEqualTo("MISSING_FCM_RESULT");
+        assertThat(delivery.getAttemptCount()).isEqualTo(3);
+        assertThat(delivery.isRetryable()).isTrue();
     }
 
     private Notification notification() {

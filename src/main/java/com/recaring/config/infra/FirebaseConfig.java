@@ -26,7 +26,7 @@ public class FirebaseConfig {
             throw new IllegalStateException("firebase.service-account-json-base64 is required when firebase.enabled=true");
         }
 
-        byte[] decoded = Base64.getDecoder().decode(serviceAccountJsonBase64);
+        byte[] decoded = decodeServiceAccount();
         GoogleCredentials credentials = GoogleCredentials.fromStream(new ByteArrayInputStream(decoded));
         FirebaseOptions options = FirebaseOptions.builder()
                 .setCredentials(credentials)
@@ -41,5 +41,16 @@ public class FirebaseConfig {
     @Bean
     public FirebaseMessaging firebaseMessaging(FirebaseApp firebaseApp) {
         return FirebaseMessaging.getInstance(firebaseApp);
+    }
+
+    private byte[] decodeServiceAccount() {
+        try {
+            return Base64.getDecoder().decode(serviceAccountJsonBase64);
+        } catch (IllegalArgumentException exception) {
+            throw new IllegalStateException(
+                    "firebase.service-account-json-base64 must be valid Base64 encoded JSON.",
+                    exception
+            );
+        }
     }
 }

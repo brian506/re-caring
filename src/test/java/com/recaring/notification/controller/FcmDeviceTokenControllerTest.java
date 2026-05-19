@@ -20,7 +20,7 @@ import java.util.Date;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@DisplayName("FcmDeviceTokenController HTTP integration test")
+@DisplayName("FCM 디바이스 토큰 컨트롤러 HTTP 통합 테스트")
 @Tag("integration")
 class FcmDeviceTokenControllerTest extends AbstractIntegrationTest {
 
@@ -49,7 +49,7 @@ class FcmDeviceTokenControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("PUT /api/v1/notifications/device-tokens - guardian token is registered")
+    @DisplayName("보호자 FCM 토큰을 등록한다")
     void upsert_registers_guardian_token() {
         client.put()
                 .uri("/api/v1/notifications/device-tokens")
@@ -81,7 +81,7 @@ class FcmDeviceTokenControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("PUT /api/v1/notifications/device-tokens - existing token is reassigned")
+    @DisplayName("기존 FCM 토큰을 다른 수신자에게 재할당한다")
     void upsert_reassigns_existing_token() {
         client.put()
                 .uri("/api/v1/notifications/device-tokens")
@@ -123,7 +123,7 @@ class FcmDeviceTokenControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("PUT /api/v1/notifications/device-tokens - ward cannot register FCM recipient token")
+    @DisplayName("피보호자는 FCM 수신자 토큰을 등록할 수 없다")
     void upsert_returns_401_for_ward() {
         client.put()
                 .uri("/api/v1/notifications/device-tokens")
@@ -141,7 +141,7 @@ class FcmDeviceTokenControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("PUT /api/v1/notifications/device-tokens - blank token returns 400")
+    @DisplayName("빈 FCM 토큰이면 400을 반환한다")
     void upsert_returns_400_for_blank_token() {
         client.put()
                 .uri("/api/v1/notifications/device-tokens")

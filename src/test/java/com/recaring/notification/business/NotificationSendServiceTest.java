@@ -1,6 +1,5 @@
 package com.recaring.notification.business;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.recaring.notification.business.command.NotificationSendCommand;
 import com.recaring.notification.dataaccess.entity.FcmDeviceToken;
 import com.recaring.notification.dataaccess.entity.Notification;
@@ -13,6 +12,7 @@ import com.recaring.notification.implement.FcmDeviceTokenReader;
 import com.recaring.notification.implement.FcmSendResult;
 import com.recaring.notification.implement.FcmTokenSendResult;
 import com.recaring.notification.implement.NotificationDeliveryManager;
+import com.recaring.notification.implement.NotificationPayloadSerializer;
 import com.recaring.notification.implement.NotificationWriter;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,12 +29,14 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("NotificationSendService unit test")
+@DisplayName("알림 발송 서비스 단위 테스트")
 class NotificationSendServiceTest {
 
     @InjectMocks
     private NotificationSendService notificationSendService;
 
+    @Mock
+    private NotificationPayloadSerializer notificationPayloadSerializer;
     @Mock
     private FcmDeviceTokenReader fcmDeviceTokenReader;
     @Mock
@@ -46,19 +48,9 @@ class NotificationSendServiceTest {
     @Mock
     private FcmClient fcmClient;
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
-
     @Test
-    @DisplayName("Sends FCM and stores delivery results")
+    @DisplayName("FCM을 발송하고 전달 결과를 저장한다")
     void send_sends_fcm_and_records_results() {
-        notificationSendService = new NotificationSendService(
-                objectMapper,
-                fcmDeviceTokenReader,
-                fcmDeviceTokenManager,
-                notificationWriter,
-                notificationDeliveryManager,
-                fcmClient
-        );
         NotificationSendCommand command = NotificationFixture.sendCommand();
         Notification notification = Notification.builder()
                 .eventType(command.eventType())
@@ -79,6 +71,8 @@ class NotificationSendServiceTest {
                 FcmTokenSendResult.failed(NotificationFixture.MANAGER_FCM_TOKEN, "UNAVAILABLE", "temporary", true, false)
         ));
 
+        given(notificationPayloadSerializer.serialize(command.dataPayload()))
+                .willReturn("{\"wardKey\":\"ward-member-key-001\"}");
         given(notificationWriter.addRequested(any(), any(), any(), any())).willReturn(notification);
         given(fcmDeviceTokenReader.findActiveRecipientTokens(command.guardianMemberKeys(), command.managerMemberKeys()))
                 .willReturn(tokens);
@@ -89,21 +83,17 @@ class NotificationSendServiceTest {
 
         then(notificationDeliveryManager).should().applyResults(deliveries, sendResult);
         then(fcmDeviceTokenManager).should().deactivateInvalidTokens(List.of());
+        then(fcmDeviceTokenManager).should().touchLastUsedAt(List.of(
+                NotificationFixture.GUARDIAN_FCM_TOKEN,
+                NotificationFixture.MANAGER_FCM_TOKEN
+        ));
         then(notificationWriter).should().completeByDeliveries(notification, deliveries);
         assertThat(result.notificationKey()).isEqualTo(notification.getNotificationKey());
     }
 
     @Test
-    @DisplayName("Marks notification failed when active tokens are absent")
+    @DisplayName("활성 토큰이 없으면 알림을 실패로 처리한다")
     void send_marks_failed_when_no_tokens() {
-        notificationSendService = new NotificationSendService(
-                objectMapper,
-                fcmDeviceTokenReader,
-                fcmDeviceTokenManager,
-                notificationWriter,
-                notificationDeliveryManager,
-                fcmClient
-        );
         NotificationSendCommand command = NotificationFixture.sendCommand();
         Notification notification = Notification.builder()
                 .eventType(command.eventType())
@@ -113,6 +103,7 @@ class NotificationSendServiceTest {
                 .build();
         notification.markFailed("NO_ACTIVE_TOKEN", "No active FCM device token was found.");
 
+        given(notificationPayloadSerializer.serialize(command.dataPayload())).willReturn("{}");
         given(notificationWriter.addRequested(any(), any(), any(), any())).willReturn(notification);
         given(fcmDeviceTokenReader.findActiveRecipientTokens(command.guardianMemberKeys(), command.managerMemberKeys()))
                 .willReturn(List.of());
