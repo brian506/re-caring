@@ -57,8 +57,8 @@ public class SecurityConfig {
                                 mvc.matcher("/api/v1/auth/sign-up/naver"),
                                 mvc.matcher("/api/v1/auth/refresh"),
                                 mvc.matcher("/api/v1/auth/sign-out"),
-                                mvc.matcher("/api/v1/auth/email"),
-                                mvc.matcher("/api/v1/auth/value"),
+                                mvc.matcher("/api/v1/auth/phone/send-code"),
+                                mvc.matcher("/api/v1/auth/phone/verify"),
                                 // Swagger UI
                                 mvc.matcher("/swagger-ui/**"),
                                 mvc.matcher("/swagger-ui.html"),
