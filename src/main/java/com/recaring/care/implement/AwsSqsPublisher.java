@@ -10,7 +10,7 @@ import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 
 @Slf4j
 @Component
-@Profile("prod")
+@Profile({"prod", "dev"})
 @RequiredArgsConstructor
 public class AwsSqsPublisher implements SqsPublisher {
 

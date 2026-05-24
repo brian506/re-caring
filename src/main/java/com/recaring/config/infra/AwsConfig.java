@@ -10,7 +10,7 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.sqs.SqsClient;
 
 @Configuration
-@Profile("prod")
+@Profile({"prod", "dev"})
 public class AwsConfig {
 
     @Value("${aws.access-key}")
