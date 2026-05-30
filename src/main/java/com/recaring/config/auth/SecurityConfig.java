@@ -63,7 +63,9 @@ public class SecurityConfig {
                                 mvc.matcher("/swagger-ui/**"),
                                 mvc.matcher("/swagger-ui.html"),
                                 mvc.matcher("/v3/api-docs/**"),
-                                mvc.matcher("/v3/api-docs")
+                                mvc.matcher("/v3/api-docs"),
+                                // Prometheus AlertManager webhook
+                                mvc.matcher(HttpMethod.POST, "/api/v1/alerts/webhook")
                         ).permitAll()
                         .requestMatchers(
                                 mvc.matcher("/actuator/**")

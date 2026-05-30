@@ -29,6 +29,9 @@ public enum ErrorCode {
     E8000, E8001,
 
     // Notification (E9xxx)
-    E9000, E9001, E9002, E9003, E9004
+    E9000, E9001, E9002, E9003, E9004,
+
+    // Alert (E10xxx) - Slack webhook, SSM, runbook
+    E10000, E10001, E10002, E10003
 
 }

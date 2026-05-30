@@ -1,20 +1,4 @@
 {
-  "__inputs": [
-    {
-      "name": "DS_PROMETHEUS",
-      "label": "Prometheus",
-      "type": "datasource",
-      "pluginId": "prometheus",
-      "pluginName": "Prometheus"
-    },
-    {
-      "name": "DS_CLOUDWATCH",
-      "label": "CloudWatch",
-      "type": "datasource",
-      "pluginId": "cloudwatch",
-      "pluginName": "CloudWatch"
-    }
-  ],
   "title": "re-caring Observability",
   "uid": "recaring-obs-v1",
   "editable": true,
@@ -65,7 +49,7 @@
       "title": "Total Requests (24h)",
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 5,
@@ -101,7 +85,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "expr": "sum(http_server_requests_seconds_count{job=\"recaring\", uri!=\"/actuator/prometheus\"})",
           "instant": true,
@@ -115,7 +99,7 @@
       "title": "Request Per Second (현재)",
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 5,
@@ -151,7 +135,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "expr": "sum(rate(http_server_requests_seconds_count{job=\"recaring\", uri!=\"/actuator/prometheus\"}[1m]))",
           "instant": true,
@@ -165,7 +149,7 @@
       "title": "Total 5xx Errors (24h)",
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 5,
@@ -205,7 +189,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "expr": "sum(http_server_requests_seconds_count{job=\"recaring\", status=~\"5..\"})",
           "instant": true,
@@ -219,7 +203,7 @@
       "title": "JVM Heap 사용률",
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 5,
@@ -265,7 +249,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "expr": "sum(jvm_memory_used_bytes{job=\"recaring\", area=\"heap\"}) / sum(jvm_memory_max_bytes{job=\"recaring\", area=\"heap\"})",
           "instant": true,
@@ -291,7 +275,7 @@
       "title": "Request Per Second (URI별)",
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 8,
@@ -325,7 +309,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "expr": "sum by(uri, method) (rate(http_server_requests_seconds_count{job=\"recaring\", uri!=\"/actuator/prometheus\"}[1m]))",
           "legendFormat": "[{{method}}] {{uri}}",
@@ -339,7 +323,7 @@
       "title": "P95 응답시간",
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 8,
@@ -390,7 +374,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "expr": "histogram_quantile(0.95, sum by(uri, le) (rate(http_server_requests_seconds_bucket{job=\"recaring\", uri!=\"/actuator/prometheus\"}[1m])))",
           "legendFormat": "{{uri}}",
@@ -404,7 +388,7 @@
       "title": "P99 응답시간",
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 8,
@@ -438,7 +422,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "expr": "histogram_quantile(0.99, sum by(uri, le) (rate(http_server_requests_seconds_bucket{job=\"recaring\", uri!=\"/actuator/prometheus\"}[1m])))",
           "legendFormat": "{{uri}}",
@@ -452,7 +436,7 @@
       "title": "5xx 에러율 (%)",
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 8,
@@ -502,7 +486,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "expr": "sum by(uri) (rate(http_server_requests_seconds_count{job=\"recaring\", status=~\"5..\", uri!=\"/actuator/prometheus\"}[1m])) / sum by(uri) (rate(http_server_requests_seconds_count{job=\"recaring\", uri!=\"/actuator/prometheus\"}[1m]))",
           "legendFormat": "{{uri}}",
@@ -516,7 +500,7 @@
       "title": "URI별 평균 응답시간",
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 8,
@@ -564,7 +548,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "expr": "sum by(uri, method) (http_server_requests_seconds_sum{job=\"recaring\", uri!=\"/actuator/prometheus\"}) / sum by(uri, method) (http_server_requests_seconds_count{job=\"recaring\", uri!=\"/actuator/prometheus\"})",
           "legendFormat": "[{{method}}] {{uri}}",
@@ -579,7 +563,7 @@
       "title": "경로당 총 요청 수",
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 8,
@@ -619,7 +603,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "expr": "sort_desc(sum by(uri, method) (http_server_requests_seconds_count{job=\"recaring\", uri!=\"/actuator/prometheus\"}))",
           "legendFormat": "[{{method}}] {{uri}}",
@@ -646,7 +630,7 @@
       "title": "CPU 사용률",
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 8,
@@ -698,7 +682,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "expr": "process_cpu_usage{job=\"recaring\"}",
           "legendFormat": "Process CPU",
@@ -707,7 +691,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "expr": "system_cpu_usage{job=\"recaring\"}",
           "legendFormat": "System CPU",
@@ -721,7 +705,7 @@
       "title": "JVM Heap 메모리",
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 8,
@@ -754,7 +738,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "expr": "sum(jvm_memory_used_bytes{job=\"recaring\", area=\"heap\"})",
           "legendFormat": "Heap Used",
@@ -763,7 +747,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "expr": "sum(jvm_memory_max_bytes{job=\"recaring\", area=\"heap\"})",
           "legendFormat": "Heap Max",
@@ -777,7 +761,7 @@
       "title": "GC Pause 시간",
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 8,
@@ -810,7 +794,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "expr": "rate(jvm_gc_pause_seconds_sum{job=\"recaring\"}[1m])",
           "legendFormat": "{{action}} {{cause}}",
@@ -836,7 +820,7 @@
       "title": "ECS CPU 사용률 (%)",
       "datasource": {
         "type": "cloudwatch",
-        "uid": "${DS_CLOUDWATCH}"
+        "uid": "cloudwatch"
       },
       "gridPos": {
         "h": 8,
@@ -888,7 +872,7 @@
         {
           "datasource": {
             "type": "cloudwatch",
-            "uid": "${DS_CLOUDWATCH}"
+            "uid": "cloudwatch"
           },
           "queryMode": "Metrics",
           "metricQueryType": 0,
@@ -913,7 +897,7 @@
         {
           "datasource": {
             "type": "cloudwatch",
-            "uid": "${DS_CLOUDWATCH}"
+            "uid": "cloudwatch"
           },
           "queryMode": "Metrics",
           "metricQueryType": 0,
@@ -943,7 +927,7 @@
       "title": "ECS 메모리 사용률 (%)",
       "datasource": {
         "type": "cloudwatch",
-        "uid": "${DS_CLOUDWATCH}"
+        "uid": "cloudwatch"
       },
       "gridPos": {
         "h": 8,
@@ -995,7 +979,7 @@
         {
           "datasource": {
             "type": "cloudwatch",
-            "uid": "${DS_CLOUDWATCH}"
+            "uid": "cloudwatch"
           },
           "queryMode": "Metrics",
           "metricQueryType": 0,
@@ -1020,7 +1004,7 @@
         {
           "datasource": {
             "type": "cloudwatch",
-            "uid": "${DS_CLOUDWATCH}"
+            "uid": "cloudwatch"
           },
           "queryMode": "Metrics",
           "metricQueryType": 0,
@@ -1050,7 +1034,7 @@
       "title": "ECS 서비스 구동 상태 (Running Tasks)",
       "datasource": {
         "type": "cloudwatch",
-        "uid": "${DS_CLOUDWATCH}"
+        "uid": "cloudwatch"
       },
       "gridPos": {
         "h": 5,
@@ -1094,7 +1078,7 @@
         {
           "datasource": {
             "type": "cloudwatch",
-            "uid": "${DS_CLOUDWATCH}"
+            "uid": "cloudwatch"
           },
           "queryMode": "Metrics",
           "metricQueryType": 0,
@@ -1119,7 +1103,7 @@
         {
           "datasource": {
             "type": "cloudwatch",
-            "uid": "${DS_CLOUDWATCH}"
+            "uid": "cloudwatch"
           },
           "queryMode": "Metrics",
           "metricQueryType": 0,
@@ -1161,7 +1145,7 @@
       "title": "EC2 메모리 사용률 (%)",
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 8,
@@ -1213,7 +1197,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "expr": "(1 - node_memory_MemAvailable_bytes{job=\"node\"} / node_memory_MemTotal_bytes{job=\"node\"}) * 100",
           "legendFormat": "{{instance}}",
@@ -1227,7 +1211,7 @@
       "title": "EC2 가용 메모리",
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 8,
@@ -1272,7 +1256,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "expr": "node_memory_MemAvailable_bytes{job=\"node\"}",
           "legendFormat": "{{instance}}",
@@ -1299,7 +1283,7 @@
       "title": "Redis 메모리 사용량",
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 8,
@@ -1332,7 +1316,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "expr": "redis_memory_used_bytes{job=\"redis\"}",
           "legendFormat": "Used",
@@ -1341,7 +1325,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "expr": "redis_memory_max_bytes{job=\"redis\"}",
           "legendFormat": "Max",
@@ -1355,7 +1339,7 @@
       "title": "Redis 히트율",
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 8,
@@ -1401,7 +1385,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "expr": "rate(redis_keyspace_hits_total{job=\"redis\"}[5m]) / (rate(redis_keyspace_hits_total{job=\"redis\"}[5m]) + rate(redis_keyspace_misses_total{job=\"redis\"}[5m]))",
           "instant": true,
@@ -1415,7 +1399,7 @@
       "title": "Redis 연결 수 / Ops",
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 8,
@@ -1448,7 +1432,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "expr": "redis_connected_clients{job=\"redis\"}",
           "legendFormat": "Clients",
@@ -1457,7 +1441,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
           "expr": "redis_instantaneous_ops_per_sec{job=\"redis\"}",
           "legendFormat": "Ops/sec",
@@ -1483,7 +1467,7 @@
       "title": "로그 레벨 발생 빈도",
       "datasource": {
         "type": "cloudwatch",
-        "uid": "${DS_CLOUDWATCH}"
+        "uid": "cloudwatch"
       },
       "gridPos": {
         "h": 8,
@@ -1564,7 +1548,7 @@
         {
           "datasource": {
             "type": "cloudwatch",
-            "uid": "${DS_CLOUDWATCH}"
+            "uid": "cloudwatch"
           },
           "queryMode": "Logs",
           "logGroups": [
@@ -1584,7 +1568,7 @@
       "title": "전체 로그 (INFO / WARN / ERROR)",
       "datasource": {
         "type": "cloudwatch",
-        "uid": "${DS_CLOUDWATCH}"
+        "uid": "cloudwatch"
       },
       "gridPos": {
         "h": 8,
@@ -1604,7 +1588,7 @@
         {
           "datasource": {
             "type": "cloudwatch",
-            "uid": "${DS_CLOUDWATCH}"
+            "uid": "cloudwatch"
           },
           "queryMode": "Logs",
           "logGroups": [
@@ -1624,7 +1608,7 @@
       "title": "ERROR 로그",
       "datasource": {
         "type": "cloudwatch",
-        "uid": "${DS_CLOUDWATCH}"
+        "uid": "cloudwatch"
       },
       "gridPos": {
         "h": 8,
@@ -1644,7 +1628,7 @@
         {
           "datasource": {
             "type": "cloudwatch",
-            "uid": "${DS_CLOUDWATCH}"
+            "uid": "cloudwatch"
           },
           "queryMode": "Logs",
           "logGroups": [
@@ -1664,7 +1648,7 @@
       "title": "WARN 로그",
       "datasource": {
         "type": "cloudwatch",
-        "uid": "${DS_CLOUDWATCH}"
+        "uid": "cloudwatch"
       },
       "gridPos": {
         "h": 8,
@@ -1684,7 +1668,7 @@
         {
           "datasource": {
             "type": "cloudwatch",
-            "uid": "${DS_CLOUDWATCH}"
+            "uid": "cloudwatch"
           },
           "queryMode": "Logs",
           "logGroups": [
