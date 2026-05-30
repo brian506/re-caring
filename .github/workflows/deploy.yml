@@ -79,42 +79,19 @@ jobs:
           cluster: recaring-cluster
           wait-for-service-stability: true
 
-      - name: Get EC2 instance ID
-        id: ec2
+      - name: Build & Push nginx image to ECR
         run: |
-          ID=$(aws ec2 describe-instances \
-            --filters \
-              "Name=tag:Name,Values=recaring-app-server" \
-              "Name=instance-state-name,Values=running" \
-            --query "Reservations[0].Instances[0].InstanceId" \
-            --output text)
-          echo "id=$ID" >> $GITHUB_OUTPUT
+          ECR_NGINX=757052694924.dkr.ecr.ap-northeast-2.amazonaws.com/recaring-nginx:latest
+          docker build -t $ECR_NGINX ./nginx
+          docker push $ECR_NGINX
 
-      - name: Deploy config files and reload nginx via SSM
+      - name: Deploy nginx to ECS
         run: |
-          CMD_ID=$(aws ssm send-command \
-            --instance-ids "${{ steps.ec2.outputs.id }}" \
-            --document-name "AWS-RunShellScript" \
-            --parameters 'commands=[
-              "cd /home/ubuntu/recaring && git fetch origin develop && git pull origin develop",
-              "sudo chown -R ubuntu:ubuntu /home/ubuntu/recaring/",
-              "chmod +x /home/ubuntu/recaring/scripts/deploy.sh",
-              "bash /home/ubuntu/recaring/scripts/deploy.sh"
-            ]' \
-            --query "Command.CommandId" \
-            --output text)
-
-          echo "SSM Command ID: $CMD_ID"
-
-          aws ssm wait command-executed \
-            --command-id "$CMD_ID" \
-            --instance-id "${{ steps.ec2.outputs.id }}"
-
-          aws ssm get-command-invocation \
-            --command-id "$CMD_ID" \
-            --instance-id "${{ steps.ec2.outputs.id }}" \
-            --query "{status: StatusDetails, stdout: StandardOutputContent, stderr: StandardErrorContent}" \
-            --output json
+          aws ecs update-service \
+            --cluster recaring-cluster \
+            --service nginx-service \
+            --force-new-deployment \
+            --no-cli-pager
 
       - name: Notify Discord (배포 성공)
         if: success()
