@@ -1,7 +1,5 @@
 package com.recaring.location.implement;
 
-import com.recaring.care.dataaccess.entity.CareRole;
-import com.recaring.care.dataaccess.repository.CareRelationshipRepository;
 import com.recaring.location.fixture.LocationFixture;
 import com.recaring.member.implement.MemberReader;
 import com.recaring.support.exception.AppException;
@@ -25,7 +23,7 @@ class LocationValidatorTest {
     private LocationValidator locationValidator;
 
     @Mock
-    private CareRelationshipRepository careRelationshipRepository;
+    private CareRelationshipCacheReader careRelationshipCacheReader;
 
     @Mock
     private MemberReader memberReader;
@@ -51,8 +49,7 @@ class LocationValidatorTest {
     @Test
     @DisplayName("GUARDIAN 케어 관계가 있으면 접근 권한 검증을 통과한다")
     void validateCaregiverAccess_passes_for_guardian_with_relationship() {
-        given(careRelationshipRepository.existsByWardKeyAndCaregiverKeyAndCareRole(
-                LocationFixture.WARD_KEY, LocationFixture.GUARDIAN_KEY, CareRole.GUARDIAN))
+        given(careRelationshipCacheReader.hasCaregiverAccess(LocationFixture.WARD_KEY, LocationFixture.GUARDIAN_KEY))
                 .willReturn(true);
 
         assertThatNoException().isThrownBy(() ->
@@ -62,8 +59,7 @@ class LocationValidatorTest {
     @Test
     @DisplayName("케어 관계가 없으면 예외가 발생한다")
     void validateCaregiverAccess_throws_when_no_relationship() {
-        given(careRelationshipRepository.existsByWardKeyAndCaregiverKeyAndCareRole(any(), any(), any()))
-                .willReturn(false);
+        given(careRelationshipCacheReader.hasCaregiverAccess(any(), any())).willReturn(false);
 
         assertThatThrownBy(() ->
                 locationValidator.validateCaregiverAccess(LocationFixture.GUARDIAN_KEY, LocationFixture.WARD_KEY))
@@ -74,8 +70,7 @@ class LocationValidatorTest {
     @Test
     @DisplayName("GUARDIAN 관계가 있으면 위치 수집 설정 권한 검증을 통과한다")
     void validateGuardianAccess_passes_for_guardian() {
-        given(careRelationshipRepository.existsByWardKeyAndCaregiverKeyAndCareRole(
-                LocationFixture.WARD_KEY, LocationFixture.GUARDIAN_KEY, CareRole.GUARDIAN))
+        given(careRelationshipCacheReader.hasGuardianAccess(LocationFixture.WARD_KEY, LocationFixture.GUARDIAN_KEY))
                 .willReturn(true);
 
         assertThatNoException().isThrownBy(() ->
@@ -85,8 +80,7 @@ class LocationValidatorTest {
     @Test
     @DisplayName("GUARDIAN 관계가 없으면 위치 수집 설정 권한 예외가 발생한다")
     void validateGuardianAccess_throws_when_not_guardian() {
-        given(careRelationshipRepository.existsByWardKeyAndCaregiverKeyAndCareRole(
-                LocationFixture.WARD_KEY, LocationFixture.MANAGER_KEY, CareRole.GUARDIAN))
+        given(careRelationshipCacheReader.hasGuardianAccess(LocationFixture.WARD_KEY, LocationFixture.MANAGER_KEY))
                 .willReturn(false);
 
         assertThatThrownBy(() ->

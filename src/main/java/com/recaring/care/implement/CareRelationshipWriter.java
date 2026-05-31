@@ -9,6 +9,7 @@ import com.recaring.member.implement.MemberReader;
 import com.recaring.support.exception.AppException;
 import com.recaring.support.exception.ErrorType;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +21,7 @@ public class CareRelationshipWriter {
     private final MemberReader memberReader;
     private final CareRelationshipValidator relationshipValidator;
 
+    @CacheEvict(value = "careRelationship", allEntries = true)
     @Transactional
     public void register(CareRelationshipRegistration registration, String memberKey) {
         Member member = memberReader.findMemberByLock(memberKey);
@@ -32,6 +34,7 @@ public class CareRelationshipWriter {
         );
     }
 
+    @CacheEvict(value = "careRelationship", allEntries = true)
     @Transactional
     public void delete(String wardKey, String caregiverKey) {
         CareRelationship relationship = careRelationshipRepository
