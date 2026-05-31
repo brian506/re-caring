@@ -98,8 +98,8 @@ class LocationServiceTest {
     }
 
     @Test
-    @DisplayName("SSE 연결 시 caregiverAccess 검증 없이 emitter를 반환한다")
-    void streamLocation_returns_emitter_without_caregiver_validation() {
+    @DisplayName("SSE 연결 시 caregiverAccess 검증 후 emitter를 반환한다")
+    void streamLocation_returns_emitter_with_caregiver_validation() {
         SseEmitter mockEmitter = mock(SseEmitter.class);
         given(sseEmitterManager.connect(LocationFixture.WARD_KEY)).willReturn(mockEmitter);
         given(gpsLatestCacheReader.find(LocationFixture.WARD_KEY)).willReturn(Optional.empty());
@@ -107,6 +107,6 @@ class LocationServiceTest {
         SseEmitter result = locationService.streamLocation(LocationFixture.GUARDIAN_KEY, LocationFixture.WARD_KEY);
 
         assertThat(result).isEqualTo(mockEmitter);
-        then(locationValidator).should(never()).validateCaregiverAccess(any(), any());
+        then(locationValidator).should(times(1)).validateCaregiverAccess(LocationFixture.GUARDIAN_KEY, LocationFixture.WARD_KEY);
     }
 }
