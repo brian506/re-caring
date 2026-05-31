@@ -1,6 +1,10 @@
 package com.recaring.location.implement;
 
 import com.recaring.location.vo.Gps;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -20,13 +24,35 @@ public class SseEmitterManager {
 
     private final Map<String, CopyOnWriteArrayList<SseEmitter>> emitters = new ConcurrentHashMap<>();
 
+    private final Timer broadcastTimer;
+    private final Counter sendFailures;
+    private final Counter removedCompletion;
+    private final Counter removedTimeout;
+    private final Counter removedError;
+
+    public SseEmitterManager(MeterRegistry registry) {
+        this.broadcastTimer = Timer.builder("sse.broadcast.duration")
+                .publishPercentiles(0.5, 0.95, 0.99)
+                .publishPercentileHistogram()
+                .register(registry);
+
+        this.sendFailures      = registry.counter("sse.emitter.send.failures");
+        this.removedCompletion = registry.counter("sse.emitter.removed", "reason", "completion");
+        this.removedTimeout    = registry.counter("sse.emitter.removed", "reason", "timeout");
+        this.removedError      = registry.counter("sse.emitter.removed", "reason", "error");
+
+        Gauge.builder("sse.active.connections", emitters,
+                        m -> m.values().stream().mapToInt(List::size).sum())
+                .register(registry);
+    }
+
     public SseEmitter connect(String wardKey) {
         SseEmitter emitter = new SseEmitter(SSE_TIMEOUT);
         emitters.computeIfAbsent(wardKey, k -> new CopyOnWriteArrayList<>()).add(emitter);
 
-        emitter.onCompletion(() -> remove(wardKey, emitter));
-        emitter.onTimeout(() -> remove(wardKey, emitter));
-        emitter.onError(e -> remove(wardKey, emitter));
+        emitter.onCompletion(() -> { remove(wardKey, emitter); removedCompletion.increment(); });
+        emitter.onTimeout(()    -> { remove(wardKey, emitter); removedTimeout.increment(); });
+        emitter.onError(e       -> { remove(wardKey, emitter); removedError.increment(); });
 
         return emitter;
     }
@@ -41,15 +67,18 @@ public class SseEmitterManager {
     }
 
     public void broadcast(String wardKey, Gps gpsLatest) {
-        List<SseEmitter> wardEmitters = emitters.getOrDefault(wardKey, new CopyOnWriteArrayList<>());
-        for (SseEmitter emitter : wardEmitters) {
-            try {
-                emitter.send(SseEmitter.event().name(EVENT_NAME).data(gpsLatest));
-            } catch (IOException e) {
-                log.debug("[SSE 이벤트 : broadcast 전송 실패]: wardKey={} | error={}", wardKey, e.getMessage());
-                remove(wardKey, emitter);
+        broadcastTimer.record(() -> {
+            List<SseEmitter> wardEmitters = emitters.getOrDefault(wardKey, new CopyOnWriteArrayList<>());
+            for (SseEmitter emitter : wardEmitters) {
+                try {
+                    emitter.send(SseEmitter.event().name(EVENT_NAME).data(gpsLatest));
+                } catch (IOException e) {
+                    log.debug("[SSE 이벤트 : broadcast 전송 실패]: wardKey={} | error={}", wardKey, e.getMessage());
+                    sendFailures.increment();
+                    remove(wardKey, emitter);
+                }
             }
-        }
+        });
     }
 
     private void remove(String wardKey, SseEmitter emitter) {
