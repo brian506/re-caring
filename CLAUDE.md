@@ -59,3 +59,7 @@ EC2 서버 접근은 **SSH가 아닌 AWS SSM Session Manager**로만 한다. SSH
 ## 인덱스 규칙
 
 Entity `@Table`의 `indexes` 속성을 사용하지 않는다. 인덱스는 별도 DDL 쿼리로 관리하며, 필요한 위치에 TODO 주석으로 표시한다.
+
+## 환경 선택
+
+prod가 아닌 dev에서만 작업할 것. application-prod.yml에 우선적으로 변경할 것이 아닌 application-dev.yml에 변경할 것
