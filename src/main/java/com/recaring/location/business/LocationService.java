@@ -35,8 +35,6 @@ public class LocationService {
     }
 
     public SseEmitter streamLocation(String caregiverKey, String wardKey) {
-        locationValidator.validateCaregiverAccess(caregiverKey, wardKey);
-
         SseEmitter emitter = sseEmitterManager.connect(wardKey);
 
         gpsLatestCacheReader.find(wardKey)

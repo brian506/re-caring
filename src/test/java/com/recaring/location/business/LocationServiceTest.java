@@ -98,16 +98,15 @@ class LocationServiceTest {
     }
 
     @Test
-    @DisplayName("케어 관계 없는 보호자가 SSE 연결 시 예외가 전파된다")
-    void streamLocation_propagates_exception_when_not_caregiver() {
-        willThrow(new AppException(ErrorType.NOT_CARE_RELATED_WARD))
-                .given(locationValidator).validateCaregiverAccess(LocationFixture.GUARDIAN_KEY, LocationFixture.WARD_KEY);
+    @DisplayName("SSE 연결 시 caregiverAccess 검증 없이 emitter를 반환한다")
+    void streamLocation_returns_emitter_without_caregiver_validation() {
+        SseEmitter mockEmitter = mock(SseEmitter.class);
+        given(sseEmitterManager.connect(LocationFixture.WARD_KEY)).willReturn(mockEmitter);
+        given(gpsLatestCacheReader.find(LocationFixture.WARD_KEY)).willReturn(Optional.empty());
 
-        assertThatThrownBy(() ->
-                locationService.streamLocation(LocationFixture.GUARDIAN_KEY, LocationFixture.WARD_KEY))
-                .isInstanceOf(AppException.class)
-                .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_CARE_RELATED_WARD);
+        SseEmitter result = locationService.streamLocation(LocationFixture.GUARDIAN_KEY, LocationFixture.WARD_KEY);
 
-        then(sseEmitterManager).should(never()).connect(any());
+        assertThat(result).isEqualTo(mockEmitter);
+        then(locationValidator).should(never()).validateCaregiverAccess(any(), any());
     }
 }
