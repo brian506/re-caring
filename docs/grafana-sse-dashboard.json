@@ -1,0 +1,597 @@
+{
+  "annotations": [
+    {
+      "kind": "AnnotationQuery",
+      "spec": {
+        "builtIn": true,
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "query": {
+          "datasource": { "name": "grafana" },
+          "group": "grafana",
+          "kind": "DataQuery",
+          "spec": {},
+          "version": "v0"
+        }
+      }
+    }
+  ],
+  "cursorSync": "Off",
+  "editable": true,
+  "elements": {
+    "panel-28": {
+      "kind": "Panel",
+      "spec": {
+        "id": 28,
+        "title": "Active SSE Connections",
+        "description": "현재 메모리에 살아있는 SseEmitter 수. K6 VU 수와 일치해야 정상.",
+        "links": [],
+        "data": {
+          "kind": "QueryGroup",
+          "spec": {
+            "queries": [
+              {
+                "kind": "PanelQuery",
+                "spec": {
+                  "query": {
+                    "kind": "DataQuery",
+                    "group": "prometheus",
+                    "version": "v0",
+                    "datasource": { "name": "prometheus" },
+                    "spec": {
+                      "expr": "sse_active_connections{job=\"recaring\"}",
+                      "legendFormat": "active"
+                    }
+                  },
+                  "refId": "A",
+                  "hidden": false
+                }
+              }
+            ],
+            "transformations": [],
+            "queryOptions": {}
+          }
+        },
+        "vizConfig": {
+          "kind": "VizConfig",
+          "group": "timeseries",
+          "version": "13.0.1+security-01",
+          "spec": {
+            "options": {
+              "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+              "tooltip": { "mode": "single" }
+            },
+            "fieldConfig": {
+              "defaults": {
+                "unit": "short",
+                "min": 0,
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    { "value": 0, "color": "green" },
+                    { "value": 300, "color": "yellow" },
+                    { "value": 1000, "color": "red" }
+                  ]
+                },
+                "custom": { "drawStyle": "line", "fillOpacity": 30, "lineWidth": 2 }
+              },
+              "overrides": []
+            }
+          }
+        }
+      }
+    },
+    "panel-29": {
+      "kind": "Panel",
+      "spec": {
+        "id": 29,
+        "title": "Broadcast 지연 (P50 / P95 / P99)",
+        "description": "GPS 한 건이 모든 보호자 emitter에게 send 완료되기까지 걸리는 시간. 본질 지표.",
+        "links": [],
+        "data": {
+          "kind": "QueryGroup",
+          "spec": {
+            "queries": [
+              {
+                "kind": "PanelQuery",
+                "spec": {
+                  "query": {
+                    "kind": "DataQuery",
+                    "group": "prometheus",
+                    "version": "v0",
+                    "datasource": { "name": "prometheus" },
+                    "spec": {
+                      "expr": "histogram_quantile(0.50, sum by(le) (rate(sse_broadcast_duration_seconds_bucket{job=\"recaring\"}[1m])))",
+                      "legendFormat": "P50"
+                    }
+                  },
+                  "refId": "A",
+                  "hidden": false
+                }
+              },
+              {
+                "kind": "PanelQuery",
+                "spec": {
+                  "query": {
+                    "kind": "DataQuery",
+                    "group": "prometheus",
+                    "version": "v0",
+                    "datasource": { "name": "prometheus" },
+                    "spec": {
+                      "expr": "histogram_quantile(0.95, sum by(le) (rate(sse_broadcast_duration_seconds_bucket{job=\"recaring\"}[1m])))",
+                      "legendFormat": "P95"
+                    }
+                  },
+                  "refId": "B",
+                  "hidden": false
+                }
+              },
+              {
+                "kind": "PanelQuery",
+                "spec": {
+                  "query": {
+                    "kind": "DataQuery",
+                    "group": "prometheus",
+                    "version": "v0",
+                    "datasource": { "name": "prometheus" },
+                    "spec": {
+                      "expr": "histogram_quantile(0.99, sum by(le) (rate(sse_broadcast_duration_seconds_bucket{job=\"recaring\"}[1m])))",
+                      "legendFormat": "P99"
+                    }
+                  },
+                  "refId": "C",
+                  "hidden": false
+                }
+              }
+            ],
+            "transformations": [],
+            "queryOptions": {}
+          }
+        },
+        "vizConfig": {
+          "kind": "VizConfig",
+          "group": "timeseries",
+          "version": "13.0.1+security-01",
+          "spec": {
+            "options": {
+              "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+              "tooltip": { "mode": "single" }
+            },
+            "fieldConfig": {
+              "defaults": {
+                "unit": "s",
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    { "value": 0, "color": "green" },
+                    { "value": 0.5, "color": "yellow" },
+                    { "value": 1, "color": "red" }
+                  ]
+                },
+                "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 1 }
+              },
+              "overrides": []
+            }
+          }
+        }
+      }
+    },
+    "panel-30": {
+      "kind": "Panel",
+      "spec": {
+        "id": 30,
+        "title": "Emitter 제거 경로별 (completion / timeout / error)",
+        "description": "정상 종료 vs 비정상 종료 비율. error 비율이 비정상으로 높으면 send 실패 누적.",
+        "links": [],
+        "data": {
+          "kind": "QueryGroup",
+          "spec": {
+            "queries": [
+              {
+                "kind": "PanelQuery",
+                "spec": {
+                  "query": {
+                    "kind": "DataQuery",
+                    "group": "prometheus",
+                    "version": "v0",
+                    "datasource": { "name": "prometheus" },
+                    "spec": {
+                      "expr": "sum by(reason) (rate(sse_emitter_removed_total{job=\"recaring\"}[1m]))",
+                      "legendFormat": "{{reason}}"
+                    }
+                  },
+                  "refId": "A",
+                  "hidden": false
+                }
+              }
+            ],
+            "transformations": [],
+            "queryOptions": {}
+          }
+        },
+        "vizConfig": {
+          "kind": "VizConfig",
+          "group": "timeseries",
+          "version": "13.0.1+security-01",
+          "spec": {
+            "options": {
+              "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+              "tooltip": { "mode": "single" }
+            },
+            "fieldConfig": {
+              "defaults": {
+                "unit": "short",
+                "custom": { "drawStyle": "line", "fillOpacity": 20, "lineWidth": 1 }
+              },
+              "overrides": [
+                {
+                  "matcher": { "id": "byName", "options": "error" },
+                  "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }]
+                },
+                {
+                  "matcher": { "id": "byName", "options": "timeout" },
+                  "properties": [{ "id": "color", "value": { "fixedColor": "orange", "mode": "fixed" } }]
+                },
+                {
+                  "matcher": { "id": "byName", "options": "completion" },
+                  "properties": [{ "id": "color", "value": { "fixedColor": "green", "mode": "fixed" } }]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "panel-31": {
+      "kind": "Panel",
+      "spec": {
+        "id": 31,
+        "title": "Emitter Send Failures",
+        "description": "broadcast 시 IOException 발생 빈도. 0에 가까워야 정상.",
+        "links": [],
+        "data": {
+          "kind": "QueryGroup",
+          "spec": {
+            "queries": [
+              {
+                "kind": "PanelQuery",
+                "spec": {
+                  "query": {
+                    "kind": "DataQuery",
+                    "group": "prometheus",
+                    "version": "v0",
+                    "datasource": { "name": "prometheus" },
+                    "spec": {
+                      "expr": "rate(sse_emitter_send_failures_total{job=\"recaring\"}[1m])",
+                      "legendFormat": "send failures/s"
+                    }
+                  },
+                  "refId": "A",
+                  "hidden": false
+                }
+              }
+            ],
+            "transformations": [],
+            "queryOptions": {}
+          }
+        },
+        "vizConfig": {
+          "kind": "VizConfig",
+          "group": "timeseries",
+          "version": "13.0.1+security-01",
+          "spec": {
+            "options": {
+              "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+              "tooltip": { "mode": "single" }
+            },
+            "fieldConfig": {
+              "defaults": {
+                "unit": "short",
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    { "value": 0, "color": "green" },
+                    { "value": 0.5, "color": "red" }
+                  ]
+                },
+                "custom": { "drawStyle": "bars", "fillOpacity": 80, "lineWidth": 1 }
+              },
+              "overrides": []
+            }
+          }
+        }
+      }
+    },
+    "panel-32": {
+      "kind": "Panel",
+      "spec": {
+        "id": 32,
+        "title": "HikariCP 풀 사용률 (%)",
+        "description": "active / max. 80% 넘으면 풀 고갈 임박.",
+        "links": [],
+        "data": {
+          "kind": "QueryGroup",
+          "spec": {
+            "queries": [
+              {
+                "kind": "PanelQuery",
+                "spec": {
+                  "query": {
+                    "kind": "DataQuery",
+                    "group": "prometheus",
+                    "version": "v0",
+                    "datasource": { "name": "prometheus" },
+                    "spec": {
+                      "expr": "hikaricp_connections_active{job=\"recaring\"} / hikaricp_connections_max{job=\"recaring\"}",
+                      "instant": true
+                    }
+                  },
+                  "refId": "A",
+                  "hidden": false
+                }
+              }
+            ],
+            "transformations": [],
+            "queryOptions": {}
+          }
+        },
+        "vizConfig": {
+          "kind": "VizConfig",
+          "group": "gauge",
+          "version": "13.0.1+security-01",
+          "spec": {
+            "options": {
+              "reduceOptions": { "calcs": ["lastNotNull"] },
+              "showThresholdLabels": false,
+              "showThresholdMarkers": true
+            },
+            "fieldConfig": {
+              "defaults": {
+                "unit": "percentunit",
+                "min": 0,
+                "max": 1,
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    { "value": 0, "color": "green" },
+                    { "value": 0.6, "color": "yellow" },
+                    { "value": 0.8, "color": "red" }
+                  ]
+                }
+              },
+              "overrides": []
+            }
+          }
+        }
+      }
+    },
+    "panel-33": {
+      "kind": "Panel",
+      "spec": {
+        "id": 33,
+        "title": "HikariCP Pending Threads",
+        "description": "풀에서 커넥션 못 받고 대기 중인 스레드 수. 0 초과면 위험.",
+        "links": [],
+        "data": {
+          "kind": "QueryGroup",
+          "spec": {
+            "queries": [
+              {
+                "kind": "PanelQuery",
+                "spec": {
+                  "query": {
+                    "kind": "DataQuery",
+                    "group": "prometheus",
+                    "version": "v0",
+                    "datasource": { "name": "prometheus" },
+                    "spec": {
+                      "expr": "hikaricp_connections_pending{job=\"recaring\"}",
+                      "legendFormat": "pending"
+                    }
+                  },
+                  "refId": "A",
+                  "hidden": false
+                }
+              }
+            ],
+            "transformations": [],
+            "queryOptions": {}
+          }
+        },
+        "vizConfig": {
+          "kind": "VizConfig",
+          "group": "timeseries",
+          "version": "13.0.1+security-01",
+          "spec": {
+            "options": {
+              "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+              "tooltip": { "mode": "single" }
+            },
+            "fieldConfig": {
+              "defaults": {
+                "unit": "short",
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    { "value": 0, "color": "green" },
+                    { "value": 1, "color": "red" }
+                  ]
+                },
+                "custom": { "drawStyle": "line", "fillOpacity": 30, "lineWidth": 2 }
+              },
+              "overrides": []
+            }
+          }
+        }
+      }
+    },
+    "panel-34": {
+      "kind": "Panel",
+      "spec": {
+        "id": 34,
+        "title": "JVM Threads / File Descriptors",
+        "description": "SSE 연결당 thread + fd 점유. OS 한도 접근 감지.",
+        "links": [],
+        "data": {
+          "kind": "QueryGroup",
+          "spec": {
+            "queries": [
+              {
+                "kind": "PanelQuery",
+                "spec": {
+                  "query": {
+                    "kind": "DataQuery",
+                    "group": "prometheus",
+                    "version": "v0",
+                    "datasource": { "name": "prometheus" },
+                    "spec": {
+                      "expr": "jvm_threads_live_threads{job=\"recaring\"}",
+                      "legendFormat": "live threads"
+                    }
+                  },
+                  "refId": "A",
+                  "hidden": false
+                }
+              },
+              {
+                "kind": "PanelQuery",
+                "spec": {
+                  "query": {
+                    "kind": "DataQuery",
+                    "group": "prometheus",
+                    "version": "v0",
+                    "datasource": { "name": "prometheus" },
+                    "spec": {
+                      "expr": "process_files_open_files{job=\"recaring\"}",
+                      "legendFormat": "open fd"
+                    }
+                  },
+                  "refId": "B",
+                  "hidden": false
+                }
+              },
+              {
+                "kind": "PanelQuery",
+                "spec": {
+                  "query": {
+                    "kind": "DataQuery",
+                    "group": "prometheus",
+                    "version": "v0",
+                    "datasource": { "name": "prometheus" },
+                    "spec": {
+                      "expr": "process_files_max_files{job=\"recaring\"}",
+                      "legendFormat": "max fd"
+                    }
+                  },
+                  "refId": "C",
+                  "hidden": false
+                }
+              }
+            ],
+            "transformations": [],
+            "queryOptions": {}
+          }
+        },
+        "vizConfig": {
+          "kind": "VizConfig",
+          "group": "timeseries",
+          "version": "13.0.1+security-01",
+          "spec": {
+            "options": {
+              "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+              "tooltip": { "mode": "single" }
+            },
+            "fieldConfig": {
+              "defaults": {
+                "unit": "short",
+                "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 1 }
+              },
+              "overrides": []
+            }
+          }
+        }
+      }
+    }
+  },
+  "layout": {
+    "kind": "RowsLayout",
+    "spec": {
+      "rows": [
+        {
+          "kind": "RowsLayoutRow",
+          "spec": {
+            "title": "📡 SSE 성능 지표",
+            "collapse": false,
+            "layout": {
+              "kind": "GridLayout",
+              "spec": {
+                "items": [
+                  { "kind": "GridLayoutItem", "spec": { "x": 0,  "y": 0, "width": 12, "height": 8,
+                    "element": { "kind": "ElementReference", "name": "panel-28" } } },
+                  { "kind": "GridLayoutItem", "spec": { "x": 12, "y": 0, "width": 12, "height": 8,
+                    "element": { "kind": "ElementReference", "name": "panel-29" } } },
+                  { "kind": "GridLayoutItem", "spec": { "x": 0,  "y": 8, "width": 12, "height": 8,
+                    "element": { "kind": "ElementReference", "name": "panel-30" } } },
+                  { "kind": "GridLayoutItem", "spec": { "x": 12, "y": 8, "width": 12, "height": 8,
+                    "element": { "kind": "ElementReference", "name": "panel-31" } } }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "kind": "RowsLayoutRow",
+          "spec": {
+            "title": "🔌 풀 / OS 리소스",
+            "collapse": false,
+            "layout": {
+              "kind": "GridLayout",
+              "spec": {
+                "items": [
+                  { "kind": "GridLayoutItem", "spec": { "x": 0,  "y": 0, "width": 8,  "height": 8,
+                    "element": { "kind": "ElementReference", "name": "panel-32" } } },
+                  { "kind": "GridLayoutItem", "spec": { "x": 8,  "y": 0, "width": 8,  "height": 8,
+                    "element": { "kind": "ElementReference", "name": "panel-33" } } },
+                  { "kind": "GridLayoutItem", "spec": { "x": 16, "y": 0, "width": 8,  "height": 8,
+                    "element": { "kind": "ElementReference", "name": "panel-34" } } }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "links": [],
+  "liveNow": false,
+  "preload": false,
+  "tags": [
+    "re-caring",
+    "sse",
+    "load-test"
+  ],
+  "timeSettings": {
+    "autoRefresh": "5s",
+    "autoRefreshIntervals": [
+      "5s",
+      "10s",
+      "30s",
+      "1m",
+      "5m",
+      "15m",
+      "30m",
+      "1h",
+      "2h",
+      "1d"
+    ],
+    "fiscalYearStartMonth": 0,
+    "from": "now-15m",
+    "hideTimepicker": false,
+    "timezone": "browser",
+    "to": "now"
+  },
+  "title": "re-caring SSE 부하테스트",
+  "variables": []
+}
