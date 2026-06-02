@@ -72,7 +72,7 @@ public class SseEmitterManager {
             for (SseEmitter emitter : wardEmitters) {
                 try {
                     emitter.send(SseEmitter.event().name(EVENT_NAME).data(gpsLatest));
-                } catch (IOException e) {
+                } catch (IOException | IllegalStateException e) {
                     log.debug("[SSE 이벤트 : broadcast 전송 실패]: wardKey={} | error={}", wardKey, e.getMessage());
                     sendFailures.increment();
                     remove(wardKey, emitter);
