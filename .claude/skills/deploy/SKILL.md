@@ -51,7 +51,24 @@ gh issue view {N} --json number,title,state 2>&1
 
 ---
 
-`deploy` subagent를 생성하여 현재 feature 브랜치의 변경사항을 배포한다.
+`security-auditor` subagent를 먼저 spawn하여 보안 취약점을 검사한다.
+
+Agent tool을 사용해 subagent_type="security-auditor"로 spawn한다.
+prompt에는 현재 브랜치명과 "변경된 파일의 보안 취약점을 감사하고 배포 판정을 내려줘"를 포함한다.
+
+### 보안 감사 결과에 따른 분기
+
+- **🔴 Critical 또는 🟠 High 발견 시**: 배포를 즉시 중단하고 아래 메시지를 출력한다. deploy subagent를 spawn하지 않는다.
+  ```
+  [배포 차단] 보안 취약점이 발견되었습니다.
+  Critical/High 항목을 수정한 뒤 다시 배포해주세요.
+  ```
+- **🟡 Medium만 발견 시**: 발견 내용을 출력하고 사용자에게 계속 진행할지 확인을 요청한다.
+- **이상 없거나 🔵 Low만 발견 시**: 보안 감사 통과 메시지를 출력하고 다음 단계로 진행한다.
+
+---
+
+보안 감사 통과 후 `deploy` subagent를 생성하여 현재 feature 브랜치의 변경사항을 배포한다.
 
 Agent tool을 사용해 subagent_type="deploy"로 spawn하고, 커밋 설명을 prompt에 포함한다.
 subagent의 출력 결과를 그대로 사용자에게 전달한다.
