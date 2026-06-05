@@ -1,5 +1,8 @@
 package com.recaring.location.implement;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.recaring.location.fixture.LocationFixture;
 import com.recaring.location.vo.Gps;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
@@ -18,7 +21,11 @@ import static org.mockito.Mockito.mock;
 @DisplayName("SseEmitterManager 단위 테스트")
 class SseEmitterManagerTest {
 
-    private final SseEmitterManager manager = new SseEmitterManager(new SimpleMeterRegistry());
+    private static final ObjectMapper objectMapper = new ObjectMapper()
+            .registerModule(new JavaTimeModule())
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
+    private final SseEmitterManager manager = new SseEmitterManager(objectMapper, new SimpleMeterRegistry());
 
     @Test
     @DisplayName("connect() 호출 시 SseEmitter가 반환된다")
