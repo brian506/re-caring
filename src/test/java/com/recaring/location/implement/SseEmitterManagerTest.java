@@ -12,6 +12,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.concurrent.Executors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -25,7 +26,8 @@ class SseEmitterManagerTest {
             .registerModule(new JavaTimeModule())
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
-    private final SseEmitterManager manager = new SseEmitterManager(objectMapper, new SimpleMeterRegistry());
+    private final SseEmitterManager manager = new SseEmitterManager(
+            objectMapper, Executors.newVirtualThreadPerTaskExecutor(), new SimpleMeterRegistry());
 
     @Test
     @DisplayName("connect() 호출 시 SseEmitter가 반환된다")
