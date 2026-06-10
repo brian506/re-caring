@@ -19,7 +19,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @Component
 public class SseEmitterManager {
 
-    private static final long SSE_TIMEOUT = 30 * 60 * 1000L; // 30분
+    private static final long SSE_TIMEOUT = 5 * 60 * 1000L; // 5분
     private static final String EVENT_NAME = "location";
 
     private final Map<String, CopyOnWriteArrayList<SseEmitter>> emitters = new ConcurrentHashMap<>();
