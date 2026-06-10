@@ -30,8 +30,6 @@ public class LocationSettingService {
     }
 
     public WardLocationCollectionIntervalInfo getMyCollectionInterval(String wardKey) {
-        locationValidator.validateWardRole(wardKey);
-
         LocationCollectionInterval interval = locationSettingReader.findCollectionInterval(wardKey);
         return WardLocationCollectionIntervalInfo.from(interval);
     }

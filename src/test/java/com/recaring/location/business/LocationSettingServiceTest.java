@@ -73,7 +73,6 @@ class LocationSettingServiceTest {
 
         WardLocationCollectionIntervalInfo result = locationSettingService.getMyCollectionInterval(LocationFixture.WARD_KEY);
 
-        then(locationValidator).should().validateWardRole(LocationFixture.WARD_KEY);
         assertThat(result.currentIntervalSeconds()).isEqualTo(60);
     }
 }

@@ -15,10 +15,12 @@ public class CacheConfig {
 
     @Bean
     public CacheManager cacheManager() {
-        CaffeineCacheManager manager = new CaffeineCacheManager("careRelationship");
-        manager.setCaffeine(Caffeine.newBuilder()
-                .expireAfterWrite(10, TimeUnit.MINUTES)
-                .maximumSize(1000));
+        CaffeineCacheManager manager = new CaffeineCacheManager();
+        manager.registerCustomCache("careRelationship",
+                Caffeine.newBuilder().expireAfterWrite(10, TimeUnit.MINUTES).maximumSize(1000).build());
+        // GPS POST hot path: device token → wardKey (immutable after issuance)
+        manager.registerCustomCache("deviceToken",
+                Caffeine.newBuilder().expireAfterWrite(1, TimeUnit.HOURS).maximumSize(2000).build());
         return manager;
     }
 }

@@ -11,12 +11,15 @@ import org.springframework.transaction.annotation.Transactional;
 public class WardDeviceTokenManager {
 
     private final WardDeviceTokenRepository wardDeviceTokenRepository;
+    private final WardDeviceTokenReader wardDeviceTokenReader;
 
     @Transactional
     public String issueToken(String wardKey) {
         return wardDeviceTokenRepository.findByWardKey(wardKey)
                 .map(existing -> {
+                    String oldToken = existing.getToken();
                     existing.reissue();
+                    wardDeviceTokenReader.evict(oldToken);
                     return existing.getToken();
                 })
                 .orElseGet(() -> {
