@@ -1,7 +1,5 @@
 package com.recaring.location.implement;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.recaring.location.vo.Gps;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
@@ -16,19 +14,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ExecutorService;
 
 @Slf4j
 @Component
 public class SseEmitterManager {
 
-    private static final long SSE_TIMEOUT = 5 * 60 * 1000L; // 30분
+    private static final long SSE_TIMEOUT = 30 * 60 * 1000L; // 30분
     private static final String EVENT_NAME = "location";
 
     private final Map<String, CopyOnWriteArrayList<SseEmitter>> emitters = new ConcurrentHashMap<>();
-
-    private final ObjectMapper objectMapper;
-    private final ExecutorService broadcastExecutor;
 
     private final Timer broadcastTimer;
     private final Counter sendFailures;
@@ -36,9 +30,7 @@ public class SseEmitterManager {
     private final Counter removedTimeout;
     private final Counter removedError;
 
-    public SseEmitterManager(ObjectMapper objectMapper, ExecutorService broadcastExecutor, MeterRegistry registry) {
-        this.objectMapper = objectMapper;
-        this.broadcastExecutor = broadcastExecutor;
+    public SseEmitterManager(MeterRegistry registry) {
         this.broadcastTimer = Timer.builder("sse.broadcast.duration")
                 .publishPercentiles(0.5, 0.95, 0.99)
                 .publishPercentileHistogram()
@@ -77,34 +69,22 @@ public class SseEmitterManager {
     public void broadcast(String wardKey, Gps gpsLatest) {
         broadcastTimer.record(() -> {
             List<SseEmitter> wardEmitters = emitters.getOrDefault(wardKey, new CopyOnWriteArrayList<>());
-            if (wardEmitters.isEmpty()) return;
-
-            String json;
-            try {
-                json = objectMapper.writeValueAsString(gpsLatest);
-            } catch (JsonProcessingException e) {
-                log.error("[SSE 이벤트 : GPS 직렬화 실패]: wardKey={} | error={}", wardKey, e.getMessage());
-                return;
-            }
-
             for (SseEmitter emitter : wardEmitters) {
-                broadcastExecutor.submit(() -> {
-                    try {
-                        emitter.send(SseEmitter.event().name(EVENT_NAME).data(json));
-                    } catch (IOException | IllegalStateException e) {
-                        log.debug("[SSE 이벤트 : broadcast 전송 실패]: wardKey={} | error={}", wardKey, e.getMessage());
-                        sendFailures.increment();
-                        remove(wardKey, emitter);
-                    }
-                });
+                try {
+                    emitter.send(SseEmitter.event().name(EVENT_NAME).data(gpsLatest));
+                } catch (IOException | IllegalStateException e) {
+                    log.debug("[SSE 이벤트 : broadcast 전송 실패]: wardKey={} | error={}", wardKey, e.getMessage());
+                    sendFailures.increment();
+                    remove(wardKey, emitter);
+                }
             }
         });
     }
 
     private void remove(String wardKey, SseEmitter emitter) {
-        emitters.computeIfPresent(wardKey, (k, list) -> {
-            list.remove(emitter);
-            return list.isEmpty() ? null : list;
-        });
+        CopyOnWriteArrayList<SseEmitter> wardEmitters = emitters.get(wardKey);
+        if (wardEmitters != null) {
+            wardEmitters.remove(emitter);
+        }
     }
 }
