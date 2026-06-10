@@ -26,8 +26,6 @@ public class LocationService {
 
     @Transactional
     public void receiveGps(String wardMemberKey, double latitude, double longitude) {
-        locationValidator.validateWardRole(wardMemberKey);
-
         Gps gps = new Gps(latitude, longitude, LocalDateTime.now());
 
         gpsHistoryWriter.save(wardMemberKey, latitude, longitude);

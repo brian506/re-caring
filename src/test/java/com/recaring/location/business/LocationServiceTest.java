@@ -4,8 +4,6 @@ import com.recaring.location.event.GpsReceivedEvent;
 import com.recaring.location.fixture.LocationFixture;
 import com.recaring.location.implement.*;
 import com.recaring.location.vo.Gps;
-import com.recaring.support.exception.AppException;
-import com.recaring.support.exception.ErrorType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -48,27 +46,12 @@ class LocationServiceTest {
         locationService.receiveGps(LocationFixture.WARD_KEY, LocationFixture.LATITUDE, LocationFixture.LONGITUDE);
 
         // Then
-        then(locationValidator).should(times(1)).validateWardRole(LocationFixture.WARD_KEY);
         then(gpsHistoryWriter).should(times(1)).save(
                 eq(LocationFixture.WARD_KEY),
                 eq(LocationFixture.LATITUDE),
                 eq(LocationFixture.LONGITUDE)
         );
         then(eventPublisher).should(times(1)).publishEvent(any(GpsReceivedEvent.class));
-    }
-
-    @Test
-    @DisplayName("WARD가 아닌 회원이 GPS 전송 시 예외가 전파된다")
-    void receiveGps_propagates_exception_when_not_ward() {
-        willThrow(new AppException(ErrorType.NOT_WARD_MEMBER))
-                .given(locationValidator).validateWardRole(LocationFixture.GUARDIAN_KEY);
-
-        assertThatThrownBy(() ->
-                locationService.receiveGps(LocationFixture.GUARDIAN_KEY, LocationFixture.LATITUDE, LocationFixture.LONGITUDE))
-                .isInstanceOf(AppException.class)
-                .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_WARD_MEMBER);
-
-        then(gpsHistoryWriter).should(never()).save(any(), anyDouble(), anyDouble());
     }
 
     @Test

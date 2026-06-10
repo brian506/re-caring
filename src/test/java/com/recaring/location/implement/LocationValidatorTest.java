@@ -1,7 +1,6 @@
 package com.recaring.location.implement;
 
 import com.recaring.location.fixture.LocationFixture;
-import com.recaring.member.implement.MemberReader;
 import com.recaring.support.exception.AppException;
 import com.recaring.support.exception.ErrorType;
 import org.junit.jupiter.api.DisplayName;
@@ -25,29 +24,8 @@ class LocationValidatorTest {
     @Mock
     private CareRelationshipCacheReader careRelationshipCacheReader;
 
-    @Mock
-    private MemberReader memberReader;
-
     @Test
-    @DisplayName("WARD 역할 회원은 GPS 전송 권한 검증을 통과한다")
-    void validateWardRole_passes_for_ward() {
-        given(memberReader.findByMemberKey(LocationFixture.WARD_KEY)).willReturn(LocationFixture.createWard());
-
-        assertThatNoException().isThrownBy(() -> locationValidator.validateWardRole(LocationFixture.WARD_KEY));
-    }
-
-    @Test
-    @DisplayName("GUARDIAN 역할 회원이 GPS 전송 시 예외가 발생한다")
-    void validateWardRole_throws_for_guardian() {
-        given(memberReader.findByMemberKey(LocationFixture.GUARDIAN_KEY)).willReturn(LocationFixture.createGuardian());
-
-        assertThatThrownBy(() -> locationValidator.validateWardRole(LocationFixture.GUARDIAN_KEY))
-                .isInstanceOf(AppException.class)
-                .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_WARD_MEMBER);
-    }
-
-    @Test
-    @DisplayName("GUARDIAN 케어 관계가 있으면 접근 권한 검증을 통과한다")
+    @DisplayName("케어 관계가 있으면 접근 권한 검증을 통과한다")
     void validateCaregiverAccess_passes_for_guardian_with_relationship() {
         given(careRelationshipCacheReader.hasCaregiverAccess(LocationFixture.WARD_KEY, LocationFixture.GUARDIAN_KEY))
                 .willReturn(true);
