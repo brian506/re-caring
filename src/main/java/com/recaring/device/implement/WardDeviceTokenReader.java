@@ -4,25 +4,36 @@ import com.recaring.device.dataaccess.repository.WardDeviceTokenRepository;
 import com.recaring.support.exception.AppException;
 import com.recaring.support.exception.ErrorType;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
+
+import java.time.Duration;
 
 @Component
 @RequiredArgsConstructor
 public class WardDeviceTokenReader {
 
-    private final WardDeviceTokenRepository wardDeviceTokenRepository;
+    private static final String KEY_PREFIX = "deviceToken:";
+    private static final Duration TTL = Duration.ofDays(30);
 
-    @Cacheable(cacheNames = "deviceToken", key = "#token")
+    private final WardDeviceTokenRepository wardDeviceTokenRepository;
+    private final StringRedisTemplate stringRedisTemplate;
+
     public String getByToken(String token) {
-        return wardDeviceTokenRepository.findByToken(token)
+        String cached = stringRedisTemplate.opsForValue().get(KEY_PREFIX + token);
+        if (cached != null) {
+            return cached;
+        }
+
+        String wardKey = wardDeviceTokenRepository.findByToken(token)
                 .map(entity -> entity.getWardKey())
                 .orElseThrow(() -> new AppException(ErrorType.INVALID_DEVICE_TOKEN));
+
+        stringRedisTemplate.opsForValue().set(KEY_PREFIX + token, wardKey, TTL);
+        return wardKey;
     }
 
-    @CacheEvict(cacheNames = "deviceToken", key = "#token")
     public void evict(String token) {
-        // cache eviction only — called on token reissue
+        stringRedisTemplate.delete(KEY_PREFIX + token);
     }
 }
