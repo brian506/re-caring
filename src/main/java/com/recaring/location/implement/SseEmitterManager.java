@@ -68,7 +68,6 @@ public class SseEmitterManager {
     private void pollLoop(SseEmitter emitter, String wardKey, AtomicBoolean active) {
         Gps lastSent = null;
         try {
-            emitter.send(SseEmitter.event().comment("connected"));
             while (active.get()) {
                 Optional<Gps> latest = gpsLatestCacheReader.find(wardKey);
                 if (latest.isPresent() && !latest.get().equals(lastSent)) {
