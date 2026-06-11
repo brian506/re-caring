@@ -56,7 +56,7 @@ public class SseEmitterManager {
 
         emitter.onCompletion(() -> stop(active, removedCompletion));
         emitter.onTimeout(()    -> { stop(active, removedTimeout); completeQuietly(emitter, null); });
-        emitter.onError(e       -> { stop(active, removedError);   completeQuietly(emitter, e); });
+        emitter.onError(e       -> stop(active, removedError)); // error already signaled — do NOT call completeWithError, it re-triggers Tomcat error dispatch
 
         activeConnections.incrementAndGet();
 
@@ -73,6 +73,8 @@ public class SseEmitterManager {
                 if (latest.isPresent() && !latest.get().equals(lastSent)) {
                     emitter.send(SseEmitter.event().name(EVENT_NAME).data(latest.get()));
                     lastSent = latest.get();
+                } else {
+                    emitter.send(SseEmitter.event().comment("")); // heartbeat: prevent ALB idle timeout (60s)
                 }
                 Thread.sleep(POLL_INTERVAL_MS);
             }
@@ -89,7 +91,7 @@ public class SseEmitterManager {
             log.warn("[SSE 이벤트 : 예상치 못한 종료]: wardKey={} | error={}", wardKey, e.getMessage(), e);
             sendFailures.increment();
             stop(active, removedError);
-            completeQuietly(emitter, e);
+            completeQuietly(emitter, null); // complete gracefully — completeWithError triggers Tomcat error dispatch on committed response
         }
     }
 
