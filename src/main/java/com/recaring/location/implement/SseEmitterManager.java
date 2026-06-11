@@ -81,7 +81,7 @@ public class SseEmitterManager {
             log.debug("[SSE 이벤트 : 전송 종료]: wardKey={} | error={}", wardKey, e.getMessage());
             sendFailures.increment();
             stop(active, removedError);
-            completeQuietly(emitter, e);
+            completeQuietly(emitter, null); // client disconnect — complete gracefully, not with error (avoids Tomcat error dispatch)
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             stop(active, removedCompletion);

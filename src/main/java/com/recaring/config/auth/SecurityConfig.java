@@ -66,7 +66,8 @@ public class SecurityConfig {
                                 mvc.matcher("/v3/api-docs")
                         ).permitAll()
                         .requestMatchers(
-                                mvc.matcher("/actuator/**")
+                                mvc.matcher("/actuator/**"),
+                                mvc.matcher("/error")
                         ).permitAll()
 
                         // WARD 전용
