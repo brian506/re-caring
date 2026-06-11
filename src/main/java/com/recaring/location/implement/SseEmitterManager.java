@@ -55,8 +55,8 @@ public class SseEmitterManager {
         AtomicBoolean active = new AtomicBoolean(true);
 
         emitter.onCompletion(() -> stop(active, removedCompletion));
-        emitter.onTimeout(()    -> stop(active, removedTimeout));
-        emitter.onError(e       -> stop(active, removedError));
+        emitter.onTimeout(()    -> { stop(active, removedTimeout); completeQuietly(emitter, null); });
+        emitter.onError(e       -> { stop(active, removedError);   completeQuietly(emitter, e); });
 
         activeConnections.incrementAndGet();
 
@@ -95,7 +95,7 @@ public class SseEmitterManager {
         }
     }
 
-    private void completeQuietly(SseEmitter emitter, Exception e) {
+    private void completeQuietly(SseEmitter emitter, Throwable e) {
         try {
             if (e != null) {
                 emitter.completeWithError(e);

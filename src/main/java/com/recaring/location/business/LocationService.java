@@ -21,12 +21,11 @@ public class LocationService {
     private final SseEmitterManager sseEmitterManager;
     private final LocationValidator locationValidator;
 
-    @Transactional
     public void receiveGps(String wardMemberKey, double latitude, double longitude) {
         Gps gps = new Gps(latitude, longitude, LocalDateTime.now());
 
-        gpsHistoryWriter.save(wardMemberKey, latitude, longitude);
         gpsLatestCacheWriter.save(wardMemberKey, gps);
+        gpsHistoryWriter.save(wardMemberKey, latitude, longitude);
     }
 
     public SseEmitter streamLocation(String caregiverKey, String wardKey) {
