@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-@Profile({"local", "test"})
+@Profile({"local", "test", "dev"})
 public class NoOpSqsPublisher implements SqsPublisher {
 
     @Override

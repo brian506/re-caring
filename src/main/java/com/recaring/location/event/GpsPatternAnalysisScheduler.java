@@ -27,6 +27,7 @@ public class GpsPatternAnalysisScheduler {
     private int intervalMinutes;
 
     // 기본 30분마다 실행. gps.pattern.analysis.interval-ms 로 오버라이드 가능
+    // todo 인덱스 적용
     @Scheduled(fixedRateString = "${gps.pattern.analysis.interval-ms:1800000}")
     public void analyzePatterns() {
         LocalDateTime from = LocalDateTime.now().minusMinutes(intervalMinutes);
