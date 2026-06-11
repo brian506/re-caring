@@ -2,7 +2,7 @@
 # 배포 서버의 Actuator 헬스체크를 수행한다
 # Usage: bash health-check.sh
 
-HEALTH_URL="https://re-caring.duckdns.org/actuator/health"
+HEALTH_URL="https://re-caring.com/actuator/health"
 MAX_RETRY=5
 INTERVAL=15
 

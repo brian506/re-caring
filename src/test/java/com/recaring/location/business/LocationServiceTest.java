@@ -1,22 +1,16 @@
 package com.recaring.location.business;
 
-import com.recaring.location.event.GpsReceivedEvent;
 import com.recaring.location.fixture.LocationFixture;
 import com.recaring.location.implement.*;
-import com.recaring.location.vo.Gps;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import java.util.Optional;
-
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -31,65 +25,37 @@ class LocationServiceTest {
     @Mock
     private GpsHistoryReader gpsHistoryReader;
     @Mock
-    private GpsLatestCacheReader gpsLatestCacheReader;
+    private GpsLatestCacheWriter gpsLatestCacheWriter;
     @Mock
     private SseEmitterManager sseEmitterManager;
     @Mock
     private LocationValidator locationValidator;
-    @Mock
-    private ApplicationEventPublisher eventPublisher;
 
     @Test
-    @DisplayName("GPS 수신 시 DB 저장 후 GpsReceivedEvent가 발행된다")
-    void receiveGps_saves_and_publishes_event() {
+    @DisplayName("GPS 수신 시 DB에 저장하고 최신 위치를 캐시에 저장한다")
+    void receiveGps_saves_history_and_cache() {
         // When
         locationService.receiveGps(LocationFixture.WARD_KEY, LocationFixture.LATITUDE, LocationFixture.LONGITUDE);
 
         // Then
         then(gpsHistoryWriter).should(times(1)).save(
-                eq(LocationFixture.WARD_KEY),
-                eq(LocationFixture.LATITUDE),
-                eq(LocationFixture.LONGITUDE)
-        );
-        then(eventPublisher).should(times(1)).publishEvent(any(GpsReceivedEvent.class));
-    }
-
-    @Test
-    @DisplayName("SSE 연결 시 캐시에 위치 정보가 있으면 초기 이벤트를 전송한다")
-    void streamLocation_sends_initial_event_when_cache_exists() {
-        SseEmitter mockEmitter = mock(SseEmitter.class);
-        Gps cached = new Gps(LocationFixture.LATITUDE, LocationFixture.LONGITUDE, java.time.LocalDateTime.now());
-        given(sseEmitterManager.connect(LocationFixture.WARD_KEY)).willReturn(mockEmitter);
-        given(gpsLatestCacheReader.find(LocationFixture.WARD_KEY)).willReturn(Optional.of(cached));
-
-        SseEmitter result = locationService.streamLocation(LocationFixture.GUARDIAN_KEY, LocationFixture.WARD_KEY);
-
-        assertThat(result).isEqualTo(mockEmitter);
-        then(sseEmitterManager).should(times(1)).sendInitialEvent(mockEmitter, cached);
-    }
-
-    @Test
-    @DisplayName("SSE 연결 시 캐시에 위치 정보가 없으면 초기 이벤트를 전송하지 않는다")
-    void streamLocation_skips_initial_event_when_cache_empty() {
-        SseEmitter mockEmitter = mock(SseEmitter.class);
-        given(sseEmitterManager.connect(LocationFixture.WARD_KEY)).willReturn(mockEmitter);
-        given(gpsLatestCacheReader.find(LocationFixture.WARD_KEY)).willReturn(Optional.empty());
-
-        locationService.streamLocation(LocationFixture.GUARDIAN_KEY, LocationFixture.WARD_KEY);
-
-        then(sseEmitterManager).should(never()).sendInitialEvent(any(), any());
+                LocationFixture.WARD_KEY, LocationFixture.LATITUDE, LocationFixture.LONGITUDE);
+        then(gpsLatestCacheWriter).should(times(1)).save(eq(LocationFixture.WARD_KEY), any());
     }
 
     @Test
     @DisplayName("SSE 연결 시 caregiverAccess 검증 후 emitter를 반환한다")
     void streamLocation_returns_emitter_with_caregiver_validation() {
+        // Given
         SseEmitter mockEmitter = mock(SseEmitter.class);
         given(sseEmitterManager.connect(LocationFixture.WARD_KEY)).willReturn(mockEmitter);
-        given(gpsLatestCacheReader.find(LocationFixture.WARD_KEY)).willReturn(Optional.empty());
 
+        // When
         SseEmitter result = locationService.streamLocation(LocationFixture.GUARDIAN_KEY, LocationFixture.WARD_KEY);
 
+        // Then
         assertThat(result).isEqualTo(mockEmitter);
-        then(locationValidator).should(times(1)).validateCaregiverAccess(LocationFixture.GUARDIAN_KEY, LocationFixture.WARD_KEY);
+        then(locationValidator).should(times(1))
+                .validateCaregiverAccess(LocationFixture.GUARDIAN_KEY, LocationFixture.WARD_KEY);
     }
 }

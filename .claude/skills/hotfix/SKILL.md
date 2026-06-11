@@ -99,7 +99,7 @@ gh run list --branch develop --workflow deploy --limit 3
 
 배포 완료 후 헬스체크:
 ```bash
-curl -s --max-time 10 https://re-caring.duckdns.org/actuator/health
+curl -s --max-time 10 https://re-caring.com/actuator/health
 ```
 
 `{"status":"UP"}` 확인 시 완료.

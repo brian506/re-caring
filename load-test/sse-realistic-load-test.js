@@ -1,6 +1,6 @@
 import http from 'k6/http';
 import { check } from 'k6';
-import { Counter, Gauge, Trend } from 'k6/metrics';
+import { Counter, Trend } from 'k6/metrics';
 import { SharedArray } from 'k6/data';
 import exec from 'k6/execution';
 
@@ -31,24 +31,19 @@ if (!SUBS[0] || !SUBS[0].token) throw new Error('dataset.json에 token이 없습
 // ── 지표 ──────────────────────────────────────────────────────
 const sseErrors       = new Counter('sse_errors');        // 4xx/5xx 등 응답 에러
 const sseDrops        = new Counter('sse_drops');         // status 0 (연결 실패/리셋)
-const activeConns     = new Gauge('sse_active_connections');
-const connectDuration = new Trend('sse_connect_duration_ms', true);
+const sseDuration     = new Trend('sse_connection_duration_ms', true); // SSE 연결 유지 시간 (서버 타임아웃까지)
 
 const gpsPostDuration = new Trend('gps_post_duration_ms', true); // ★ broadcast 영향 핵심 지표
 const gpsSuccess      = new Counter('gps_post_success');
 const gpsFailed       = new Counter('gps_post_failed');
 
-// ── SSE ramp 프로파일 (breakpoint 탐색) ───────────────────────
-// 각 단계 5분 soak → GC baseline 우상향 / 누수 발현 관측.
+// ── SSE ramp 프로파일 (실서비스 패턴 재현) ────────────────────
+// 실서비스에서는 연결이 서서히 누적됨 — 급등 구간을 없애 stampede 방지.
 // 주의: 최대 target은 dataset의 subscribers 수(N*G) 이하여야 한다.
 const SSE_STAGES = [
-  { duration: '1m', target: 500  },  // 100 ward
-  { duration: '5m', target: 500  },
-  { duration: '1m', target: 1000 },  // 200 ward
-  { duration: '5m', target: 1000 },
-  { duration: '1m', target: 2000 },  // 400 ward — 최대 목표
-  { duration: '5m', target: 2000 },
-  { duration: '1m', target: 0    },  // ramp-down
+  { duration: '10m', target: 2000 },  // ~200/min 완만한 ramp (초당 ~3.3개 신규 연결)
+  { duration: '15m', target: 2000 },  // steady-state: 2000 SSE + 80 GPS/s 지속 관측
+  { duration: '2m',  target: 0    },  // ramp-down
 ];
 
 // publisher 전체 실행 시간 = SSE 단계 합 (자동 계산)
@@ -88,6 +83,9 @@ export const options = {
 };
 
 // ── 시나리오 1: 보호자 SSE 구독 (연결 유지) ──────────────────
+// responseType: 'binary' — Go HTTP 클라이언트가 청크 단위로 TCP recv buffer를 읽어들임.
+// 모바일 앱이 SSE 이벤트를 소비하는 것과 동일한 동작 → 서버 send buffer 포화 없음.
+// VU는 서버 SSE 타임아웃(5분)까지 http.get() 안에서 블로킹 상태로 연결을 유지한다.
 export function subscribe() {
   // iterationInTest는 시나리오 내 연결마다 고유 → 동시 연결 슬롯 분산
   const s = SUBS[exec.scenario.iterationInTest % SUBS.length];
@@ -99,12 +97,12 @@ export function subscribe() {
       'Authorization': s.token,
       'Cache-Control': 'no-cache',
     },
-    timeout: '60m',          // 서버 SSE 타임아웃(5분)에 의해 끊기면 재연결 → 자연 churn 발생
-    responseType: 'none',
+    timeout: '7m',           // 서버 SSE 타임아웃(5분)보다 여유있게 설정
+    responseType: 'binary',  // TCP recv buffer 소비 — 'none'과 달리 스트림을 실제로 읽음
     tags: { name: 'sse_stream' },
   });
 
-  connectDuration.add(Date.now() - before);
+  sseDuration.add(Date.now() - before);
 
   const ok = check(res, {
     'SSE connected (200)': (r) => r.status === 200,
@@ -116,8 +114,6 @@ export function subscribe() {
   if (!ok) {
     if (res.status === 0) sseDrops.add(1);
     else sseErrors.add(1);
-  } else {
-    activeConns.add(1);
   }
 }
 
