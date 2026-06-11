@@ -4,6 +4,7 @@ import com.recaring.security.filter.AuthExceptionTranslationFilter;
 import com.recaring.security.filter.DeviceTokenAuthFilter;
 import com.recaring.security.filter.JwtAuthenticationFilter;
 import com.recaring.security.handler.JwtAuthenticationEntryPoint;
+import jakarta.servlet.DispatcherType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -48,6 +49,10 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(authorize -> authorize
+                        // SSE 등 async 요청 완료 시 컨테이너가 ASYNC/ERROR 디스패치로 필터 체인을 재실행한다.
+                        // 이때 SecurityContext가 비어 있어 AuthorizationFilter가 원래 경로를 다시 인가하려다
+                        // Access Denied를 던진다. 내부 디스패치는 인가 대상에서 제외한다 (최초 REQUEST 인가는 유지).
+                        .dispatcherTypeMatchers(DispatcherType.ASYNC, DispatcherType.ERROR).permitAll()
                         .requestMatchers(
                                 mvc.matcher("/api/v1/auth/sign-up"),
                                 mvc.matcher("/api/v1/auth/sign-in/local"),
