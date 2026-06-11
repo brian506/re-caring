@@ -68,6 +68,7 @@ public class SseEmitterManager {
     private void pollLoop(SseEmitter emitter, String wardKey, AtomicBoolean active) {
         Gps lastSent = null;
         try {
+            emitter.send(SseEmitter.event().comment("connected"));
             while (active.get()) {
                 Optional<Gps> latest = gpsLatestCacheReader.find(wardKey);
                 if (latest.isPresent() && !latest.get().equals(lastSent)) {
@@ -85,6 +86,11 @@ public class SseEmitterManager {
             Thread.currentThread().interrupt();
             stop(active, removedCompletion);
             completeQuietly(emitter, null);
+        } catch (Exception e) {
+            log.warn("[SSE 이벤트 : 예상치 못한 종료]: wardKey={} | error={}", wardKey, e.getMessage(), e);
+            sendFailures.increment();
+            stop(active, removedError);
+            completeQuietly(emitter, e);
         }
     }
 
