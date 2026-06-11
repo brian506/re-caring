@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.Optional;
+import java.util.concurrent.Executors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
@@ -16,8 +17,11 @@ import static org.mockito.Mockito.mock;
 class SseEmitterManagerTest {
 
     private final GpsLatestCacheReader gpsLatestCacheReader = mock(GpsLatestCacheReader.class);
-    private final SseEmitterManager manager =
-            new SseEmitterManager(new SimpleMeterRegistry(), gpsLatestCacheReader);
+    private final SseEmitterManager manager = new SseEmitterManager(
+            new SimpleMeterRegistry(),
+            gpsLatestCacheReader,
+            Executors.newVirtualThreadPerTaskExecutor()
+    );
 
     @Test
     @DisplayName("connect() 호출 시 SseEmitter가 반환된다")

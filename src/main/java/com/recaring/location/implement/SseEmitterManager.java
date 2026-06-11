@@ -5,11 +5,13 @@ import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
 import java.util.Optional;
+import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -18,10 +20,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class SseEmitterManager {
 
     private static final long SSE_TIMEOUT = 5 * 60 * 1000L; // 5분
-    private static final long POLL_INTERVAL_MS = 1000L;     // Redis 최신 GPS 폴링 주기
+    private static final long POLL_INTERVAL_MS = 10_000L;   // GPS 수신 주기(30s) 이내로 설정하여 불필요한 Redis 조회 최소화
     private static final String EVENT_NAME = "location";
 
     private final GpsLatestCacheReader gpsLatestCacheReader;
+    private final Executor ssePollExecutor;
 
     private final AtomicInteger activeConnections = new AtomicInteger();
     private final Counter sendFailures;
@@ -29,8 +32,11 @@ public class SseEmitterManager {
     private final Counter removedTimeout;
     private final Counter removedError;
 
-    public SseEmitterManager(MeterRegistry registry, GpsLatestCacheReader gpsLatestCacheReader) {
+    public SseEmitterManager(MeterRegistry registry,
+                             GpsLatestCacheReader gpsLatestCacheReader,
+                             @Qualifier("ssePollExecutor") Executor ssePollExecutor) {
         this.gpsLatestCacheReader = gpsLatestCacheReader;
+        this.ssePollExecutor = ssePollExecutor;
 
         this.sendFailures      = registry.counter("sse.emitter.send.failures");
         this.removedCompletion = registry.counter("sse.emitter.removed", "reason", "completion");
@@ -42,7 +48,8 @@ public class SseEmitterManager {
     }
 
     // SSE 연결 수립과 동시에 폴링 루프를 시작한다.
-    // 초기 최신값 전송과 이후 GPS 갱신 전송이 단일 루프에서 함께 처리된다.
+    // 초기함최신값 전송과 이후 GPS 갱신 전송이 단일 루프에서 함께 처리된다.
+    // todo 5분이 지나면 프론트에서 자동으로 재연결하느 로직 있어야 함
     public SseEmitter connect(String wardKey) {
         SseEmitter emitter = new SseEmitter(SSE_TIMEOUT);
         AtomicBoolean active = new AtomicBoolean(true);
@@ -53,11 +60,7 @@ public class SseEmitterManager {
 
         activeConnections.incrementAndGet();
 
-        // TODO: 가상 스레드 도입 시 연결당 플랫폼 스레드를 AsyncConfig의 Executor(가상 스레드)로 교체
-        Thread.ofPlatform()
-                .name("sse-poll-", 0)
-                .daemon()
-                .start(() -> pollLoop(emitter, wardKey, active));
+        ssePollExecutor.execute(() -> pollLoop(emitter, wardKey, active));
 
         return emitter;
     }
@@ -76,9 +79,11 @@ public class SseEmitterManager {
         } catch (IOException | IllegalStateException e) {
             log.debug("[SSE 이벤트 : 전송 종료]: wardKey={} | error={}", wardKey, e.getMessage());
             sendFailures.increment();
+            stop(active, removedError);
             completeQuietly(emitter, e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+            stop(active, removedCompletion);
             completeQuietly(emitter, null);
         }
     }
