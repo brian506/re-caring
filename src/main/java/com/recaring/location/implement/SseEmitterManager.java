@@ -5,13 +5,11 @@ import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
 import java.util.Optional;
-import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -24,7 +22,6 @@ public class SseEmitterManager {
     private static final String EVENT_NAME = "location";
 
     private final GpsLatestCacheReader gpsLatestCacheReader;
-    private final Executor ssePollExecutor;
 
     private final AtomicInteger activeConnections = new AtomicInteger();
     private final Counter sendFailures;
@@ -33,10 +30,8 @@ public class SseEmitterManager {
     private final Counter removedError;
 
     public SseEmitterManager(MeterRegistry registry,
-                             GpsLatestCacheReader gpsLatestCacheReader,
-                             @Qualifier("ssePollExecutor") Executor ssePollExecutor) {
+                             GpsLatestCacheReader gpsLatestCacheReader) {
         this.gpsLatestCacheReader = gpsLatestCacheReader;
-        this.ssePollExecutor = ssePollExecutor;
 
         this.sendFailures      = registry.counter("sse.emitter.send.failures");
         this.removedCompletion = registry.counter("sse.emitter.removed", "reason", "completion");
@@ -60,7 +55,11 @@ public class SseEmitterManager {
 
         activeConnections.incrementAndGet();
 
-        ssePollExecutor.execute(() -> pollLoop(emitter, wardKey, active));
+        // 가상 스레드 롤백: 연결당 플랫폼 스레드로 폴링 루프 실행 (메모리 비교 테스트용)
+        Thread.ofPlatform()
+                .name("sse-poll-", 0)
+                .daemon()
+                .start(() -> pollLoop(emitter, wardKey, active));
 
         return emitter;
     }

@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.Optional;
-import java.util.concurrent.Executors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
@@ -19,8 +18,7 @@ class SseEmitterManagerTest {
     private final GpsLatestCacheReader gpsLatestCacheReader = mock(GpsLatestCacheReader.class);
     private final SseEmitterManager manager = new SseEmitterManager(
             new SimpleMeterRegistry(),
-            gpsLatestCacheReader,
-            Executors.newVirtualThreadPerTaskExecutor()
+            gpsLatestCacheReader
     );
 
     @Test
