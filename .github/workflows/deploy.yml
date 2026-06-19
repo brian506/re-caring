@@ -18,6 +18,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Detect nginx changes
+        id: changes
+        if: github.event_name == 'pull_request'
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            nginx:
+              - 'nginx/**'
+
       - name: Setup JDK 21
         uses: actions/setup-java@v4
         with:
@@ -75,17 +84,19 @@ jobs:
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: recaring-service
+          service: recaring-task-service
           cluster: recaring-cluster
           wait-for-service-stability: true
 
       - name: Build & Push nginx image to ECR
+        if: github.event_name == 'workflow_dispatch' || steps.changes.outputs.nginx == 'true'
         run: |
           ECR_NGINX=757052694924.dkr.ecr.ap-northeast-2.amazonaws.com/recaring-nginx:latest
           docker build -t $ECR_NGINX ./nginx
           docker push $ECR_NGINX
 
       - name: Deploy nginx to ECS
+        if: github.event_name == 'workflow_dispatch' || steps.changes.outputs.nginx == 'true'
         run: |
           aws ecs update-service \
             --cluster recaring-cluster \
