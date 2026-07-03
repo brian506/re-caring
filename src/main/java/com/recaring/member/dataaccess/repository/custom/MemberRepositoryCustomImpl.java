@@ -37,4 +37,11 @@ public class MemberRepositoryCustomImpl extends QuerydslRepositorySupport implem
         );
     }
 
+    @Override
+    public void deleteByMemberKey(String memberKey) {
+        delete(member)
+                .where(member.memberKey.eq(memberKey))
+                .execute();
+    }
+
 }

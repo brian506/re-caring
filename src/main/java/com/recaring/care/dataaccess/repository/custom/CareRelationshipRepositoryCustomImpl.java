@@ -65,4 +65,14 @@ public class CareRelationshipRepositoryCustomImpl extends QuerydslRepositorySupp
                 .fetchFirst();
         return Optional.ofNullable(result);
     }
+
+    @Override
+    public void deleteAllByMemberKey(String memberKey) {
+        delete(careRelationship)
+                .where(
+                        careRelationship.wardMemberKey.eq(memberKey)
+                                .or(careRelationship.caregiverMemberKey.eq(memberKey))
+                )
+                .execute();
+    }
 }

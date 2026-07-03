@@ -42,4 +42,10 @@ public class CareRelationshipWriter {
                 .orElseThrow(() -> new AppException(ErrorType.NOT_FOUND_CARE_RELATIONSHIP));
         careRelationshipRepository.delete(relationship);
     }
+
+    @CacheEvict(value = "careRelationship", allEntries = true)
+    @Transactional
+    public void deleteAllByMemberKey(String memberKey) {
+        careRelationshipRepository.deleteAllByMemberKey(memberKey);
+    }
 }

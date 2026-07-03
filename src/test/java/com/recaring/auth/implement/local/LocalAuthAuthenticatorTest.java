@@ -118,4 +118,46 @@ class LocalAuthAuthenticatorTest {
             .isInstanceOf(AppException.class)
             .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_FOUND_ACCOUNT);
     }
+
+    @Test
+    @DisplayName("비밀번호 검증 성공 - memberKey 기준으로 일치하는 비밀번호는 예외 없이 통과한다")
+    void verifyPassword_success() {
+        // given
+        Password password = AuthFixture.createPassword();
+
+        com.recaring.auth.dataaccess.entity.LocalAuth localAuth =
+            com.recaring.auth.dataaccess.entity.LocalAuth.builder()
+                .memberKey(AuthFixture.MEMBER_KEY)
+                .email(AuthFixture.EMAIL)
+                .password(AuthFixture.ENCODED_PASSWORD)
+                .build();
+
+        given(localAuthReader.findByMemberKey(AuthFixture.MEMBER_KEY)).willReturn(localAuth);
+        given(passwordEncoder.matches(password.value(), AuthFixture.ENCODED_PASSWORD)).willReturn(true);
+
+        // when & then
+        localAuthAuthenticator.verifyPassword(AuthFixture.MEMBER_KEY, password);
+    }
+
+    @Test
+    @DisplayName("비밀번호 검증 실패 - memberKey 기준으로 비밀번호가 일치하지 않으면 AppException 발생")
+    void verifyPassword_fail_with_wrong_password() {
+        // given
+        Password password = AuthFixture.createPassword();
+
+        com.recaring.auth.dataaccess.entity.LocalAuth localAuth =
+            com.recaring.auth.dataaccess.entity.LocalAuth.builder()
+                .memberKey(AuthFixture.MEMBER_KEY)
+                .email(AuthFixture.EMAIL)
+                .password(AuthFixture.ENCODED_PASSWORD)
+                .build();
+
+        given(localAuthReader.findByMemberKey(AuthFixture.MEMBER_KEY)).willReturn(localAuth);
+        given(passwordEncoder.matches(password.value(), AuthFixture.ENCODED_PASSWORD)).willReturn(false);
+
+        // when & then
+        assertThatThrownBy(() -> localAuthAuthenticator.verifyPassword(AuthFixture.MEMBER_KEY, password))
+            .isInstanceOf(AppException.class)
+            .hasFieldOrPropertyWithValue("errorType", ErrorType.INVALID_PASSWORD);
+    }
 }

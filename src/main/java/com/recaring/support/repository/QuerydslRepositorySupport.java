@@ -4,6 +4,7 @@ package com.recaring.support.repository;
 import com.querydsl.core.types.EntityPath;
 import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.dsl.PathBuilder;
+import com.querydsl.jpa.impl.JPADeleteClause;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.querydsl.jpa.impl.JPAUpdateClause;
@@ -58,6 +59,10 @@ public abstract class QuerydslRepositorySupport {
 
     protected <T> JPAUpdateClause update(EntityPath<T> from) {
         return this.jpaQueryFactory.update(from);
+    }
+
+    protected <T> JPADeleteClause delete(EntityPath<T> from) {
+        return this.jpaQueryFactory.delete(from);
     }
 
 }

@@ -26,4 +26,9 @@ public class MemberWriter {
                 .build();
         return memberRepository.save(member).getMemberKey();
     }
+
+    @Transactional
+    public void deleteByMemberKey(String memberKey) {
+        memberRepository.deleteByMemberKey(memberKey);
+    }
 }

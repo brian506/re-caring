@@ -7,4 +7,6 @@ import java.util.Optional;
 
 public interface OAuthRepositoryCustom {
     Optional<OAuth> findOAuthMember(OAuthProvider provider, String providerMemberId);
+
+    void deleteByMemberKey(String memberKey);
 }

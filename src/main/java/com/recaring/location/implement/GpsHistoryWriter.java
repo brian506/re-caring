@@ -18,4 +18,8 @@ public class GpsHistoryWriter {
                 .longitude(longitude)
                 .build());
     }
+
+    public void deleteByWardMemberKey(String wardMemberKey) {
+        gpsHistoryRepository.deleteByWardMemberKey(wardMemberKey);
+    }
 }

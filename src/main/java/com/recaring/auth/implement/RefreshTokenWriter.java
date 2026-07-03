@@ -23,4 +23,8 @@ public class RefreshTokenWriter {
     public void delete(String refreshToken) {
         refreshTokenRepository.deleteByToken(refreshToken);
     }
+
+    public void deleteByMemberKey(String memberKey) {
+        refreshTokenRepository.deleteByMemberKey(memberKey);
+    }
 }

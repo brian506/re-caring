@@ -36,4 +36,15 @@ public class CareInvitationRepositoryCustomImpl extends QuerydslRepositorySuppor
                         .fetchOne()
         );
     }
+
+    @Override
+    public void deleteAllByMemberKey(String memberKey) {
+        delete(careInvitation)
+                .where(
+                        careInvitation.requesterMemberKey.eq(memberKey)
+                                .or(careInvitation.targetMemberKey.eq(memberKey))
+                                .or(careInvitation.wardMemberKey.eq(memberKey))
+                )
+                .execute();
+    }
 }

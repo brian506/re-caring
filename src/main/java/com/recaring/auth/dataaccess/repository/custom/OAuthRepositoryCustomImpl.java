@@ -23,4 +23,11 @@ public class OAuthRepositoryCustomImpl extends QuerydslRepositorySupport impleme
                         .fetchOne()
         );
     }
+
+    @Override
+    public void deleteByMemberKey(String memberKey) {
+        delete(oAuth)
+                .where(oAuth.memberKey.eq(memberKey))
+                .execute();
+    }
 }

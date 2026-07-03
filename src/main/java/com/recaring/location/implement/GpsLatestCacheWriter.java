@@ -34,4 +34,8 @@ public class GpsLatestCacheWriter {
             throw new AppException(ErrorType.DEFAULT_ERROR);
         }
     }
+
+    public void delete(String wardMemberKey) {
+        redisTemplate.delete(KEY_PREFIX + wardMemberKey);
+    }
 }

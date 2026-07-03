@@ -20,4 +20,9 @@ public class MembersTermsAgreementWriter {
                         .build()
         );
     }
+
+    @Transactional
+    public void deleteByMemberKey(String memberKey) {
+        membersTermsAgreementRepository.deleteByMemberKey(memberKey);
+    }
 }
