@@ -3,6 +3,7 @@ package com.recaring.member.fixture;
 import com.recaring.member.dataaccess.entity.Gender;
 import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.dataaccess.entity.MemberRole;
+import com.recaring.member.dataaccess.entity.MembersTermsAgreement;
 import com.recaring.member.dataaccess.entity.SignUpType;
 
 import java.time.LocalDate;
@@ -45,6 +46,14 @@ public class MemberFixture {
                 .gender(gender)
                 .role(ROLE)
                 .signUpType(SignUpType.LOCAL)
+                .build();
+    }
+
+    public static final String MEMBER_KEY = "test-member-key-uuid";
+
+    public static MembersTermsAgreement createTermsAgreement() {
+        return MembersTermsAgreement.builder()
+                .memberKey(MEMBER_KEY)
                 .build();
     }
 }

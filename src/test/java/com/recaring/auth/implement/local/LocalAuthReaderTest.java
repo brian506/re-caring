@@ -114,4 +114,36 @@ class LocalAuthReaderTest {
         // then
         assertThat(result.getEmail()).isEqualTo(specialEmail);
     }
+
+    @Test
+    @DisplayName("memberKey로 이메일 조회 성공 - 이메일 문자열 반환")
+    void findEmailByMemberKey_success() {
+        // given
+        String memberKey = AuthFixture.MEMBER_KEY;
+        LocalAuth localAuth = LocalAuth.builder()
+            .memberKey(memberKey)
+            .email(AuthFixture.EMAIL)
+            .password(AuthFixture.ENCODED_PASSWORD)
+            .build();
+
+        given(authRepository.findByMemberKey(memberKey)).willReturn(Optional.of(localAuth));
+
+        // when
+        String result = localAuthReader.findEmailByMemberKey(memberKey);
+
+        // then
+        assertThat(result).isEqualTo(AuthFixture.EMAIL);
+    }
+
+    @Test
+    @DisplayName("memberKey로 이메일 조회 실패 - NOT_FOUND_ACCOUNT 예외 발생")
+    void findEmailByMemberKey_throws_when_not_found() {
+        // given
+        given(authRepository.findByMemberKey(AuthFixture.MEMBER_KEY)).willReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> localAuthReader.findEmailByMemberKey(AuthFixture.MEMBER_KEY))
+            .isInstanceOf(AppException.class)
+            .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_FOUND_ACCOUNT);
+    }
 }
