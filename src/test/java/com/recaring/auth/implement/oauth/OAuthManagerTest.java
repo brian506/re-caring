@@ -2,13 +2,9 @@ package com.recaring.auth.implement.oauth;
 
 import com.recaring.auth.dataaccess.entity.OAuth;
 import com.recaring.auth.dataaccess.repository.OAuthRepository;
-import com.recaring.auth.vo.NewOauthMember;
 import com.recaring.auth.vo.OAuthProvider;
-import com.recaring.member.dataaccess.entity.Gender;
-import com.recaring.member.dataaccess.entity.MemberRole;
-import com.recaring.member.implement.MemberWriter;
-import com.recaring.member.implement.MembersTermsAgreementWriter;
-import com.recaring.sms.fixture.SmsFixture;
+import com.recaring.support.exception.AppException;
+import com.recaring.support.exception.ErrorType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,13 +13,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDate;
-
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.BDDMockito.willThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 
 @ExtendWith(MockitoExtension.class)
@@ -37,173 +32,44 @@ class OAuthManagerTest {
     private OAuthRepository oAuthRepository;
 
     @Mock
-    private MemberWriter memberWriter;
-
-    @Mock
-    private MembersTermsAgreementWriter termsAgreementWriter;
+    private OAuthLinkValidator oAuthLinkValidator;
 
     @Test
-    @DisplayName("OAuth 회원가입 성공 - memberWriter와 oAuthRepository 호출 검증")
-    void register_success() {
+    @DisplayName("연동 성공 - 검증 통과 후 OAuth 엔티티를 저장한다")
+    void link_success() {
         // given
-        String memberKey = "member-key-oauth-123";
-        NewOauthMember newOauthMember = NewOauthMember.builder()
-            .phone(SmsFixture.PHONE)
-            .name("김카카오")
-            .birth(LocalDate.of(1995, 5, 15))
-            .gender(Gender.FEMALE)
-            .role(MemberRole.GUARDIAN)
-            .provider(OAuthProvider.KAKAO)
-            .providerMemberId("kakao-user-456")
-            .build();
-
-        OAuth createdOAuth = OAuth.builder()
-            .memberKey(memberKey)
-            .provider(OAuthProvider.KAKAO)
-            .providerMemberId("kakao-user-456")
-            .build();
-
-        given(memberWriter.registerOAuthMember(newOauthMember)).willReturn(memberKey);
-        given(oAuthRepository.save(any(OAuth.class))).willReturn(createdOAuth);
+        String memberKey = "member-key-123";
+        OAuthProvider provider = OAuthProvider.KAKAO;
+        String providerMemberId = "kakao-user-456";
 
         // when
-        String result = oAuthManager.register(newOauthMember);
+        oAuthManager.link(memberKey, provider, providerMemberId);
 
         // then
-        assertThat(result).isEqualTo(memberKey);
-        then(memberWriter).should(times(1)).registerOAuthMember(newOauthMember);
-        then(oAuthRepository).should(times(1)).save(any(OAuth.class));
+        then(oAuthLinkValidator).should(times(1)).validateLinkable(memberKey, provider);
+
+        ArgumentCaptor<OAuth> captor = ArgumentCaptor.forClass(OAuth.class);
+        then(oAuthRepository).should(times(1)).save(captor.capture());
+        OAuth saved = captor.getValue();
+        assertThat(saved.getMemberKey()).isEqualTo(memberKey);
+        assertThat(saved.getProvider()).isEqualTo(provider);
+        assertThat(saved.getProviderMemberId()).isEqualTo(providerMemberId);
     }
 
     @Test
-    @DisplayName("OAuth 회원가입 - OAuth 엔티티가 올바르게 저장되는지 검증")
-    void register_verify_oauth_entity_saved() {
+    @DisplayName("연동 실패 - 이미 연동된 provider면 예외가 발생하고 저장하지 않는다")
+    void link_fails_when_already_linked() {
         // given
-        String memberKey = "member-oauth-789";
-        NewOauthMember newOauthMember = NewOauthMember.builder()
-            .phone("01087654321")
-            .name("이네이버")
-            .birth(LocalDate.of(1992, 3, 20))
-            .gender(Gender.MALE)
-            .role(MemberRole.GUARDIAN)
-            .provider(OAuthProvider.NAVER)
-            .providerMemberId("naver-user-789")
-            .build();
+        String memberKey = "member-key-123";
+        OAuthProvider provider = OAuthProvider.NAVER;
+        willThrow(new AppException(ErrorType.OAUTH_ALREADY_LINKED))
+                .given(oAuthLinkValidator).validateLinkable(memberKey, provider);
 
-        OAuth createdOAuth = OAuth.builder()
-            .memberKey(memberKey)
-            .provider(OAuthProvider.NAVER)
-            .providerMemberId("naver-user-789")
-            .build();
+        // when & then
+        assertThatThrownBy(() -> oAuthManager.link(memberKey, provider, "naver-user-789"))
+                .isInstanceOf(AppException.class)
+                .hasFieldOrPropertyWithValue("errorType", ErrorType.OAUTH_ALREADY_LINKED);
 
-        given(memberWriter.registerOAuthMember(newOauthMember)).willReturn(memberKey);
-        given(oAuthRepository.save(any(OAuth.class))).willReturn(createdOAuth);
-
-        // when
-        oAuthManager.register(newOauthMember);
-
-        // then
-        ArgumentCaptor<OAuth> oAuthCaptor = ArgumentCaptor.forClass(OAuth.class);
-        then(oAuthRepository).should(times(1)).save(oAuthCaptor.capture());
-
-        OAuth capturedOAuth = oAuthCaptor.getValue();
-        assertThat(capturedOAuth.getMemberKey()).isEqualTo(memberKey);
-        assertThat(capturedOAuth.getProvider()).isEqualTo(OAuthProvider.NAVER);
-        assertThat(capturedOAuth.getProviderMemberId()).isEqualTo("naver-user-789");
-    }
-
-    @Test
-    @DisplayName("OAuth 회원가입 - 카카오 provider로 등록")
-    void register_with_kakao_provider() {
-        // given
-        String memberKey = "kakao-member-key";
-        NewOauthMember kakaoMember = NewOauthMember.builder()
-            .phone("01011111111")
-            .name("박카카오")
-            .birth(LocalDate.of(1998, 7, 10))
-            .gender(Gender.FEMALE)
-            .role(MemberRole.GUARDIAN)
-            .provider(OAuthProvider.KAKAO)
-            .providerMemberId("2827374756383")
-            .build();
-
-        OAuth createdOAuth = OAuth.builder()
-            .memberKey(memberKey)
-            .provider(OAuthProvider.KAKAO)
-            .providerMemberId(kakaoMember.providerMemberId())
-            .build();
-
-        given(memberWriter.registerOAuthMember(kakaoMember)).willReturn(memberKey);
-        given(oAuthRepository.save(any(OAuth.class))).willReturn(createdOAuth);
-
-        // when
-        String result = oAuthManager.register(kakaoMember);
-
-        // then
-        assertThat(result).isEqualTo(memberKey);
-    }
-
-    @Test
-    @DisplayName("OAuth 회원가입 - 네이버 provider로 등록")
-    void register_with_naver_provider() {
-        // given
-        String memberKey = "naver-member-key";
-        NewOauthMember naverMember = NewOauthMember.builder()
-            .phone("01022222222")
-            .name("최네이버")
-            .birth(LocalDate.of(1996, 12, 5))
-            .gender(Gender.MALE)
-            .role(MemberRole.GUARDIAN)
-            .provider(OAuthProvider.NAVER)
-            .providerMemberId("naver-uid-9384756")
-            .build();
-
-        OAuth createdOAuth = OAuth.builder()
-            .memberKey(memberKey)
-            .provider(OAuthProvider.NAVER)
-            .providerMemberId(naverMember.providerMemberId())
-            .build();
-
-        given(memberWriter.registerOAuthMember(naverMember)).willReturn(memberKey);
-        given(oAuthRepository.save(any(OAuth.class))).willReturn(createdOAuth);
-
-        // when
-        String result = oAuthManager.register(naverMember);
-
-        // then
-        assertThat(result).isEqualTo(memberKey);
-    }
-
-    @Test
-    @DisplayName("OAuth 회원가입 - 트랜잭션 내에서 멤버와 OAuth 엔티티 함께 저장")
-    void register_transactional_consistency() {
-        // given
-        String memberKey = "member-tx-123";
-        NewOauthMember newOauthMember = NewOauthMember.builder()
-            .phone("01099999999")
-            .name("트랜잭션테스트")
-            .birth(LocalDate.of(1994, 6, 12))
-            .gender(Gender.FEMALE)
-            .role(MemberRole.GUARDIAN)
-            .provider(OAuthProvider.KAKAO)
-            .providerMemberId("kakao-tx-test")
-            .build();
-
-        OAuth createdOAuth = OAuth.builder()
-            .memberKey(memberKey)
-            .provider(OAuthProvider.KAKAO)
-            .providerMemberId("kakao-tx-test")
-            .build();
-
-        given(memberWriter.registerOAuthMember(newOauthMember)).willReturn(memberKey);
-        given(oAuthRepository.save(any(OAuth.class))).willReturn(createdOAuth);
-
-        // when
-        String result = oAuthManager.register(newOauthMember);
-
-        // then - 호출 순서 검증: memberWriter가 먼저 호출되어야 memberKey가 생김
-        assertThat(result).isEqualTo(memberKey);
-        then(memberWriter).should(times(1)).registerOAuthMember(any());
-        then(oAuthRepository).should(times(1)).save(any());
+        then(oAuthRepository).should(never()).save(any(OAuth.class));
     }
 }

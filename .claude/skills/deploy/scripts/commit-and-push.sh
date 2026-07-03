@@ -22,7 +22,8 @@ case "$TYPE" in
     ;;
 esac
 
-BRANCH="feature/$ISSUE_NUMBER"
+# Push to the actual checked-out branch (any {type}/{N} form), not a reconstructed feature/{N}
+BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 COMMIT_MSG="$TYPE[#$ISSUE_NUMBER]: $DESCRIPTION"
 
 git add -A

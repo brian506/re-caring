@@ -1,6 +1,6 @@
 ---
 name: deploy
-description: feature 브랜치의 변경사항을 빌드/테스트 → 커밋 → PR → CI 대기 → 머지 → 배포 확인 → 브랜치 삭제까지 자동화한다. 사용자가 "배포해줘" 라는 명령을 전달하면 수행한다.
+description: 이슈 번호가 붙은 브랜치({type}/{N}, 예 feature·refactor·fix·chore·hotfix)의 변경사항을 빌드/테스트 → 커밋 → PR → CI 대기 → 머지 → 배포 확인 → 브랜치 삭제까지 자동화한다. 사용자가 "배포해줘" 라는 명령을 전달하면 수행한다.
 allowed-tools: Bash(./gradlew *) Bash(git *) Bash(gh *) Bash(bash *) Bash(sleep *) Read Glob
 ---
 
@@ -8,7 +8,7 @@ allowed-tools: Bash(./gradlew *) Bash(git *) Bash(gh *) Bash(bash *) Bash(sleep 
 
 > **Language rule**: Write all files and code in English. Always respond to the user in Korean.
 
-현재 feature 브랜치의 변경사항을 배포 파이프라인 끝까지 자동 처리한다.
+현재 체크아웃된 브랜치({type}/{N})의 변경사항을 배포 파이프라인 끝까지 자동 처리한다.
 스크립트는 모두 `.claude/skills/deploy/scripts/` 에 있다.
 
 ## Step 0: 사전 조건 확인 (필수 — 이슈 없으면 즉시 중단)
@@ -25,7 +25,7 @@ gh issue view {N} --json number,title,state 2>&1
 
 ```
 [배포 중단] 이슈 #{N}이 GitHub에 존재하지 않습니다.
-/deploy는 이미 이슈가 생성된 feature 브랜치에서만 실행할 수 있습니다.
+/deploy는 이미 이슈가 생성된 브랜치({type}/{N})에서만 실행할 수 있습니다.
 /feature-dev로 이슈와 브랜치를 먼저 생성하세요.
 ```
 
@@ -59,10 +59,11 @@ bash .claude/skills/deploy/scripts/commit-and-push.sh {N} "{커밋 설명}" {typ
 
 ## Step 3: PR 생성
 
-먼저 feature/{N} 브랜치에 PR이 이미 존재하는지 확인한다.
+먼저 현재 체크아웃된 브랜치에 PR이 이미 존재하는지 확인한다. (feature/{N}으로 재조립하지 말 것)
 
 ```bash
-gh pr list --repo brian506/re-caring --head feature/{N} --json number --jq '.[0].number'
+BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+gh pr list --repo brian506/re-caring --head "$BRANCH" --json number --jq '.[0].number'
 ```
 
 PR 번호가 반환되면 해당 번호를 재사용하고 `create-pr.sh`를 건너뛴다.
@@ -113,6 +114,6 @@ bash .claude/skills/deploy/scripts/cleanup-branch.sh {N}
 이슈: #{N}
 PR: #{PR번호}
 배포: 성공
-브랜치: feature/{N} 삭제 완료
+브랜치: {배포 브랜치} 삭제 완료
 현재 브랜치: develop
 ```

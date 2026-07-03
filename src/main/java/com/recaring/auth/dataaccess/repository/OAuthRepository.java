@@ -10,4 +10,6 @@ import java.util.Optional;
 public interface OAuthRepository extends JpaRepository<OAuth, Long>, OAuthRepositoryCustom {
 
     Optional<OAuth> findByProviderAndProviderMemberId(OAuthProvider provider, String providerMemberId);
+
+    boolean existsByMemberKeyAndProvider(String memberKey, OAuthProvider provider);
 }

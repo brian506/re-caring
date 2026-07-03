@@ -21,8 +21,8 @@
 |--------|--------|------|------|
 | Auth | POST | `/api/v1/auth/sign-up` | 로컬 회원가입 |
 | Auth | POST | `/api/v1/auth/sign-in` | 로컬 로그인 |
-| Auth | POST | `/api/v1/auth/oauth/sign-in` | OAuth 로그인 (카카오/네이버) |
-| Auth | POST | `/api/v1/auth/oauth/sign-up` | OAuth 회원가입 |
+| Auth | POST | `/api/v1/auth/sign-in/{kakao\|naver}` | OAuth 로그인 (미연동 계정은 OAUTH_NOT_LINKED) |
+| Auth | POST | `/api/v1/auth/oauth/link/{kakao\|naver}` | OAuth 사후 연동 (JWT 인증, 로컬 가입 필수) |
 | Auth | POST | `/api/v1/auth/token/refresh` | 토큰 갱신 |
 | Auth | GET | `/api/v1/auth/email/mask` | 이메일 마스킹 조회 |
 | Auth | PATCH | `/api/v1/auth/password` | 비밀번호 변경 |
