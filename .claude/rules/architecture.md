@@ -79,16 +79,13 @@ Authorization: Device {deviceToken}
 - 발급: `POST /api/v1/device/token` (JWT 인증, WARD 전용, 최초 1회)
 - 재발급: 동일 엔드포인트 재호출 → 기존 토큰 교체
 
-## 논리 삭제
+## 삭제 정책
 
-```java
-@SQLDelete(sql = "UPDATE table SET deleted_at = NOW() WHERE id = ?")
-@SQLRestriction("deleted_at IS NULL")
-public class Entity extends BaseEntity { ... }
-```
+모든 삭제는 **hard-delete**로 통일한다. soft-delete(`@SQLDelete`, `@SQLRestriction`, `deleted_at`)를 사용하지 않는다.
 
-- 삭제 시 `entity.delete()` 호출
-- `repository.delete()` 직접 호출 금지
+- 단건 삭제: `repository.delete(entity)`
+- 조건 삭제: 파생 메서드 `deleteBy...` 또는 `@Modifying` 벌크 쿼리
+- 여러 테이블을 한 번에 정리해야 하면 Manager(@Transactional)에서 오케스트레이션
 
 ## 외부 식별자
 

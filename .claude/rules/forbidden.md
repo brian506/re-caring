@@ -29,9 +29,9 @@
   - 인덱스는 별도 DDL 스크립트로 관리, 엔티티에 TODO 주석으로 표시
   - 올바른 예: `// TODO: CREATE INDEX idx_xxx ON yyy(zzz);`
 
-- **`repository.delete(entity)`를 직접 호출하면 안 된다**
-  - 논리 삭제 사용: `entity.delete()` → `@SQLDelete` 트리거
-  - 직접 delete는 `deleted_at` 소프트 딜리트 전략을 우회함
+- **삭제는 모두 hard-delete로 처리한다 (soft-delete 금지)**
+  - `@SQLDelete` / `@SQLRestriction` / `deleted_at` 컬럼을 새로 도입하면 안 된다
+  - 실제 삭제: `repository.delete(entity)` 또는 파생 `deleteBy...` / `@Modifying` 벌크 쿼리 사용
 
 - **DDL을 적용하기 전에 코드를 배포하면 안 된다**
   - `spring.jpa.hibernate.ddl-auto=validate` — 스키마 불일치 시 시작 즉시 충돌

@@ -32,9 +32,6 @@ public class QNotificationDelivery extends EntityPathBase<NotificationDelivery> 
     //inherited
     public final DateTimePath<java.time.LocalDateTime> createdAt = _super.createdAt;
 
-    //inherited
-    public final DateTimePath<java.time.LocalDateTime> deletedAt = _super.deletedAt;
-
     public final StringPath failureCode = createString("failureCode");
 
     public final StringPath failureReason = createString("failureReason");

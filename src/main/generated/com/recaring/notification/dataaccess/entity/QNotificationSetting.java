@@ -31,9 +31,6 @@ public class QNotificationSetting extends EntityPathBase<NotificationSetting> {
     //inherited
     public final DateTimePath<java.time.LocalDateTime> createdAt = _super.createdAt;
 
-    //inherited
-    public final DateTimePath<java.time.LocalDateTime> deletedAt = _super.deletedAt;
-
     public final BooleanPath emergencyCallEnabled = createBoolean("emergencyCallEnabled");
 
     public final NumberPath<Long> id = createNumber("id", Long.class);

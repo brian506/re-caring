@@ -50,10 +50,10 @@
 
 ## 완료 조건
 - [ ] DELETE /api/v1/members/me 엔드포인트 구현
-- [ ] 소프트 딜리트 적용 (deletedAt 세팅)
+- [ ] 회원 연관 데이터 hard-delete 처리
 - [ ] 탈퇴 시 RefreshToken 삭제
 - [ ] 단위 테스트 작성
 
 ## 참고
-CLAUDE.md - Soft Delete 전략 섹션
+architecture.md - 삭제 정책 섹션
 ```

@@ -14,8 +14,6 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -23,8 +21,6 @@ import java.util.UUID;
 @Getter
 @Entity
 @Table(name = "notifications")
-@SQLDelete(sql = "UPDATE notifications SET deleted_at = NOW() WHERE notification_id = ?")
-@SQLRestriction("deleted_at IS NULL")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Notification extends BaseEntity {
 

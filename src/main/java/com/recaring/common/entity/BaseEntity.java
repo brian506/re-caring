@@ -19,17 +19,6 @@ public class BaseEntity {
     @LastModifiedDate
     private LocalDateTime updatedAt;
 
-    @Column
-    private LocalDateTime deletedAt;
-
-    public boolean isDeleted() {
-        return deletedAt != null;
-    }
-
-    public void delete() {
-        this.deletedAt = LocalDateTime.now();
-    }
-
     public void update() {
         updatedAt = LocalDateTime.now();
     }
