@@ -13,4 +13,6 @@ public interface GpsHistoryRepositoryCustom {
     List<String> findActiveWardKeysSince(LocalDateTime since);
 
     List<GpsHistory> findByWardKeyBetween(String wardMemberKey, LocalDateTime from, LocalDateTime to);
+
+    void deleteByWardMemberKey(String wardMemberKey);
 }

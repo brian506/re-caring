@@ -17,4 +17,6 @@ public interface CareRelationshipRepositoryCustom {
     boolean existsByWardKeyAndCaregiverKey(String wardKey, String caregiverKey);
 
     Optional<CareRelationship> findByWardKeyAndCaregiverKey(String wardKey, String caregiverKey);
+
+    void deleteAllByMemberKey(String memberKey);
 }

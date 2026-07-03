@@ -32,4 +32,8 @@ public class SafeZoneWriter {
     public void delete(SafeZone zone) {
         safeZoneRepository.delete(zone);
     }
+
+    public void deleteByWardMemberKey(String wardMemberKey) {
+        safeZoneRepository.deleteByWardMemberKey(wardMemberKey);
+    }
 }

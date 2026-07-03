@@ -5,8 +5,6 @@ import com.recaring.auth.vo.OAuthProvider;
 import com.recaring.auth.dataaccess.entity.OAuth;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.Optional;
-
 public interface OAuthRepository extends JpaRepository<OAuth, Long>, OAuthRepositoryCustom {
 
     boolean existsByMemberKeyAndProvider(String memberKey, OAuthProvider provider);

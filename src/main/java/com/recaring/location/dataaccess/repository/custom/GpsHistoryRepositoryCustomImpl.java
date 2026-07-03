@@ -48,4 +48,11 @@ public class GpsHistoryRepositoryCustomImpl extends QuerydslRepositorySupport
                 .orderBy(gpsHistory.recordedAt.asc())
                 .fetch();
     }
+
+    @Override
+    public void deleteByWardMemberKey(String wardMemberKey) {
+        delete(gpsHistory)
+                .where(gpsHistory.wardMemberKey.eq(wardMemberKey))
+                .execute();
+    }
 }

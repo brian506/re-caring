@@ -31,4 +31,11 @@ public class SafeZoneRepositoryCustomImpl extends QuerydslRepositorySupport
                         .fetchOne()
         );
     }
+
+    @Override
+    public void deleteByWardMemberKey(String wardMemberKey) {
+        delete(safeZone)
+                .where(safeZone.wardMemberKey.eq(wardMemberKey))
+                .execute();
+    }
 }

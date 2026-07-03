@@ -1,14 +1,18 @@
 package com.recaring.member.controller;
 
+import com.recaring.auth.vo.Password;
 import com.recaring.member.business.MemberService;
 import com.recaring.member.controller.request.SearchByPhonesRequest;
+import com.recaring.member.controller.request.WithdrawRequest;
 import com.recaring.member.controller.response.ContactMemberResponse;
+import com.recaring.security.vo.AuthMember;
 import com.recaring.support.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -37,5 +41,20 @@ public class MemberController {
     ) {
         List<ContactMemberResponse> responses = memberService.findByPhoneNumbers(request.phones());
         return ResponseEntity.ok(ApiResponse.success(responses));
+    }
+
+    @Operation(
+            summary = "회원 탈퇴",
+            description = """
+                    비밀번호 확인 후 본인 계정 및 연관된 모든 데이터를 삭제합니다.
+                    """
+    )
+    @DeleteMapping("/me")
+    public ResponseEntity<ApiResponse<Void>> withdraw(
+            @AuthMember String memberKey,
+            @Valid @RequestBody WithdrawRequest request
+    ) {
+        memberService.withdraw(memberKey, new Password(request.password()));
+        return ResponseEntity.ok(ApiResponse.success());
     }
 }

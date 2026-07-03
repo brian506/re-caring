@@ -10,4 +10,6 @@ public interface MemberRepositoryCustom {
     Optional<Member> findAccount(String name, LocalDate birth, String phone);
 
     Optional<Member> findMemberByPessimistic(String memberKey);
+
+    void deleteByMemberKey(String memberKey);
 }

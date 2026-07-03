@@ -31,4 +31,11 @@ public class LocalAuthAuthenticator {
         }
         return memberReader.findByMemberKey(localAuth.getMemberKey());
     }
+
+    public void verifyPassword(String memberKey, Password password) {
+        LocalAuth localAuth = localAuthReader.findByMemberKey(memberKey);
+        if (!passwordEncoder.matches(password.value(), localAuth.getPassword())) {
+            throw new AppException(ErrorType.INVALID_PASSWORD);
+        }
+    }
 }

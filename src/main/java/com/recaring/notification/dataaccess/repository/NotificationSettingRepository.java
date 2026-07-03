@@ -1,6 +1,7 @@
 package com.recaring.notification.dataaccess.repository;
 
 import com.recaring.notification.dataaccess.entity.NotificationSetting;
+import com.recaring.notification.dataaccess.repository.custom.NotificationSettingRepositoryCustom;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -8,7 +9,8 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
-public interface NotificationSettingRepository extends JpaRepository<NotificationSetting, Long> {
+public interface NotificationSettingRepository extends JpaRepository<NotificationSetting, Long>,
+        NotificationSettingRepositoryCustom {
     Optional<NotificationSetting> findByWardMemberKey(String wardMemberKey);
 
     @Modifying(flushAutomatically = true, clearAutomatically = true)
