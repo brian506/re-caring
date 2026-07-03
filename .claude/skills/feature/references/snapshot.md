@@ -1,6 +1,6 @@
 # 프로젝트 스냅샷
 
-> 마지막 업데이트: 2026-05-13. 기능 추가·수정 시 해당 섹션을 갱신한다.
+> 마지막 업데이트: 2026-07-04. 기능 추가·수정 시 해당 섹션을 갱신한다.
 
 ## 도메인별 패키지 현황
 
@@ -10,7 +10,7 @@
 | `care` | CareInvitationService, CareRelationshipService | CareInvitationManager, CareInvitationReader/Writer, CareRelationshipValidator, SqsPublisher(전략패턴) |
 | `device` | DeviceTokenService | WardDeviceTokenManager, WardDeviceTokenReader |
 | `location` | LocationService | GpsHistoryReader/Writer, GpsLatestCacheReader/Writer, SseEmitterManager, LocationValidator, GpsPatternAnalysisScheduler(SQS 발행) |
-| `member` | MemberService | MemberReader/Writer/Validator |
+| `member` | MemberService | MemberReader/Writer/Validator, MembersTermsAgreementWriter, MemberWithdrawalManager |
 | `safezone` | SafeZoneService | SafeZoneReader, SafeZoneWriter |
 | `sms` | PhoneVerificationService | SmsClient, SmsCodeGenerator, PhoneVerificationReader/Writer |
 | `alert` | AlertService, AlertResolutionService | AlertInvestigationOrchestrator, AlertInvestigationAgent(Tool Use Loop), SsmContextFetcher, PrometheusContextFetcher, ErrorHistoryFetcher, RunbookService, SlackAlertNotifier, GitHubPrCreator, AlertRetryHandler |
@@ -40,7 +40,8 @@
 | Location | POST | `/api/v1/location/gps` | GPS 좌표 전송 (WARD, Device Token 인증) |
 | Location | GET | `/api/v1/location/stream/{wardKey}` | SSE 실시간 위치 스트림 (GUARDIAN) |
 | Location | GET | `/api/v1/location/history/{wardKey}` | 날짜별 이동 경로 히스토리 |
-| Member | GET/PATCH | `/api/v1/member/...` | 회원 정보 조회/수정 |
+| Member | POST | `/api/v1/members/phones` | 연락처 기반 가입 회원 조회 (GUARDIAN) |
+| Member | DELETE | `/api/v1/members/me` | 회원 탈퇴 (비밀번호 재확인 + 연관 데이터 hard-delete) |
 | SafeZone | POST | `/api/v1/care/wards/{wardKey}/safe-zones` | 안심존 추가 (GUARDIAN only) |
 | SafeZone | GET | `/api/v1/care/wards/{wardKey}/safe-zones` | 안심존 목록 조회 (GUARDIAN, MANAGER) |
 | SafeZone | GET | `/api/v1/care/wards/{wardKey}/safe-zones/{safeZoneKey}` | 안심존 상세 조회 (GUARDIAN, MANAGER) |
