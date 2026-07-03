@@ -6,16 +6,12 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.SQLRestriction;
 
 import java.util.UUID;
 
 @Getter
 @Entity
 @Table(name = "safe_zones")
-@SQLDelete(sql = "UPDATE safe_zones SET deleted_at = NOW() WHERE safe_zone_id = ?")
-@SQLRestriction("deleted_at IS NULL")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class SafeZone extends BaseEntity {
 

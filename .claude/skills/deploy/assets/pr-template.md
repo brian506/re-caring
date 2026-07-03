@@ -27,11 +27,11 @@ closes #{이슈번호}
 ```markdown
 ## 개요
 회원이 서비스를 탈퇴할 수 있는 API를 구현했습니다.
-소프트 딜리트 전략을 적용하며 탈퇴 시 RefreshToken도 함께 삭제합니다.
+탈퇴 시 회원 연관 데이터를 hard-delete하며 RefreshToken도 함께 삭제합니다.
 
 ## 변경 사항
 - `DELETE /api/v1/members/me` 엔드포인트 추가
-- `MemberWriter.remove()` 소프트 딜리트 구현
+- `MemberWriter.remove()` hard-delete 구현
 - `RefreshTokenWriter.removeByMemberKey()` 토큰 삭제 구현
 - `MemberService.withdraw()` 단위 테스트 추가
 

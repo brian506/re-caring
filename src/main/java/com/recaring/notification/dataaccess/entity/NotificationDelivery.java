@@ -15,16 +15,12 @@ import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDateTime;
 
 @Getter
 @Entity
 @Table(name = "notification_deliveries")
-@SQLDelete(sql = "UPDATE notification_deliveries SET deleted_at = NOW() WHERE notification_delivery_id = ?")
-@SQLRestriction("deleted_at IS NULL")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class NotificationDelivery extends BaseEntity {
 

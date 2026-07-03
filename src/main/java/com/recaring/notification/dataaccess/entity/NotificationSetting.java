@@ -17,8 +17,6 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.SQLRestriction;
 
 @Getter
 @Entity
@@ -26,8 +24,6 @@ import org.hibernate.annotations.SQLRestriction;
         name = "notification_settings",
         uniqueConstraints = @UniqueConstraint(columnNames = "ward_member_key")
 )
-@SQLDelete(sql = "UPDATE notification_settings SET deleted_at = NOW() WHERE notification_setting_id = ?")
-@SQLRestriction("deleted_at IS NULL")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class NotificationSetting extends BaseEntity {
 

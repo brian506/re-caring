@@ -13,16 +13,12 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDateTime;
 
 @Getter
 @Entity
 @Table(name = "fcm_device_tokens")
-@SQLDelete(sql = "UPDATE fcm_device_tokens SET deleted_at = NOW() WHERE fcm_device_token_id = ?")
-@SQLRestriction("deleted_at IS NULL")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class FcmDeviceToken extends BaseEntity {
 

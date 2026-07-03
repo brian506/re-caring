@@ -31,9 +31,6 @@ public class QNotification extends EntityPathBase<Notification> {
 
     public final StringPath dataPayload = createString("dataPayload");
 
-    //inherited
-    public final DateTimePath<java.time.LocalDateTime> deletedAt = _super.deletedAt;
-
     public final StringPath eventType = createString("eventType");
 
     public final StringPath failureCode = createString("failureCode");

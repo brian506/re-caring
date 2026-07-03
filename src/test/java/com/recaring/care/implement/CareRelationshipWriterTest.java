@@ -40,7 +40,7 @@ class CareRelationshipWriterTest {
     // ── delete ─────────────────────────────────────────────────────────────
 
     @Test
-    @DisplayName("케어 관계 삭제 - 관계가 존재하면 entity.delete()가 호출된다")
+    @DisplayName("케어 관계 삭제 - 관계가 존재하면 repository.delete()가 호출된다")
     void delete_success() {
         CareRelationship relationship = CareFixture.createGuardianRelationship(
                 CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY);
@@ -54,6 +54,7 @@ class CareRelationshipWriterTest {
 
         then(careRelationshipRepository).should(times(1))
                 .findByWardKeyAndCaregiverKey(CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY);
+        then(careRelationshipRepository).should(times(1)).delete(relationship);
     }
 
     @Test

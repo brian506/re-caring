@@ -33,9 +33,6 @@ public class QFcmDeviceToken extends EntityPathBase<FcmDeviceToken> {
 
     public final StringPath deactivationReason = createString("deactivationReason");
 
-    //inherited
-    public final DateTimePath<java.time.LocalDateTime> deletedAt = _super.deletedAt;
-
     public final NumberPath<Long> id = createNumber("id", Long.class);
 
     public final DateTimePath<java.time.LocalDateTime> lastUsedAt = createDateTime("lastUsedAt", java.time.LocalDateTime.class);

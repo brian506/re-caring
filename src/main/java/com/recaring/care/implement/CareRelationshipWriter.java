@@ -40,6 +40,6 @@ public class CareRelationshipWriter {
         CareRelationship relationship = careRelationshipRepository
                 .findByWardKeyAndCaregiverKey(wardKey, caregiverKey)
                 .orElseThrow(() -> new AppException(ErrorType.NOT_FOUND_CARE_RELATIONSHIP));
-        relationship.delete();
+        careRelationshipRepository.delete(relationship);
     }
 }

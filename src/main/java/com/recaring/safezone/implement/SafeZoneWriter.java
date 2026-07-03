@@ -30,7 +30,6 @@ public class SafeZoneWriter {
     }
 
     public void delete(SafeZone zone) {
-        zone.delete();
-        safeZoneRepository.save(zone);
+        safeZoneRepository.delete(zone);
     }
 }

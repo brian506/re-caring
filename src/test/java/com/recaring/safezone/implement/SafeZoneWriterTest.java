@@ -60,13 +60,12 @@ class SafeZoneWriterTest {
     }
 
     @Test
-    @DisplayName("delete 호출 시 deletedAt이 설정되고 저장된다")
-    void delete_marks_deleted_and_saves() {
+    @DisplayName("delete 호출 시 repository.delete()로 hard-delete 된다")
+    void delete_hard_deletes_entity() {
         SafeZone zone = SafeZoneFixture.createSafeZone();
 
         safeZoneWriter.delete(zone);
 
-        assertThat(zone.isDeleted()).isTrue();
-        then(safeZoneRepository).should(times(1)).save(zone);
+        then(safeZoneRepository).should(times(1)).delete(zone);
     }
 }

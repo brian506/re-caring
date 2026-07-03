@@ -39,8 +39,8 @@ git diff develop...HEAD --name-only -- 'src/main/**'
 ### [금지 패턴]
 - [ ] `@Table` 어노테이션에 `indexes` 속성이 없는가
   - 탐지: `@Table(.*indexes` 패턴
-- [ ] `repository.delete(entity)` 직접 호출이 없는가 (논리 삭제 규칙)
-  - 탐지: `.delete(` 호출 위치 확인 → implement 계층이라면 `entity.delete()` 사용 여부 확인
+- [ ] soft-delete(`@SQLDelete`, `@SQLRestriction`, `deleted_at`)가 새로 도입되지 않았는가 (삭제는 hard-delete로 통일)
+  - 탐지: `@SQLDelete` / `@SQLRestriction` / `deleted_at` 패턴 확인
 - [ ] `business/` 패키지 아래에 데이터 전달 전용 DTO(record/class)가 추가되지 않았는가
   - VO는 `vo/` 패키지에 위치해야 함
 
