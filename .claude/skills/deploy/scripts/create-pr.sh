@@ -12,7 +12,9 @@ fi
 ISSUE_NUMBER="$1"
 TITLE="$2"
 BODY="$3"
-BRANCH="feature/$ISSUE_NUMBER"
+# Use the actual checked-out branch (any {type}/{N} form), not a reconstructed feature/{N}
+BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+TYPE="${BRANCH%%/*}"
 REPO="brian506/re-caring"
 ASSIGNEE=$(gh api user --jq '.login')
 
@@ -22,10 +24,12 @@ PR_URL=$(gh pr create \
   --head "$BRANCH" \
   --title "$TITLE" \
   --body "$BODY" \
-  --assignee "$ASSIGNEE" \
-  --label "feature")
+  --assignee "$ASSIGNEE")
 
 echo "Created PR: $PR_URL"
+
+# Best-effort label by branch type (label may not exist in the repo)
+gh pr edit "$PR_URL" --repo "$REPO" --add-label "$TYPE" >/dev/null 2>&1 || true
 
 PR_NUMBER=$(echo "$PR_URL" | grep -o '[0-9]*$')
 if [ -z "$PR_NUMBER" ]; then

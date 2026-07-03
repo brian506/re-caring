@@ -37,7 +37,7 @@ public class ApiControllerAdvice {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<@Nullable Object>> handleException(Exception e) {
         printExceptionLog(e);
-        return new ResponseEntity<>(ApiResponse.error(ErrorType.DEFAULT_ERROR, e), HttpStatus.INTERNAL_SERVER_ERROR);
+        return new ResponseEntity<>(ApiResponse.error(ErrorType.DEFAULT_ERROR, null), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     private void printAppExceptionLog(AppException e) {

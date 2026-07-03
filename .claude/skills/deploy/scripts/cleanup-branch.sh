@@ -10,7 +10,15 @@ if [ -z "${1:-}" ]; then
 fi
 
 ISSUE_NUMBER="$1"
-BRANCH="feature/$ISSUE_NUMBER"
+# Capture the branch we are on (any {type}/{N} form) before switching to develop
+BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+
+case "$BRANCH" in
+  develop|main|master)
+    echo "WARN: 현재 브랜치가 '$BRANCH' 라 삭제 대상이 없습니다. 정리 생략." >&2
+    BRANCH=""
+    ;;
+esac
 
 if ! git checkout develop; then
   echo "WARN: develop 브랜치 checkout 실패" >&2
@@ -22,7 +30,9 @@ if ! git pull origin develop; then
   exit 1
 fi
 
-git branch -d "$BRANCH" 2>/dev/null && echo "Deleted local branch: $BRANCH" \
-  || echo "Local branch $BRANCH not found or already deleted"
+if [ -n "$BRANCH" ]; then
+  git branch -d "$BRANCH" 2>/dev/null && echo "Deleted local branch: $BRANCH" \
+    || echo "Local branch $BRANCH not found or already deleted"
+fi
 
 echo "=== Cleanup done. Now on develop ==="

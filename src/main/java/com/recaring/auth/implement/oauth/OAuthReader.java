@@ -18,4 +18,8 @@ public class OAuthReader {
         return oAuthRepository.findOAuthMember(provider, providerMemberId);
     }
 
+    public boolean isLinked(String memberKey, OAuthProvider provider) {
+        return oAuthRepository.existsByMemberKeyAndProvider(memberKey, provider);
+    }
+
 }

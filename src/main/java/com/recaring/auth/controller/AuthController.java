@@ -6,16 +6,16 @@ import com.recaring.auth.business.OAuthService;
 import com.recaring.auth.business.TokenRefreshService;
 import com.recaring.auth.controller.request.EmailRequest;
 import com.recaring.auth.controller.request.NewPasswordRequest;
+import com.recaring.auth.controller.request.OauthLinkRequest;
 import com.recaring.auth.controller.request.OauthSignInRequest;
-import com.recaring.auth.controller.request.OauthSignUpRequest;
 import com.recaring.auth.controller.request.SignInRequest;
 import com.recaring.auth.controller.request.SignUpRequest;
 import com.recaring.auth.controller.response.MaskEmailResponse;
-import com.recaring.auth.controller.response.OAuthSignInResponse;
 import com.recaring.auth.controller.response.SignInResponse;
 import com.recaring.auth.vo.LocalEmail;
 import com.recaring.auth.vo.OAuthProvider;
 import com.recaring.auth.vo.Password;
+import com.recaring.security.vo.AuthMember;
 import com.recaring.security.vo.Jwt;
 import com.recaring.sms.vo.PhoneNumber;
 import com.recaring.support.response.ApiResponse;
@@ -32,6 +32,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -68,65 +69,55 @@ public class AuthController {
     @Operation(
             summary = "카카오 로그인",
             description = """
-                    카카오 Access Token으로 로그인합니다.
-
-                    - `status: SUCCESS` → 로그인 성공. Access Token 반환, Refresh Token은 Cookie 발급
-                    - `status: NEED_SIGN_UP` → 미가입 회원. `providerMemberId`를 받아 `/sign-up/kakao`로 이동
+                    카카오 Access Token으로 로그인합니다. Access Token은 응답 바디, Refresh Token은 Cookie로 발급됩니다.
+                    연동되지 않은 카카오 계정이면 로그인에 실패합니다. 먼저 로컬 회원가입 후 `/oauth/link/kakao`로 연동해야 합니다.
                     """
     )
     @PostMapping("/sign-in/kakao")
-    public ResponseEntity<ApiResponse<OAuthSignInResponse>> signInByKakao(
+    public ResponseEntity<ApiResponse<SignInResponse>> signInByKakao(
             @Valid @RequestBody OauthSignInRequest request,
             HttpServletResponse response
     ) {
-        OAuthSignInResponse result = oAuthService.signIn(request.accessToken(), OAuthProvider.KAKAO);
-        if (OAuthSignInResponse.SUCCESS.equals(result.status())) {
-            response.addHeader(HttpHeaders.SET_COOKIE, cookieService.create(result.refreshToken()).toString());
-        }
-        return ResponseEntity.ok(ApiResponse.success(result));
+        Jwt jwt = oAuthService.signIn(request.accessToken(), OAuthProvider.KAKAO);
+        response.addHeader(HttpHeaders.SET_COOKIE, cookieService.create(jwt.refreshToken()).toString());
+        return ResponseEntity.ok(ApiResponse.success(new SignInResponse(jwt.accessToken())));
     }
 
     @Operation(
             summary = "네이버 로그인",
             description = """
-                    네이버 Access Token으로 로그인합니다.
-
-                    - `status: SUCCESS` → 로그인 성공. Access Token 반환, Refresh Token은 Cookie 발급
-                    - `status: NEED_SIGN_UP` → 미가입 회원. `providerMemberId`를 받아 `/sign-up/naver`로 이동
+                    네이버 Access Token으로 로그인합니다. Access Token은 응답 바디, Refresh Token은 Cookie로 발급됩니다.
+                    연동되지 않은 네이버 계정이면 로그인에 실패합니다. 먼저 로컬 회원가입 후 `/oauth/link/naver`로 연동해야 합니다.
                     """
     )
     @PostMapping("/sign-in/naver")
-    public ResponseEntity<ApiResponse<OAuthSignInResponse>> signInByNaver(
+    public ResponseEntity<ApiResponse<SignInResponse>> signInByNaver(
             @Valid @RequestBody OauthSignInRequest request,
             HttpServletResponse response
     ) {
-        OAuthSignInResponse result = oAuthService.signIn(request.accessToken(), OAuthProvider.NAVER);
-        if (OAuthSignInResponse.SUCCESS.equals(result.status())) {
-            response.addHeader(HttpHeaders.SET_COOKIE, cookieService.create(result.refreshToken()).toString());
-        }
-        return ResponseEntity.ok(ApiResponse.success(result));
-    }
-
-    @Operation(summary = "카카오 회원가입", description = "카카오 로그인 후 NEED_SIGN_UP 상태일 때 추가 정보를 입력해 회원가입합니다.")
-    @PostMapping("/sign-up/kakao")
-    public ResponseEntity<ApiResponse<SignInResponse>> signUpByKakao(
-            @Valid @RequestBody OauthSignUpRequest request,
-            HttpServletResponse response
-    ) {
-        Jwt jwt = oAuthService.signUp(OAuthProvider.KAKAO, request.toCommand());
+        Jwt jwt = oAuthService.signIn(request.accessToken(), OAuthProvider.NAVER);
         response.addHeader(HttpHeaders.SET_COOKIE, cookieService.create(jwt.refreshToken()).toString());
         return ResponseEntity.ok(ApiResponse.success(new SignInResponse(jwt.accessToken())));
     }
 
-    @Operation(summary = "네이버 회원가입", description = "네이버 로그인 후 NEED_SIGN_UP 상태일 때 추가 정보를 입력해 회원가입합니다.")
-    @PostMapping("/sign-up/naver")
-    public ResponseEntity<ApiResponse<SignInResponse>> signUpByNaver(
-            @Valid @RequestBody OauthSignUpRequest request,
-            HttpServletResponse response
+    @Operation(summary = "카카오 연동", description = "로그인한 계정에 카카오 계정을 연동합니다. (JWT 인증 필요)")
+    @PostMapping("/oauth/link/kakao")
+    public ResponseEntity<ApiResponse<Void>> linkKakao(
+            @AuthMember String memberKey,
+            @Valid @RequestBody OauthLinkRequest request
     ) {
-        Jwt jwt = oAuthService.signUp(OAuthProvider.NAVER, request.toCommand());
-        response.addHeader(HttpHeaders.SET_COOKIE, cookieService.create(jwt.refreshToken()).toString());
-        return ResponseEntity.ok(ApiResponse.success(new SignInResponse(jwt.accessToken())));
+        oAuthService.link(memberKey, OAuthProvider.KAKAO, request.accessToken());
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success());
+    }
+
+    @Operation(summary = "네이버 연동", description = "로그인한 계정에 네이버 계정을 연동합니다. (JWT 인증 필요)")
+    @PostMapping("/oauth/link/naver")
+    public ResponseEntity<ApiResponse<Void>> linkNaver(
+            @AuthMember String memberKey,
+            @Valid @RequestBody OauthLinkRequest request
+    ) {
+        oAuthService.link(memberKey, OAuthProvider.NAVER, request.accessToken());
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success());
     }
 
     @Operation(summary = "이메일 찾기", description = "이름, 생년월일, 전화번호로 가입된 이메일을 마스킹하여 반환합니다.")

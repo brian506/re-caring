@@ -1,7 +1,5 @@
 package com.recaring.auth.business;
 
-import com.recaring.auth.business.command.OAuthSignUpCommand;
-import com.recaring.auth.controller.response.OAuthSignInResponse;
 import com.recaring.auth.dataaccess.entity.OAuth;
 import com.recaring.auth.implement.oauth.OAuthAuthenticator;
 import com.recaring.auth.implement.oauth.OAuthManager;
@@ -12,16 +10,12 @@ import com.recaring.auth.vo.OAuthUser;
 import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.implement.MemberReader;
 import com.recaring.security.vo.Jwt;
-import com.recaring.sms.implement.PhoneVerificationReader;
-import com.recaring.sms.vo.PhoneNumber;
 import com.recaring.support.exception.AppException;
 import com.recaring.support.exception.ErrorType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -32,26 +26,19 @@ public class OAuthService {
     private final OAuthManager oAuthManager;
     private final MemberReader memberReader;
     private final TokenIssuer tokenIssuer;
-    private final PhoneVerificationReader phoneVerificationReader;
 
-    public OAuthSignInResponse signIn(String accessToken, OAuthProvider provider) {
+    public Jwt signIn(String accessToken, OAuthProvider provider) {
         OAuthUser oAuthUser = authenticate(accessToken, provider);
-        Optional<OAuth> oAuth = oAuthReader.findOAuthUser(provider, oAuthUser.providerMemberId());
+        OAuth oAuth = oAuthReader.findOAuthUser(provider, oAuthUser.providerMemberId())
+                .orElseThrow(() -> new AppException(ErrorType.OAUTH_NOT_LINKED));
 
-        if (oAuth.isEmpty()) {
-            return OAuthSignInResponse.needSignUp(oAuthUser.providerMemberId());
-        }
-
-        Member member = memberReader.findByMemberKey(oAuth.get().getMemberKey());
-        return OAuthSignInResponse.success(tokenIssuer.issue(member));
+        Member member = memberReader.findByMemberKey(oAuth.getMemberKey());
+        return tokenIssuer.issue(member);
     }
 
-    @Transactional
-    public Jwt signUp(OAuthProvider provider, OAuthSignUpCommand command) {
-        PhoneNumber phone = phoneVerificationReader.findPhoneByToken(command.smsToken());
-        String memberKey = oAuthManager.register(command.toNewOauthMember(phone, provider));
-        Member member = memberReader.findByMemberKey(memberKey);
-        return tokenIssuer.issue(member);
+    public void link(String memberKey, OAuthProvider provider, String accessToken) {
+        OAuthUser oAuthUser = authenticate(accessToken, provider);
+        oAuthManager.link(memberKey, provider, oAuthUser.providerMemberId());
     }
 
     private OAuthUser authenticate(String accessToken, OAuthProvider provider) {
