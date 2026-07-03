@@ -11,6 +11,7 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -31,6 +32,13 @@ public class ApiControllerAdvice {
     public ResponseEntity<ApiResponse<@Nullable Object>> handleOptimisticLockException(ObjectOptimisticLockingFailureException e) {
         log.warn("[OptimisticLockException]: message={}", e.getMessage());
         return new ResponseEntity<>(ApiResponse.error(ErrorType.NOTIFICATION_SETTING_UPDATE_CONFLICT, null), HttpStatus.CONFLICT);
+    }
+
+    @NullMarked
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse<@Nullable Object>> handleValidationException(MethodArgumentNotValidException e) {
+        log.warn("[요청 검증 : 실패]: message={}", e.getMessage());
+        return new ResponseEntity<>(ApiResponse.error(ErrorType.INVALID_ACCESS_PATH, null), HttpStatus.BAD_REQUEST);
     }
 
     @NullMarked
