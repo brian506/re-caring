@@ -5,6 +5,7 @@ import com.recaring.location.dataaccess.repository.GpsHistoryRepository;
 import com.recaring.location.fixture.LocationFixture;
 import com.recaring.support.AbstractRepositoryTest;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
@@ -15,6 +16,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@Tag("integration")
 @DisplayName("GpsHistoryRepository 리포지토리 테스트")
 class GpsHistoryRepositoryTest extends AbstractRepositoryTest {
 
