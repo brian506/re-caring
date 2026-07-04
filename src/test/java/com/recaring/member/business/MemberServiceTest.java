@@ -38,6 +38,8 @@ class MemberServiceTest {
 
     @Mock
     private MemberWithdrawalManager memberWithdrawalManager;
+
+    @Mock
     private LocalAuthReader localAuthReader;
 
     @Mock
