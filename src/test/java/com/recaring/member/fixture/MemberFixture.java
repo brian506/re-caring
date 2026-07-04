@@ -16,6 +16,9 @@ public class MemberFixture {
     public static final Gender GENDER = Gender.MALE;
     public static final MemberRole ROLE = MemberRole.GUARDIAN;
 
+    public static final String UPDATED_NAME = "김철수";
+    public static final LocalDate UPDATED_BIRTH = LocalDate.of(1995, 5, 5);
+
     public static Member createMember() {
         return Member.builder()
                 .phone(PHONE)

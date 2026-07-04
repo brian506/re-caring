@@ -63,4 +63,14 @@ public class Member extends BaseEntity {
         this.subscriptionType = SubscriptionType.BASIC;
     }
 
+    public void updateProfile(String name, LocalDate birth) {
+        if (name != null && !name.isBlank()) {
+            this.name = name;
+        }
+        if (birth != null) {
+            this.birth = birth;
+        }
+        update();
+    }
+
 }
