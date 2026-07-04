@@ -5,6 +5,8 @@ import com.recaring.member.business.MemberService;
 import com.recaring.member.controller.request.SearchByPhonesRequest;
 import com.recaring.member.controller.request.WithdrawRequest;
 import com.recaring.member.controller.response.ContactMemberResponse;
+import com.recaring.member.controller.response.MyInfoResponse;
+import com.recaring.security.vo.AuthMember;
 import com.recaring.security.vo.AuthMember;
 import com.recaring.support.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,6 +14,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -41,6 +44,19 @@ public class MemberController {
     ) {
         List<ContactMemberResponse> responses = memberService.findByPhoneNumbers(request.phones());
         return ResponseEntity.ok(ApiResponse.success(responses));
+    }
+
+    @Operation(
+            summary = "내 정보 조회",
+            description = """
+                    JWT 인증 기반으로 본인의 회원 정보를 조회합니다.
+                    회원 기본 정보, 이메일, 약관 동의 시각을 반환합니다.
+                    """
+    )
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<MyInfoResponse>> getMyInfo(@AuthMember String memberKey) {
+        MyInfoResponse response = memberService.getMyInfo(memberKey);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     @Operation(

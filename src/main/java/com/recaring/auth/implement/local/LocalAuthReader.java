@@ -22,4 +22,8 @@ public class LocalAuthReader {
         return authRepository.findByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorType.NOT_FOUND_ACCOUNT));
     }
+
+    public String findEmailByMemberKey(String memberKey) {
+        return findByMemberKey(memberKey).getEmail();
+    }
 }
