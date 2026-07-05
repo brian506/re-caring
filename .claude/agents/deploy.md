@@ -94,6 +94,25 @@ CI 실패 시 `.claude/skills/deploy/references/error-handling.md` 파일을 Rea
 원인 수정 후 `commit-and-push.sh`로 재푸시하면 CI가 자동 재트리거된다.
 수정 커밋은 type을 `fix`로 지정한다.
 
+## Step 4.5: 스키마 변경 적용 (pending DDL) — 머지 전 필수
+
+머지하면 GitHub Actions가 즉시 ECS 배포를 트리거하고, 앱은 `ddl-auto=validate`로 기동한다.
+따라서 스키마 변경은 **머지 이전에** dev DB에 반드시 적용돼 있어야 한다 (안 그러면 crash loop).
+
+먼저 적용될 DDL을 눈으로 검토한다 (파일이 있을 때만). 그다음 적용 스크립트를 실행한다.
+스크립트는 `docs/pending-ddl.sql`(gitignore된 브랜치용 ledger)을 읽어 dev DB에 한 트랜잭션으로 적용하고,
+성공 시 파일을 자동 삭제한다. 파일이 없거나 비어 있으면 `NO_PENDING_DDL`을 출력하고 무해하게 종료한다.
+
+```bash
+bash .claude/skills/deploy/scripts/apply-pending-ddl.sh docs/pending-ddl.sql
+```
+
+- 출력이 `NO_PENDING_DDL` → 이번 배포에 스키마 변경 없음. Step 5로 진행한다.
+- 출력이 `Status: Success` → 적용 완료. Step 5로 진행한다.
+- 그 외(스크립트 exit≠0, `DDL APPLY FAILED`) → 원인을 분석해 사용자에게 보고하고 **중단**한다. 절대 머지하지 않는다.
+
+`Status: Success`(또는 `NO_PENDING_DDL`) 확인 전까지 Step 5로 넘어가지 않는다.
+
 ## Step 5: 머지 & 배포
 
 ```bash

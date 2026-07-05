@@ -85,28 +85,22 @@ Implement: {Reader}, {Writer}, {Validator}
 ### 4-1. DataAccess 계층
 Entity, Repository (필요 시 QueryDSL)
 
-### 4-2. DDL 마이그레이션 (새 Entity 생성·컬럼 추가 시 필수)
+### 4-2. 스키마 변경 기록 (새 Entity·컬럼·타입·제약 변경 시 필수)
 
-DDL을 작성한 뒤 **적용 전에 AskUserQuestion으로 확인**한다:
+**구현 중에는 DB에 직접 적용하지 않는다.** 로컬은 `ddl-auto=create`라 적용이 불필요하고, dev/prod 적용은 배포 시점(`/deploy`)에 일괄 수행한다.
 
-```
-질문 예시:
-"아래 DDL을 프로덕션 DB에 적용합니다. 확인해 주세요.
+엔티티를 바꿀 때마다 그 **변경분 DDL을 `docs/pending-ddl.sql`에 append**한다 (이 파일은 gitignore된 브랜치용 ledger — 커밋되지 않고, 배포 시 소비된 뒤 삭제된다).
 
-{DDL 내용}
+- 파일이 없으면 생성하고, 있으면 이어서 추가한다.
+- 엔티티에서 실제로 바뀐 것만 정확히 기록한다. 특히 다음을 빠뜨리지 않는다:
+  - 새 테이블/컬럼 추가 (`CREATE TABLE`, `ALTER TABLE ... ADD COLUMN`)
+  - **삭제된 컬럼** (`ALTER TABLE ... DROP COLUMN`) — 엔티티에서 지운 필드
+  - **삭제된 테이블** (`DROP TABLE`) — FK로 참조되면 참조 테이블부터 먼저 정리
+  - 타입/NULL/UNIQUE 제약 변경 (`ALTER TABLE ... ALTER COLUMN`)
+- 변환 규칙·형식 → `.claude/rules/ddl-conventions.md`
+- 인덱스는 DDL에 넣지 않고 엔티티에 TODO 주석으로만 남긴다.
 
-적용할까요?"
-```
-
-규칙 → `.claude/rules/ddl-conventions.md`
-
-승인 후 실행:
-
-```bash
-bash .claude/skills/feature/scripts/apply-ddl.sh "CREATE TABLE ..."
-```
-
-`Status: Success`, `Error: ""` 확인 전까지 다음 단계로 진행하지 않는다.
+기록만 하고 적용은 하지 않으므로 이 단계에서 `apply-ddl.sh` / AskUserQuestion은 필요 없다. 배포 전 실제 적용·확인은 `/deploy`가 담당한다.
 
 ### 4-3. Implement 계층
 Reader / Writer / Manager / Validator / Authenticator — 역할 기준 → `.claude/rules/architecture.md`

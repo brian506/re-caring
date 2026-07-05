@@ -18,7 +18,6 @@ public class RefreshTokenReader {
                 .orElseThrow(() -> new AppException(ErrorType.EXPIRED_JWT));
 
         if (entity.isExpired()) {
-            refreshTokenRepository.deleteByToken(refreshToken);
             throw new AppException(ErrorType.EXPIRED_JWT);
         }
 
