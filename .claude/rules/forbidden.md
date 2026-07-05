@@ -33,9 +33,11 @@
   - `@SQLDelete` / `@SQLRestriction` / `deleted_at` 컬럼을 새로 도입하면 안 된다
   - 실제 삭제: `repository.delete(entity)` 또는 파생 `deleteBy...` / `@Modifying` 벌크 쿼리 사용
 
-- **DDL을 적용하기 전에 코드를 배포하면 안 된다**
-  - `spring.jpa.hibernate.ddl-auto=validate` — 스키마 불일치 시 시작 즉시 충돌
-  - `apply-ddl.sh` 실행 후 `Status: Success` 확인 전까지 다음 단계 진행 금지
+- **스키마 변경 적용 전에 코드를 머지/배포하면 안 된다**
+  - `spring.jpa.hibernate.ddl-auto=validate` — 스키마 불일치 시 시작 즉시 충돌(crash loop)
+  - 스키마 변경은 기능마다 별도 DDL 파일을 만들지 않고, 구현 중 `docs/pending-ddl.sql`(gitignore된 브랜치용 ledger)에 변경분을 append한다.
+  - `/deploy`가 CI 통과 후·머지 직전에 `apply-pending-ddl.sh`로 dev DB에 적용하고 `Status: Success` 확인 후 파일을 삭제한다. 이 확인 전까지 머지 금지.
+  - 자세한 흐름 → `.claude/rules/ddl-conventions.md`
 
 ## Swagger / API Documentation
 

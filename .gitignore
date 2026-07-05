@@ -53,3 +53,6 @@ override.tf.json
 # local ignored files
 CLAUDE.md
 docs/git.md
+
+### pending schema migration ledger (applied & deleted at deploy time) ###
+docs/pending-ddl.sql
