@@ -19,8 +19,6 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.times;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("RefreshTokenReader 단위 테스트")
@@ -59,7 +57,7 @@ class RefreshTokenReaderTest {
     }
 
     @Test
-    @DisplayName("만료된 토큰이면 DB에서 삭제 후 EXPIRED_JWT 예외가 발생한다")
+    @DisplayName("만료된 토큰이면 EXPIRED_JWT 예외가 발생한다")
     void findMemberKey_fail_when_expired() {
         // given
         RefreshToken expiredToken = AuthFixture.createRefreshToken();
@@ -70,6 +68,5 @@ class RefreshTokenReaderTest {
         assertThatThrownBy(() -> refreshTokenReader.findMemberKey(AuthFixture.REFRESH_TOKEN))
                 .isInstanceOf(AppException.class)
                 .hasFieldOrPropertyWithValue("errorType", ErrorType.EXPIRED_JWT);
-        then(refreshTokenRepository).should(times(1)).deleteByToken(AuthFixture.REFRESH_TOKEN);
     }
 }

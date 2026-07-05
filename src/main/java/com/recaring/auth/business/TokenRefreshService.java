@@ -9,6 +9,7 @@ import com.recaring.security.jwt.JwtValidator;
 import com.recaring.security.vo.Jwt;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +21,7 @@ public class TokenRefreshService {
     private final MemberReader memberReader;
     private final TokenIssuer tokenIssuer;
 
+    @Transactional
     public Jwt refresh(String refreshToken) {
         jwtValidator.validate(refreshToken);
         String memberKey = refreshTokenReader.findMemberKey(refreshToken);

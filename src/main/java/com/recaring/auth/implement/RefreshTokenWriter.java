@@ -5,6 +5,7 @@ import com.recaring.auth.dataaccess.repository.RefreshTokenRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @RequiredArgsConstructor
@@ -20,6 +21,7 @@ public class RefreshTokenWriter {
         refreshTokenRepository.save(entity);
     }
 
+    @Transactional
     public void delete(String refreshToken) {
         refreshTokenRepository.deleteByToken(refreshToken);
     }
