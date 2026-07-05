@@ -28,8 +28,8 @@ public class LocationSettingController {
     private final LocationSettingService locationSettingService;
 
     @Operation(
-            summary = "Get location collection interval",
-            description = "Returns the current location collection interval and selectable options. [GUARDIAN only]"
+            summary = "위치 수집 주기 조회",
+            description = "피보호자의 현재 위치 수집 주기와 선택 가능한 옵션 목록을 반환합니다. [GUARDIAN 전용]"
     )
     @GetMapping("/{wardKey}/collection-interval")
     public ResponseEntity<ApiResponse<LocationCollectionIntervalSettingResponse>> getCollectionInterval(
@@ -45,8 +45,8 @@ public class LocationSettingController {
     }
 
     @Operation(
-            summary = "Update location collection interval",
-            description = "Updates the location collection interval for a ward. [GUARDIAN only]"
+            summary = "위치 수집 주기 변경",
+            description = "피보호자의 위치 수집 주기를 변경합니다. [GUARDIAN 전용]"
     )
     @PatchMapping("/{wardKey}/collection-interval")
     public ResponseEntity<ApiResponse<Void>> updateCollectionInterval(
@@ -55,13 +55,13 @@ public class LocationSettingController {
             @PathVariable String wardKey,
             @Valid @RequestBody UpdateLocationCollectionIntervalRequest request
     ) {
-        locationSettingService.updateCollectionInterval(memberKey, request.toCommand(wardKey));
+        locationSettingService.updateCollectionInterval(memberKey, wardKey, request.toInterval());
         return ResponseEntity.ok(ApiResponse.success());
     }
 
     @Operation(
-            summary = "Get my location collection interval",
-            description = "Returns only the current interval for the ward device app. [WARD Device Token only]"
+            summary = "내 위치 수집 주기 조회",
+            description = "피보호자 디바이스 앱에서 현재 설정된 위치 수집 주기를 조회합니다. [WARD Device Token 전용]"
     )
     @GetMapping("/collection-interval/me")
     public ResponseEntity<ApiResponse<WardLocationCollectionIntervalResponse>> getMyCollectionInterval(

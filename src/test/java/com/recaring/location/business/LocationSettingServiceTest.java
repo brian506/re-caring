@@ -1,6 +1,5 @@
 package com.recaring.location.business;
 
-import com.recaring.location.business.command.UpdateLocationCollectionIntervalCommand;
 import com.recaring.location.fixture.LocationFixture;
 import com.recaring.location.implement.LocationSettingManager;
 import com.recaring.location.implement.LocationSettingReader;
@@ -51,12 +50,11 @@ class LocationSettingServiceTest {
     @Test
     @DisplayName("주보호자는 위치 수집 주기를 수정한다")
     void updateCollectionInterval_updates_setting_for_guardian() {
-        UpdateLocationCollectionIntervalCommand command = new UpdateLocationCollectionIntervalCommand(
+        locationSettingService.updateCollectionInterval(
+                LocationFixture.GUARDIAN_KEY,
                 LocationFixture.WARD_KEY,
                 LocationCollectionInterval.THIRTY_SECONDS
         );
-
-        locationSettingService.updateCollectionInterval(LocationFixture.GUARDIAN_KEY, command);
 
         then(locationValidator).should().validateGuardianAccess(LocationFixture.GUARDIAN_KEY, LocationFixture.WARD_KEY);
         then(locationSettingManager).should().updateCollectionInterval(

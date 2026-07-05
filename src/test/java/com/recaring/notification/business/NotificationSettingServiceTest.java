@@ -1,9 +1,6 @@
 package com.recaring.notification.business;
 
 import com.recaring.notification.business.command.UpdateAnomalyNotificationSettingCommand;
-import com.recaring.notification.business.command.UpdateBatteryNotificationSettingCommand;
-import com.recaring.notification.business.command.UpdateEmergencyCallNotificationSettingCommand;
-import com.recaring.notification.business.command.UpdateSafeZoneNotificationSettingCommand;
 import com.recaring.notification.dataaccess.entity.NotificationSetting;
 import com.recaring.notification.fixture.NotificationFixture;
 import com.recaring.notification.implement.NotificationSettingManager;
@@ -53,15 +50,10 @@ class NotificationSettingServiceTest {
     @Test
     @DisplayName("Validates access, prepares a row, and updates safe zone settings")
     void updateSafeZone_validates_access_and_updates_setting() {
-        UpdateSafeZoneNotificationSettingCommand command = new UpdateSafeZoneNotificationSettingCommand(
-                NotificationFixture.WARD_KEY,
-                false,
-                true
-        );
         NotificationSetting setting = NotificationFixture.createSetting(NotificationFixture.WARD_KEY);
         given(notificationSettingReader.findExistingSetting(NotificationFixture.WARD_KEY)).willReturn(setting);
 
-        notificationSettingService.updateSafeZone(NotificationFixture.GUARDIAN_KEY, command);
+        notificationSettingService.updateSafeZone(NotificationFixture.GUARDIAN_KEY, NotificationFixture.WARD_KEY, false, true);
 
         then(notificationSettingValidator).should()
                 .validateSettingAccess(NotificationFixture.GUARDIAN_KEY, NotificationFixture.WARD_KEY);
@@ -101,12 +93,10 @@ class NotificationSettingServiceTest {
     @Test
     @DisplayName("Validates access, prepares a row, and updates emergency call settings")
     void updateEmergencyCall_validates_access_and_updates_setting() {
-        UpdateEmergencyCallNotificationSettingCommand command =
-                new UpdateEmergencyCallNotificationSettingCommand(NotificationFixture.WARD_KEY, false);
         NotificationSetting setting = NotificationFixture.createSetting(NotificationFixture.WARD_KEY);
         given(notificationSettingReader.findExistingSetting(NotificationFixture.WARD_KEY)).willReturn(setting);
 
-        notificationSettingService.updateEmergencyCall(NotificationFixture.WARD_KEY, command);
+        notificationSettingService.updateEmergencyCall(NotificationFixture.WARD_KEY, NotificationFixture.WARD_KEY, false);
 
         then(notificationSettingValidator).should()
                 .validateSettingAccess(NotificationFixture.WARD_KEY, NotificationFixture.WARD_KEY);
@@ -118,15 +108,11 @@ class NotificationSettingServiceTest {
     @Test
     @DisplayName("Validates access, prepares a row, and updates battery settings")
     void updateBattery_validates_access_and_updates_setting() {
-        UpdateBatteryNotificationSettingCommand command = new UpdateBatteryNotificationSettingCommand(
-                NotificationFixture.WARD_KEY,
-                true,
-                new BatteryThreshold(30)
-        );
         NotificationSetting setting = NotificationFixture.createSetting(NotificationFixture.WARD_KEY);
         given(notificationSettingReader.findExistingSetting(NotificationFixture.WARD_KEY)).willReturn(setting);
 
-        notificationSettingService.updateBattery(NotificationFixture.WARD_KEY, command);
+        notificationSettingService.updateBattery(
+                NotificationFixture.WARD_KEY, NotificationFixture.WARD_KEY, true, new BatteryThreshold(30));
 
         then(notificationSettingValidator).should()
                 .validateSettingAccess(NotificationFixture.WARD_KEY, NotificationFixture.WARD_KEY);

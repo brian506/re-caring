@@ -68,15 +68,13 @@ class FcmDeviceTokenControllerTest extends AbstractIntegrationTest {
                 .jsonPath("$.resultType").isEqualTo("SUCCESS")
                 .jsonPath("$.data.memberKey").isEqualTo(guardian.getMemberKey())
                 .jsonPath("$.data.recipientType").isEqualTo("GUARDIAN")
-                .jsonPath("$.data.platform").isEqualTo("ANDROID")
-                .jsonPath("$.data.active").isEqualTo(true);
+                .jsonPath("$.data.platform").isEqualTo("ANDROID");
 
         assertThat(fcmDeviceTokenRepository.findByToken("guardian-fcm-token-http"))
                 .isPresent()
                 .get()
                 .satisfies(token -> {
                     assertThat(token.getMemberKey()).isEqualTo(guardian.getMemberKey());
-                    assertThat(token.isActive()).isTrue();
                 });
     }
 

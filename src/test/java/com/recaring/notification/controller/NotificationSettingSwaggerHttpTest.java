@@ -65,17 +65,17 @@ class NotificationSettingSwaggerHttpTest {
         assertThat(response.body()).contains("\"title\":\"re;caRing API\"");
         assertThat(response.body()).contains("\"BearerAuth\"");
         assertThat(response.body()).contains("\"/api/v1/notifications/settings/{wardKey}\"");
-        assertThat(response.body()).contains("\"summary\":\"Get notification settings\"");
+        assertThat(response.body()).contains("\"summary\":\"알림 설정 조회\"");
         assertThat(response.body()).contains("\"/api/v1/notifications/settings/{wardKey}/safe-zone\"");
-        assertThat(response.body()).contains("\"summary\":\"Update safe zone notification settings\"");
+        assertThat(response.body()).contains("\"summary\":\"안심존 알림 설정 변경\"");
         assertThat(response.body()).contains("\"/api/v1/notifications/settings/{wardKey}/anomaly\"");
-        assertThat(response.body()).contains("\"summary\":\"Update anomaly notification settings\"");
+        assertThat(response.body()).contains("\"summary\":\"이상탐지 알림 설정 변경\"");
         assertThat(response.body()).contains("\"/api/v1/notifications/settings/{wardKey}/emergency-call\"");
-        assertThat(response.body()).contains("\"summary\":\"Update emergency call notification settings\"");
+        assertThat(response.body()).contains("\"summary\":\"응급호출 알림 설정 변경\"");
         assertThat(response.body()).contains("\"/api/v1/notifications/settings/{wardKey}/battery\"");
-        assertThat(response.body()).contains("\"summary\":\"Update battery notification settings\"");
+        assertThat(response.body()).contains("\"summary\":\"배터리 부족 알림 설정 변경\"");
         assertThat(response.body()).contains("\"/api/v1/notifications/device-tokens\"");
-        assertThat(response.body()).contains("\"summary\":\"Upsert FCM device token\"");
+        assertThat(response.body()).contains("\"summary\":\"FCM device token 생성 및 업데이트\"");
     }
 
     @Test

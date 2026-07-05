@@ -25,6 +25,18 @@ public class OAuthRepositoryCustomImpl extends QuerydslRepositorySupport impleme
     }
 
     @Override
+    public boolean existsByMemberKeyAndProvider(String memberKey, OAuthProvider provider) {
+        Integer result = selectOne()
+                .from(oAuth)
+                .where(
+                        oAuth.memberKey.eq(memberKey),
+                        oAuth.provider.eq(provider)
+                )
+                .fetchFirst();
+        return result != null;
+    }
+
+    @Override
     public void deleteByMemberKey(String memberKey) {
         delete(oAuth)
                 .where(oAuth.memberKey.eq(memberKey))

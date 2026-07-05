@@ -16,7 +16,6 @@ import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.dataaccess.entity.MemberWithdrawal;
 import com.recaring.member.dataaccess.repository.MemberWithdrawalRepository;
 import com.recaring.notification.dataaccess.repository.FcmDeviceTokenRepository;
-import com.recaring.notification.dataaccess.repository.NotificationDeliveryRepository;
 import com.recaring.notification.dataaccess.repository.NotificationSettingRepository;
 import com.recaring.safezone.implement.SafeZoneWriter;
 import lombok.RequiredArgsConstructor;
@@ -48,7 +47,6 @@ public class MemberWithdrawalManager {
     private final LocalAuthRepository localAuthRepository;
     private final OAuthRepository oAuthRepository;
     private final FcmDeviceTokenRepository fcmDeviceTokenRepository;
-    private final NotificationDeliveryRepository notificationDeliveryRepository;
     private final NotificationSettingRepository notificationSettingRepository;
     private final LocationSettingRepository locationSettingRepository;
     private final WardDeviceTokenRepository wardDeviceTokenRepository;
@@ -67,7 +65,6 @@ public class MemberWithdrawalManager {
         oAuthRepository.deleteByMemberKey(memberKey);
         membersTermsAgreementWriter.deleteByMemberKey(memberKey);
         fcmDeviceTokenRepository.deleteByMemberKey(memberKey);
-        notificationDeliveryRepository.deleteByRecipientMemberKey(memberKey);
         notificationSettingRepository.deleteByWardMemberKey(memberKey);
         careRelationshipWriter.deleteAllByMemberKey(memberKey);
         careInvitationWriter.deleteAllByMemberKey(memberKey);

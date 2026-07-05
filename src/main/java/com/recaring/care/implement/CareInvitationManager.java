@@ -35,7 +35,7 @@ public class CareInvitationManager {
 
         careRelationshipValidator.validateCanAddWard(invitation.requesterMemberKey(), invitation.wardMemberKey());
         CareInvitation saved = careInvitationWriter.register(invitation);
-        eventPublisher.publishEvent(new CareInvitationSentEvent(saved.getRequestKey(), saved.getTargetMemberKey(), saved.getRequesterMemberKey()));
+        eventPublisher.publishEvent(new CareInvitationSentEvent(saved.getRequestKey(), saved.getTargetMemberKey(), saved.getRequesterMemberKey(), saved.targetRole()));
     }
 
     // 관리자 추가
@@ -46,7 +46,7 @@ public class CareInvitationManager {
 
         careRelationshipValidator.validateCanAddManager(invitation.requesterMemberKey(), invitation.wardMemberKey(), invitation.targetMemberKey());
         CareInvitation saved = careInvitationWriter.register(invitation);
-        eventPublisher.publishEvent(new CareInvitationSentEvent(saved.getRequestKey(), saved.getTargetMemberKey(), saved.getRequesterMemberKey()));
+        eventPublisher.publishEvent(new CareInvitationSentEvent(saved.getRequestKey(), saved.getTargetMemberKey(), saved.getRequesterMemberKey(), saved.targetRole()));
     }
 
     // 보호자 추가
@@ -57,7 +57,7 @@ public class CareInvitationManager {
 
         careRelationshipValidator.validateCanAddGuardian(invitation.requesterMemberKey(), invitation.wardMemberKey(), invitation.targetMemberKey());
         CareInvitation saved = careInvitationWriter.register(invitation);
-        eventPublisher.publishEvent(new CareInvitationSentEvent(saved.getRequestKey(), saved.getTargetMemberKey(), saved.getRequesterMemberKey()));
+        eventPublisher.publishEvent(new CareInvitationSentEvent(saved.getRequestKey(), saved.getTargetMemberKey(), saved.getRequesterMemberKey(), saved.targetRole()));
     }
 
     // 요청 수락
@@ -74,7 +74,7 @@ public class CareInvitationManager {
                 memberKey
         );
         careInvitationWriter.accept(invitation.getRequestKey());
-        eventPublisher.publishEvent(new CareInvitationAcceptedEvent(invitation.getRequestKey(), memberKey));
+        eventPublisher.publishEvent(new CareInvitationAcceptedEvent(invitation.getRequestKey(), memberKey, invitation.getRequesterMemberKey(), invitation.targetRole()));
     }
 
     @Transactional

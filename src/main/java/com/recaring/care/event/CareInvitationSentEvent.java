@@ -1,3 +1,5 @@
 package com.recaring.care.event;
 
-public record CareInvitationSentEvent(String requestKey, String targetMemberKey, String requesterMemberKey) {}
+import com.recaring.care.dataaccess.entity.CarePartyRole;
+
+public record CareInvitationSentEvent(String requestKey, String targetMemberKey, String requesterMemberKey, CarePartyRole targetRole) {}

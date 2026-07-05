@@ -29,23 +29,15 @@ public class QNotification extends EntityPathBase<Notification> {
     //inherited
     public final DateTimePath<java.time.LocalDateTime> createdAt = _super.createdAt;
 
-    public final StringPath dataPayload = createString("dataPayload");
+    public final MapPath<String, String, StringPath> dataPayload = this.<String, String, StringPath>createMap("dataPayload", String.class, String.class, StringPath.class);
 
     public final StringPath eventType = createString("eventType");
-
-    public final StringPath failureCode = createString("failureCode");
-
-    public final StringPath failureReason = createString("failureReason");
 
     public final NumberPath<Long> id = createNumber("id", Long.class);
 
     public final StringPath notificationKey = createString("notificationKey");
 
-    public final DateTimePath<java.time.LocalDateTime> requestedAt = createDateTime("requestedAt", java.time.LocalDateTime.class);
-
-    public final DateTimePath<java.time.LocalDateTime> sentAt = createDateTime("sentAt", java.time.LocalDateTime.class);
-
-    public final EnumPath<NotificationStatus> status = createEnum("status", NotificationStatus.class);
+    public final StringPath recipientMemberKey = createString("recipientMemberKey");
 
     public final StringPath title = createString("title");
 

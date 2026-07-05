@@ -68,6 +68,17 @@ public class CareInvitation extends BaseEntity {
         return this.targetMemberKey;
     }
 
+    /**
+     * 초대 대상(target)이 어떤 역할로 요청받았는지 반환한다.
+     * target == ward 이면 보호 대상자, 그 외에는 careRole(보호자/관계자)이다.
+     */
+    public CarePartyRole targetRole() {
+        if (this.targetMemberKey.equals(this.wardMemberKey)) {
+            return CarePartyRole.WARD;
+        }
+        return this.careRole == CareRole.MANAGER ? CarePartyRole.MANAGER : CarePartyRole.GUARDIAN;
+    }
+
     public void accept() {
         this.status = CareInvitationStatus.ACCEPTED;
     }

@@ -1,18 +1,20 @@
 package com.recaring.notification.fixture;
 
+import com.recaring.care.dataaccess.entity.CareRole;
 import com.recaring.member.dataaccess.entity.Gender;
 import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.dataaccess.entity.MemberRole;
 import com.recaring.member.dataaccess.entity.SignUpType;
 import com.recaring.notification.business.command.NotificationSendCommand;
-import com.recaring.notification.business.command.UpsertFcmDeviceTokenCommand;
 import com.recaring.notification.dataaccess.entity.FcmDevicePlatform;
 import com.recaring.notification.dataaccess.entity.FcmDeviceToken;
+import com.recaring.notification.dataaccess.entity.Notification;
 import com.recaring.notification.dataaccess.entity.NotificationSetting;
-import com.recaring.notification.dataaccess.entity.NotificationRecipientType;
 import com.recaring.notification.vo.AnomalySensitivity;
+import com.recaring.notification.vo.NotificationItem;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -85,19 +87,10 @@ public class NotificationFixture {
                 .build();
     }
 
-    public static UpsertFcmDeviceTokenCommand guardianTokenCommand(String token) {
-        return new UpsertFcmDeviceTokenCommand(
-                GUARDIAN_KEY,
-                NotificationRecipientType.GUARDIAN,
-                token,
-                FcmDevicePlatform.ANDROID
-        );
-    }
-
     public static FcmDeviceToken guardianFcmDeviceToken(String token) {
         return FcmDeviceToken.builder()
                 .memberKey(GUARDIAN_KEY)
-                .recipientType(NotificationRecipientType.GUARDIAN)
+                .careRole(CareRole.GUARDIAN)
                 .token(token)
                 .platform(FcmDevicePlatform.ANDROID)
                 .build();
@@ -106,7 +99,7 @@ public class NotificationFixture {
     public static FcmDeviceToken managerFcmDeviceToken(String token) {
         return FcmDeviceToken.builder()
                 .memberKey(MANAGER_KEY)
-                .recipientType(NotificationRecipientType.MANAGER)
+                .careRole(CareRole.MANAGER)
                 .token(token)
                 .platform(FcmDevicePlatform.IOS)
                 .build();
@@ -120,6 +113,27 @@ public class NotificationFixture {
                 "body",
                 Map.of("wardKey", WARD_KEY),
                 "SAFE_ZONE_EXIT"
+        );
+    }
+
+    public static Notification notification(String recipientMemberKey, String eventType, String title, String body) {
+        return Notification.builder()
+                .recipientMemberKey(recipientMemberKey)
+                .eventType(eventType)
+                .title(title)
+                .body(body)
+                .dataPayload(Map.of("type", eventType))
+                .build();
+    }
+
+    public static NotificationItem notificationItem(String eventType, String title, String body) {
+        return new NotificationItem(
+                "notification-key-001",
+                eventType,
+                title,
+                body,
+                Map.of("type", eventType),
+                LocalDateTime.of(2026, 7, 5, 9, 41)
         );
     }
 }
