@@ -1,7 +1,12 @@
 package com.recaring.notification.dataaccess.repository.custom;
 
+import com.querydsl.core.BooleanBuilder;
+import com.recaring.care.dataaccess.entity.CareRole;
 import com.recaring.notification.dataaccess.entity.FcmDeviceToken;
 import com.recaring.support.repository.QuerydslRepositorySupport;
+
+import java.util.Collection;
+import java.util.List;
 
 import static com.recaring.notification.dataaccess.entity.QFcmDeviceToken.fcmDeviceToken;
 
@@ -17,5 +22,29 @@ public class FcmDeviceTokenRepositoryCustomImpl extends QuerydslRepositorySuppor
         delete(fcmDeviceToken)
                 .where(fcmDeviceToken.memberKey.eq(memberKey))
                 .execute();
+    }
+
+    @Override
+    public void deleteByTokenIn(Collection<String> tokens) {
+        delete(fcmDeviceToken)
+                .where(fcmDeviceToken.token.in(tokens))
+                .execute();
+    }
+
+    @Override
+    public List<FcmDeviceToken> findTokensByCareRoles(
+            Collection<String> guardianMemberKeys,
+            Collection<String> managerMemberKeys
+    ) {
+        BooleanBuilder predicate = new BooleanBuilder();
+        if (guardianMemberKeys != null && !guardianMemberKeys.isEmpty()) {
+            predicate.or(fcmDeviceToken.memberKey.in(guardianMemberKeys)
+                    .and(fcmDeviceToken.careRole.eq(CareRole.GUARDIAN)));
+        }
+        if (managerMemberKeys != null && !managerMemberKeys.isEmpty()) {
+            predicate.or(fcmDeviceToken.memberKey.in(managerMemberKeys)
+                    .and(fcmDeviceToken.careRole.eq(CareRole.MANAGER)));
+        }
+        return selectFrom(fcmDeviceToken).where(predicate).fetch();
     }
 }

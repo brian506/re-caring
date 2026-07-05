@@ -1,10 +1,10 @@
 package com.recaring.safezone.implement;
 
-import com.recaring.safezone.controller.request.CreateSafeZoneCommand;
-import com.recaring.safezone.controller.request.UpdateSafeZoneCommand;
 import com.recaring.safezone.dataaccess.entity.SafeZone;
 import com.recaring.safezone.dataaccess.repository.SafeZoneRepository;
 import com.recaring.safezone.fixture.SafeZoneFixture;
+import com.recaring.safezone.vo.SafeZoneCreation;
+import com.recaring.safezone.vo.SafeZoneUpdate;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,7 +31,7 @@ class SafeZoneWriterTest {
     @Test
     @DisplayName("register 호출 시 올바른 필드로 안심존 엔티티를 저장한다")
     void register_saves_entity_with_correct_fields() {
-        CreateSafeZoneCommand command = SafeZoneFixture.createCommand();
+        SafeZoneCreation command = SafeZoneFixture.createCommand();
         ArgumentCaptor<SafeZone> captor = ArgumentCaptor.forClass(SafeZone.class);
 
         safeZoneWriter.register(command);
@@ -49,7 +49,7 @@ class SafeZoneWriterTest {
     @DisplayName("update 호출 시 엔티티 필드가 command 값으로 변경되고 저장된다")
     void update_mutates_entity_and_saves() {
         SafeZone zone = SafeZoneFixture.createSafeZone();
-        UpdateSafeZoneCommand command = SafeZoneFixture.updateCommand();
+        SafeZoneUpdate command = SafeZoneFixture.updateCommand();
 
         safeZoneWriter.update(zone, command);
 

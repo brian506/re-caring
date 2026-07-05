@@ -18,7 +18,6 @@ import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.dataaccess.repository.MemberWithdrawalRepository;
 import com.recaring.member.fixture.MemberFixture;
 import com.recaring.notification.dataaccess.repository.FcmDeviceTokenRepository;
-import com.recaring.notification.dataaccess.repository.NotificationDeliveryRepository;
 import com.recaring.notification.dataaccess.repository.NotificationSettingRepository;
 import com.recaring.safezone.implement.SafeZoneWriter;
 import com.recaring.support.exception.AppException;
@@ -91,9 +90,6 @@ class MemberWithdrawalManagerTest {
     private FcmDeviceTokenRepository fcmDeviceTokenRepository;
 
     @Mock
-    private NotificationDeliveryRepository notificationDeliveryRepository;
-
-    @Mock
     private NotificationSettingRepository notificationSettingRepository;
 
     @Mock
@@ -130,7 +126,6 @@ class MemberWithdrawalManagerTest {
         then(oAuthRepository).should(times(1)).deleteByMemberKey(memberKey);
         then(membersTermsAgreementWriter).should(times(1)).deleteByMemberKey(memberKey);
         then(fcmDeviceTokenRepository).should(times(1)).deleteByMemberKey(memberKey);
-        then(notificationDeliveryRepository).should(times(1)).deleteByRecipientMemberKey(memberKey);
         then(notificationSettingRepository).should(times(1)).deleteByWardMemberKey(memberKey);
         then(careRelationshipWriter).should(times(1)).deleteAllByMemberKey(memberKey);
         then(careInvitationWriter).should(times(1)).deleteAllByMemberKey(memberKey);

@@ -1,13 +1,12 @@
 package com.recaring.notification.business;
 
 import com.recaring.notification.business.command.UpdateAnomalyNotificationSettingCommand;
-import com.recaring.notification.business.command.UpdateBatteryNotificationSettingCommand;
-import com.recaring.notification.business.command.UpdateEmergencyCallNotificationSettingCommand;
-import com.recaring.notification.business.command.UpdateSafeZoneNotificationSettingCommand;
 import com.recaring.notification.dataaccess.entity.NotificationSetting;
 import com.recaring.notification.implement.NotificationSettingManager;
 import com.recaring.notification.implement.NotificationSettingReader;
 import com.recaring.notification.implement.NotificationSettingValidator;
+import com.recaring.notification.vo.AnomalySensitivity;
+import com.recaring.notification.vo.BatteryThreshold;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,14 +26,10 @@ public class NotificationSettingService {
     }
 
     @Transactional
-    public void updateSafeZone(String requesterKey, UpdateSafeZoneNotificationSettingCommand command) {
-        notificationSettingValidator.validateSettingAccess(requesterKey, command.wardKey());
-        NotificationSetting setting = findOrAddDefault(command.wardKey());
-        notificationSettingManager.updateSafeZone(
-                setting,
-                command.entryEnabled(),
-                command.exitEnabled()
-        );
+    public void updateSafeZone(String requesterKey, String wardKey, boolean entryEnabled, boolean exitEnabled) {
+        notificationSettingValidator.validateSettingAccess(requesterKey, wardKey);
+        NotificationSetting setting = findOrAddDefault(wardKey);
+        notificationSettingManager.updateSafeZone(setting, entryEnabled, exitEnabled);
     }
 
     @Transactional
@@ -51,21 +46,17 @@ public class NotificationSettingService {
     }
 
     @Transactional
-    public void updateEmergencyCall(String requesterKey, UpdateEmergencyCallNotificationSettingCommand command) {
-        notificationSettingValidator.validateSettingAccess(requesterKey, command.wardKey());
-        NotificationSetting setting = findOrAddDefault(command.wardKey());
-        notificationSettingManager.updateEmergencyCall(setting, command.enabled());
+    public void updateEmergencyCall(String requesterKey, String wardKey, boolean enabled) {
+        notificationSettingValidator.validateSettingAccess(requesterKey, wardKey);
+        NotificationSetting setting = findOrAddDefault(wardKey);
+        notificationSettingManager.updateEmergencyCall(setting, enabled);
     }
 
     @Transactional
-    public void updateBattery(String requesterKey, UpdateBatteryNotificationSettingCommand command) {
-        notificationSettingValidator.validateSettingAccess(requesterKey, command.wardKey());
-        NotificationSetting setting = findOrAddDefault(command.wardKey());
-        notificationSettingManager.updateBattery(
-                setting,
-                command.lowBatteryEnabled(),
-                command.threshold()
-        );
+    public void updateBattery(String requesterKey, String wardKey, boolean lowBatteryEnabled, BatteryThreshold threshold) {
+        notificationSettingValidator.validateSettingAccess(requesterKey, wardKey);
+        NotificationSetting setting = findOrAddDefault(wardKey);
+        notificationSettingManager.updateBattery(setting, lowBatteryEnabled, threshold);
     }
 
     private NotificationSetting findOrAddDefault(String wardKey) {

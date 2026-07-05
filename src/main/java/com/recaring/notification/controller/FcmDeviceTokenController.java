@@ -24,8 +24,8 @@ public class FcmDeviceTokenController {
     private final FcmDeviceTokenService fcmDeviceTokenService;
 
     @Operation(
-            summary = "Upsert FCM device token",
-            description = "Registers or updates a guardian or manager FCM device token. [GUARDIAN, MANAGER]"
+            summary = "FCM device token 생성 및 업데이트",
+            description = "FCM 토큰 없으면 생성하고 있으면 수정. [GUARDIAN, MANAGER]"
     )
     @PutMapping
     public ResponseEntity<ApiResponse<FcmDeviceTokenResponse>> upsert(
@@ -34,7 +34,7 @@ public class FcmDeviceTokenController {
             @RequestBody UpsertFcmDeviceTokenRequest request
     ) {
         FcmDeviceTokenResponse response = FcmDeviceTokenResponse.from(
-                fcmDeviceTokenService.upsert(request.toCommand(memberKey))
+                fcmDeviceTokenService.upsert(memberKey, request.token(), request.careRole(), request.platform())
         );
         return ResponseEntity.ok(ApiResponse.success(response));
     }

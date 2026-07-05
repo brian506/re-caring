@@ -1,11 +1,11 @@
 package com.recaring.safezone.fixture;
 
 import com.recaring.care.fixture.CareFixture;
-import com.recaring.safezone.controller.request.CreateSafeZoneCommand;
-import com.recaring.safezone.controller.request.UpdateSafeZoneCommand;
 import com.recaring.safezone.dataaccess.entity.SafeZone;
 import com.recaring.safezone.dataaccess.entity.SafeZoneRadius;
+import com.recaring.safezone.vo.SafeZoneCreation;
 import com.recaring.safezone.vo.SafeZoneInfo;
+import com.recaring.safezone.vo.SafeZoneUpdate;
 
 public class SafeZoneFixture {
 
@@ -48,11 +48,11 @@ public class SafeZoneFixture {
         return new SafeZoneInfo(safeZoneKey, NAME, ADDRESS, LATITUDE, LONGITUDE, RADIUS);
     }
 
-    public static CreateSafeZoneCommand createCommand() {
-        return new CreateSafeZoneCommand(WARD_MEMBER_KEY, NAME, ADDRESS, LATITUDE, LONGITUDE, RADIUS);
+    public static SafeZoneCreation createCommand() {
+        return new SafeZoneCreation(WARD_MEMBER_KEY, NAME, ADDRESS, LATITUDE, LONGITUDE, RADIUS);
     }
 
-    public static UpdateSafeZoneCommand updateCommand() {
-        return new UpdateSafeZoneCommand(UPDATED_NAME, UPDATED_ADDRESS, UPDATED_LATITUDE, UPDATED_LONGITUDE, UPDATED_RADIUS);
+    public static SafeZoneUpdate updateCommand() {
+        return new SafeZoneUpdate(UPDATED_NAME, UPDATED_ADDRESS, UPDATED_LATITUDE, UPDATED_LONGITUDE, UPDATED_RADIUS);
     }
 }

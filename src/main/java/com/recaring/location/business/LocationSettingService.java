@@ -1,6 +1,5 @@
 package com.recaring.location.business;
 
-import com.recaring.location.business.command.UpdateLocationCollectionIntervalCommand;
 import com.recaring.location.implement.LocationSettingManager;
 import com.recaring.location.implement.LocationSettingReader;
 import com.recaring.location.implement.LocationValidator;
@@ -23,10 +22,10 @@ public class LocationSettingService {
         return LocationCollectionIntervalSettingInfo.from(interval);
     }
 
-    public void updateCollectionInterval(String requesterKey, UpdateLocationCollectionIntervalCommand command) {
-        locationValidator.validateGuardianAccess(requesterKey, command.wardKey());
+    public void updateCollectionInterval(String requesterKey, String wardKey, LocationCollectionInterval interval) {
+        locationValidator.validateGuardianAccess(requesterKey, wardKey);
 
-        locationSettingManager.updateCollectionInterval(command.wardKey(), command.interval());
+        locationSettingManager.updateCollectionInterval(wardKey, interval);
     }
 
     public WardLocationCollectionIntervalInfo getMyCollectionInterval(String wardKey) {

@@ -1,95 +1,71 @@
 package com.recaring.notification.implement;
 
 import com.google.firebase.ErrorCode;
-import com.google.firebase.messaging.BatchResponse;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingException;
+import com.google.firebase.messaging.Message;
 import com.google.firebase.messaging.MessagingErrorCode;
-import com.google.firebase.messaging.MulticastMessage;
-import com.google.firebase.messaging.SendResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 @ConditionalOnBean(FirebaseMessaging.class)
 public class FirebaseFcmClient implements FcmClient {
 
-    private static final int MULTICAST_LIMIT = 500;
+    private static final int MAX_ATTEMPTS = 3;
 
     private final FirebaseMessaging firebaseMessaging;
 
     @Override
-    public FcmSendResult send(FcmPushMessage message, List<String> tokens) {
-        List<FcmTokenSendResult> results = new ArrayList<>();
-        for (int start = 0; start < tokens.size(); start += MULTICAST_LIMIT) {
-            int end = Math.min(start + MULTICAST_LIMIT, tokens.size());
-            results.addAll(sendBatch(message, tokens.subList(start, end)));
+    public List<String> sendAndCollectInvalidTokens(FcmPushMessage message, List<String> tokens) {
+        List<String> invalidTokens = new ArrayList<>();
+        for (String token : tokens) {
+            if (isInvalidAfterSend(message, token)) {
+                invalidTokens.add(token);
+            }
         }
-        return new FcmSendResult(results);
+        return invalidTokens;
     }
 
-    private List<FcmTokenSendResult> sendBatch(FcmPushMessage message, List<String> tokens) {
-        MulticastMessage multicastMessage = MulticastMessage.builder()
+    private boolean isInvalidAfterSend(FcmPushMessage message, String token) {
+        Message fcmMessage = Message.builder()
                 .setNotification(com.google.firebase.messaging.Notification.builder()
                         .setTitle(message.title())
                         .setBody(message.body())
                         .build())
                 .putAllData(message.dataPayload())
-                .addAllTokens(tokens)
+                .setToken(token)
                 .build();
 
-        try {
-            BatchResponse response = firebaseMessaging.sendEachForMulticast(multicastMessage);
-            return parseBatchResponse(tokens, response);
-        } catch (FirebaseMessagingException exception) {
-            return tokens.stream()
-                    .map(token -> FcmTokenSendResult.failed(
-                            token,
-                            errorCode(exception),
-                            exception.getMessage(),
-                            isRetryable(exception),
-                            isInvalidToken(exception)
-                    ))
-                    .toList();
-        } catch (RuntimeException exception) {
-            return tokens.stream()
-                    .map(token -> FcmTokenSendResult.failed(
-                            token,
-                            "FCM_SEND_EXCEPTION",
-                            exception.getMessage(),
-                            true,
-                            false
-                    ))
-                    .toList();
-        }
-    }
-
-    private List<FcmTokenSendResult> parseBatchResponse(List<String> tokens, BatchResponse response) {
-        List<FcmTokenSendResult> results = new ArrayList<>();
-        List<SendResponse> responses = response.getResponses();
-        for (int index = 0; index < responses.size(); index++) {
-            SendResponse sendResponse = responses.get(index);
-            String token = tokens.get(index);
-            if (sendResponse.isSuccessful()) {
-                results.add(FcmTokenSendResult.sent(token, sendResponse.getMessageId()));
-                continue;
+        for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+            try {
+                firebaseMessaging.send(fcmMessage);
+                return false;
+            } catch (FirebaseMessagingException exception) {
+                if (isInvalidToken(exception)) {
+                    log.warn("[알림 전송 : 무효 토큰]: errorCode={}", errorCode(exception));
+                    return true;
+                }
+                if (attempt == MAX_ATTEMPTS) {
+                    log.warn("[알림 전송 : 전송 실패]: errorCode={} | attempts={} | error={}",
+                            errorCode(exception), attempt, exception.getMessage());
+                    return false;
+                }
+            } catch (RuntimeException exception) {
+                if (attempt == MAX_ATTEMPTS) {
+                    log.error("[알림 전송 : 예외]: attempts={} | error={}", attempt, exception.getMessage());
+                    return false;
+                }
             }
-
-            FirebaseMessagingException exception = sendResponse.getException();
-            results.add(FcmTokenSendResult.failed(
-                    token,
-                    errorCode(exception),
-                    exception.getMessage(),
-                    isRetryable(exception),
-                    isInvalidToken(exception)
-            ));
         }
-        return results;
+        return false;
     }
 
     private String errorCode(FirebaseMessagingException exception) {
@@ -105,13 +81,5 @@ public class FirebaseFcmClient implements FcmClient {
     private boolean isInvalidToken(FirebaseMessagingException exception) {
         MessagingErrorCode code = exception.getMessagingErrorCode();
         return code == MessagingErrorCode.UNREGISTERED || code == MessagingErrorCode.INVALID_ARGUMENT;
-    }
-
-    private boolean isRetryable(FirebaseMessagingException exception) {
-        if (isInvalidToken(exception)) {
-            return false;
-        }
-        ErrorCode code = exception.getErrorCode();
-        return code == ErrorCode.UNAVAILABLE || code == ErrorCode.INTERNAL || code == ErrorCode.DEADLINE_EXCEEDED;
     }
 }

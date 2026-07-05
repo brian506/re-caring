@@ -1,7 +1,7 @@
 package com.recaring.safezone.implement;
 
-import com.recaring.safezone.controller.request.CreateSafeZoneCommand;
-import com.recaring.safezone.controller.request.UpdateSafeZoneCommand;
+import com.recaring.safezone.vo.SafeZoneCreation;
+import com.recaring.safezone.vo.SafeZoneUpdate;
 import com.recaring.safezone.dataaccess.entity.SafeZone;
 import com.recaring.safezone.dataaccess.repository.SafeZoneRepository;
 import lombok.RequiredArgsConstructor;
@@ -13,7 +13,7 @@ public class SafeZoneWriter {
 
     private final SafeZoneRepository safeZoneRepository;
 
-    public void register(CreateSafeZoneCommand command) {
+    public void register(SafeZoneCreation command) {
         safeZoneRepository.save(SafeZone.builder()
                 .wardMemberKey(command.wardMemberKey())
                 .name(command.name())
@@ -24,7 +24,7 @@ public class SafeZoneWriter {
                 .build());
     }
 
-    public void update(SafeZone zone, UpdateSafeZoneCommand command) {
+    public void update(SafeZone zone, SafeZoneUpdate command) {
         zone.update(command.name(), command.address(), command.latitude(), command.longitude(), command.radius());
         safeZoneRepository.save(zone);
     }

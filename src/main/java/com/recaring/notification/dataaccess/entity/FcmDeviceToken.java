@@ -1,5 +1,6 @@
 package com.recaring.notification.dataaccess.entity;
 
+import com.recaring.care.dataaccess.entity.CareRole;
 import com.recaring.common.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -13,8 +14,6 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 
 @Getter
 @Entity
@@ -32,7 +31,7 @@ public class FcmDeviceToken extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "recipient_type", nullable = false, length = 20)
-    private NotificationRecipientType recipientType;
+    private CareRole careRole;
 
     @Column(name = "token", nullable = false, unique = true, length = 512)
     private String token;
@@ -41,51 +40,25 @@ public class FcmDeviceToken extends BaseEntity {
     @Column(name = "platform", length = 20)
     private FcmDevicePlatform platform;
 
-    @Column(name = "active", nullable = false)
-    private boolean active;
-
-    @Column(name = "last_used_at")
-    private LocalDateTime lastUsedAt;
-
-    @Column(name = "deactivated_at")
-    private LocalDateTime deactivatedAt;
-
-    @Column(name = "deactivation_reason", length = 100)
-    private String deactivationReason;
-
     @Builder
     public FcmDeviceToken(
             String memberKey,
-            NotificationRecipientType recipientType,
+            CareRole careRole,
             String token,
             FcmDevicePlatform platform
     ) {
         this.memberKey = memberKey;
-        this.recipientType = recipientType;
+        this.careRole = careRole;
         this.token = token;
         this.platform = platform;
-        this.active = true;
     }
 
-    public void assignTo(String memberKey, NotificationRecipientType recipientType, FcmDevicePlatform platform) {
+    public void assignTo(String memberKey, CareRole careRole, FcmDevicePlatform platform) {
         this.memberKey = memberKey;
-        this.recipientType = recipientType;
+        this.careRole = careRole;
         this.platform = platform;
-        this.active = true;
-        this.deactivatedAt = null;
-        this.deactivationReason = null;
         update();
     }
 
-    public void touchLastUsedAt() {
-        this.lastUsedAt = LocalDateTime.now();
-        update();
-    }
 
-    public void deactivate(String reason) {
-        this.active = false;
-        this.deactivatedAt = LocalDateTime.now();
-        this.deactivationReason = reason;
-        update();
-    }
 }

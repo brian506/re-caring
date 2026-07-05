@@ -2,8 +2,8 @@ package com.recaring.safezone.business;
 
 import com.recaring.care.dataaccess.entity.CareRole;
 import com.recaring.care.dataaccess.repository.CareRelationshipRepository;
-import com.recaring.safezone.controller.request.CreateSafeZoneCommand;
-import com.recaring.safezone.controller.request.UpdateSafeZoneCommand;
+import com.recaring.safezone.vo.SafeZoneCreation;
+import com.recaring.safezone.vo.SafeZoneUpdate;
 import com.recaring.safezone.dataaccess.entity.SafeZone;
 import com.recaring.safezone.implement.SafeZoneReader;
 import com.recaring.safezone.implement.SafeZoneWriter;
@@ -25,7 +25,7 @@ public class SafeZoneService {
     private final CareRelationshipRepository careRelationshipRepository;
 
     @Transactional
-    public void addSafeZone(String requesterKey, CreateSafeZoneCommand command) {
+    public void addSafeZone(String requesterKey, SafeZoneCreation command) {
         validateGuardianAccess(requesterKey, command.wardMemberKey());
         safeZoneWriter.register(command);
     }
@@ -43,7 +43,7 @@ public class SafeZoneService {
     }
 
     @Transactional
-    public void updateSafeZone(String requesterKey, String wardKey, String safeZoneKey, UpdateSafeZoneCommand command) {
+    public void updateSafeZone(String requesterKey, String wardKey, String safeZoneKey, SafeZoneUpdate command) {
         validateGuardianAccess(requesterKey, wardKey);
         SafeZone zone = safeZoneReader.getEntity(safeZoneKey);
         safeZoneWriter.update(zone, command);

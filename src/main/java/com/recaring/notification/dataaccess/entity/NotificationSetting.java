@@ -20,10 +20,7 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @Entity
-@Table(
-        name = "notification_settings",
-        uniqueConstraints = @UniqueConstraint(columnNames = "ward_member_key")
-)
+@Table(name = "notification_settings")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class NotificationSetting extends BaseEntity {
 

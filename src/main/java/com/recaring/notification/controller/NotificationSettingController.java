@@ -30,8 +30,8 @@ public class NotificationSettingController {
     private final NotificationSettingService notificationSettingService;
 
     @Operation(
-            summary = "Get notification settings",
-            description = "Returns ST-003 notification settings for a ward. [WARD, GUARDIAN, MANAGER]"
+            summary = "알림 설정 조회",
+            description = "wardKey에 해당하는 피보호자의 알림 설정을 반환합니다."
     )
     @GetMapping("/{wardKey}")
     public ResponseEntity<ApiResponse<NotificationSettingResponse>> getSetting(
@@ -46,8 +46,8 @@ public class NotificationSettingController {
     }
 
     @Operation(
-            summary = "Update safe zone notification settings",
-            description = "Updates ST-003-1 safe zone notification settings for a ward. [WARD, GUARDIAN, MANAGER]"
+            summary = "안심존 알림 설정 변경",
+            description = "안심존 진입/이탈 알림 활성화 여부를 변경합니다."
     )
     @PatchMapping("/{wardKey}/safe-zone")
     public ResponseEntity<ApiResponse<Void>> updateSafeZone(
@@ -56,13 +56,13 @@ public class NotificationSettingController {
             @PathVariable String wardKey,
             @Valid @RequestBody UpdateSafeZoneNotificationSettingRequest request
     ) {
-        notificationSettingService.updateSafeZone(memberKey, request.toCommand(wardKey));
+        notificationSettingService.updateSafeZone(memberKey, wardKey, request.entryEnabled(), request.exitEnabled());
         return ResponseEntity.ok(ApiResponse.success());
     }
 
     @Operation(
-            summary = "Update anomaly notification settings",
-            description = "Updates ST-003-2 anomaly notification settings for a ward. [WARD, GUARDIAN, MANAGER]"
+            summary = "이상탐지 알림 설정 변경",
+            description = "경로 이탈/속도 이상/배회 알림 활성화 여부와 알림 민감도를 변경합니다."
     )
     @PatchMapping("/{wardKey}/anomaly")
     public ResponseEntity<ApiResponse<Void>> updateAnomaly(
@@ -76,8 +76,8 @@ public class NotificationSettingController {
     }
 
     @Operation(
-            summary = "Update emergency call notification settings",
-            description = "Updates ST-003-3 emergency call notification settings for a ward. [WARD, GUARDIAN, MANAGER]"
+            summary = "응급호출 알림 설정 변경",
+            description = "응급호출 알림 활성화 여부를 변경합니다."
     )
     @PatchMapping("/{wardKey}/emergency-call")
     public ResponseEntity<ApiResponse<Void>> updateEmergencyCall(
@@ -86,13 +86,13 @@ public class NotificationSettingController {
             @PathVariable String wardKey,
             @Valid @RequestBody UpdateEmergencyCallNotificationSettingRequest request
     ) {
-        notificationSettingService.updateEmergencyCall(memberKey, request.toCommand(wardKey));
+        notificationSettingService.updateEmergencyCall(memberKey, wardKey, request.enabled());
         return ResponseEntity.ok(ApiResponse.success());
     }
 
     @Operation(
-            summary = "Update battery notification settings",
-            description = "Updates ST-003-4 battery notification settings for a ward. [WARD, GUARDIAN, MANAGER]"
+            summary = "배터리 부족 알림 설정 변경",
+            description = "배터리 부족 알림 활성화 여부와 알림 기준 배터리 수치(%)를 변경합니다."
     )
     @PatchMapping("/{wardKey}/battery")
     public ResponseEntity<ApiResponse<Void>> updateBattery(
@@ -101,7 +101,7 @@ public class NotificationSettingController {
             @PathVariable String wardKey,
             @Valid @RequestBody UpdateBatteryNotificationSettingRequest request
     ) {
-        notificationSettingService.updateBattery(memberKey, request.toCommand(wardKey));
+        notificationSettingService.updateBattery(memberKey, wardKey, request.lowBatteryEnabled(), request.toThreshold());
         return ResponseEntity.ok(ApiResponse.success());
     }
 }

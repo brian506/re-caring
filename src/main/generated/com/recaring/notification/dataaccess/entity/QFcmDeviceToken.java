@@ -24,24 +24,16 @@ public class QFcmDeviceToken extends EntityPathBase<FcmDeviceToken> {
 
     public final com.recaring.common.entity.QBaseEntity _super = new com.recaring.common.entity.QBaseEntity(this);
 
-    public final BooleanPath active = createBoolean("active");
+    public final EnumPath<com.recaring.care.dataaccess.entity.CareRole> careRole = createEnum("careRole", com.recaring.care.dataaccess.entity.CareRole.class);
 
     //inherited
     public final DateTimePath<java.time.LocalDateTime> createdAt = _super.createdAt;
 
-    public final DateTimePath<java.time.LocalDateTime> deactivatedAt = createDateTime("deactivatedAt", java.time.LocalDateTime.class);
-
-    public final StringPath deactivationReason = createString("deactivationReason");
-
     public final NumberPath<Long> id = createNumber("id", Long.class);
-
-    public final DateTimePath<java.time.LocalDateTime> lastUsedAt = createDateTime("lastUsedAt", java.time.LocalDateTime.class);
 
     public final StringPath memberKey = createString("memberKey");
 
     public final EnumPath<FcmDevicePlatform> platform = createEnum("platform", FcmDevicePlatform.class);
-
-    public final EnumPath<NotificationRecipientType> recipientType = createEnum("recipientType", NotificationRecipientType.class);
 
     public final StringPath token = createString("token");
 

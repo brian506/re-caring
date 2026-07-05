@@ -93,12 +93,7 @@ class NotificationSettingControllerWebMvcTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.resultType").value("SUCCESS"));
 
-        then(notificationSettingService).should().updateSafeZone(
-                eq(MEMBER_KEY),
-                argThat(command -> command.wardKey().equals(WARD_KEY)
-                        && !command.entryEnabled()
-                        && command.exitEnabled())
-        );
+        then(notificationSettingService).should().updateSafeZone(MEMBER_KEY, WARD_KEY, false, true);
     }
 
     @Test

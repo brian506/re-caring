@@ -2,22 +2,18 @@ package com.recaring.notification.controller.response;
 
 import com.recaring.notification.dataaccess.entity.FcmDevicePlatform;
 import com.recaring.notification.dataaccess.entity.FcmDeviceToken;
-import com.recaring.notification.dataaccess.entity.NotificationRecipientType;
+import com.recaring.care.dataaccess.entity.CareRole;
 
 public record FcmDeviceTokenResponse(
-        Long id,
         String memberKey,
-        NotificationRecipientType recipientType,
-        FcmDevicePlatform platform,
-        boolean active
+        CareRole careRole,
+        FcmDevicePlatform platform
 ) {
     public static FcmDeviceTokenResponse from(FcmDeviceToken token) {
         return new FcmDeviceTokenResponse(
-                token.getId(),
                 token.getMemberKey(),
-                token.getRecipientType(),
-                token.getPlatform(),
-                token.isActive()
+                token.getCareRole(),
+                token.getPlatform()
         );
     }
 }

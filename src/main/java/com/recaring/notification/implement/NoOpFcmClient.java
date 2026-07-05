@@ -10,10 +10,7 @@ import java.util.List;
 public class NoOpFcmClient implements FcmClient {
 
     @Override
-    public FcmSendResult send(FcmPushMessage message, List<String> tokens) {
-        List<FcmTokenSendResult> results = tokens.stream()
-                .map(token -> FcmTokenSendResult.sent(token, "noop:" + token))
-                .toList();
-        return new FcmSendResult(results);
+    public List<String> sendAndCollectInvalidTokens(FcmPushMessage message, List<String> tokens) {
+        return List.of();
     }
 }
