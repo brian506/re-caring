@@ -7,9 +7,9 @@ import java.util.Optional;
 
 public interface OAuthRepositoryCustom {
 
-    Optional<OAuth> findOAuthMember(OAuthProvider provider, String providerMemberId);
+    Optional<OAuth> find(OAuthProvider provider, String providerMemberId);
 
-    boolean existsByMemberKeyAndProvider(String memberKey, OAuthProvider provider);
+    boolean existsOAuthLink(String memberKey, OAuthProvider provider);
 
     void deleteByMemberKey(String memberKey);
 }

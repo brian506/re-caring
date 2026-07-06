@@ -5,6 +5,7 @@ import com.recaring.support.repository.QuerydslRepositorySupport;
 import jakarta.persistence.LockModeType;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import static com.recaring.member.dataaccess.entity.QMember.member;
@@ -28,13 +29,20 @@ public class MemberRepositoryCustomImpl extends QuerydslRepositorySupport implem
     }
 
     @Override
-    public Optional<Member> findMemberByPessimistic(String memberKey) {
+    public Optional<Member> findForUpdate(String memberKey) {
         return Optional.ofNullable(
                 selectFrom(member)
                         .where(member.memberKey.eq(memberKey))
                         .setLockMode(LockModeType.PESSIMISTIC_WRITE)
                         .fetchOne()
         );
+    }
+
+    @Override
+    public List<Member> findByPhones(List<String> phones) {
+        return selectFrom(member)
+                .where(member.phone.in(phones))
+                .fetch();
     }
 
     @Override

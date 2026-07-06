@@ -118,7 +118,7 @@ class CareInvitationManagerTest {
     void accept_creates_relationship_and_updates_status() {
         CareInvitation invitation = CareFixture.createWardInvitation(
                 CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY);
-        given(careInvitationReader.findByRequestKeyAndMemberKey(
+        given(careInvitationReader.findInvitationForRecipient(
                 CareFixture.REQUEST_KEY, CareFixture.WARD_MEMBER_KEY)).willReturn(invitation);
 
         careInvitationManager.accept(CareFixture.REQUEST_KEY, CareFixture.WARD_MEMBER_KEY);
@@ -133,7 +133,7 @@ class CareInvitationManagerTest {
     void reject_updates_status_to_rejected() {
         CareInvitation invitation = CareFixture.createWardInvitation(
                 CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY);
-        given(careInvitationReader.findByRequestKeyAndMemberKey(
+        given(careInvitationReader.findInvitationForRecipient(
                 CareFixture.REQUEST_KEY, CareFixture.WARD_MEMBER_KEY)).willReturn(invitation);
 
         careInvitationManager.reject(CareFixture.REQUEST_KEY, CareFixture.WARD_MEMBER_KEY);

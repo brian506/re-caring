@@ -40,10 +40,10 @@ public class MemberController {
                     """
     )
     @PostMapping("/phones")
-    public ResponseEntity<ApiResponse<List<ContactMemberResponse>>> searchByPhones(
+    public ResponseEntity<ApiResponse<List<ContactMemberResponse>>> findByPhones(
             @Valid @RequestBody SearchByPhonesRequest request
     ) {
-        List<ContactMemberResponse> responses = memberService.findByPhoneNumbers(request.phones());
+        List<ContactMemberResponse> responses = memberService.findByPhones(request.phones());
         return ResponseEntity.ok(ApiResponse.success(responses));
     }
 

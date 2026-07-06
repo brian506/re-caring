@@ -85,8 +85,8 @@ class OAuthServiceTest {
         Jwt jwt = AuthFixture.createJwt();
 
         given(kakaoAuthenticator.supports(provider)).willReturn(true);
-        given(kakaoAuthenticator.authentication(accessToken)).willReturn(oAuthUser);
-        given(oAuthReader.findOAuthUser(provider, providerMemberId)).willReturn(Optional.of(oAuth));
+        given(kakaoAuthenticator.authenticate(accessToken)).willReturn(oAuthUser);
+        given(oAuthReader.find(provider, providerMemberId)).willReturn(Optional.of(oAuth));
         given(memberReader.findByMemberKey(memberKey)).willReturn(member);
         given(tokenIssuer.issue(member)).willReturn(jwt);
 
@@ -109,8 +109,8 @@ class OAuthServiceTest {
         OAuthUser oAuthUser = new OAuthUser(providerMemberId, provider, "newuser@example.com", "네이버사용자");
 
         given(naverAuthenticator.supports(provider)).willReturn(true);
-        given(naverAuthenticator.authentication(accessToken)).willReturn(oAuthUser);
-        given(oAuthReader.findOAuthUser(provider, providerMemberId)).willReturn(Optional.empty());
+        given(naverAuthenticator.authenticate(accessToken)).willReturn(oAuthUser);
+        given(oAuthReader.find(provider, providerMemberId)).willReturn(Optional.empty());
 
         // when & then
         assertThatThrownBy(() -> oAuthService.signIn(accessToken, provider))
@@ -148,7 +148,7 @@ class OAuthServiceTest {
         OAuthUser oAuthUser = new OAuthUser(providerMemberId, provider, "user@example.com", "카카오사용자");
 
         given(kakaoAuthenticator.supports(provider)).willReturn(true);
-        given(kakaoAuthenticator.authentication(accessToken)).willReturn(oAuthUser);
+        given(kakaoAuthenticator.authenticate(accessToken)).willReturn(oAuthUser);
 
         // when
         oAuthService.link(memberKey, provider, accessToken);

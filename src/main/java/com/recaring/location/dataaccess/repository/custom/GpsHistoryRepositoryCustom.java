@@ -8,7 +8,7 @@ import java.util.List;
 
 public interface GpsHistoryRepositoryCustom {
 
-    List<GpsHistory> findByWardKeyAndDate(String wardMemberKey, LocalDate date);
+    List<GpsHistory> findDailyGpsHistory(String wardMemberKey, LocalDate date);
 
     List<String> findActiveWardKeysSince(LocalDateTime since);
 

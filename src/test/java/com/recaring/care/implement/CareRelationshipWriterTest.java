@@ -44,7 +44,7 @@ class CareRelationshipWriterTest {
     void delete_success() {
         CareRelationship relationship = CareFixture.createGuardianRelationship(
                 CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY);
-        given(careRelationshipRepository.findByWardKeyAndCaregiverKey(
+        given(careRelationshipRepository.findCareRelationship(
                 CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY))
                 .willReturn(Optional.of(relationship));
 
@@ -53,14 +53,14 @@ class CareRelationshipWriterTest {
                 .doesNotThrowAnyException();
 
         then(careRelationshipRepository).should(times(1))
-                .findByWardKeyAndCaregiverKey(CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY);
+                .findCareRelationship(CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY);
         then(careRelationshipRepository).should(times(1)).delete(relationship);
     }
 
     @Test
     @DisplayName("케어 관계 삭제 - 관계가 존재하지 않으면 예외가 발생한다")
     void delete_fails_when_relationship_not_found() {
-        given(careRelationshipRepository.findByWardKeyAndCaregiverKey(
+        given(careRelationshipRepository.findCareRelationship(
                 CareFixture.WARD_MEMBER_KEY, "unknown-key"))
                 .willReturn(Optional.empty());
 

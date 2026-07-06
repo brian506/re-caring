@@ -87,7 +87,7 @@ public class CareController {
             description = "수신한 케어 요청을 수락합니다. 수락 시 케어 관계가 생성됩니다. [GUARDIAN, WARD 공통]"
     )
     @PatchMapping("/requests/{requestKey}/accept")
-    public ResponseEntity<ApiResponse<Void>> acceptRequestAsWard(
+    public ResponseEntity<ApiResponse<Void>> acceptRequest(
             @AuthMember String memberKey,
             @PathVariable String requestKey
     ) {

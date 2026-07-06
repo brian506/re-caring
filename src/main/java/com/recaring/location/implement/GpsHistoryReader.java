@@ -15,8 +15,8 @@ public class GpsHistoryReader {
 
     private final GpsHistoryRepository gpsHistoryRepository;
 
-    public List<Gps> findByWardKeyAndDate(String wardMemberKey, LocalDate date) {
-        return gpsHistoryRepository.findByWardKeyAndDate(wardMemberKey, date)
+    public List<Gps> findDailyGpsHistory(String wardMemberKey, LocalDate date) {
+        return gpsHistoryRepository.findDailyGpsHistory(wardMemberKey, date)
                 .stream()
                 .map(Gps::from)
                 .toList();

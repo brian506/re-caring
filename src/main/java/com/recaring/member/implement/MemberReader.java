@@ -29,13 +29,13 @@ public class MemberReader {
                 .orElseThrow(() -> new AppException(ErrorType.NOT_FOUND_ACCOUNT));
     }
 
-    public Member findEmail(String name, LocalDate birth, String phone) {
+    public Member findAccount(String name, LocalDate birth, String phone) {
         return memberRepository.findAccount(name, birth, phone)
                 .orElseThrow(() -> new AppException(ErrorType.NOT_FOUND_ACCOUNT));
     }
 
-    public List<Member> findAllByPhones(List<String> phones) {
-        return memberRepository.findAllByPhoneIn(phones);
+    public List<Member> findByPhones(List<String> phones) {
+        return memberRepository.findByPhones(phones);
     }
 
     public Map<String, Member> findAllByMemberKeys(List<String> memberKeys) {
@@ -44,7 +44,7 @@ public class MemberReader {
                 .collect(Collectors.toMap(Member::getMemberKey, m -> m));
     }
 
-    public Member findMemberByLock(String memberKey) {
-        return memberRepository.findMemberByPessimistic(memberKey).orElseThrow(() -> new AppException(ErrorType.NOT_FOUND_ACCOUNT));
+    public Member findForUpdate(String memberKey) {
+        return memberRepository.findForUpdate(memberKey).orElseThrow(() -> new AppException(ErrorType.NOT_FOUND_ACCOUNT));
     }
 }

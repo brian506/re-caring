@@ -21,7 +21,7 @@ public class KakaoAuthenticator implements OAuthAuthenticator {
     private final RestClient restClient;
 
     @Override
-    public OAuthUser authentication(String accessToken) {
+    public OAuthUser authenticate(String accessToken) {
         KakaoUser kakaoUser = restClient.get()
                 .uri(KAKAO_USER_INFO_URL)
                 .header(HttpHeaders.AUTHORIZATION, BEARER + accessToken)

@@ -27,7 +27,7 @@ class OAuthReaderTest {
 
     @Test
     @DisplayName("OAuth 사용자 조회 성공 - provider와 providerMemberId로 조회")
-    void findOAuthUser_success_found() {
+    void find_success_found() {
         // given
         OAuthProvider provider = OAuthProvider.KAKAO;
         String providerMemberId = "kakao-user-123";
@@ -39,11 +39,11 @@ class OAuthReaderTest {
             .providerMemberId(providerMemberId)
             .build();
 
-        given(oAuthRepository.findOAuthMember(provider, providerMemberId))
+        given(oAuthRepository.find(provider, providerMemberId))
             .willReturn(Optional.of(oAuth));
 
         // when
-        Optional<OAuth> result = oAuthReader.findOAuthUser(provider, providerMemberId);
+        Optional<OAuth> result = oAuthReader.find(provider, providerMemberId);
 
         // then
         assertThat(result).isPresent();
@@ -54,16 +54,16 @@ class OAuthReaderTest {
 
     @Test
     @DisplayName("OAuth 사용자 조회 실패 - 존재하지 않는 사용자")
-    void findOAuthUser_success_not_found() {
+    void find_success_not_found() {
         // given
         OAuthProvider provider = OAuthProvider.NAVER;
         String providerMemberId = "naver-user-nonexistent";
 
-        given(oAuthRepository.findOAuthMember(provider, providerMemberId))
+        given(oAuthRepository.find(provider, providerMemberId))
             .willReturn(Optional.empty());
 
         // when
-        Optional<OAuth> result = oAuthReader.findOAuthUser(provider, providerMemberId);
+        Optional<OAuth> result = oAuthReader.find(provider, providerMemberId);
 
         // then
         assertThat(result).isEmpty();
@@ -71,7 +71,7 @@ class OAuthReaderTest {
 
     @Test
     @DisplayName("OAuth 사용자 조회 - 카카오 provider")
-    void findOAuthUser_with_kakao_provider() {
+    void find_with_kakao_provider() {
         // given
         OAuthProvider provider = OAuthProvider.KAKAO;
         String providerMemberId = "2928374756";
@@ -82,11 +82,11 @@ class OAuthReaderTest {
             .providerMemberId(providerMemberId)
             .build();
 
-        given(oAuthRepository.findOAuthMember(OAuthProvider.KAKAO, providerMemberId))
+        given(oAuthRepository.find(OAuthProvider.KAKAO, providerMemberId))
             .willReturn(Optional.of(oAuth));
 
         // when
-        Optional<OAuth> result = oAuthReader.findOAuthUser(provider, providerMemberId);
+        Optional<OAuth> result = oAuthReader.find(provider, providerMemberId);
 
         // then
         assertThat(result).isPresent();
@@ -95,7 +95,7 @@ class OAuthReaderTest {
 
     @Test
     @DisplayName("OAuth 사용자 조회 - 네이버 provider")
-    void findOAuthUser_with_naver_provider() {
+    void find_with_naver_provider() {
         // given
         OAuthProvider provider = OAuthProvider.NAVER;
         String providerMemberId = "naver-id-987654";
@@ -106,11 +106,11 @@ class OAuthReaderTest {
             .providerMemberId(providerMemberId)
             .build();
 
-        given(oAuthRepository.findOAuthMember(OAuthProvider.NAVER, providerMemberId))
+        given(oAuthRepository.find(OAuthProvider.NAVER, providerMemberId))
             .willReturn(Optional.of(oAuth));
 
         // when
-        Optional<OAuth> result = oAuthReader.findOAuthUser(provider, providerMemberId);
+        Optional<OAuth> result = oAuthReader.find(provider, providerMemberId);
 
         // then
         assertThat(result).isPresent();
@@ -119,7 +119,7 @@ class OAuthReaderTest {
 
     @Test
     @DisplayName("OAuth 사용자 조회 - 같은 providerMemberId로 여러 provider 구분")
-    void findOAuthUser_same_provider_user_id_different_provider() {
+    void find_same_provider_user_id_different_provider() {
         // given
         String sameProviderId = "shared-id-123";
 
@@ -135,14 +135,14 @@ class OAuthReaderTest {
             .providerMemberId(sameProviderId)
             .build();
 
-        given(oAuthRepository.findOAuthMember(OAuthProvider.KAKAO, sameProviderId))
+        given(oAuthRepository.find(OAuthProvider.KAKAO, sameProviderId))
             .willReturn(Optional.of(kakaoOAuth));
-        given(oAuthRepository.findOAuthMember(OAuthProvider.NAVER, sameProviderId))
+        given(oAuthRepository.find(OAuthProvider.NAVER, sameProviderId))
             .willReturn(Optional.of(naverOAuth));
 
         // when
-        Optional<OAuth> kakaoResult = oAuthReader.findOAuthUser(OAuthProvider.KAKAO, sameProviderId);
-        Optional<OAuth> naverResult = oAuthReader.findOAuthUser(OAuthProvider.NAVER, sameProviderId);
+        Optional<OAuth> kakaoResult = oAuthReader.find(OAuthProvider.KAKAO, sameProviderId);
+        Optional<OAuth> naverResult = oAuthReader.find(OAuthProvider.NAVER, sameProviderId);
 
         // then
         assertThat(kakaoResult).isPresent();

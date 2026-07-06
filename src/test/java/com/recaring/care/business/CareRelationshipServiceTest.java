@@ -91,7 +91,7 @@ class CareRelationshipServiceTest {
         careRelationshipService.removeWard(CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY);
 
         then(careRelationshipValidator).should(times(1))
-                .validateIsCaregiver(CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY);
+                .validateCaregiver(CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY);
         then(careRelationshipWriter).should(times(1))
                 .delete(CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY);
     }
@@ -101,7 +101,7 @@ class CareRelationshipServiceTest {
     void removeWard_propagates_exception_when_not_caregiver() {
         willThrow(new AppException(ErrorType.NOT_FOUND_CARE_RELATIONSHIP))
                 .given(careRelationshipValidator)
-                .validateIsCaregiver(CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY);
+                .validateCaregiver(CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY);
 
         assertThatThrownBy(() ->
                 careRelationshipService.removeWard(CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY))
@@ -120,7 +120,7 @@ class CareRelationshipServiceTest {
                 CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY);
 
         then(careRelationshipValidator).should(times(1))
-                .validateIsGuardianRole(CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY);
+                .validateGuardianRole(CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY);
         then(careRelationshipWriter).should(times(1))
                 .delete(CareFixture.WARD_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY);
     }
@@ -130,7 +130,7 @@ class CareRelationshipServiceTest {
     void removeCaregiver_propagates_exception_when_not_guardian_role() {
         willThrow(new AppException(ErrorType.NOT_GUARDIAN_ROLE_IN_CARE))
                 .given(careRelationshipValidator)
-                .validateIsGuardianRole(CareFixture.MANAGER_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY);
+                .validateGuardianRole(CareFixture.MANAGER_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY);
 
         assertThatThrownBy(() ->
                 careRelationshipService.removeCaregiver(

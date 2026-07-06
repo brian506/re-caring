@@ -31,7 +31,7 @@ public class CareRelationshipRepositoryCustomImpl extends QuerydslRepositorySupp
     }
 
     @Override
-    public boolean existsByWardKeyAndCaregiverKeyAndCareRole(String wardKey, String caregiverKey, CareRole careRole) {
+    public boolean existsCareRelationship(String wardKey, String caregiverKey, CareRole careRole) {
         Integer result = selectOne()
                 .from(careRelationship)
                 .where(
@@ -44,7 +44,7 @@ public class CareRelationshipRepositoryCustomImpl extends QuerydslRepositorySupp
     }
 
     @Override
-    public boolean existsByWardKeyAndCaregiverKey(String wardKey, String caregiverKey) {
+    public boolean existsCareRelationship(String wardKey, String caregiverKey) {
         Integer result = selectOne()
                 .from(careRelationship)
                 .where(
@@ -56,7 +56,7 @@ public class CareRelationshipRepositoryCustomImpl extends QuerydslRepositorySupp
     }
 
     @Override
-    public Optional<CareRelationship> findByWardKeyAndCaregiverKey(String wardKey, String caregiverKey) {
+    public Optional<CareRelationship> findCareRelationship(String wardKey, String caregiverKey) {
         CareRelationship result = selectFrom(careRelationship)
                 .where(
                         careRelationship.wardMemberKey.eq(wardKey),

@@ -1,10 +1,9 @@
 package com.recaring.safezone.business;
 
 import com.recaring.care.dataaccess.entity.CareRole;
-import com.recaring.care.dataaccess.repository.CareRelationshipRepository;
+import com.recaring.care.implement.CareRelationshipReader;
 import com.recaring.safezone.vo.SafeZoneCreation;
 import com.recaring.safezone.vo.SafeZoneUpdate;
-import com.recaring.safezone.dataaccess.entity.SafeZone;
 import com.recaring.safezone.implement.SafeZoneReader;
 import com.recaring.safezone.implement.SafeZoneWriter;
 import com.recaring.safezone.vo.SafeZoneInfo;
@@ -22,7 +21,7 @@ public class SafeZoneService {
 
     private final SafeZoneReader safeZoneReader;
     private final SafeZoneWriter safeZoneWriter;
-    private final CareRelationshipRepository careRelationshipRepository;
+    private final CareRelationshipReader careRelationshipReader;
 
     @Transactional
     public void addSafeZone(String requesterKey, SafeZoneCreation command) {
@@ -37,7 +36,7 @@ public class SafeZoneService {
     }
 
     @Transactional(readOnly = true)
-    public SafeZoneInfo getSafeZone(String requesterKey, String wardKey, String safeZoneKey) {
+    public SafeZoneInfo getSafeZone(String requesterKey,  String wardKey, String safeZoneKey) {
         validateCareAccess(requesterKey, wardKey);
         return safeZoneReader.findBySafeZoneKey(safeZoneKey);
     }
@@ -45,25 +44,23 @@ public class SafeZoneService {
     @Transactional
     public void updateSafeZone(String requesterKey, String wardKey, String safeZoneKey, SafeZoneUpdate command) {
         validateGuardianAccess(requesterKey, wardKey);
-        SafeZone zone = safeZoneReader.getEntity(safeZoneKey);
-        safeZoneWriter.update(zone, command);
+        safeZoneWriter.update(safeZoneKey, command);
     }
 
     @Transactional
     public void deleteSafeZone(String requesterKey, String wardKey, String safeZoneKey) {
         validateGuardianAccess(requesterKey, wardKey);
-        SafeZone zone = safeZoneReader.getEntity(safeZoneKey);
-        safeZoneWriter.delete(zone);
+        safeZoneWriter.delete(safeZoneKey);
     }
 
     private void validateCareAccess(String requesterKey, String wardKey) {
-        if (!careRelationshipRepository.existsByWardKeyAndCaregiverKey(wardKey, requesterKey)) {
+        if (!careRelationshipReader.exists(wardKey, requesterKey)) {
             throw new AppException(ErrorType.NOT_CAREGIVER_OF_WARD);
         }
     }
 
     private void validateGuardianAccess(String requesterKey, String wardKey) {
-        if (!careRelationshipRepository.existsByWardKeyAndCaregiverKeyAndCareRole(wardKey, requesterKey, CareRole.GUARDIAN)) {
+        if (!careRelationshipReader.existsWithCareRole(wardKey, requesterKey, CareRole.GUARDIAN)) {
             throw new AppException(ErrorType.NOT_GUARDIAN_OF_WARD);
         }
     }

@@ -68,6 +68,10 @@ public class CareRelationshipReader {
     }
 
     public boolean existsWithCareRole(String wardKey, String caregiverKey, CareRole careRole) {
-        return careRelationshipRepository.existsByWardKeyAndCaregiverKeyAndCareRole(wardKey, caregiverKey, careRole);
+        return careRelationshipRepository.existsCareRelationship(wardKey, caregiverKey, careRole);
+    }
+
+    public boolean exists(String wardKey, String caregiverKey) {
+        return careRelationshipRepository.existsCareRelationship(wardKey, caregiverKey);
     }
 }

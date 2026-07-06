@@ -29,7 +29,7 @@ public class OAuthService {
 
     public Jwt signIn(String accessToken, OAuthProvider provider) {
         OAuthUser oAuthUser = authenticate(accessToken, provider);
-        OAuth oAuth = oAuthReader.findOAuthUser(provider, oAuthUser.providerMemberId())
+        OAuth oAuth = oAuthReader.find(provider, oAuthUser.providerMemberId())
                 .orElseThrow(() -> new AppException(ErrorType.OAUTH_NOT_LINKED));
 
         Member member = memberReader.findByMemberKey(oAuth.getMemberKey());
@@ -46,6 +46,6 @@ public class OAuthService {
                 .filter(a -> a.supports(provider))
                 .findFirst()
                 .orElseThrow(() -> new AppException(ErrorType.INVALID_OAUTH_USER))
-                .authentication(accessToken);
+                .authenticate(accessToken);
     }
 }

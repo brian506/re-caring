@@ -21,8 +21,8 @@ public class CareInvitationReader {
     private final CareInvitationRepository careInvitationRepository;
     private final MemberReader memberReader;
 
-    public CareInvitation findByRequestKeyAndMemberKey(String requestKey, String memberKey) {
-        return careInvitationRepository.findByRequestKeyAndMemberKey(requestKey, memberKey)
+    public CareInvitation findInvitationForRecipient(String requestKey, String memberKey) {
+        return careInvitationRepository.findInvitationForRecipient(requestKey, memberKey)
                 .orElseThrow(() -> new AppException(ErrorType.NOT_FOUND_CARE_REQUEST));
     }
 

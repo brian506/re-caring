@@ -24,7 +24,7 @@ public class CareRelationshipWriter {
     @CacheEvict(value = "careRelationship", allEntries = true)
     @Transactional
     public void register(CareRelationshipRegistration registration, String memberKey) {
-        Member member = memberReader.findMemberByLock(memberKey);
+        Member member = memberReader.findForUpdate(memberKey);
         if (member.getRole() == MemberRole.GUARDIAN) {
             relationshipValidator.validateCanAddWard(memberKey, registration.wardMemberKey());
         }
@@ -38,7 +38,7 @@ public class CareRelationshipWriter {
     @Transactional
     public void delete(String wardKey, String caregiverKey) {
         CareRelationship relationship = careRelationshipRepository
-                .findByWardKeyAndCaregiverKey(wardKey, caregiverKey)
+                .findCareRelationship(wardKey, caregiverKey)
                 .orElseThrow(() -> new AppException(ErrorType.NOT_FOUND_CARE_RELATIONSHIP));
         careRelationshipRepository.delete(relationship);
     }
