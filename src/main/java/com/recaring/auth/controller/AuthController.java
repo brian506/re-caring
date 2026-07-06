@@ -131,8 +131,8 @@ public class AuthController {
 
     @Operation(summary = "비밀번호 재설정", description = "SMS 인증 후 발급받은 smsToken으로 새 비밀번호를 설정합니다.")
     @PostMapping("/password")
-    public ResponseEntity<ApiResponse<Void>> findPassword(@Valid @RequestBody NewPasswordRequest request) {
-        localAuthService.findPassword(request.smsToken(), new Password(request.password()));
+    public ResponseEntity<ApiResponse<Void>> resetPassword(@Valid @RequestBody NewPasswordRequest request) {
+        localAuthService.resetPassword(request.smsToken(), new Password(request.password()));
         return ResponseEntity.ok(ApiResponse.success());
     }
 

@@ -44,11 +44,11 @@ public class LocalAuthService {
     }
 
     public String findEmail(String name, LocalDate birth, PhoneNumber phone) {
-        Member member = memberReader.findEmail(name, birth, phone.value());
+        Member member = memberReader.findAccount(name, birth, phone.value());
         return MaskingUtils.maskEmail(localAuthReader.findByMemberKey(member.getMemberKey()).getEmail());
     }
 
-    public void findPassword(String smsToken, Password password) {
+    public void resetPassword(String smsToken, Password password) {
         PhoneNumber phone = phoneVerificationReader.findPhoneByToken(smsToken);
         Member member = memberReader.findByPhone(phone);
         EncodedPassword encodedPassword = authAuthenticator.encodePassword(password);

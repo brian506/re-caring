@@ -20,7 +20,7 @@ public class NaverAuthenticator implements OAuthAuthenticator {
     private final RestClient restClient;
 
     @Override
-    public OAuthUser authentication(String accessToken) {
+    public OAuthUser authenticate(String accessToken) {
         NaverUser naverUser = restClient.get()
                 .uri(NAVER_USER_INFO_URL)
                 .header(HttpHeaders.AUTHORIZATION, BEARER + accessToken)

@@ -71,7 +71,7 @@ class CareRelationshipReaderTest {
     @Test
     @DisplayName("Checks whether caregiver has the requested care role")
     void existsWithCareRole_returns_relationship_existence() {
-        given(careRelationshipRepository.existsByWardKeyAndCaregiverKeyAndCareRole(
+        given(careRelationshipRepository.existsCareRelationship(
                 CareFixture.WARD_MEMBER_KEY,
                 CareFixture.MANAGER_MEMBER_KEY,
                 CareRole.MANAGER

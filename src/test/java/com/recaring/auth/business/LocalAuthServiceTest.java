@@ -113,7 +113,7 @@ class LocalAuthServiceTest {
                 .password(AuthFixture.ENCODED_PASSWORD)
                 .build();
 
-        given(memberReader.findEmail(
+        given(memberReader.findAccount(
                 MemberFixture.NAME, MemberFixture.BIRTH, SmsFixture.PHONE))
                 .willReturn(member);
         given(localAuthReader.findByMemberKey(member.getMemberKey())).willReturn(localAuth);
@@ -127,7 +127,7 @@ class LocalAuthServiceTest {
 
     @Test
     @DisplayName("비밀번호 재설정 시 전화번호 인증 후 비밀번호가 변경된다")
-    void findPassword_success() {
+    void resetPassword_success() {
         //given
         String smsToken = UUID.randomUUID().toString();
         PhoneNumber phone = SmsFixture.createPhoneNumber();
@@ -140,7 +140,7 @@ class LocalAuthServiceTest {
         given(authAuthenticator.encodePassword(newPassword)).willReturn(encodedPassword);
 
         // when
-        localAuthService.findPassword(smsToken, newPassword);
+        localAuthService.resetPassword(smsToken, newPassword);
 
         // then
         then(localAuthManager).should(times(1))

@@ -13,7 +13,5 @@ public interface MemberRepository extends JpaRepository<Member, Long>, MemberRep
 
     Optional<Member> findByPhone(String phone);
 
-    List<Member> findAllByPhoneIn(List<String> phones);
-
     List<Member> findAllByMemberKeyIn(List<String> memberKeys);
 }

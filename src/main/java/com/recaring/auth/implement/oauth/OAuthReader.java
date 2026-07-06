@@ -14,12 +14,12 @@ public class OAuthReader {
 
     private final OAuthRepository oAuthRepository;
 
-    public Optional<OAuth> findOAuthUser(OAuthProvider provider, String providerMemberId) {
-        return oAuthRepository.findOAuthMember(provider, providerMemberId);
+    public Optional<OAuth> find(OAuthProvider provider, String providerMemberId) {
+        return oAuthRepository.find(provider, providerMemberId);
     }
 
     public boolean isLinked(String memberKey, OAuthProvider provider) {
-        return oAuthRepository.existsByMemberKeyAndProvider(memberKey, provider);
+        return oAuthRepository.existsOAuthLink(memberKey, provider);
     }
 
 }

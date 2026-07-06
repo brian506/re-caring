@@ -15,7 +15,7 @@ public class OAuthRepositoryCustomImpl extends QuerydslRepositorySupport impleme
     }
 
     @Override
-    public Optional<OAuth> findOAuthMember(OAuthProvider provider, String providerMemberId) {
+    public Optional<OAuth> find(OAuthProvider provider, String providerMemberId) {
         return Optional.ofNullable(
                 selectFrom(oAuth)
                         .where(oAuth.provider.eq(provider),
@@ -25,7 +25,7 @@ public class OAuthRepositoryCustomImpl extends QuerydslRepositorySupport impleme
     }
 
     @Override
-    public boolean existsByMemberKeyAndProvider(String memberKey, OAuthProvider provider) {
+    public boolean existsOAuthLink(String memberKey, OAuthProvider provider) {
         Integer result = selectOne()
                 .from(oAuth)
                 .where(

@@ -63,7 +63,7 @@ public class CareInvitationManager {
     // 요청 수락
     @Transactional
     public void accept(String requestKey, String memberKey) {
-        CareInvitation invitation = careInvitationReader.findByRequestKeyAndMemberKey(requestKey, memberKey);
+        CareInvitation invitation = careInvitationReader.findInvitationForRecipient(requestKey, memberKey);
 
         careRelationshipWriter.register(
                 new CareRelationshipRegistration(
@@ -79,7 +79,7 @@ public class CareInvitationManager {
 
     @Transactional
     public void reject(String requestKey, String memberKey) {
-        CareInvitation request = careInvitationReader.findByRequestKeyAndMemberKey(requestKey, memberKey);
+        CareInvitation request = careInvitationReader.findInvitationForRecipient(requestKey, memberKey);
         careInvitationWriter.reject(request.getRequestKey());
     }
 }

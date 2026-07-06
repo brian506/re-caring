@@ -36,40 +36,40 @@ public class CareRelationshipValidator {
 
         List<CareRelationship> careRelationships = careRelationshipRepository.findAllByCaregiverMemberKey(caregiverMemberKey);
         checkRoleLimit(careRelationships, CareRole.GUARDIAN, MAX_WARD_COUNT);
-        isDuplicated(careRelationships, CareRelationship::getWardMemberKey,newWardMemberKey);
+        validateNotDuplicated(careRelationships, CareRelationship::getWardMemberKey,newWardMemberKey);
     }
 
     public void validateCanAddManager(String requesterKey, String wardMemberKey, String newManagerKey) {
         memberValidator.validatePremium(requesterKey);
         List<CareRelationship> careRelationships = careRelationshipRepository.findAllByWardMemberKey(wardMemberKey);
         checkRoleLimit(careRelationships, CareRole.MANAGER, MAX_MANAGER_COUNT);
-        isDuplicated(careRelationships, CareRelationship::getCaregiverMemberKey, newManagerKey);
+        validateNotDuplicated(careRelationships, CareRelationship::getCaregiverMemberKey, newManagerKey);
     }
 
     public void validateCanAddGuardian(String requesterKey, String wardMemberKey, String newGuardianKey) {
         memberValidator.validatePremium(requesterKey);
         List<CareRelationship> careRelationships = careRelationshipRepository.findAllByWardMemberKey(wardMemberKey);
         checkRoleLimit(careRelationships, CareRole.GUARDIAN, MAX_GUARDIAN_COUNT);
-        isDuplicated(careRelationships, CareRelationship::getCaregiverMemberKey, newGuardianKey);
+        validateNotDuplicated(careRelationships, CareRelationship::getCaregiverMemberKey, newGuardianKey);
     }
 
     public void validateCaregiverViewAccess(String requesterKey, String wardKey) {
         boolean isWardSelf = wardKey.equals(requesterKey);
-        boolean isGuardian = careRelationshipRepository.existsByWardKeyAndCaregiverKeyAndCareRole(wardKey, requesterKey, CareRole.GUARDIAN);
+        boolean isGuardian = careRelationshipRepository.existsCareRelationship(wardKey, requesterKey, CareRole.GUARDIAN);
         if (!isWardSelf && !isGuardian) {
             throw new AppException(ErrorType.NOT_GUARDIAN_OF_WARD);
         }
     }
 
-    public void validateIsCaregiver(String requesterKey, String wardKey) {
-        boolean isCaregiver = careRelationshipRepository.existsByWardKeyAndCaregiverKey(wardKey, requesterKey);
+    public void validateCaregiver(String requesterKey, String wardKey) {
+        boolean isCaregiver = careRelationshipRepository.existsCareRelationship(wardKey, requesterKey);
         if (!isCaregiver) {
             throw new AppException(ErrorType.NOT_FOUND_CARE_RELATIONSHIP);
         }
     }
 
-    public void validateIsGuardianRole(String requesterKey, String wardKey) {
-        boolean isGuardian = careRelationshipRepository.existsByWardKeyAndCaregiverKeyAndCareRole(wardKey, requesterKey, CareRole.GUARDIAN);
+    public void validateGuardianRole(String requesterKey, String wardKey) {
+        boolean isGuardian = careRelationshipRepository.existsCareRelationship(wardKey, requesterKey, CareRole.GUARDIAN);
         if (!isGuardian) {
             throw new AppException(ErrorType.NOT_GUARDIAN_ROLE_IN_CARE);
         }
@@ -84,7 +84,7 @@ public class CareRelationshipValidator {
         }
     }
 
-    private void isDuplicated(List<CareRelationship> careRelationships, Function<CareRelationship, String> key, String targetKey) {
+    private void validateNotDuplicated(List<CareRelationship> careRelationships, Function<CareRelationship, String> key, String targetKey) {
         boolean isDuplicated = careRelationships.stream()
                 .map(key)
                 .anyMatch(targetKey::equals);

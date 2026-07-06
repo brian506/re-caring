@@ -17,7 +17,7 @@ public class GpsHistoryRepositoryCustomImpl extends QuerydslRepositorySupport
     }
 
     @Override
-    public List<GpsHistory> findByWardKeyAndDate(String wardMemberKey, LocalDate date) {
+    public List<GpsHistory> findDailyGpsHistory(String wardMemberKey, LocalDate date) {
         return selectFrom(gpsHistory)
                 .where(
                         gpsHistory.wardMemberKey.eq(wardMemberKey),

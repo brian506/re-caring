@@ -25,7 +25,7 @@ class GpsHistoryRepositoryTest extends AbstractRepositoryTest {
 
     @Test
     @DisplayName("wardKey와 날짜로 해당 날짜 범위의 GPS 이력을 오름차순으로 조회한다")
-    void findByWardKeyAndDate_returns_ordered_histories() {
+    void findDailyGpsHistory_returns_ordered_histories() {
         LocalDate today = LocalDate.of(2024, 6, 1);
         GpsHistory h1 = gpsHistoryRepository.save(buildHistory(LocationFixture.WARD_KEY, 37.1, 126.1));
         GpsHistory h2 = gpsHistoryRepository.save(buildHistory(LocationFixture.WARD_KEY, 37.2, 126.2));
@@ -35,7 +35,7 @@ class GpsHistoryRepositoryTest extends AbstractRepositoryTest {
         em.flush();
         em.clear();
 
-        List<GpsHistory> result = gpsHistoryRepository.findByWardKeyAndDate(LocationFixture.WARD_KEY, today);
+        List<GpsHistory> result = gpsHistoryRepository.findDailyGpsHistory(LocationFixture.WARD_KEY, today);
 
         // create-drop DDL 환경에서 @CreatedDate는 현재 시간으로 자동 설정되므로
         // wardKey 필터링이 올바른지 검증
@@ -44,12 +44,12 @@ class GpsHistoryRepositoryTest extends AbstractRepositoryTest {
 
     @Test
     @DisplayName("다른 wardKey는 조회 결과에 포함되지 않는다")
-    void findByWardKeyAndDate_excludes_other_wards() {
+    void findDailyGpsHistory_excludes_other_wards() {
         gpsHistoryRepository.save(buildHistory("other-ward", 35.0, 127.0));
         em.flush();
         em.clear();
 
-        List<GpsHistory> result = gpsHistoryRepository.findByWardKeyAndDate(
+        List<GpsHistory> result = gpsHistoryRepository.findDailyGpsHistory(
                 LocationFixture.WARD_KEY, LocalDate.now());
 
         assertThat(result).noneMatch(h -> h.getWardMemberKey().equals("other-ward"));

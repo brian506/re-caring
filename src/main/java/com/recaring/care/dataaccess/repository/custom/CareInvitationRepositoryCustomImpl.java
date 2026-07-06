@@ -28,7 +28,7 @@ public class CareInvitationRepositoryCustomImpl extends QuerydslRepositorySuppor
     }
 
     @Override
-    public Optional<CareInvitation> findByRequestKeyAndMemberKey(String requestKey, String memberKey) {
+    public Optional<CareInvitation> findInvitationForRecipient(String requestKey, String memberKey) {
         return Optional.ofNullable(
                 selectFrom(careInvitation)
                         .where(careInvitation.requestKey.eq(requestKey),

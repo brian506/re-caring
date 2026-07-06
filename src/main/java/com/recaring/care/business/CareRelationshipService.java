@@ -28,12 +28,12 @@ public class CareRelationshipService {
     }
 
     public void removeWard(String guardianKey, String wardKey) {
-        careRelationshipValidator.validateIsCaregiver(guardianKey, wardKey);
+        careRelationshipValidator.validateCaregiver(guardianKey, wardKey);
         careRelationshipWriter.delete(wardKey, guardianKey);
     }
 
     public void removeCaregiver(String guardianKey, String wardKey, String caregiverKey) {
-        careRelationshipValidator.validateIsGuardianRole(guardianKey, wardKey);
+        careRelationshipValidator.validateGuardianRole(guardianKey, wardKey);
         careRelationshipWriter.delete(wardKey, caregiverKey);
     }
 }

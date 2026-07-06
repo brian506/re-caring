@@ -1,7 +1,7 @@
 package com.recaring.safezone;
 
 import com.recaring.care.dataaccess.entity.CareRole;
-import com.recaring.care.dataaccess.repository.CareRelationshipRepository;
+import com.recaring.care.implement.CareRelationshipReader;
 import com.recaring.care.fixture.CareFixture;
 import com.recaring.safezone.business.SafeZoneService;
 import com.recaring.safezone.dataaccess.entity.SafeZone;
@@ -41,7 +41,7 @@ class SafeZoneServiceTest {
     private SafeZoneWriter safeZoneWriter;
 
     @Mock
-    private CareRelationshipRepository careRelationshipRepository;
+    private CareRelationshipReader careRelationshipReader;
 
     // ── addSafeZone ──────────────────────────────────────────────────────────
 
@@ -49,7 +49,7 @@ class SafeZoneServiceTest {
     @DisplayName("CareRole.GUARDIAN인 보호자는 안심존을 추가한다")
     void addSafeZone_success_when_guardian() {
         SafeZoneCreation command = SafeZoneFixture.createCommand();
-        given(careRelationshipRepository.existsByWardKeyAndCaregiverKeyAndCareRole(
+        given(careRelationshipReader.existsWithCareRole(
                 SafeZoneFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY, CareRole.GUARDIAN)).willReturn(true);
 
         safeZoneService.addSafeZone(CareFixture.GUARDIAN_MEMBER_KEY, command);
@@ -61,7 +61,7 @@ class SafeZoneServiceTest {
     @DisplayName("CareRole.MANAGER인 관계자가 안심존 추가 시 NOT_GUARDIAN_OF_WARD 예외가 발생한다")
     void addSafeZone_throws_when_manager() {
         SafeZoneCreation command = SafeZoneFixture.createCommand();
-        given(careRelationshipRepository.existsByWardKeyAndCaregiverKeyAndCareRole(
+        given(careRelationshipReader.existsWithCareRole(
                 SafeZoneFixture.WARD_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY, CareRole.GUARDIAN)).willReturn(false);
 
         assertThatThrownBy(() -> safeZoneService.addSafeZone(CareFixture.MANAGER_MEMBER_KEY, command))
@@ -75,7 +75,7 @@ class SafeZoneServiceTest {
     @DisplayName("케어 관계가 없으면 안심존 추가 시 NOT_GUARDIAN_OF_WARD 예외가 발생한다")
     void addSafeZone_throws_when_not_guardian() {
         SafeZoneCreation command = SafeZoneFixture.createCommand();
-        given(careRelationshipRepository.existsByWardKeyAndCaregiverKeyAndCareRole(
+        given(careRelationshipReader.existsWithCareRole(
                 SafeZoneFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY, CareRole.GUARDIAN)).willReturn(false);
 
         assertThatThrownBy(() -> safeZoneService.addSafeZone(CareFixture.GUARDIAN_MEMBER_KEY, command))
@@ -92,7 +92,7 @@ class SafeZoneServiceTest {
     void getSafeZones_returns_list_when_guardian() {
         SafeZone zone = SafeZoneFixture.createSafeZone();
         List<SafeZoneInfo> expected = List.of(SafeZoneFixture.createSafeZoneInfo(zone.getSafeZoneKey()));
-        given(careRelationshipRepository.existsByWardKeyAndCaregiverKey(
+        given(careRelationshipReader.exists(
                 SafeZoneFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY)).willReturn(true);
         given(safeZoneReader.findAllByWardMemberKey(SafeZoneFixture.WARD_MEMBER_KEY)).willReturn(expected);
 
@@ -106,7 +106,7 @@ class SafeZoneServiceTest {
     void getSafeZones_returns_list_when_manager() {
         SafeZone zone = SafeZoneFixture.createSafeZone();
         List<SafeZoneInfo> expected = List.of(SafeZoneFixture.createSafeZoneInfo(zone.getSafeZoneKey()));
-        given(careRelationshipRepository.existsByWardKeyAndCaregiverKey(
+        given(careRelationshipReader.exists(
                 SafeZoneFixture.WARD_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY)).willReturn(true);
         given(safeZoneReader.findAllByWardMemberKey(SafeZoneFixture.WARD_MEMBER_KEY)).willReturn(expected);
 
@@ -118,7 +118,7 @@ class SafeZoneServiceTest {
     @Test
     @DisplayName("케어 관계가 없으면 목록 조회 시 NOT_CAREGIVER_OF_WARD 예외가 발생한다")
     void getSafeZones_throws_when_not_caregiver() {
-        given(careRelationshipRepository.existsByWardKeyAndCaregiverKey(
+        given(careRelationshipReader.exists(
                 SafeZoneFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY)).willReturn(false);
 
         assertThatThrownBy(() -> safeZoneService.getSafeZones(CareFixture.GUARDIAN_MEMBER_KEY, SafeZoneFixture.WARD_MEMBER_KEY))
@@ -135,7 +135,7 @@ class SafeZoneServiceTest {
     void getSafeZone_returns_info_when_guardian() {
         SafeZone zone = SafeZoneFixture.createSafeZone();
         SafeZoneInfo expected = SafeZoneFixture.createSafeZoneInfo(zone.getSafeZoneKey());
-        given(careRelationshipRepository.existsByWardKeyAndCaregiverKey(
+        given(careRelationshipReader.exists(
                 SafeZoneFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY)).willReturn(true);
         given(safeZoneReader.findBySafeZoneKey(zone.getSafeZoneKey())).willReturn(expected);
 
@@ -150,7 +150,7 @@ class SafeZoneServiceTest {
     void getSafeZone_returns_info_when_manager() {
         SafeZone zone = SafeZoneFixture.createSafeZone();
         SafeZoneInfo expected = SafeZoneFixture.createSafeZoneInfo(zone.getSafeZoneKey());
-        given(careRelationshipRepository.existsByWardKeyAndCaregiverKey(
+        given(careRelationshipReader.exists(
                 SafeZoneFixture.WARD_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY)).willReturn(true);
         given(safeZoneReader.findBySafeZoneKey(zone.getSafeZoneKey())).willReturn(expected);
 
@@ -167,20 +167,19 @@ class SafeZoneServiceTest {
     void updateSafeZone_success_when_guardian() {
         SafeZone zone = SafeZoneFixture.createSafeZone();
         SafeZoneUpdate command = SafeZoneFixture.updateCommand();
-        given(careRelationshipRepository.existsByWardKeyAndCaregiverKeyAndCareRole(
+        given(careRelationshipReader.existsWithCareRole(
                 SafeZoneFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY, CareRole.GUARDIAN)).willReturn(true);
-        given(safeZoneReader.getEntity(zone.getSafeZoneKey())).willReturn(zone);
 
         safeZoneService.updateSafeZone(CareFixture.GUARDIAN_MEMBER_KEY, SafeZoneFixture.WARD_MEMBER_KEY, zone.getSafeZoneKey(), command);
 
-        then(safeZoneWriter).should(times(1)).update(zone, command);
+        then(safeZoneWriter).should(times(1)).update(zone.getSafeZoneKey(), command);
     }
 
     @Test
     @DisplayName("CareRole.MANAGER인 관계자가 안심존 수정 시 NOT_GUARDIAN_OF_WARD 예외가 발생한다")
     void updateSafeZone_throws_when_manager() {
         SafeZoneUpdate command = SafeZoneFixture.updateCommand();
-        given(careRelationshipRepository.existsByWardKeyAndCaregiverKeyAndCareRole(
+        given(careRelationshipReader.existsWithCareRole(
                 SafeZoneFixture.WARD_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY, CareRole.GUARDIAN)).willReturn(false);
 
         assertThatThrownBy(() -> safeZoneService.updateSafeZone(
@@ -195,7 +194,7 @@ class SafeZoneServiceTest {
     @DisplayName("케어 관계가 없으면 수정 시 NOT_GUARDIAN_OF_WARD 예외가 발생한다")
     void updateSafeZone_throws_when_not_guardian() {
         SafeZoneUpdate command = SafeZoneFixture.updateCommand();
-        given(careRelationshipRepository.existsByWardKeyAndCaregiverKeyAndCareRole(
+        given(careRelationshipReader.existsWithCareRole(
                 SafeZoneFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY, CareRole.GUARDIAN)).willReturn(false);
 
         assertThatThrownBy(() -> safeZoneService.updateSafeZone(
@@ -212,19 +211,18 @@ class SafeZoneServiceTest {
     @DisplayName("CareRole.GUARDIAN인 보호자는 안심존을 삭제한다")
     void deleteSafeZone_success_when_guardian() {
         SafeZone zone = SafeZoneFixture.createSafeZone();
-        given(careRelationshipRepository.existsByWardKeyAndCaregiverKeyAndCareRole(
+        given(careRelationshipReader.existsWithCareRole(
                 SafeZoneFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY, CareRole.GUARDIAN)).willReturn(true);
-        given(safeZoneReader.getEntity(zone.getSafeZoneKey())).willReturn(zone);
 
         safeZoneService.deleteSafeZone(CareFixture.GUARDIAN_MEMBER_KEY, SafeZoneFixture.WARD_MEMBER_KEY, zone.getSafeZoneKey());
 
-        then(safeZoneWriter).should(times(1)).delete(zone);
+        then(safeZoneWriter).should(times(1)).delete(zone.getSafeZoneKey());
     }
 
     @Test
     @DisplayName("CareRole.MANAGER인 관계자가 안심존 삭제 시 NOT_GUARDIAN_OF_WARD 예외가 발생한다")
     void deleteSafeZone_throws_when_manager() {
-        given(careRelationshipRepository.existsByWardKeyAndCaregiverKeyAndCareRole(
+        given(careRelationshipReader.existsWithCareRole(
                 SafeZoneFixture.WARD_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY, CareRole.GUARDIAN)).willReturn(false);
 
         assertThatThrownBy(() -> safeZoneService.deleteSafeZone(
@@ -238,7 +236,7 @@ class SafeZoneServiceTest {
     @Test
     @DisplayName("케어 관계가 없으면 삭제 시 NOT_GUARDIAN_OF_WARD 예외가 발생한다")
     void deleteSafeZone_throws_when_not_guardian() {
-        given(careRelationshipRepository.existsByWardKeyAndCaregiverKeyAndCareRole(
+        given(careRelationshipReader.existsWithCareRole(
                 SafeZoneFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY, CareRole.GUARDIAN)).willReturn(false);
 
         assertThatThrownBy(() -> safeZoneService.deleteSafeZone(

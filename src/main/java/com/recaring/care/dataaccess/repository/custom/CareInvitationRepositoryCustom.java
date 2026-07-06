@@ -9,7 +9,7 @@ public interface CareInvitationRepositoryCustom {
 
     List<CareInvitation> findReceivedPendingRequests(String targetKey);
 
-    Optional<CareInvitation> findByRequestKeyAndMemberKey(String requestKey, String memberKey);
+    Optional<CareInvitation> findInvitationForRecipient(String requestKey, String memberKey);
 
     void deleteAllByMemberKey(String memberKey);
 }

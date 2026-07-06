@@ -124,59 +124,59 @@ class CareRelationshipValidatorTest {
                 .hasFieldOrPropertyWithValue("errorType", ErrorType.ALREADY_CARE_RELATIONSHIP);
     }
 
-    // ── validateIsCaregiver ────────────────────────────────────────────────
+    // ── validateCaregiver ────────────────────────────────────────────────
 
     @Test
     @DisplayName("케어 관계 보호자 검증 - 케어 관계가 존재하면 정상 통과한다")
-    void validateIsCaregiver_success() {
-        given(careRelationshipRepository.existsByWardKeyAndCaregiverKey(
+    void validateCaregiver_success() {
+        given(careRelationshipRepository.existsCareRelationship(
                 CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY))
                 .willReturn(true);
 
         assertThatCode(() ->
-                careRelationshipValidator.validateIsCaregiver(
+                careRelationshipValidator.validateCaregiver(
                         CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY))
                 .doesNotThrowAnyException();
     }
 
     @Test
     @DisplayName("케어 관계 보호자 검증 - 케어 관계가 없으면 예외가 발생한다")
-    void validateIsCaregiver_fails_when_relationship_not_found() {
-        given(careRelationshipRepository.existsByWardKeyAndCaregiverKey(
+    void validateCaregiver_fails_when_relationship_not_found() {
+        given(careRelationshipRepository.existsCareRelationship(
                 CareFixture.WARD_MEMBER_KEY, "stranger-key"))
                 .willReturn(false);
 
         assertThatThrownBy(() ->
-                careRelationshipValidator.validateIsCaregiver(
+                careRelationshipValidator.validateCaregiver(
                         "stranger-key", CareFixture.WARD_MEMBER_KEY))
                 .isInstanceOf(AppException.class)
                 .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_FOUND_CARE_RELATIONSHIP);
     }
 
-    // ── validateIsGuardianRole ─────────────────────────────────────────────
+    // ── validateGuardianRole ─────────────────────────────────────────────
 
     @Test
     @DisplayName("보호자 역할 검증 - CareRole이 GUARDIAN이면 정상 통과한다")
-    void validateIsGuardianRole_success() {
-        given(careRelationshipRepository.existsByWardKeyAndCaregiverKeyAndCareRole(
+    void validateGuardianRole_success() {
+        given(careRelationshipRepository.existsCareRelationship(
                 CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY, CareRole.GUARDIAN))
                 .willReturn(true);
 
         assertThatCode(() ->
-                careRelationshipValidator.validateIsGuardianRole(
+                careRelationshipValidator.validateGuardianRole(
                         CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY))
                 .doesNotThrowAnyException();
     }
 
     @Test
     @DisplayName("보호자 역할 검증 - CareRole이 GUARDIAN이 아니면 예외가 발생한다")
-    void validateIsGuardianRole_fails_when_not_guardian_role() {
-        given(careRelationshipRepository.existsByWardKeyAndCaregiverKeyAndCareRole(
+    void validateGuardianRole_fails_when_not_guardian_role() {
+        given(careRelationshipRepository.existsCareRelationship(
                 CareFixture.WARD_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY, CareRole.GUARDIAN))
                 .willReturn(false);
 
         assertThatThrownBy(() ->
-                careRelationshipValidator.validateIsGuardianRole(
+                careRelationshipValidator.validateGuardianRole(
                         CareFixture.MANAGER_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY))
                 .isInstanceOf(AppException.class)
                 .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_GUARDIAN_ROLE_IN_CARE);
@@ -197,7 +197,7 @@ class CareRelationshipValidatorTest {
     @Test
     @DisplayName("보호자 목록 조회 권한 - 해당 ward의 보호자(GUARDIAN)는 접근 가능하다")
     void validateCaregiverViewAccess_success_when_guardian() {
-        given(careRelationshipRepository.existsByWardKeyAndCaregiverKeyAndCareRole(
+        given(careRelationshipRepository.existsCareRelationship(
                 CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY, CareRole.GUARDIAN))
                 .willReturn(true);
 
@@ -210,7 +210,7 @@ class CareRelationshipValidatorTest {
     @Test
     @DisplayName("보호자 목록 조회 권한 - 관계없는 사람은 예외가 발생한다")
     void validateCaregiverViewAccess_fails_when_unauthorized() {
-        given(careRelationshipRepository.existsByWardKeyAndCaregiverKeyAndCareRole(
+        given(careRelationshipRepository.existsCareRelationship(
                 CareFixture.WARD_MEMBER_KEY, "stranger-key", CareRole.GUARDIAN))
                 .willReturn(false);
 

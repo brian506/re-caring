@@ -35,6 +35,6 @@ public class LocationService {
 
     public List<Gps> getHistory(String caregiverKey, String wardKey, LocalDate date) {
         locationValidator.validateCaregiverAccess(caregiverKey, wardKey);
-        return gpsHistoryReader.findByWardKeyAndDate(wardKey, date);
+        return gpsHistoryReader.findDailyGpsHistory(wardKey, date);
     }
 }

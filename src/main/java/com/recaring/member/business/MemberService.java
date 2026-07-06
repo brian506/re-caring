@@ -36,8 +36,8 @@ public class MemberService {
     private final MemberWithdrawalManager memberWithdrawalManager;
     private final SafeZoneReader safeZoneReader;
 
-    public List<ContactMemberResponse> findByPhoneNumbers(List<String> phoneNumbers) {
-        List<Member> members = memberReader.findAllByPhones(phoneNumbers);
+    public List<ContactMemberResponse> findByPhones(List<String> phoneNumbers) {
+        List<Member> members = memberReader.findByPhones(phoneNumbers);
 
         return members.stream()
                 .map(ContactMemberResponse::from)
