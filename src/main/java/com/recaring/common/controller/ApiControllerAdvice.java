@@ -14,6 +14,7 @@ import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.async.AsyncRequestNotUsableException;
 
 @Slf4j
 @RestControllerAdvice
@@ -39,6 +40,15 @@ public class ApiControllerAdvice {
     public ResponseEntity<ApiResponse<@Nullable Object>> handleValidationException(MethodArgumentNotValidException e) {
         log.warn("[요청 검증 : 실패]: message={}", e.getMessage());
         return new ResponseEntity<>(ApiResponse.error(ErrorType.INVALID_ACCESS_PATH, null), HttpStatus.BAD_REQUEST);
+    }
+
+    // SSE(text/event-stream) 스트림에서 클라이언트가 연결을 끊으면 emitter.send()가 실패하고,
+    // Spring async 인프라가 이 실패를 error dispatch로 advice까지 올려보낸다.
+    // 이 경우 응답은 이미 text/event-stream으로 확정돼 ApiResponse(JSON)를 쓸 수 없다.
+    // 정상적인 클라이언트 이탈이므로 바디 없이 debug 로그만 남기고 조용히 종료한다.
+    @ExceptionHandler(AsyncRequestNotUsableException.class)
+    public void handleAsyncRequestNotUsable(AsyncRequestNotUsableException e) {
+        log.debug("[SSE 이벤트 : 연결 종료]: message={}", e.getMessage());
     }
 
     @NullMarked
@@ -71,12 +81,9 @@ public class ApiControllerAdvice {
     }
 
     private void printExceptionLog(Exception e) {
-        String className = e.getStackTrace()[0].getClassName();
-        String methodName = e.getStackTrace()[0].getMethodName();
-        int lineNumber = e.getStackTrace()[0].getLineNumber();
-        String message = e.getMessage();
-
-        log.error("[AppException]: class={} | method={} | line={} | message={}",
-                className, methodName, lineNumber, message);
+        // 미처리 예외는 예외 타입과 전체 스택트레이스를 함께 남겨야 근본 원인을 진단할 수 있다.
+        // (과거: stackTrace[0]만 파싱해 CGLIB 프록시 프레임·null 메시지만 찍혀 원인 불명이었음)
+        log.error("[미처리 예외 : 시스템 오류]: type={} | message={}",
+                e.getClass().getName(), e.getMessage(), e);
     }
 }
