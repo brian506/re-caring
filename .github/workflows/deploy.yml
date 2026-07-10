@@ -15,6 +15,9 @@ jobs:
       github.event.pull_request.merged == true
     environment: dev
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
     steps:
       - uses: actions/checkout@v4
 
