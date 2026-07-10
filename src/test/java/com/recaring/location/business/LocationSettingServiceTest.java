@@ -42,9 +42,9 @@ class LocationSettingServiceTest {
         );
 
         then(locationValidator).should().validateGuardianAccess(LocationFixture.GUARDIAN_KEY, LocationFixture.WARD_KEY);
-        assertThat(result.currentIntervalSeconds()).isEqualTo(5);
-        assertThat(result.defaultIntervalSeconds()).isEqualTo(5);
-        assertThat(result.options()).containsExactly(5, 10, 30, 60, 180, 300);
+        assertThat(result.currentIntervalSeconds()).isEqualTo(30);
+        assertThat(result.defaultIntervalSeconds()).isEqualTo(30);
+        assertThat(result.options()).containsExactly(30, 60, 180, 300);
     }
 
     @Test

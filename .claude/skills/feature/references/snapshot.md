@@ -1,6 +1,6 @@
 # 프로젝트 스냅샷
 
-> 마지막 업데이트: 2026-07-05. 기능 추가·수정 시 해당 섹션을 갱신한다.
+> 마지막 업데이트: 2026-07-10. 기능 추가·수정 시 해당 섹션을 갱신한다.
 
 ## 도메인별 패키지 현황
 
@@ -9,7 +9,7 @@
 | `auth` | LocalAuthService, OAuthService, TokenRefreshService | LocalAuthAuthenticator, TokenIssuer, RefreshTokenReader/Writer, OAuthManager |
 | `care` | CareInvitationService, CareRelationshipService | CareInvitationManager, CareInvitationReader/Writer, CareRelationshipValidator, SqsPublisher(전략패턴) |
 | `device` | DeviceTokenService | WardDeviceTokenManager, WardDeviceTokenReader |
-| `location` | LocationService | GpsHistoryReader/Writer, GpsLatestCacheReader/Writer, SseEmitterManager, LocationValidator, GpsPatternAnalysisScheduler(SQS 발행) |
+| `location` | LocationService, LocationSettingService | GpsHistoryReader/Writer, GpsLatestCacheReader/Writer, SseEmitterManager, LocationValidator, GpsPatternAnalysisScheduler(SQS 발행), LocationSettingManager, LocationSettingReader |
 | `member` | MemberService | MemberReader/Writer/Validator, MembersTermsAgreementWriter, MemberWithdrawalManager |
 | `notification` | NotificationQueryService, NotificationSettingService, NotificationSendService, FcmDeviceTokenService | NotificationReader/Writer, NotificationSendManager, NotificationSettingReader/Manager/Validator, FcmDeviceTokenReader/Manager, FcmClient(Firebase/NoOp), CareInvitationNotificationListener |
 | `safezone` | SafeZoneService | SafeZoneReader, SafeZoneWriter |
@@ -41,6 +41,9 @@
 | Location | POST | `/api/v1/location/gps` | GPS 좌표 전송 (WARD, Device Token 인증) |
 | Location | GET | `/api/v1/location/stream/{wardKey}` | SSE 실시간 위치 스트림 (GUARDIAN) |
 | Location | GET | `/api/v1/location/history/{wardKey}` | 날짜별 이동 경로 히스토리 |
+| Location | GET | `/api/v1/location/settings/{wardKey}/collection-interval` | 위치 수집 주기 조회 (GUARDIAN, 옵션 30/60/180/300초 포함) |
+| Location | PATCH | `/api/v1/location/settings/{wardKey}/collection-interval` | 위치 수집 주기 수정 (GUARDIAN only) |
+| Location | GET | `/api/v1/location/settings/collection-interval/me` | 내 위치 수집 주기 조회 (WARD, Device Token 인증) |
 | Notification | GET | `/api/v1/notifications` | 내 알림함 목록 조회 (WARD, GUARDIAN — recipient 기준, 최신순, 페이징 없음) |
 | Member | GET | `/api/v1/members/me` | 내 정보 조회 (JWT 인증, Member+이메일+약관+안심존 통합) |
 | Member | PATCH | `/api/v1/members/me` | 내 정보 수정 (이름·생년월일·비밀번호 부분 수정, JWT 인증) |
@@ -65,6 +68,7 @@
 | CareRelationship | care_relationships | caregiverKey, wardKey, role(GUARDIAN/MANAGER) |
 | CareInvitation | care_invitations | inviterKey, receiverKey, wardKey, status(PENDING/ACCEPTED/REJECTED/EXPIRED), createdAt |
 | GpsHistory | gps_histories | wardMemberKey, latitude, longitude, recordedAt |
+| LocationSetting | location_settings | wardMemberKey(UNIQUE), collectionIntervalSeconds(30/60/180/300, 기본 30) |
 | WardDeviceToken | ward_device_tokens | wardKey(UUID, UNIQUE), token(UUID, UNIQUE), createdAt, expiresAt |
 | MembersTermsAgreement | members_terms_agreements | memberKey, agreedAt |
 | SafeZone | safe_zones | safeZoneKey(UUID), wardMemberKey, name, address, latitude, longitude, radius(SMALL/MEDIUM/LARGE/XLARGE) |

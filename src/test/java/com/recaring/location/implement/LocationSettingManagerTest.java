@@ -50,7 +50,7 @@ class LocationSettingManagerTest {
     void updateCollectionInterval_updates_existing_setting() {
         LocationSetting setting = LocationSetting.builder()
                 .wardMemberKey(LocationFixture.WARD_KEY)
-                .collectionIntervalSeconds(5)
+                .collectionIntervalSeconds(30)
                 .build();
         given(locationSettingRepository.findByWardMemberKey(LocationFixture.WARD_KEY))
                 .willReturn(Optional.of(setting));
