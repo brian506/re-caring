@@ -14,6 +14,7 @@ import com.recaring.auth.vo.Password;
 import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.fixture.MemberFixture;
 import com.recaring.member.implement.MemberReader;
+import com.recaring.notification.business.FcmDeviceTokenService;
 import com.recaring.security.vo.Jwt;
 import com.recaring.sms.fixture.SmsFixture;
 import com.recaring.sms.implement.PhoneVerificationReader;
@@ -60,6 +61,9 @@ class LocalAuthServiceTest {
 
     @Mock
     private PhoneVerificationReader phoneVerificationReader;
+
+    @Mock
+    private FcmDeviceTokenService fcmDeviceTokenService;
 
     @Test
     @DisplayName("회원가입 시 전화번호 인증 후 멤버가 등록된다")
@@ -152,8 +156,32 @@ class LocalAuthServiceTest {
     void signOut_success() {
         String refreshToken = "some-refresh-token";
 
-        localAuthService.signOut(refreshToken);
+        localAuthService.signOut(refreshToken, null);
 
         then(refreshTokenWriter).should(times(1)).delete(refreshToken);
+        then(fcmDeviceTokenService).should(times(0)).delete(any());
+    }
+
+    @Test
+    @DisplayName("로그아웃 시 FCM 토큰을 함께 보내면 해당 토큰도 삭제된다")
+    void signOut_deletes_fcmToken_when_present() {
+        String refreshToken = "some-refresh-token";
+        String fcmToken = "some-fcm-token";
+
+        localAuthService.signOut(refreshToken, fcmToken);
+
+        then(refreshTokenWriter).should(times(1)).delete(refreshToken);
+        then(fcmDeviceTokenService).should(times(1)).delete(fcmToken);
+    }
+
+    @Test
+    @DisplayName("로그아웃 시 FCM 토큰이 공백이면 삭제를 시도하지 않는다")
+    void signOut_does_not_delete_fcmToken_when_blank() {
+        String refreshToken = "some-refresh-token";
+
+        localAuthService.signOut(refreshToken, "  ");
+
+        then(refreshTokenWriter).should(times(1)).delete(refreshToken);
+        then(fcmDeviceTokenService).should(times(0)).delete(any());
     }
 }

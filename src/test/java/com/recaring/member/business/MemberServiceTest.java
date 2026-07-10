@@ -84,6 +84,7 @@ class MemberServiceTest {
 
         assertThat(result.name()).isEqualTo(MemberFixture.NAME);
         assertThat(result.phone()).isEqualTo(MemberFixture.PHONE);
+        assertThat(result.gender()).isEqualTo(MemberFixture.GENDER.getDescription());
         assertThat(result.email()).isEqualTo(AuthFixture.EMAIL);
         assertThat(result.termsServiceAgreedAt()).isNotNull();
         assertThat(result.termsPrivacyAgreedAt()).isNotNull();

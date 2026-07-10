@@ -1,6 +1,7 @@
 package com.recaring.care.implement;
 
 import com.recaring.care.dataaccess.entity.CareInvitation;
+import com.recaring.care.dataaccess.entity.CareInvitationStatus;
 import com.recaring.care.event.CareInvitationAcceptedEvent;
 import com.recaring.care.event.CareInvitationSentEvent;
 import com.recaring.care.fixture.CareFixture;
@@ -140,5 +141,40 @@ class CareInvitationManagerTest {
 
         then(careInvitationWriter).should(times(1)).reject(anyString());
         then(careRelationshipWriter).should(times(0)).register(any(), any());
+    }
+
+    @Test
+    @DisplayName("초대 수락 - 이미 처리된(수락/거절) 초대장이면 예외가 발생한다")
+    void accept_fails_when_invitation_already_processed() {
+        CareInvitation invitation = CareFixture.createWardInvitation(
+                CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY);
+        invitation.accept();
+        given(careInvitationReader.findInvitationForRecipient(
+                CareFixture.REQUEST_KEY, CareFixture.WARD_MEMBER_KEY)).willReturn(invitation);
+
+        assertThatThrownBy(() ->
+                careInvitationManager.accept(CareFixture.REQUEST_KEY, CareFixture.WARD_MEMBER_KEY))
+                .isInstanceOf(AppException.class)
+                .hasFieldOrPropertyWithValue("errorType", ErrorType.ALREADY_PROCESSED_CARE_REQUEST);
+
+        then(careRelationshipWriter).should(times(0)).register(any(), any());
+        then(careInvitationWriter).should(times(0)).accept(anyString());
+    }
+
+    @Test
+    @DisplayName("초대 거절 - 이미 처리된(수락/거절) 초대장이면 예외가 발생한다")
+    void reject_fails_when_invitation_already_processed() {
+        CareInvitation invitation = CareFixture.createWardInvitation(
+                CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY);
+        invitation.reject();
+        given(careInvitationReader.findInvitationForRecipient(
+                CareFixture.REQUEST_KEY, CareFixture.WARD_MEMBER_KEY)).willReturn(invitation);
+
+        assertThatThrownBy(() ->
+                careInvitationManager.reject(CareFixture.REQUEST_KEY, CareFixture.WARD_MEMBER_KEY))
+                .isInstanceOf(AppException.class)
+                .hasFieldOrPropertyWithValue("errorType", ErrorType.ALREADY_PROCESSED_CARE_REQUEST);
+
+        then(careInvitationWriter).should(times(0)).reject(anyString());
     }
 }

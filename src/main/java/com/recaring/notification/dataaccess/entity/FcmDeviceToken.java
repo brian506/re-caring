@@ -1,6 +1,6 @@
 package com.recaring.notification.dataaccess.entity;
 
-import com.recaring.care.dataaccess.entity.CareRole;
+import com.recaring.care.dataaccess.entity.CarePartyRole;
 import com.recaring.common.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -31,7 +31,7 @@ public class FcmDeviceToken extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "recipient_type", nullable = false, length = 20)
-    private CareRole careRole;
+    private CarePartyRole careRole;
 
     @Column(name = "token", nullable = false, unique = true, length = 512)
     private String token;
@@ -43,7 +43,7 @@ public class FcmDeviceToken extends BaseEntity {
     @Builder
     public FcmDeviceToken(
             String memberKey,
-            CareRole careRole,
+            CarePartyRole careRole,
             String token,
             FcmDevicePlatform platform
     ) {
@@ -53,7 +53,7 @@ public class FcmDeviceToken extends BaseEntity {
         this.platform = platform;
     }
 
-    public void assignTo(String memberKey, CareRole careRole, FcmDevicePlatform platform) {
+    public void assignTo(String memberKey, CarePartyRole careRole, FcmDevicePlatform platform) {
         this.memberKey = memberKey;
         this.careRole = careRole;
         this.platform = platform;

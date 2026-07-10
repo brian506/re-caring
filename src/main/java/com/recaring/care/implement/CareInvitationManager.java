@@ -1,6 +1,7 @@
 package com.recaring.care.implement;
 
 import com.recaring.care.dataaccess.entity.CareInvitation;
+import com.recaring.care.dataaccess.entity.CareInvitationStatus;
 import com.recaring.care.dataaccess.entity.CareRole;
 import com.recaring.care.event.CareInvitationAcceptedEvent;
 import com.recaring.care.event.CareInvitationSentEvent;
@@ -11,6 +12,8 @@ import com.recaring.care.vo.Ward;
 import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.implement.MemberReader;
 import com.recaring.sms.vo.PhoneNumber;
+import com.recaring.support.exception.AppException;
+import com.recaring.support.exception.ErrorType;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -64,6 +67,7 @@ public class CareInvitationManager {
     @Transactional
     public void accept(String requestKey, String memberKey) {
         CareInvitation invitation = careInvitationReader.findInvitationForRecipient(requestKey, memberKey);
+        validatePending(invitation);
 
         careRelationshipWriter.register(
                 new CareRelationshipRegistration(
@@ -80,6 +84,13 @@ public class CareInvitationManager {
     @Transactional
     public void reject(String requestKey, String memberKey) {
         CareInvitation request = careInvitationReader.findInvitationForRecipient(requestKey, memberKey);
+        validatePending(request);
         careInvitationWriter.reject(request.getRequestKey());
+    }
+
+    private void validatePending(CareInvitation invitation) {
+        if (invitation.getStatus() != CareInvitationStatus.PENDING) {
+            throw new AppException(ErrorType.ALREADY_PROCESSED_CARE_REQUEST);
+        }
     }
 }

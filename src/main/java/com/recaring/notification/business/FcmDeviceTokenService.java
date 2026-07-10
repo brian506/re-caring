@@ -1,6 +1,6 @@
 package com.recaring.notification.business;
 
-import com.recaring.care.dataaccess.entity.CareRole;
+import com.recaring.care.dataaccess.entity.CarePartyRole;
 import com.recaring.notification.dataaccess.entity.FcmDevicePlatform;
 import com.recaring.notification.dataaccess.entity.FcmDeviceToken;
 import com.recaring.notification.implement.FcmDeviceTokenManager;
@@ -13,7 +13,11 @@ public class FcmDeviceTokenService {
 
     private final FcmDeviceTokenManager fcmDeviceTokenManager;
 
-    public FcmDeviceToken upsert(String memberKey, String token, CareRole careRole, FcmDevicePlatform platform) {
+    public FcmDeviceToken upsert(String memberKey, String token, CarePartyRole careRole, FcmDevicePlatform platform) {
         return fcmDeviceTokenManager.upsert(memberKey, token, careRole, platform);
+    }
+
+    public void delete(String token) {
+        fcmDeviceTokenManager.deleteByToken(token);
     }
 }

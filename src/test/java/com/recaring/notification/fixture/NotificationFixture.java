@@ -1,6 +1,6 @@
 package com.recaring.notification.fixture;
 
-import com.recaring.care.dataaccess.entity.CareRole;
+import com.recaring.care.dataaccess.entity.CarePartyRole;
 import com.recaring.member.dataaccess.entity.Gender;
 import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.dataaccess.entity.MemberRole;
@@ -90,7 +90,7 @@ public class NotificationFixture {
     public static FcmDeviceToken guardianFcmDeviceToken(String token) {
         return FcmDeviceToken.builder()
                 .memberKey(GUARDIAN_KEY)
-                .careRole(CareRole.GUARDIAN)
+                .careRole(CarePartyRole.GUARDIAN)
                 .token(token)
                 .platform(FcmDevicePlatform.ANDROID)
                 .build();
@@ -99,7 +99,7 @@ public class NotificationFixture {
     public static FcmDeviceToken managerFcmDeviceToken(String token) {
         return FcmDeviceToken.builder()
                 .memberKey(MANAGER_KEY)
-                .careRole(CareRole.MANAGER)
+                .careRole(CarePartyRole.MANAGER)
                 .token(token)
                 .platform(FcmDevicePlatform.IOS)
                 .build();

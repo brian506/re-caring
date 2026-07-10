@@ -3,6 +3,7 @@ package com.recaring.config.auth;
 import com.recaring.security.filter.AuthExceptionTranslationFilter;
 import com.recaring.security.filter.DeviceTokenAuthFilter;
 import com.recaring.security.filter.JwtAuthenticationFilter;
+import com.recaring.security.handler.JwtAccessDeniedHandler;
 import com.recaring.security.handler.JwtAuthenticationEntryPoint;
 import jakarta.servlet.DispatcherType;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +36,7 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
     private final AuthExceptionTranslationFilter authExceptionTranslationFilter;
     private final DeviceTokenAuthFilter deviceTokenAuthFilter;
 
@@ -83,9 +85,7 @@ public class SecurityConfig {
                         // GUARDIAN 전용 (보호자만 접근 가능)
                         .requestMatchers(
                                 mvc.matcher(HttpMethod.POST, "/api/v1/care/requests"),
-                                mvc.matcher(HttpMethod.GET,  "/api/v1/care/wards"),
                                 mvc.matcher(HttpMethod.POST, "/api/v1/members/phones"),
-                                mvc.matcher(HttpMethod.PUT,  "/api/v1/notifications/device-tokens"),
                                 mvc.matcher(HttpMethod.GET,  "/api/v1/location/settings/{wardKey}/collection-interval"),
                                 mvc.matcher(HttpMethod.PATCH, "/api/v1/location/settings/{wardKey}/collection-interval"),
                                 // SafeZone (GUARDIAN/MANAGER 모두 MemberRole.GUARDIAN)
@@ -98,6 +98,10 @@ public class SecurityConfig {
 
                         // GUARDIAN + WARD 모두 접근 가능
                         .requestMatchers(
+                                // WARD도 케어 초대 등 본인 대상 알림을 푸시로 받기 위해 FCM 토큰을 등록한다
+                                mvc.matcher(HttpMethod.PUT,   "/api/v1/notifications/device-tokens"),
+                                // WARD는 자신이 관리하는 대상자가 없어 빈 목록을 받는다 (컨트롤러가 역할 무관 처리)
+                                mvc.matcher(HttpMethod.GET,   "/api/v1/care/wards"),
                                 mvc.matcher(HttpMethod.GET,   "/api/v1/care/requests/received"),
                                 mvc.matcher(HttpMethod.PATCH, "/api/v1/care/requests/{requestKey}/accept"),
                                 mvc.matcher(HttpMethod.PATCH, "/api/v1/care/requests/{requestKey}/reject"),
@@ -113,7 +117,9 @@ public class SecurityConfig {
                 .sessionManagement(configurer ->
                         configurer.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(configurer ->
-                        configurer.authenticationEntryPoint(jwtAuthenticationEntryPoint))
+                        configurer
+                                .authenticationEntryPoint(jwtAuthenticationEntryPoint)
+                                .accessDeniedHandler(jwtAccessDeniedHandler))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(deviceTokenAuthFilter, JwtAuthenticationFilter.class)
                 .addFilterBefore(authExceptionTranslationFilter, DeviceTokenAuthFilter.class)

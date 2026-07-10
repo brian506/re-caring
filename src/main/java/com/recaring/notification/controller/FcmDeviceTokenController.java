@@ -25,7 +25,7 @@ public class FcmDeviceTokenController {
 
     @Operation(
             summary = "FCM device token 생성 및 업데이트",
-            description = "FCM 토큰 없으면 생성하고 있으면 수정. [GUARDIAN, MANAGER]"
+            description = "FCM 토큰 없으면 생성하고 있으면 수정. [GUARDIAN, MANAGER, WARD]"
     )
     @PutMapping
     public ResponseEntity<ApiResponse<FcmDeviceTokenResponse>> upsert(

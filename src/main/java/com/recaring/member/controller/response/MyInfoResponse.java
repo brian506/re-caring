@@ -1,6 +1,5 @@
 package com.recaring.member.controller.response;
 
-import com.recaring.member.dataaccess.entity.Gender;
 import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.dataaccess.entity.MemberRole;
 import com.recaring.member.dataaccess.entity.MembersTermsAgreement;
@@ -17,7 +16,7 @@ public record MyInfoResponse(
         String name,
         String phone,
         LocalDate birth,
-        Gender gender,
+        String gender,
         MemberRole role,
         SubscriptionType subscriptionType,
         SignUpType signUpType,
@@ -34,7 +33,7 @@ public record MyInfoResponse(
                 member.getName(),
                 member.getPhone(),
                 member.getBirth(),
-                member.getGender(),
+                member.getGender() != null ? member.getGender().getDescription() : null,
                 member.getRole(),
                 member.getSubscriptionType(),
                 member.getSignUpType(),
