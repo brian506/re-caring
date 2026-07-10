@@ -7,14 +7,12 @@ import java.util.Arrays;
 import java.util.List;
 
 public enum LocationCollectionInterval {
-    FIVE_SECONDS(5),
-    TEN_SECONDS(10),
     THIRTY_SECONDS(30),
     ONE_MINUTE(60),
     THREE_MINUTES(180),
     FIVE_MINUTES(300);
 
-    public static final LocationCollectionInterval DEFAULT = FIVE_SECONDS;
+    public static final LocationCollectionInterval DEFAULT = THIRTY_SECONDS;
 
     private final int seconds;
 

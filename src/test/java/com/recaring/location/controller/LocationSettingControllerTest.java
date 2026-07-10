@@ -82,14 +82,12 @@ class LocationSettingControllerTest extends AbstractIntegrationTest {
                 .expectStatus().isOk()
                 .expectBody()
                 .jsonPath("$.resultType").isEqualTo("SUCCESS")
-                .jsonPath("$.data.currentIntervalSeconds").isEqualTo(5)
-                .jsonPath("$.data.defaultIntervalSeconds").isEqualTo(5)
-                .jsonPath("$.data.options[0]").isEqualTo(5)
-                .jsonPath("$.data.options[1]").isEqualTo(10)
-                .jsonPath("$.data.options[2]").isEqualTo(30)
-                .jsonPath("$.data.options[3]").isEqualTo(60)
-                .jsonPath("$.data.options[4]").isEqualTo(180)
-                .jsonPath("$.data.options[5]").isEqualTo(300);
+                .jsonPath("$.data.currentIntervalSeconds").isEqualTo(30)
+                .jsonPath("$.data.defaultIntervalSeconds").isEqualTo(30)
+                .jsonPath("$.data.options[0]").isEqualTo(30)
+                .jsonPath("$.data.options[1]").isEqualTo(60)
+                .jsonPath("$.data.options[2]").isEqualTo(180)
+                .jsonPath("$.data.options[3]").isEqualTo(300);
     }
 
     @Test

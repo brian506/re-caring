@@ -24,7 +24,7 @@ class LocationCollectionIntervalTest {
     @DisplayName("허용된 주기 옵션을 초 단위 목록으로 반환한다")
     void options_returns_allowed_seconds() {
         assertThat(LocationCollectionInterval.options())
-                .containsExactly(5, 10, 30, 60, 180, 300);
+                .containsExactly(30, 60, 180, 300);
     }
 
     @Test
