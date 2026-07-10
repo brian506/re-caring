@@ -10,6 +10,8 @@ public interface FcmDeviceTokenRepositoryCustom {
 
     void deleteByMemberKey(String memberKey);
 
+    void deleteByToken(String token);
+
     void deleteByTokenIn(Collection<String> tokens);
 
     List<FcmDeviceToken> findTokensByCareRoles(

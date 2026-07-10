@@ -40,14 +40,18 @@ public class CareRelationshipValidator {
     }
 
     public void validateCanAddManager(String requesterKey, String wardMemberKey, String newManagerKey) {
-        memberValidator.validatePremium(requesterKey);
+        validateGuardianRole(requesterKey, wardMemberKey);
+
+        // memberValidator.validatePremium(requesterKey);
         List<CareRelationship> careRelationships = careRelationshipRepository.findAllByWardMemberKey(wardMemberKey);
         checkRoleLimit(careRelationships, CareRole.MANAGER, MAX_MANAGER_COUNT);
         validateNotDuplicated(careRelationships, CareRelationship::getCaregiverMemberKey, newManagerKey);
     }
 
     public void validateCanAddGuardian(String requesterKey, String wardMemberKey, String newGuardianKey) {
-        memberValidator.validatePremium(requesterKey);
+        validateGuardianRole(requesterKey, wardMemberKey);
+
+        // memberValidator.validatePremium(requesterKey);
         List<CareRelationship> careRelationships = careRelationshipRepository.findAllByWardMemberKey(wardMemberKey);
         checkRoleLimit(careRelationships, CareRole.GUARDIAN, MAX_GUARDIAN_COUNT);
         validateNotDuplicated(careRelationships, CareRelationship::getCaregiverMemberKey, newGuardianKey);

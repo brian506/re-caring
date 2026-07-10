@@ -12,9 +12,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.async.AsyncRequestNotUsableException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 @Slf4j
 @RestControllerAdvice
@@ -39,6 +41,16 @@ public class ApiControllerAdvice {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<@Nullable Object>> handleValidationException(MethodArgumentNotValidException e) {
         log.warn("[요청 검증 : 실패]: message={}", e.getMessage());
+        return new ResponseEntity<>(ApiResponse.error(ErrorType.INVALID_ACCESS_PATH, null), HttpStatus.BAD_REQUEST);
+    }
+
+    // @RequestParam/@PathVariable 바인딩 실패(파라미터 누락, 타입 변환 실패 등)는 @Valid 단계 이전에 발생해
+    // MethodArgumentNotValidException으로 잡히지 않는다. 핸들러가 없으면 클라이언트 입력 오류가
+    // generic Exception 핸들러(500)로 흡수되어 서버 오류로 오분류된다. 검증 실패와 동일한 400 포맷으로 응답한다.
+    @NullMarked
+    @ExceptionHandler({MissingServletRequestParameterException.class, MethodArgumentTypeMismatchException.class})
+    public ResponseEntity<ApiResponse<@Nullable Object>> handleRequestParamException(Exception e) {
+        log.warn("[요청 파라미터 : 바인딩 실패]: message={}", e.getMessage());
         return new ResponseEntity<>(ApiResponse.error(ErrorType.INVALID_ACCESS_PATH, null), HttpStatus.BAD_REQUEST);
     }
 

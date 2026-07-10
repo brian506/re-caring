@@ -1,6 +1,6 @@
 package com.recaring.notification.implement;
 
-import com.recaring.care.dataaccess.entity.CareRole;
+import com.recaring.care.dataaccess.entity.CarePartyRole;
 import com.recaring.notification.dataaccess.entity.FcmDevicePlatform;
 import com.recaring.notification.dataaccess.entity.FcmDeviceToken;
 import com.recaring.notification.dataaccess.repository.FcmDeviceTokenRepository;
@@ -41,12 +41,12 @@ class FcmDeviceTokenManagerTest {
         FcmDeviceToken result = fcmDeviceTokenManager.upsert(
                 NotificationFixture.GUARDIAN_KEY,
                 NotificationFixture.GUARDIAN_FCM_TOKEN,
-                CareRole.GUARDIAN,
+                CarePartyRole.GUARDIAN,
                 FcmDevicePlatform.ANDROID
         );
 
         assertThat(result.getMemberKey()).isEqualTo(NotificationFixture.GUARDIAN_KEY);
-        assertThat(result.getCareRole()).isEqualTo(CareRole.GUARDIAN);
+        assertThat(result.getCareRole()).isEqualTo(CarePartyRole.GUARDIAN);
         assertThat(result.getPlatform()).isEqualTo(FcmDevicePlatform.ANDROID);
     }
 
@@ -60,14 +60,22 @@ class FcmDeviceTokenManagerTest {
         FcmDeviceToken result = fcmDeviceTokenManager.upsert(
                 NotificationFixture.MANAGER_KEY,
                 NotificationFixture.GUARDIAN_FCM_TOKEN,
-                CareRole.MANAGER,
+                CarePartyRole.MANAGER,
                 FcmDevicePlatform.IOS
         );
 
         assertThat(result.getMemberKey()).isEqualTo(NotificationFixture.MANAGER_KEY);
-        assertThat(result.getCareRole()).isEqualTo(CareRole.MANAGER);
+        assertThat(result.getCareRole()).isEqualTo(CarePartyRole.MANAGER);
         assertThat(result.getPlatform()).isEqualTo(FcmDevicePlatform.IOS);
         then(fcmDeviceTokenRepository).should().findByToken(NotificationFixture.GUARDIAN_FCM_TOKEN);
+    }
+
+    @Test
+    @DisplayName("토큰으로 FCM 디바이스 토큰을 삭제한다")
+    void deleteByToken_deletes_token() {
+        fcmDeviceTokenManager.deleteByToken(NotificationFixture.GUARDIAN_FCM_TOKEN);
+
+        then(fcmDeviceTokenRepository).should().deleteByToken(NotificationFixture.GUARDIAN_FCM_TOKEN);
     }
 
     @Test

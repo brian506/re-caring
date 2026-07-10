@@ -1,6 +1,6 @@
 package com.recaring.notification.implement;
 
-import com.recaring.care.dataaccess.entity.CareRole;
+import com.recaring.care.dataaccess.entity.CarePartyRole;
 import com.recaring.notification.dataaccess.entity.FcmDevicePlatform;
 import com.recaring.notification.dataaccess.entity.FcmDeviceToken;
 import com.recaring.notification.dataaccess.repository.FcmDeviceTokenRepository;
@@ -17,7 +17,7 @@ public class FcmDeviceTokenManager {
     private final FcmDeviceTokenRepository fcmDeviceTokenRepository;
 
     @Transactional
-    public FcmDeviceToken upsert(String memberKey, String token, CareRole careRole, FcmDevicePlatform platform) {
+    public FcmDeviceToken upsert(String memberKey, String token, CarePartyRole careRole, FcmDevicePlatform platform) {
         return fcmDeviceTokenRepository.findByToken(token)
                 .map(existing -> {
                     existing.assignTo(memberKey, careRole, platform);
@@ -29,6 +29,11 @@ public class FcmDeviceTokenManager {
                         .token(token)
                         .platform(platform)
                         .build()));
+    }
+
+    @Transactional
+    public void deleteByToken(String token) {
+        fcmDeviceTokenRepository.deleteByToken(token);
     }
 
     @Transactional

@@ -2,7 +2,8 @@ package com.recaring.notification.controller.response;
 
 import com.recaring.notification.vo.NotificationItem;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.Map;
 
 public record NotificationResponse(
@@ -11,7 +12,7 @@ public record NotificationResponse(
         String title,
         String body,
         Map<String, String> dataPayload,
-        LocalDateTime createdAt
+        Instant createdAt
 ) {
     public static NotificationResponse from(NotificationItem item) {
         return new NotificationResponse(
@@ -20,7 +21,7 @@ public record NotificationResponse(
                 item.title(),
                 item.body(),
                 item.dataPayload(),
-                item.createdAt()
+                item.createdAt().atZone(ZoneId.systemDefault()).toInstant()
         );
     }
 }

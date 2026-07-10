@@ -6,6 +6,8 @@ import com.recaring.auth.fixture.AuthFixture;
 import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.dataaccess.repository.MemberRepository;
 import com.recaring.member.fixture.MemberFixture;
+import com.recaring.notification.dataaccess.repository.FcmDeviceTokenRepository;
+import com.recaring.notification.fixture.NotificationFixture;
 import com.recaring.sms.fixture.SmsFixture;
 import com.recaring.support.AbstractIntegrationTest;
 import org.junit.jupiter.api.AfterEach;
@@ -41,10 +43,14 @@ class AuthControllerTest extends AbstractIntegrationTest {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private FcmDeviceTokenRepository fcmDeviceTokenRepository;
+
     @AfterEach
     void tearDown() {
         localAuthRepository.deleteAll();
         memberRepository.deleteAll();
+        fcmDeviceTokenRepository.deleteAll();
         redisTemplate.getConnectionFactory().getConnection().serverCommands().flushAll();
     }
 
@@ -190,6 +196,31 @@ class AuthControllerTest extends AbstractIntegrationTest {
         // 토큰 삭제 검증
         String stored = redisTemplate.opsForValue().get(REFRESH_TOKEN_KEY_PREFIX + refreshToken);
         assertThat(stored).isNull();
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/auth/sign-out - fcmToken을 함께 보내면 해당 기기의 FCM 토큰도 삭제된다")
+    void signOut_deletes_fcmToken_when_provided() {
+        String refreshToken = UUID.randomUUID().toString();
+        String memberKey = UUID.randomUUID().toString();
+        redisTemplate.opsForValue().set(REFRESH_TOKEN_KEY_PREFIX + refreshToken, memberKey, 14, TimeUnit.DAYS);
+        fcmDeviceTokenRepository.save(NotificationFixture.guardianFcmDeviceToken(NotificationFixture.GUARDIAN_FCM_TOKEN));
+
+        client.post()
+                .uri("/api/v1/auth/sign-out")
+                .header(HttpHeaders.COOKIE, "refresh_token=" + refreshToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {
+                            "fcmToken": "%s"
+                        }
+                        """.formatted(NotificationFixture.GUARDIAN_FCM_TOKEN))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.resultType").isEqualTo("SUCCESS");
+
+        assertThat(fcmDeviceTokenRepository.findByToken(NotificationFixture.GUARDIAN_FCM_TOKEN)).isEmpty();
     }
 
     @Test

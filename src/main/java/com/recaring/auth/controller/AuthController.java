@@ -9,6 +9,7 @@ import com.recaring.auth.controller.request.NewPasswordRequest;
 import com.recaring.auth.controller.request.OauthLinkRequest;
 import com.recaring.auth.controller.request.OauthSignInRequest;
 import com.recaring.auth.controller.request.SignInRequest;
+import com.recaring.auth.controller.request.SignOutRequest;
 import com.recaring.auth.controller.request.SignUpRequest;
 import com.recaring.auth.controller.response.MaskEmailResponse;
 import com.recaring.auth.controller.response.SignInResponse;
@@ -151,14 +152,19 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success(new SignInResponse(jwt.accessToken())));
     }
 
-    @Operation(summary = "로그아웃", description = "Refresh Token을 만료시키고 Cookie를 삭제합니다.")
+    @Operation(
+            summary = "로그아웃",
+            description = "Refresh Token을 만료시키고 Cookie를 삭제합니다. fcmToken을 함께 보내면 해당 기기의 FCM 토큰도 삭제합니다."
+    )
     @PostMapping("/sign-out")
     public ResponseEntity<ApiResponse<Void>> signOut(
+            @Valid @RequestBody(required = false) SignOutRequest signOutRequest,
             HttpServletRequest request,
             HttpServletResponse response
     ) {
         String refreshToken = cookieService.extract(request);
-        localAuthService.signOut(refreshToken);
+        String fcmToken = signOutRequest == null ? null : signOutRequest.fcmToken();
+        localAuthService.signOut(refreshToken, fcmToken);
         response.addHeader(HttpHeaders.SET_COOKIE, cookieService.expire().toString());
         return ResponseEntity.ok(ApiResponse.success());
     }

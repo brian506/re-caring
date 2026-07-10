@@ -58,7 +58,7 @@ class FcmDeviceTokenControllerTest extends AbstractIntegrationTest {
                 .body("""
                         {
                           "token": "guardian-fcm-token-http",
-                          "recipientType": "GUARDIAN",
+                          "careRole": "GUARDIAN",
                           "platform": "ANDROID"
                         }
                         """)
@@ -67,7 +67,7 @@ class FcmDeviceTokenControllerTest extends AbstractIntegrationTest {
                 .expectBody()
                 .jsonPath("$.resultType").isEqualTo("SUCCESS")
                 .jsonPath("$.data.memberKey").isEqualTo(guardian.getMemberKey())
-                .jsonPath("$.data.recipientType").isEqualTo("GUARDIAN")
+                .jsonPath("$.data.careRole").isEqualTo("GUARDIAN")
                 .jsonPath("$.data.platform").isEqualTo("ANDROID");
 
         assertThat(fcmDeviceTokenRepository.findByToken("guardian-fcm-token-http"))
@@ -88,7 +88,7 @@ class FcmDeviceTokenControllerTest extends AbstractIntegrationTest {
                 .body("""
                         {
                           "token": "shared-fcm-token-http",
-                          "recipientType": "GUARDIAN",
+                          "careRole": "GUARDIAN",
                           "platform": "ANDROID"
                         }
                         """)
@@ -102,7 +102,7 @@ class FcmDeviceTokenControllerTest extends AbstractIntegrationTest {
                 .body("""
                         {
                           "token": "shared-fcm-token-http",
-                          "recipientType": "MANAGER",
+                          "careRole": "MANAGER",
                           "platform": "IOS"
                         }
                         """)
@@ -110,7 +110,7 @@ class FcmDeviceTokenControllerTest extends AbstractIntegrationTest {
                 .expectStatus().isOk()
                 .expectBody()
                 .jsonPath("$.data.memberKey").isEqualTo(manager.getMemberKey())
-                .jsonPath("$.data.recipientType").isEqualTo("MANAGER")
+                .jsonPath("$.data.careRole").isEqualTo("MANAGER")
                 .jsonPath("$.data.platform").isEqualTo("IOS");
 
         assertThat(fcmDeviceTokenRepository.findAll()).hasSize(1);
@@ -121,8 +121,8 @@ class FcmDeviceTokenControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("피보호자는 FCM 수신자 토큰을 등록할 수 없다")
-    void upsert_returns_401_for_ward() {
+    @DisplayName("피보호자도 본인 대상 알림 수신을 위해 FCM 토큰을 등록할 수 있다")
+    void upsert_registers_ward_token() {
         client.put()
                 .uri("/api/v1/notifications/device-tokens")
                 .header(HttpHeaders.AUTHORIZATION, bearerToken(ward))
@@ -130,12 +130,18 @@ class FcmDeviceTokenControllerTest extends AbstractIntegrationTest {
                 .body("""
                         {
                           "token": "ward-fcm-token-http",
-                          "recipientType": "GUARDIAN",
+                          "careRole": "WARD",
                           "platform": "ANDROID"
                         }
                         """)
                 .exchange()
-                .expectStatus().isUnauthorized();
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.resultType").isEqualTo("SUCCESS")
+                .jsonPath("$.data.memberKey").isEqualTo(ward.getMemberKey())
+                .jsonPath("$.data.careRole").isEqualTo("WARD");
+
+        assertThat(fcmDeviceTokenRepository.findByToken("ward-fcm-token-http")).isPresent();
     }
 
     @Test
@@ -148,7 +154,7 @@ class FcmDeviceTokenControllerTest extends AbstractIntegrationTest {
                 .body("""
                         {
                           "token": " ",
-                          "recipientType": "GUARDIAN",
+                          "careRole": "GUARDIAN",
                           "platform": "ANDROID"
                         }
                         """)

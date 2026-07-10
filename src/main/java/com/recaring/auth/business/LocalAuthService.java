@@ -12,6 +12,7 @@ import com.recaring.auth.vo.Password;
 import com.recaring.common.utils.MaskingUtils;
 import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.implement.MemberReader;
+import com.recaring.notification.business.FcmDeviceTokenService;
 import com.recaring.security.vo.Jwt;
 import com.recaring.sms.implement.PhoneVerificationReader;
 import com.recaring.sms.vo.PhoneNumber;
@@ -31,6 +32,7 @@ public class LocalAuthService {
     private final LocalAuthReader localAuthReader;
     private final RefreshTokenWriter refreshTokenWriter;
     private final PhoneVerificationReader phoneVerificationReader;
+    private final FcmDeviceTokenService fcmDeviceTokenService;
 
     public void signUp(SignUpCommand command) {
         PhoneNumber phone = phoneVerificationReader.findPhoneByToken(command.smsToken());
@@ -55,7 +57,10 @@ public class LocalAuthService {
         localAuthManager.changePassword(member.getMemberKey(), encodedPassword.value());
     }
 
-    public void signOut(String refreshToken) {
+    public void signOut(String refreshToken, String fcmToken) {
         refreshTokenWriter.delete(refreshToken);
+        if (fcmToken != null && !fcmToken.isBlank()) {
+            fcmDeviceTokenService.delete(fcmToken);
+        }
     }
 }

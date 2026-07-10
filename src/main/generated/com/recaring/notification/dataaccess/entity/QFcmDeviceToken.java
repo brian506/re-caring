@@ -24,7 +24,7 @@ public class QFcmDeviceToken extends EntityPathBase<FcmDeviceToken> {
 
     public final com.recaring.common.entity.QBaseEntity _super = new com.recaring.common.entity.QBaseEntity(this);
 
-    public final EnumPath<com.recaring.care.dataaccess.entity.CareRole> careRole = createEnum("careRole", com.recaring.care.dataaccess.entity.CareRole.class);
+    public final EnumPath<com.recaring.care.dataaccess.entity.CarePartyRole> careRole = createEnum("careRole", com.recaring.care.dataaccess.entity.CarePartyRole.class);
 
     //inherited
     public final DateTimePath<java.time.LocalDateTime> createdAt = _super.createdAt;
