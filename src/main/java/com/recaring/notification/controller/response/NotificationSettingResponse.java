@@ -32,7 +32,9 @@ public record NotificationSettingResponse(
             boolean routeDeviationEnabled,
             boolean speedAnomalyEnabled,
             boolean wanderingAnomalyEnabled,
-            String sensitivity,
+            String routeDeviationSensitivity,
+            String speedAnomalySensitivity,
+            String wanderingAnomalySensitivity,
             List<String> sensitivityOptions
     ) {
         private static AnomalySettingResponse from(NotificationSettingInfo.AnomalySettingInfo info) {
@@ -40,7 +42,9 @@ public record NotificationSettingResponse(
                     info.routeDeviationEnabled(),
                     info.speedAnomalyEnabled(),
                     info.wanderingAnomalyEnabled(),
-                    info.sensitivity(),
+                    info.routeDeviationSensitivity(),
+                    info.speedAnomalySensitivity(),
+                    info.wanderingAnomalySensitivity(),
                     info.sensitivityOptions()
             );
         }

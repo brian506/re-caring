@@ -11,11 +11,13 @@ public class GpsHistoryWriter {
 
     private final GpsHistoryRepository gpsHistoryRepository;
 
-    public void save(String wardMemberKey, double latitude, double longitude) {
+    public void save(String wardMemberKey, double latitude, double longitude, Double accuracy, Integer battery) {
         gpsHistoryRepository.save(GpsHistory.builder()
                 .wardMemberKey(wardMemberKey)
                 .latitude(latitude)
                 .longitude(longitude)
+                .accuracy(accuracy)
+                .battery(battery)
                 .build());
     }
 

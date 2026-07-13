@@ -70,7 +70,9 @@ class NotificationSettingControllerWebMvcTest {
                 .andExpect(jsonPath("$.resultType").value("SUCCESS"))
                 .andExpect(jsonPath("$.data.safeZone.entryEnabled").value(true))
                 .andExpect(jsonPath("$.data.safeZone.exitEnabled").value(false))
-                .andExpect(jsonPath("$.data.anomaly.sensitivity").value("HIGH"))
+                .andExpect(jsonPath("$.data.anomaly.routeDeviationSensitivity").value("HIGH"))
+                .andExpect(jsonPath("$.data.anomaly.speedAnomalySensitivity").value("LOW"))
+                .andExpect(jsonPath("$.data.anomaly.wanderingAnomalySensitivity").value("VERY_HIGH"))
                 .andExpect(jsonPath("$.data.anomaly.sensitivityOptions[0]").value("VERY_LOW"))
                 .andExpect(jsonPath("$.data.emergencyCall.enabled").value(true))
                 .andExpect(jsonPath("$.data.battery.lowBatteryEnabled").value(false))
@@ -122,7 +124,9 @@ class NotificationSettingControllerWebMvcTest {
                                   "routeDeviationEnabled": true,
                                   "speedAnomalyEnabled": false,
                                   "wanderingAnomalyEnabled": true,
-                                  "sensitivity": "LOW"
+                                  "routeDeviationSensitivity": "LOW",
+                                  "speedAnomalySensitivity": "VERY_HIGH",
+                                  "wanderingAnomalySensitivity": "VERY_LOW"
                                 }
                                 """))
                 .andExpect(status().isOk())
@@ -134,7 +138,9 @@ class NotificationSettingControllerWebMvcTest {
                         && command.routeDeviationEnabled()
                         && !command.speedAnomalyEnabled()
                         && command.wanderingAnomalyEnabled()
-                        && command.sensitivity() == AnomalySensitivity.LOW)
+                        && command.routeDeviationSensitivity() == AnomalySensitivity.LOW
+                        && command.speedAnomalySensitivity() == AnomalySensitivity.VERY_HIGH
+                        && command.wanderingAnomalySensitivity() == AnomalySensitivity.VERY_LOW)
         );
     }
 
@@ -160,7 +166,9 @@ class NotificationSettingControllerWebMvcTest {
         );
 
         assertThat(response.safeZone().entryEnabled()).isTrue();
-        assertThat(response.anomaly().sensitivity()).isEqualTo("HIGH");
+        assertThat(response.anomaly().routeDeviationSensitivity()).isEqualTo("HIGH");
+        assertThat(response.anomaly().speedAnomalySensitivity()).isEqualTo("LOW");
+        assertThat(response.anomaly().wanderingAnomalySensitivity()).isEqualTo("VERY_HIGH");
         assertThat(response.battery().thresholdOptions()).contains(10, 25, 100);
     }
 

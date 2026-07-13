@@ -1,6 +1,5 @@
 package com.recaring.notification.implement;
 
-import com.recaring.notification.dataaccess.entity.NotificationSetting;
 import com.recaring.notification.dataaccess.repository.NotificationSettingRepository;
 import com.recaring.notification.vo.AnomalySensitivity;
 import com.recaring.notification.vo.BatteryThreshold;
@@ -20,32 +19,37 @@ public class NotificationSettingManager {
     }
 
     @Transactional
-    public void updateSafeZone(NotificationSetting setting, boolean entryEnabled, boolean exitEnabled) {
-        setting.updateSafeZone(entryEnabled, exitEnabled);
-        notificationSettingRepository.save(setting);
+    public void updateSafeZone(String wardKey, boolean entryEnabled, boolean exitEnabled) {
+        notificationSettingRepository.insertDefaultIfAbsent(wardKey);
+        notificationSettingRepository.updateSafeZone(wardKey, entryEnabled, exitEnabled);
     }
 
     @Transactional
     public void updateAnomaly(
-            NotificationSetting setting,
+            String wardKey,
             boolean routeDeviationEnabled,
             boolean speedAnomalyEnabled,
             boolean wanderingAnomalyEnabled,
-            AnomalySensitivity sensitivity
+            AnomalySensitivity routeDeviationSensitivity,
+            AnomalySensitivity speedAnomalySensitivity,
+            AnomalySensitivity wanderingAnomalySensitivity
     ) {
-        setting.updateAnomaly(routeDeviationEnabled, speedAnomalyEnabled, wanderingAnomalyEnabled, sensitivity);
-        notificationSettingRepository.save(setting);
+        notificationSettingRepository.insertDefaultIfAbsent(wardKey);
+        notificationSettingRepository.updateAnomaly(
+                wardKey,
+                routeDeviationEnabled, speedAnomalyEnabled, wanderingAnomalyEnabled,
+                routeDeviationSensitivity, speedAnomalySensitivity, wanderingAnomalySensitivity);
     }
 
     @Transactional
-    public void updateEmergencyCall(NotificationSetting setting, boolean enabled) {
-        setting.updateEmergencyCall(enabled);
-        notificationSettingRepository.save(setting);
+    public void updateEmergencyCall(String wardKey, boolean enabled) {
+        notificationSettingRepository.insertDefaultIfAbsent(wardKey);
+        notificationSettingRepository.updateEmergencyCall(wardKey, enabled);
     }
 
     @Transactional
-    public void updateBattery(NotificationSetting setting, boolean lowBatteryEnabled, BatteryThreshold threshold) {
-        setting.updateBattery(lowBatteryEnabled, threshold);
-        notificationSettingRepository.save(setting);
+    public void updateBattery(String wardKey, boolean lowBatteryEnabled, BatteryThreshold threshold) {
+        notificationSettingRepository.insertDefaultIfAbsent(wardKey);
+        notificationSettingRepository.updateBattery(wardKey, lowBatteryEnabled, threshold.percent());
     }
 }

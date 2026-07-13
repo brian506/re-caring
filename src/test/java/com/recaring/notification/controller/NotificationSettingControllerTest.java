@@ -80,7 +80,9 @@ class NotificationSettingControllerTest extends AbstractIntegrationTest {
                 .jsonPath("$.data.anomaly.routeDeviationEnabled").isEqualTo(true)
                 .jsonPath("$.data.anomaly.speedAnomalyEnabled").isEqualTo(true)
                 .jsonPath("$.data.anomaly.wanderingAnomalyEnabled").isEqualTo(true)
-                .jsonPath("$.data.anomaly.sensitivity").isEqualTo("NORMAL")
+                .jsonPath("$.data.anomaly.routeDeviationSensitivity").isEqualTo("NORMAL")
+                .jsonPath("$.data.anomaly.speedAnomalySensitivity").isEqualTo("NORMAL")
+                .jsonPath("$.data.anomaly.wanderingAnomalySensitivity").isEqualTo("NORMAL")
                 .jsonPath("$.data.anomaly.sensitivityOptions[0]").isEqualTo("VERY_LOW")
                 .jsonPath("$.data.anomaly.sensitivityOptions[4]").isEqualTo("VERY_HIGH")
                 .jsonPath("$.data.emergencyCall.enabled").isEqualTo(true)
@@ -127,7 +129,9 @@ class NotificationSettingControllerTest extends AbstractIntegrationTest {
                           "routeDeviationEnabled": false,
                           "speedAnomalyEnabled": true,
                           "wanderingAnomalyEnabled": false,
-                          "sensitivity": "VERY_HIGH"
+                          "routeDeviationSensitivity": "VERY_HIGH",
+                          "speedAnomalySensitivity": "LOW",
+                          "wanderingAnomalySensitivity": "VERY_LOW"
                         }
                         """)
                 .exchange()
@@ -142,7 +146,9 @@ class NotificationSettingControllerTest extends AbstractIntegrationTest {
                 .jsonPath("$.data.anomaly.routeDeviationEnabled").isEqualTo(false)
                 .jsonPath("$.data.anomaly.speedAnomalyEnabled").isEqualTo(true)
                 .jsonPath("$.data.anomaly.wanderingAnomalyEnabled").isEqualTo(false)
-                .jsonPath("$.data.anomaly.sensitivity").isEqualTo("VERY_HIGH");
+                .jsonPath("$.data.anomaly.routeDeviationSensitivity").isEqualTo("VERY_HIGH")
+                .jsonPath("$.data.anomaly.speedAnomalySensitivity").isEqualTo("LOW")
+                .jsonPath("$.data.anomaly.wanderingAnomalySensitivity").isEqualTo("VERY_LOW");
     }
 
     @Test
@@ -215,7 +221,9 @@ class NotificationSettingControllerTest extends AbstractIntegrationTest {
                           "routeDeviationEnabled": true,
                           "speedAnomalyEnabled": true,
                           "wanderingAnomalyEnabled": true,
-                          "sensitivity": "INVALID"
+                          "routeDeviationSensitivity": "INVALID",
+                          "speedAnomalySensitivity": "NORMAL",
+                          "wanderingAnomalySensitivity": "NORMAL"
                         }
                         """)
                 .exchange()

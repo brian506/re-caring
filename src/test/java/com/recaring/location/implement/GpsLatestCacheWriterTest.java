@@ -37,22 +37,26 @@ class GpsLatestCacheWriterTest {
     private ValueOperations<String, String> valueOps;
 
     @Test
-    @DisplayName("GPS 정보를 직렬화하여 Redis에 TTL 5분으로 저장한다")
+    @DisplayName("GPS 정보를 직렬화하여 Redis에 TTL 6분으로 저장한다")
     void save_serializes_and_stores_with_ttl() throws Exception {
-        Gps gps = new Gps(LocationFixture.LATITUDE, LocationFixture.LONGITUDE, LocalDateTime.now());
+        Gps gps = new Gps(
+                LocationFixture.LATITUDE, LocationFixture.LONGITUDE, LocalDateTime.now(),
+                LocationFixture.ACCURACY, LocationFixture.BATTERY);
         given(objectMapper.writeValueAsString(gps)).willReturn("{\"lat\":37.5665}");
         given(redisTemplate.opsForValue()).willReturn(valueOps);
 
         writer.save(LocationFixture.WARD_KEY, gps);
 
         then(valueOps).should(times(1))
-                .set(eq("gps:latest:" + LocationFixture.WARD_KEY), anyString(), eq(5L), eq(TimeUnit.MINUTES));
+                .set(eq("gps:latest:" + LocationFixture.WARD_KEY), anyString(), eq(6L), eq(TimeUnit.MINUTES));
     }
 
     @Test
     @DisplayName("직렬화 실패 시 AppException이 발생한다")
     void save_throws_app_exception_on_serialization_failure() throws Exception {
-        Gps gps = new Gps(LocationFixture.LATITUDE, LocationFixture.LONGITUDE, LocalDateTime.now());
+        Gps gps = new Gps(
+                LocationFixture.LATITUDE, LocationFixture.LONGITUDE, LocalDateTime.now(),
+                LocationFixture.ACCURACY, LocationFixture.BATTERY);
         given(objectMapper.writeValueAsString(gps)).willThrow(JsonProcessingException.class);
 
         assertThatThrownBy(() -> writer.save(LocationFixture.WARD_KEY, gps))

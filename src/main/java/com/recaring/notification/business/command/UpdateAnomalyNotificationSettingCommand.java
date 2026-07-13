@@ -9,13 +9,17 @@ public record UpdateAnomalyNotificationSettingCommand(
         boolean routeDeviationEnabled,
         boolean speedAnomalyEnabled,
         boolean wanderingAnomalyEnabled,
-        AnomalySensitivity sensitivity
+        AnomalySensitivity routeDeviationSensitivity,
+        AnomalySensitivity speedAnomalySensitivity,
+        AnomalySensitivity wanderingAnomalySensitivity
 ) {
     public UpdateAnomalyNotificationSettingCommand {
         if (wardKey == null || wardKey.isBlank()) {
             throw new AppException(ErrorType.INVALID_MEMBER_KEY);
         }
-        if (sensitivity == null) {
+        if (routeDeviationSensitivity == null
+                || speedAnomalySensitivity == null
+                || wanderingAnomalySensitivity == null) {
             throw new AppException(ErrorType.INVALID_NOTIFICATION_SENSITIVITY);
         }
     }

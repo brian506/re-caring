@@ -14,6 +14,8 @@ public class LocationFixture {
     public static final String MANAGER_KEY = "manager-member-key-001";
     public static final double LATITUDE = 37.5665;
     public static final double LONGITUDE = 126.9780;
+    public static final Double ACCURACY = 15.0;
+    public static final Integer BATTERY = 80;
 
     public static Member createWard() {
         return Member.builder()

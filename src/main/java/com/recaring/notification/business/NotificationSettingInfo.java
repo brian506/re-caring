@@ -22,7 +22,9 @@ public record NotificationSettingInfo(
                         setting.isRouteDeviationEnabled(),
                         setting.isSpeedAnomalyEnabled(),
                         setting.isWanderingAnomalyEnabled(),
-                        setting.getAnomalySensitivity().name(),
+                        setting.getRouteDeviationSensitivity().name(),
+                        setting.getSpeedAnomalySensitivity().name(),
+                        setting.getWanderingAnomalySensitivity().name(),
                         AnomalySensitivity.options()
                 ),
                 new EmergencyCallSettingInfo(setting.isEmergencyCallEnabled()),
@@ -44,7 +46,9 @@ public record NotificationSettingInfo(
             boolean routeDeviationEnabled,
             boolean speedAnomalyEnabled,
             boolean wanderingAnomalyEnabled,
-            String sensitivity,
+            String routeDeviationSensitivity,
+            String speedAnomalySensitivity,
+            String wanderingAnomalySensitivity,
             List<String> sensitivityOptions
     ) {
     }

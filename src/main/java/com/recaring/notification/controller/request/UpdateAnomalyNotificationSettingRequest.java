@@ -9,7 +9,9 @@ public record UpdateAnomalyNotificationSettingRequest(
         @NotNull Boolean routeDeviationEnabled,
         @NotNull Boolean speedAnomalyEnabled,
         @NotNull Boolean wanderingAnomalyEnabled,
-        @NotBlank String sensitivity
+        @NotBlank String routeDeviationSensitivity,
+        @NotBlank String speedAnomalySensitivity,
+        @NotBlank String wanderingAnomalySensitivity
 ) {
     public UpdateAnomalyNotificationSettingCommand toCommand(String wardKey) {
         return new UpdateAnomalyNotificationSettingCommand(
@@ -17,7 +19,9 @@ public record UpdateAnomalyNotificationSettingRequest(
                 routeDeviationEnabled,
                 speedAnomalyEnabled,
                 wanderingAnomalyEnabled,
-                AnomalySensitivity.from(sensitivity)
+                AnomalySensitivity.from(routeDeviationSensitivity),
+                AnomalySensitivity.from(speedAnomalySensitivity),
+                AnomalySensitivity.from(wanderingAnomalySensitivity)
         );
     }
 }

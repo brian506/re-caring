@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 public class GpsLatestCacheWriter {
 
     private static final String KEY_PREFIX = "gps:latest:";
-    private static final long TTL_MINUTES = 5;
+    private static final long TTL_MINUTES = 6;
 
     private final StringRedisTemplate redisTemplate;
     private final ObjectMapper objectMapper;

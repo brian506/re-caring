@@ -35,11 +35,14 @@ class LocationServiceTest {
     @DisplayName("GPS 수신 시 DB에 저장하고 최신 위치를 캐시에 저장한다")
     void receiveGps_saves_history_and_cache() {
         // When
-        locationService.receiveGps(LocationFixture.WARD_KEY, LocationFixture.LATITUDE, LocationFixture.LONGITUDE);
+        locationService.receiveGps(
+                LocationFixture.WARD_KEY, LocationFixture.LATITUDE, LocationFixture.LONGITUDE,
+                LocationFixture.ACCURACY, LocationFixture.BATTERY);
 
         // Then
         then(gpsHistoryWriter).should(times(1)).save(
-                LocationFixture.WARD_KEY, LocationFixture.LATITUDE, LocationFixture.LONGITUDE);
+                LocationFixture.WARD_KEY, LocationFixture.LATITUDE, LocationFixture.LONGITUDE,
+                LocationFixture.ACCURACY, LocationFixture.BATTERY);
         then(gpsLatestCacheWriter).should(times(1)).save(eq(LocationFixture.WARD_KEY), any());
     }
 

@@ -48,7 +48,9 @@ class GpsPatternAnalysisSchedulerTest {
         ReflectionTestUtils.setField(scheduler, "gpsQueueUrl", "https://sqs.test/queue");
         ReflectionTestUtils.setField(scheduler, "intervalMinutes", 30);
 
-        Gps gps = new Gps(LocationFixture.LATITUDE, LocationFixture.LONGITUDE, LocalDateTime.now());
+        Gps gps = new Gps(
+                LocationFixture.LATITUDE, LocationFixture.LONGITUDE, LocalDateTime.now(),
+                LocationFixture.ACCURACY, LocationFixture.BATTERY);
         given(gpsHistoryReader.findActiveWardKeysSince(any(LocalDateTime.class)))
                 .willReturn(List.of(LocationFixture.WARD_KEY, "ward-key-002"));
         given(gpsHistoryReader.findByWardKeyBetween(
