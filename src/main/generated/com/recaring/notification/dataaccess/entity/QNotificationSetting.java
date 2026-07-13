@@ -24,8 +24,6 @@ public class QNotificationSetting extends EntityPathBase<NotificationSetting> {
 
     public final com.recaring.common.entity.QBaseEntity _super = new com.recaring.common.entity.QBaseEntity(this);
 
-    public final EnumPath<com.recaring.notification.vo.AnomalySensitivity> anomalySensitivity = createEnum("anomalySensitivity", com.recaring.notification.vo.AnomalySensitivity.class);
-
     public final NumberPath<Integer> batteryThresholdPercent = createNumber("batteryThresholdPercent", Integer.class);
 
     //inherited
@@ -39,18 +37,22 @@ public class QNotificationSetting extends EntityPathBase<NotificationSetting> {
 
     public final BooleanPath routeDeviationEnabled = createBoolean("routeDeviationEnabled");
 
+    public final EnumPath<com.recaring.notification.vo.AnomalySensitivity> routeDeviationSensitivity = createEnum("routeDeviationSensitivity", com.recaring.notification.vo.AnomalySensitivity.class);
+
     public final BooleanPath safeZoneEntryEnabled = createBoolean("safeZoneEntryEnabled");
 
     public final BooleanPath safeZoneExitEnabled = createBoolean("safeZoneExitEnabled");
 
     public final BooleanPath speedAnomalyEnabled = createBoolean("speedAnomalyEnabled");
 
+    public final EnumPath<com.recaring.notification.vo.AnomalySensitivity> speedAnomalySensitivity = createEnum("speedAnomalySensitivity", com.recaring.notification.vo.AnomalySensitivity.class);
+
     //inherited
     public final DateTimePath<java.time.LocalDateTime> updatedAt = _super.updatedAt;
 
-    public final NumberPath<Long> version = createNumber("version", Long.class);
-
     public final BooleanPath wanderingAnomalyEnabled = createBoolean("wanderingAnomalyEnabled");
+
+    public final EnumPath<com.recaring.notification.vo.AnomalySensitivity> wanderingAnomalySensitivity = createEnum("wanderingAnomalySensitivity", com.recaring.notification.vo.AnomalySensitivity.class);
 
     public final StringPath wardMemberKey = createString("wardMemberKey");
 

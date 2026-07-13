@@ -38,7 +38,9 @@ class GpsLatestCacheReaderTest {
     @DisplayName("Redis에 값이 있으면 역직렬화하여 Gps를 반환한다")
     void find_returns_gps_when_cache_exists() throws Exception {
         String json = "{\"lat\":37.5665,\"lng\":126.9780,\"recordedAt\":\"2024-01-01T00:00:00\"}";
-        Gps expected = new Gps(LocationFixture.LATITUDE, LocationFixture.LONGITUDE, LocalDateTime.now());
+        Gps expected = new Gps(
+                LocationFixture.LATITUDE, LocationFixture.LONGITUDE, LocalDateTime.now(),
+                LocationFixture.ACCURACY, LocationFixture.BATTERY);
         given(redisTemplate.opsForValue()).willReturn(valueOps);
         given(valueOps.get("gps:latest:" + LocationFixture.WARD_KEY)).willReturn(json);
         given(objectMapper.readValue(json, Gps.class)).willReturn(expected);

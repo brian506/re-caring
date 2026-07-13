@@ -39,7 +39,9 @@ class NotificationSettingReaderTest {
 
         assertThat(result.safeZone().entryEnabled()).isTrue();
         assertThat(result.safeZone().exitEnabled()).isTrue();
-        assertThat(result.anomaly().sensitivity()).isEqualTo("NORMAL");
+        assertThat(result.anomaly().routeDeviationSensitivity()).isEqualTo("NORMAL");
+        assertThat(result.anomaly().speedAnomalySensitivity()).isEqualTo("NORMAL");
+        assertThat(result.anomaly().wanderingAnomalySensitivity()).isEqualTo("NORMAL");
         assertThat(result.emergencyCall().enabled()).isTrue();
         assertThat(result.battery().lowBatteryEnabled()).isTrue();
         assertThat(result.battery().thresholdPercent()).isEqualTo(25);
@@ -58,7 +60,9 @@ class NotificationSettingReaderTest {
         assertThat(result.anomaly().routeDeviationEnabled()).isTrue();
         assertThat(result.anomaly().speedAnomalyEnabled()).isFalse();
         assertThat(result.anomaly().wanderingAnomalyEnabled()).isTrue();
-        assertThat(result.anomaly().sensitivity()).isEqualTo("HIGH");
+        assertThat(result.anomaly().routeDeviationSensitivity()).isEqualTo("HIGH");
+        assertThat(result.anomaly().speedAnomalySensitivity()).isEqualTo("LOW");
+        assertThat(result.anomaly().wanderingAnomalySensitivity()).isEqualTo("VERY_HIGH");
         assertThat(result.emergencyCall().enabled()).isTrue();
         assertThat(result.battery().lowBatteryEnabled()).isFalse();
         assertThat(result.battery().thresholdPercent()).isEqualTo(40);

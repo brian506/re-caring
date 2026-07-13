@@ -22,6 +22,10 @@ public class QGpsHistory extends EntityPathBase<GpsHistory> {
 
     public static final QGpsHistory gpsHistory = new QGpsHistory("gpsHistory");
 
+    public final NumberPath<Double> accuracy = createNumber("accuracy", Double.class);
+
+    public final NumberPath<Integer> battery = createNumber("battery", Integer.class);
+
     public final NumberPath<Long> id = createNumber("id", Long.class);
 
     public final NumberPath<Double> latitude = createNumber("latitude", Double.class);

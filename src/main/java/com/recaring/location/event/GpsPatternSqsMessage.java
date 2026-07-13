@@ -8,11 +8,12 @@ public record GpsPatternSqsMessage(
         String wardMemberKey,
         List<GpsPoint> gpsPoints
 ) {
-    public record GpsPoint(double lat, double lng, String recordedAt) {}
+    public record GpsPoint(double latitude, double longitude, String recordedAt, Double accuracy, Integer battery) {}
 
     public static GpsPatternSqsMessage from(String wardMemberKey, List<Gps> gpsList) {
         List<GpsPoint> points = gpsList.stream()
-                .map(gps -> new GpsPoint(gps.lat(), gps.lng(), gps.recordedAt().toString()))
+                .map(gps -> new GpsPoint(
+                        gps.lat(), gps.lng(), gps.recordedAt().toString(), gps.accuracy(), gps.battery()))
                 .toList();
         return new GpsPatternSqsMessage(wardMemberKey, points);
     }

@@ -42,10 +42,18 @@ public class GpsHistory {
     @Column(nullable = false, updatable = false)
     private LocalDateTime recordedAt;
 
+    @Column
+    private Double accuracy;
+
+    @Column
+    private Integer battery;
+
     @Builder
-    public GpsHistory(String wardMemberKey, double latitude, double longitude) {
+    public GpsHistory(String wardMemberKey, double latitude, double longitude, Double accuracy, Integer battery) {
         this.wardMemberKey = wardMemberKey;
         this.latitude = latitude;
         this.longitude = longitude;
+        this.accuracy = accuracy;
+        this.battery = battery;
     }
 }
