@@ -2,14 +2,19 @@ package com.recaring.location.controller.response;
 
 import com.recaring.location.vo.Gps;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.ZoneOffset;
 
 public record GpsHistoryResponse(
-        double lat,
-        double lng,
-        LocalDateTime recordedAt
+        double latitude,
+        double longitude,
+        Instant recordedAt
 ) {
     public static GpsHistoryResponse from(Gps gps) {
-        return new GpsHistoryResponse(gps.lat(), gps.lng(), gps.recordedAt());
+        return new GpsHistoryResponse(
+                gps.latitude(),
+                gps.longitude(),
+                gps.recordedAt().toInstant(ZoneOffset.UTC)
+        );
     }
 }

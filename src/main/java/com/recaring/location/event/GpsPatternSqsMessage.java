@@ -13,7 +13,7 @@ public record GpsPatternSqsMessage(
     public static GpsPatternSqsMessage from(String wardMemberKey, List<Gps> gpsList) {
         List<GpsPoint> points = gpsList.stream()
                 .map(gps -> new GpsPoint(
-                        gps.lat(), gps.lng(), gps.recordedAt().toString(), gps.accuracy(), gps.battery()))
+                        gps.latitude(), gps.longitude(), gps.recordedAt().toString(), gps.accuracy(), gps.battery()))
                 .toList();
         return new GpsPatternSqsMessage(wardMemberKey, points);
     }

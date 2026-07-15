@@ -5,8 +5,8 @@ import com.recaring.location.dataaccess.entity.GpsHistory;
 import java.time.LocalDateTime;
 
 public record Gps(
-        double lat,
-        double lng,
+        double latitude,
+        double longitude,
         LocalDateTime recordedAt,
         Double accuracy,
         Integer battery
