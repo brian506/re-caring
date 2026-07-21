@@ -45,11 +45,6 @@ aws:
   sqs:
     gps-queue-url: ""
 
-gps:
-  pattern:
-    analysis:
-      interval-ms: 1800000
-
 management:
   endpoints:
     web:

@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -53,39 +52,6 @@ class GpsHistoryRepositoryTest extends AbstractRepositoryTest {
                 LocationFixture.WARD_KEY, LocalDate.now());
 
         assertThat(result).noneMatch(h -> h.getWardMemberKey().equals("other-ward"));
-    }
-
-    @Test
-    @DisplayName("findActiveWardKeysSince는 기준 시간 이후 GPS를 전송한 wardKey 목록을 중복 없이 반환한다")
-    void findActiveWardKeysSince_returns_distinct_ward_keys() {
-        LocalDateTime since = LocalDateTime.now().minusMinutes(30);
-        gpsHistoryRepository.save(buildHistory(LocationFixture.WARD_KEY, 37.1, 126.1));
-        gpsHistoryRepository.save(buildHistory(LocationFixture.WARD_KEY, 37.2, 126.2));
-        gpsHistoryRepository.save(buildHistory("ward-key-002", 36.0, 127.0));
-        em.flush();
-        em.clear();
-
-        List<String> activeKeys = gpsHistoryRepository.findActiveWardKeysSince(since);
-
-        assertThat(activeKeys)
-                .containsExactlyInAnyOrder(LocationFixture.WARD_KEY, "ward-key-002")
-                .doesNotHaveDuplicates();
-    }
-
-    @Test
-    @DisplayName("findByWardKeyBetween은 지정한 시간 범위 내 GPS 이력을 반환한다")
-    void findByWardKeyBetween_returns_histories_in_range() {
-        LocalDateTime from = LocalDateTime.now().minusHours(1);
-        LocalDateTime to = LocalDateTime.now().plusHours(1);
-        gpsHistoryRepository.save(buildHistory(LocationFixture.WARD_KEY, 37.1, 126.1));
-        em.flush();
-        em.clear();
-
-        List<GpsHistory> result = gpsHistoryRepository.findByWardKeyBetween(
-                LocationFixture.WARD_KEY, from, to);
-
-        assertThat(result).isNotEmpty();
-        assertThat(result).allMatch(h -> h.getWardMemberKey().equals(LocationFixture.WARD_KEY));
     }
 
     private GpsHistory buildHistory(String wardKey, double lat, double lng) {

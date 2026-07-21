@@ -88,18 +88,18 @@ class TokenRefreshServiceTest {
     }
 
     @Test
-    @DisplayName("DB에 없는 리프레시 토큰이면 EXPIRED_JWT 예외가 발생한다")
+    @DisplayName("DB에 없는 리프레시 토큰이면 REFRESH_TOKEN_NOT_FOUND 예외가 발생한다")
     void refresh_fail_when_token_not_in_redis() {
         String refreshToken = "not-in-redis-token";
         @SuppressWarnings("unchecked")
         Jws<Claims> mockClaims = mock(Jws.class);
         given(jwtValidator.validate(refreshToken)).willReturn(mockClaims);
         given(refreshTokenReader.findMemberKey(refreshToken))
-                .willThrow(new AppException(ErrorType.EXPIRED_JWT));
+                .willThrow(new AppException(ErrorType.REFRESH_TOKEN_NOT_FOUND));
 
         assertThatThrownBy(() -> tokenRefreshService.refresh(refreshToken))
                 .isInstanceOf(AppException.class)
                 .extracting(e -> ((AppException) e).getErrorType())
-                .isEqualTo(ErrorType.EXPIRED_JWT);
+                .isEqualTo(ErrorType.REFRESH_TOKEN_NOT_FOUND);
     }
 }

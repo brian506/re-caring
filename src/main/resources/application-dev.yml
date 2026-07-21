@@ -70,11 +70,6 @@ aws:
   sqs:
     gps-queue-url: ${AWS_SQS_GPS_QUEUE_URL}
 
-gps:
-  pattern:
-    analysis:
-      interval-ms: ${GPS_PATTERN_INTERVAL_MS:1800000}
-
 springdoc:
   swagger-ui:
     enabled: true

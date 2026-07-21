@@ -45,7 +45,7 @@ class RefreshTokenReaderTest {
     }
 
     @Test
-    @DisplayName("DB에 존재하지 않는 토큰이면 EXPIRED_JWT 예외가 발생한다")
+    @DisplayName("DB에 존재하지 않는 토큰이면 REFRESH_TOKEN_NOT_FOUND 예외가 발생한다")
     void findMemberKey_fail_when_not_found() {
         // given
         given(refreshTokenRepository.findByToken(AuthFixture.REFRESH_TOKEN)).willReturn(Optional.empty());
@@ -53,7 +53,7 @@ class RefreshTokenReaderTest {
         // when & then
         assertThatThrownBy(() -> refreshTokenReader.findMemberKey(AuthFixture.REFRESH_TOKEN))
                 .isInstanceOf(AppException.class)
-                .hasFieldOrPropertyWithValue("errorType", ErrorType.EXPIRED_JWT);
+                .hasFieldOrPropertyWithValue("errorType", ErrorType.REFRESH_TOKEN_NOT_FOUND);
     }
 
     @Test

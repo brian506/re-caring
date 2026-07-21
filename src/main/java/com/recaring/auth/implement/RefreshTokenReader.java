@@ -15,7 +15,7 @@ public class RefreshTokenReader {
 
     public String findMemberKey(String refreshToken) {
         RefreshToken entity = refreshTokenRepository.findByToken(refreshToken)
-                .orElseThrow(() -> new AppException(ErrorType.EXPIRED_JWT));
+                .orElseThrow(() -> new AppException(ErrorType.REFRESH_TOKEN_NOT_FOUND));
 
         if (entity.isExpired()) {
             throw new AppException(ErrorType.EXPIRED_JWT);
