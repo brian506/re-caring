@@ -38,6 +38,7 @@ public enum ErrorType {
     INVALID_MEMBER_KEY(HttpStatus.BAD_REQUEST, ErrorCode.E2018, "멤버 key가 유효하지 않습니다.", LogLevel.WARN),
     OAUTH_ALREADY_LINKED(HttpStatus.CONFLICT, ErrorCode.E2019, "이미 연동된 소셜 계정입니다.", LogLevel.WARN),
     OAUTH_NOT_LINKED(HttpStatus.BAD_REQUEST, ErrorCode.E2020, "연동되지 않은 소셜 계정입니다. 로컬 회원가입 후 연동해 주세요.", LogLevel.WARN),
+    REFRESH_TOKEN_NOT_FOUND(HttpStatus.BAD_REQUEST, ErrorCode.E2021, "리프레시 토큰을 찾을 수 없습니다.", LogLevel.WARN),
 
     // Member (E3xxx)
     EMAIL_IS_NULL(HttpStatus.BAD_REQUEST, ErrorCode.E3000, "이메일은 필수 입력값입니다.", LogLevel.WARN),
