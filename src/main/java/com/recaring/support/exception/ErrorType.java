@@ -69,6 +69,7 @@ public enum ErrorType {
     WARD_KEY_REQUIRED(HttpStatus.BAD_REQUEST, ErrorCode.E5010, "보호자를 추가하려면 보호 대상자 키가 필요합니다.", LogLevel.WARN),
     NOT_FOUND_CARE_RELATIONSHIP(HttpStatus.BAD_REQUEST, ErrorCode.E5011, "존재하지 않는 케어 관계입니다.", LogLevel.WARN),
     NOT_GUARDIAN_ROLE_IN_CARE(HttpStatus.FORBIDDEN, ErrorCode.E5012, "해당 보호 대상자의 보호자(GUARDIAN) 역할이 아닙니다.", LogLevel.WARN),
+    CARE_WARD_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, ErrorCode.E5013, "보호 대상자는 최대 5명까지 등록할 수 있습니다.", LogLevel.WARN),
 
     // Location (E6xxx)
     NOT_WARD_MEMBER(HttpStatus.FORBIDDEN, ErrorCode.E6000, "보호 대상자로 가입한 회원만 GPS를 전송할 수 있습니다.", LogLevel.WARN),

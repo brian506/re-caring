@@ -16,7 +16,7 @@ import java.util.function.Function;
 @RequiredArgsConstructor
 public class CareRelationshipValidator {
 
-    private static final int MAX_WARD_COUNT = 1;
+    private static final int MAX_WARD_COUNT = 5;
     private static final int MAX_MANAGER_COUNT = 3;
     private static final int MAX_GUARDIAN_COUNT = 1;
 
@@ -35,7 +35,7 @@ public class CareRelationshipValidator {
         memberValidator.validateSubscription(caregiverMemberKey);
 
         List<CareRelationship> careRelationships = careRelationshipRepository.findAllByCaregiverMemberKey(caregiverMemberKey);
-        checkRoleLimit(careRelationships, CareRole.GUARDIAN, MAX_WARD_COUNT);
+        checkRoleLimit(careRelationships, CareRole.GUARDIAN, MAX_WARD_COUNT, ErrorType.CARE_WARD_LIMIT_EXCEEDED);
         validateNotDuplicated(careRelationships, CareRelationship::getWardMemberKey,newWardMemberKey);
     }
 
@@ -44,7 +44,7 @@ public class CareRelationshipValidator {
 
         // memberValidator.validatePremium(requesterKey);
         List<CareRelationship> careRelationships = careRelationshipRepository.findAllByWardMemberKey(wardMemberKey);
-        checkRoleLimit(careRelationships, CareRole.MANAGER, MAX_MANAGER_COUNT);
+        checkRoleLimit(careRelationships, CareRole.MANAGER, MAX_MANAGER_COUNT, ErrorType.CARE_CAREGIVER_LIMIT_EXCEEDED);
         validateNotDuplicated(careRelationships, CareRelationship::getCaregiverMemberKey, newManagerKey);
     }
 
@@ -53,7 +53,7 @@ public class CareRelationshipValidator {
 
         // memberValidator.validatePremium(requesterKey);
         List<CareRelationship> careRelationships = careRelationshipRepository.findAllByWardMemberKey(wardMemberKey);
-        checkRoleLimit(careRelationships, CareRole.GUARDIAN, MAX_GUARDIAN_COUNT);
+        checkRoleLimit(careRelationships, CareRole.GUARDIAN, MAX_GUARDIAN_COUNT, ErrorType.CARE_CAREGIVER_LIMIT_EXCEEDED);
         validateNotDuplicated(careRelationships, CareRelationship::getCaregiverMemberKey, newGuardianKey);
     }
 
@@ -79,12 +79,12 @@ public class CareRelationshipValidator {
         }
     }
 
-    private void checkRoleLimit(List<CareRelationship> relationships, CareRole role, int maxCount) {
+    private void checkRoleLimit(List<CareRelationship> relationships, CareRole role, int maxCount, ErrorType errorType) {
         long count = relationships.stream()
                 .filter(r -> r.getCareRole() == role)
                 .count();
         if(count >= maxCount) {
-            throw new AppException(ErrorType.CARE_CAREGIVER_LIMIT_EXCEEDED);
+            throw new AppException(errorType);
         }
     }
 

@@ -51,17 +51,22 @@ class CareRelationshipValidatorTest {
     }
 
     @Test
-    @DisplayName("보호 대상자 추가 검증 - 이미 1명의 보호 대상자가 있으면 예외가 발생한다")
+    @DisplayName("보호 대상자 추가 검증 - 이미 5명의 보호 대상자가 있으면 예외가 발생한다")
     void validateCanAddWard_fails_when_limit_exceeded() {
-        CareRelationship existing = CareFixture.createGuardianRelationship(CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY);
+        List<CareRelationship> existing = List.of(
+                CareFixture.createGuardianRelationship("ward-key-1", CareFixture.GUARDIAN_MEMBER_KEY),
+                CareFixture.createGuardianRelationship("ward-key-2", CareFixture.GUARDIAN_MEMBER_KEY),
+                CareFixture.createGuardianRelationship("ward-key-3", CareFixture.GUARDIAN_MEMBER_KEY),
+                CareFixture.createGuardianRelationship("ward-key-4", CareFixture.GUARDIAN_MEMBER_KEY),
+                CareFixture.createGuardianRelationship("ward-key-5", CareFixture.GUARDIAN_MEMBER_KEY));
         given(careRelationshipRepository.findAllByCaregiverMemberKey(CareFixture.GUARDIAN_MEMBER_KEY))
-                .willReturn(List.of(existing));
+                .willReturn(existing);
 
         assertThatThrownBy(() ->
                 careRelationshipValidator.validateCanAddWard(
                         CareFixture.GUARDIAN_MEMBER_KEY, "another-ward-key"))
                 .isInstanceOf(AppException.class)
-                .hasFieldOrPropertyWithValue("errorType", ErrorType.CARE_CAREGIVER_LIMIT_EXCEEDED);
+                .hasFieldOrPropertyWithValue("errorType", ErrorType.CARE_WARD_LIMIT_EXCEEDED);
     }
 
     @Test
@@ -72,12 +77,11 @@ class CareRelationshipValidatorTest {
                 .willReturn(List.of(existing));
 
         // 이미 등록된 wardMemberKey로 재등록 시도
-        // limit 체크가 먼저 걸리므로 CARE_CAREGIVER_LIMIT_EXCEEDED 발생
         assertThatThrownBy(() ->
                 careRelationshipValidator.validateCanAddWard(
                         CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY))
                 .isInstanceOf(AppException.class)
-                .hasFieldOrPropertyWithValue("errorType", ErrorType.CARE_CAREGIVER_LIMIT_EXCEEDED);
+                .hasFieldOrPropertyWithValue("errorType", ErrorType.ALREADY_CARE_RELATIONSHIP);
     }
 
     // ── validateCanAddManager ──────────────────────────────────────────────
