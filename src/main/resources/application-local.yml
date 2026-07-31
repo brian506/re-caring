@@ -43,7 +43,8 @@ client:
 
 aws:
   sqs:
-    gps-queue-url: ""
+    detection-request-queue-url: ""
+    detection-result-queue-url: ""
 
 management:
   endpoints:

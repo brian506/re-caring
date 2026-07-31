@@ -3,6 +3,7 @@ package com.recaring.notification.dataaccess.entity;
 import com.recaring.common.entity.BaseEntity;
 import com.recaring.notification.vo.AnomalySensitivity;
 import com.recaring.notification.vo.BatteryThreshold;
+import com.recaring.notification.vo.BatteryThresholdRange;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -72,6 +73,9 @@ public class NotificationSetting extends BaseEntity {
     @Column(name = "battery_threshold_percent", nullable = false, columnDefinition = "integer not null default 25")
     private int batteryThresholdPercent;
 
+    @Column(name = "full_battery_threshold_percent", nullable = false, columnDefinition = "integer not null default 100")
+    private int fullBatteryThresholdPercent;
+
     @Builder
     public NotificationSetting(
             String wardMemberKey,
@@ -85,7 +89,8 @@ public class NotificationSetting extends BaseEntity {
             AnomalySensitivity wanderingAnomalySensitivity,
             boolean emergencyCallEnabled,
             boolean lowBatteryEnabled,
-            int batteryThresholdPercent
+            int batteryThresholdPercent,
+            int fullBatteryThresholdPercent
     ) {
         this.wardMemberKey = wardMemberKey;
         this.safeZoneEntryEnabled = safeZoneEntryEnabled;
@@ -99,6 +104,7 @@ public class NotificationSetting extends BaseEntity {
         this.emergencyCallEnabled = emergencyCallEnabled;
         this.lowBatteryEnabled = lowBatteryEnabled;
         this.batteryThresholdPercent = batteryThresholdPercent;
+        this.fullBatteryThresholdPercent = fullBatteryThresholdPercent;
     }
 
     public static NotificationSetting defaultFor(String wardMemberKey) {
@@ -115,6 +121,7 @@ public class NotificationSetting extends BaseEntity {
                 .emergencyCallEnabled(true)
                 .lowBatteryEnabled(true)
                 .batteryThresholdPercent(BatteryThreshold.DEFAULT.percent())
+                .fullBatteryThresholdPercent(BatteryThreshold.DEFAULT_FULL.percent())
                 .build();
     }
 
@@ -146,9 +153,10 @@ public class NotificationSetting extends BaseEntity {
         update();
     }
 
-    public void updateBattery(boolean lowBatteryEnabled, BatteryThreshold threshold) {
+    public void updateBattery(boolean lowBatteryEnabled, BatteryThresholdRange thresholdRange) {
         this.lowBatteryEnabled = lowBatteryEnabled;
-        this.batteryThresholdPercent = threshold.percent();
+        this.batteryThresholdPercent = thresholdRange.low().percent();
+        this.fullBatteryThresholdPercent = thresholdRange.full().percent();
         update();
     }
 }

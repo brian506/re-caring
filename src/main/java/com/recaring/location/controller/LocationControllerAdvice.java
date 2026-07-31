@@ -5,6 +5,8 @@ import com.recaring.support.response.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -16,7 +18,13 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 // text/event-stream만으로 좁혀져 JSON 컨버터를 못 찾고 500으로 깨진다. assignableTypes로 이
 // 컨트롤러가 던진 AppException만 가로채 Content-Type을 명시적으로 고정해 협상 자체를 건너뛴다.
 // (ApiControllerAdvice는 원본 그대로, 다른 컨트롤러/엔드포인트는 영향 없음)
+// @Order is required: ExceptionHandlerExceptionResolver walks the advice beans in order and
+// uses the FIRST one that both applies to the controller and handles the exception type.
+// A narrower `assignableTypes` scope does NOT raise priority — it only decides candidacy.
+// Without an explicit order both this and ApiControllerAdvice sit at LOWEST_PRECEDENCE, the
+// global one wins by scan order, and this handler never runs.
 @Slf4j
+@Order(Ordered.HIGHEST_PRECEDENCE)
 @RestControllerAdvice(assignableTypes = LocationController.class)
 public class LocationControllerAdvice {
 

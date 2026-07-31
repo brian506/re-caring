@@ -31,6 +31,8 @@ public class QNotificationSetting extends EntityPathBase<NotificationSetting> {
 
     public final BooleanPath emergencyCallEnabled = createBoolean("emergencyCallEnabled");
 
+    public final NumberPath<Integer> fullBatteryThresholdPercent = createNumber("fullBatteryThresholdPercent", Integer.class);
+
     public final NumberPath<Long> id = createNumber("id", Long.class);
 
     public final BooleanPath lowBatteryEnabled = createBoolean("lowBatteryEnabled");

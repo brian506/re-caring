@@ -86,6 +86,7 @@ public class NotificationFixture {
                 .emergencyCallEnabled(true)
                 .lowBatteryEnabled(false)
                 .batteryThresholdPercent(40)
+                .fullBatteryThresholdPercent(90)
                 .build();
     }
 

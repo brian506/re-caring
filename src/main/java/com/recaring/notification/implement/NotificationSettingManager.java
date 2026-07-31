@@ -2,7 +2,7 @@ package com.recaring.notification.implement;
 
 import com.recaring.notification.dataaccess.repository.NotificationSettingRepository;
 import com.recaring.notification.vo.AnomalySensitivity;
-import com.recaring.notification.vo.BatteryThreshold;
+import com.recaring.notification.vo.BatteryThresholdRange;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,8 +48,9 @@ public class NotificationSettingManager {
     }
 
     @Transactional
-    public void updateBattery(String wardKey, boolean lowBatteryEnabled, BatteryThreshold threshold) {
+    public void updateBattery(String wardKey, boolean lowBatteryEnabled, BatteryThresholdRange thresholdRange) {
         notificationSettingRepository.insertDefaultIfAbsent(wardKey);
-        notificationSettingRepository.updateBattery(wardKey, lowBatteryEnabled, threshold.percent());
+        notificationSettingRepository.updateBattery(
+                wardKey, lowBatteryEnabled, thresholdRange.low().percent(), thresholdRange.full().percent());
     }
 }

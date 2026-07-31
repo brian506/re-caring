@@ -53,7 +53,8 @@ aws:
   secret-key: ${AWS_SECRET_KEY}
   region: ${AWS_REGION:ap-northeast-2}
   sqs:
-    gps-queue-url: ${AWS_SQS_GPS_QUEUE_URL}
+    detection-request-queue-url: ${AWS_SQS_DETECTION_REQUEST_QUEUE_URL}
+    detection-result-queue-url: ${AWS_SQS_DETECTION_RESULT_QUEUE_URL}
 
 gps:
   pattern:

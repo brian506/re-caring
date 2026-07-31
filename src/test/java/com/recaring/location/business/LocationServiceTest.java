@@ -1,5 +1,6 @@
 package com.recaring.location.business;
 
+import com.recaring.location.event.GpsSavedEvent;
 import com.recaring.location.fixture.LocationFixture;
 import com.recaring.location.implement.*;
 import org.junit.jupiter.api.DisplayName;
@@ -8,6 +9,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -30,6 +32,8 @@ class LocationServiceTest {
     private SseEmitterManager sseEmitterManager;
     @Mock
     private LocationValidator locationValidator;
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @Test
     @DisplayName("GPS 수신 시 DB에 저장하고 최신 위치를 캐시에 저장한다")
@@ -44,6 +48,7 @@ class LocationServiceTest {
                 LocationFixture.WARD_KEY, LocationFixture.LATITUDE, LocationFixture.LONGITUDE,
                 LocationFixture.ACCURACY, LocationFixture.BATTERY);
         then(gpsLatestCacheWriter).should(times(1)).save(eq(LocationFixture.WARD_KEY), any());
+        then(eventPublisher).should(times(1)).publishEvent(any(GpsSavedEvent.class));
     }
 
     @Test

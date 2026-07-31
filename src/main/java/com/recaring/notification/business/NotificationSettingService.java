@@ -5,7 +5,7 @@ import com.recaring.notification.implement.NotificationSettingManager;
 import com.recaring.notification.implement.NotificationSettingReader;
 import com.recaring.notification.implement.NotificationSettingValidator;
 import com.recaring.notification.vo.AnomalySensitivity;
-import com.recaring.notification.vo.BatteryThreshold;
+import com.recaring.notification.vo.BatteryThresholdRange;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -51,8 +51,8 @@ public class NotificationSettingService {
     }
 
     @Transactional
-    public void updateBattery(String requesterKey, String wardKey, boolean lowBatteryEnabled, BatteryThreshold threshold) {
+    public void updateBattery(String requesterKey, String wardKey, boolean lowBatteryEnabled, BatteryThresholdRange thresholdRange) {
         notificationSettingValidator.validateSettingAccess(requesterKey, wardKey);
-        notificationSettingManager.updateBattery(wardKey, lowBatteryEnabled, threshold);
+        notificationSettingManager.updateBattery(wardKey, lowBatteryEnabled, thresholdRange);
     }
 }

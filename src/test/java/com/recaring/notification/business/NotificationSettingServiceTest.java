@@ -7,6 +7,7 @@ import com.recaring.notification.implement.NotificationSettingReader;
 import com.recaring.notification.implement.NotificationSettingValidator;
 import com.recaring.notification.vo.AnomalySensitivity;
 import com.recaring.notification.vo.BatteryThreshold;
+import com.recaring.notification.vo.BatteryThresholdRange;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -97,14 +98,15 @@ class NotificationSettingServiceTest {
     @Test
     @DisplayName("Validates access and delegates battery update to the manager")
     void updateBattery_validates_access_and_updates_setting() {
-        BatteryThreshold threshold = new BatteryThreshold(30);
+        BatteryThresholdRange thresholdRange = new BatteryThresholdRange(
+                new BatteryThreshold(30), new BatteryThreshold(90));
 
         notificationSettingService.updateBattery(
-                NotificationFixture.WARD_KEY, NotificationFixture.WARD_KEY, true, threshold);
+                NotificationFixture.WARD_KEY, NotificationFixture.WARD_KEY, true, thresholdRange);
 
         then(notificationSettingValidator).should()
                 .validateSettingAccess(NotificationFixture.WARD_KEY, NotificationFixture.WARD_KEY);
         then(notificationSettingManager).should()
-                .updateBattery(NotificationFixture.WARD_KEY, true, threshold);
+                .updateBattery(NotificationFixture.WARD_KEY, true, thresholdRange);
     }
 }

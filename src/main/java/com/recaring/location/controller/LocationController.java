@@ -7,6 +7,7 @@ import com.recaring.security.vo.AuthMember;
 import com.recaring.support.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -47,8 +48,14 @@ public class LocationController {
     @GetMapping(value = "/stream/{wardKey}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter streamLocation(
             @AuthMember String memberKey,
-            @PathVariable String wardKey
+            @PathVariable String wardKey,
+            HttpServletResponse response
     ) {
+        // nginx buffers proxied responses until a 4KB buffer fills, which never happens
+        // within one 300s stream. This header disables buffering per-response, so the
+        // stream keeps working even if the proxy config is changed or replaced.
+        response.setHeader("X-Accel-Buffering", "no");
+
         return locationService.streamLocation(memberKey, wardKey);
     }
 

@@ -31,6 +31,7 @@ public record NotificationSettingInfo(
                 new BatterySettingInfo(
                         setting.isLowBatteryEnabled(),
                         setting.getBatteryThresholdPercent(),
+                        setting.getFullBatteryThresholdPercent(),
                         BatteryThreshold.options()
                 )
         );
@@ -60,7 +61,8 @@ public record NotificationSettingInfo(
 
     public record BatterySettingInfo(
             boolean lowBatteryEnabled,
-            int thresholdPercent,
+            int lowThresholdPercent,
+            int fullThresholdPercent,
             List<Integer> thresholdOptions
     ) {
     }

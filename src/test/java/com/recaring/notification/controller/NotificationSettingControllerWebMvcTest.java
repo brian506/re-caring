@@ -76,7 +76,8 @@ class NotificationSettingControllerWebMvcTest {
                 .andExpect(jsonPath("$.data.anomaly.sensitivityOptions[0]").value("VERY_LOW"))
                 .andExpect(jsonPath("$.data.emergencyCall.enabled").value(true))
                 .andExpect(jsonPath("$.data.battery.lowBatteryEnabled").value(false))
-                .andExpect(jsonPath("$.data.battery.thresholdPercent").value(40))
+                .andExpect(jsonPath("$.data.battery.lowThresholdPercent").value(40))
+                .andExpect(jsonPath("$.data.battery.fullThresholdPercent").value(90))
                 .andExpect(jsonPath("$.data.battery.thresholdOptions[0]").value(10))
                 .andExpect(jsonPath("$.data.battery.thresholdOptions[18]").value(100));
 
@@ -151,7 +152,7 @@ class NotificationSettingControllerWebMvcTest {
                         .requestAttr("memberKey", MEMBER_KEY)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"lowBatteryEnabled": true, "thresholdPercent": 12}
+                                {"lowBatteryEnabled": true, "lowThresholdPercent": 12, "fullThresholdPercent": 90}
                                 """))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.resultType").value("ERROR"))

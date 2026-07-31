@@ -108,7 +108,7 @@ class NotificationSettingRepositoryTest extends AbstractRepositoryTest {
     void updateBattery_updates_only_battery_columns() {
         notificationSettingRepository.insertDefaultIfAbsent(NotificationFixture.WARD_KEY);
 
-        notificationSettingRepository.updateBattery(NotificationFixture.WARD_KEY, false, 40);
+        notificationSettingRepository.updateBattery(NotificationFixture.WARD_KEY, false, 40, 90);
 
         NotificationSetting updated = notificationSettingRepository
                 .findByWardMemberKey(NotificationFixture.WARD_KEY)
@@ -116,6 +116,7 @@ class NotificationSettingRepositoryTest extends AbstractRepositoryTest {
 
         assertThat(updated.isLowBatteryEnabled()).isFalse();
         assertThat(updated.getBatteryThresholdPercent()).isEqualTo(40);
+        assertThat(updated.getFullBatteryThresholdPercent()).isEqualTo(90);
         assertThat(updated.isEmergencyCallEnabled()).isTrue();
     }
 }

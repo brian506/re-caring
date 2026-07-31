@@ -44,7 +44,8 @@ class NotificationSettingReaderTest {
         assertThat(result.anomaly().wanderingAnomalySensitivity()).isEqualTo("NORMAL");
         assertThat(result.emergencyCall().enabled()).isTrue();
         assertThat(result.battery().lowBatteryEnabled()).isTrue();
-        assertThat(result.battery().thresholdPercent()).isEqualTo(25);
+        assertThat(result.battery().lowThresholdPercent()).isEqualTo(25);
+        assertThat(result.battery().fullThresholdPercent()).isEqualTo(100);
     }
 
     @Test
@@ -65,7 +66,8 @@ class NotificationSettingReaderTest {
         assertThat(result.anomaly().wanderingAnomalySensitivity()).isEqualTo("VERY_HIGH");
         assertThat(result.emergencyCall().enabled()).isTrue();
         assertThat(result.battery().lowBatteryEnabled()).isFalse();
-        assertThat(result.battery().thresholdPercent()).isEqualTo(40);
+        assertThat(result.battery().lowThresholdPercent()).isEqualTo(40);
+        assertThat(result.battery().fullThresholdPercent()).isEqualTo(90);
     }
 
     @Test

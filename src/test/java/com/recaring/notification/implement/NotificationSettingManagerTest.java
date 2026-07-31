@@ -4,6 +4,7 @@ import com.recaring.notification.dataaccess.repository.NotificationSettingReposi
 import com.recaring.notification.fixture.NotificationFixture;
 import com.recaring.notification.vo.AnomalySensitivity;
 import com.recaring.notification.vo.BatteryThreshold;
+import com.recaring.notification.vo.BatteryThresholdRange;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -80,10 +81,10 @@ class NotificationSettingManagerTest {
         notificationSettingManager.updateBattery(
                 NotificationFixture.WARD_KEY,
                 true,
-                new BatteryThreshold(30)
+                new BatteryThresholdRange(new BatteryThreshold(30), new BatteryThreshold(90))
         );
 
         then(notificationSettingRepository).should().insertDefaultIfAbsent(NotificationFixture.WARD_KEY);
-        then(notificationSettingRepository).should().updateBattery(NotificationFixture.WARD_KEY, true, 30);
+        then(notificationSettingRepository).should().updateBattery(NotificationFixture.WARD_KEY, true, 30, 90);
     }
 }
