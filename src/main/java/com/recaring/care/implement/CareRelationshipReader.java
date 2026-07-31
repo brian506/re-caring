@@ -36,7 +36,7 @@ public class CareRelationshipReader {
         return relationships.stream()
                 .map(r -> {
                     Member ward = memberMap.get(r.getWardMemberKey());
-                    return new WardInfo(ward.getMemberKey(), ward.getName(), ward.getPhone(), r.getCareRole());
+                    return new WardInfo(ward.getMemberKey(), ward.getName(), ward.getPhone(), ward.getGender(), r.getCareRole());
                 })
                 .toList();
     }
