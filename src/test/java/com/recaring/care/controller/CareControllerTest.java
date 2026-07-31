@@ -200,7 +200,8 @@ class CareControllerTest extends AbstractIntegrationTest {
                 .expectBody()
                 .jsonPath("$.resultType").isEqualTo("SUCCESS")
                 .jsonPath("$.data").isArray()
-                .jsonPath("$.data[0].wardName").isEqualTo("보호대상자");
+                .jsonPath("$.data[0].wardName").isEqualTo("보호대상자")
+                .jsonPath("$.data[0].wardGender").isEqualTo("FEMALE");
     }
 
     // ── 보호자/관리자 목록 조회 ────────────────────────────────────────────

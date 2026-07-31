@@ -42,7 +42,9 @@ class CareRelationshipServiceTest {
     @DisplayName("내 보호 대상자 목록 조회 시 Reader에서 조립된 결과를 반환한다")
     void getMyWards_returns_reader_result() {
         List<WardInfo> expected = List.of(
-                new WardInfo(CareFixture.WARD_MEMBER_KEY, "보호대상자", CareFixture.WARD_PHONE, com.recaring.care.dataaccess.entity.CareRole.GUARDIAN)
+                new WardInfo(CareFixture.WARD_MEMBER_KEY, "보호대상자", CareFixture.WARD_PHONE,
+                        com.recaring.member.dataaccess.entity.Gender.FEMALE,
+                        com.recaring.care.dataaccess.entity.CareRole.GUARDIAN)
         );
         given(careRelationshipReader.findWardInfos(CareFixture.GUARDIAN_MEMBER_KEY)).willReturn(expected);
 
