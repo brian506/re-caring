@@ -1,7 +1,6 @@
 package com.recaring.location.fixture;
 
 import com.recaring.location.vo.Gps;
-import com.recaring.location.vo.GpsReport;
 import com.recaring.member.dataaccess.entity.Gender;
 import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.dataaccess.entity.MemberRole;
@@ -25,17 +24,14 @@ public class LocationFixture {
     public static final String LAST_NOTIFIED_THRESHOLD_FIELD = "lastNotifiedThreshold";
     public static final String SAFE_ZONE_STATE_KEY = "safezone:state:" + WARD_KEY;
     public static final LocalDateTime MEASURED_AT = LocalDateTime.of(2026, 7, 27, 10, 15, 0);
-
-    public static GpsReport createGpsReport() {
-        return new GpsReport(LATITUDE, LONGITUDE, ACCURACY, BATTERY, SPEED, MEASURED_AT);
-    }
+    public static final LocalDateTime RECORDED_AT = LocalDateTime.of(2026, 7, 27, 10, 15, 3);
 
     public static Gps createGps() {
-        return createGpsReport().toGps(MEASURED_AT);
+        return createGps(BATTERY);
     }
 
     public static Gps createGps(Integer battery) {
-        return new GpsReport(LATITUDE, LONGITUDE, ACCURACY, battery, SPEED, MEASURED_AT).toGps(MEASURED_AT);
+        return new Gps(LATITUDE, LONGITUDE, RECORDED_AT, ACCURACY, battery, SPEED, MEASURED_AT);
     }
 
     public static Member createWard() {

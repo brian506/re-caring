@@ -106,6 +106,7 @@ public class SecurityConfig {
                                 mvc.matcher(HttpMethod.PATCH, "/api/v1/care/requests/{requestKey}/accept"),
                                 mvc.matcher(HttpMethod.PATCH, "/api/v1/care/requests/{requestKey}/reject"),
                                 mvc.matcher(HttpMethod.GET,   "/api/v1/care/wards/{wardKey}/caregivers"),
+                                mvc.matcher(HttpMethod.GET,   "/api/v1/location/history/{wardKey}"),
                                 mvc.matcher(HttpMethod.GET,   "/api/v1/notifications/settings/{wardKey}"),
                                 mvc.matcher(HttpMethod.PATCH, "/api/v1/notifications/settings/{wardKey}/safe-zone"),
                                 mvc.matcher(HttpMethod.PATCH, "/api/v1/notifications/settings/{wardKey}/anomaly"),

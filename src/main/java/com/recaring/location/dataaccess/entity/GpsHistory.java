@@ -2,7 +2,6 @@ package com.recaring.location.dataaccess.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -11,9 +10,6 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
 import java.time.LocalDateTime;
 
 @Getter
@@ -21,7 +17,6 @@ import java.time.LocalDateTime;
 @Table(name = "gps_histories")
 // TODO: CREATE INDEX idx_gps_ward_recorded ON gps_histories (ward_member_key, recorded_at);
 // TODO: CREATE INDEX idx_gps_ward_measured ON gps_histories (ward_member_key, measured_at);
-@EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class GpsHistory {
 
@@ -40,7 +35,6 @@ public class GpsHistory {
     private double longitude;
 
     // Server-side receive time. Not the device measurement time — use measuredAt for that.
-    @CreatedDate
     @Column(nullable = false, updatable = false)
     private LocalDateTime recordedAt;
 
@@ -59,11 +53,12 @@ public class GpsHistory {
     private LocalDateTime measuredAt;
 
     @Builder
-    public GpsHistory(String wardMemberKey, double latitude, double longitude,
+    public GpsHistory(String wardMemberKey, double latitude, double longitude, LocalDateTime recordedAt,
                       Double accuracy, Integer battery, Double speed, LocalDateTime measuredAt) {
         this.wardMemberKey = wardMemberKey;
         this.latitude = latitude;
         this.longitude = longitude;
+        this.recordedAt = recordedAt;
         this.accuracy = accuracy;
         this.battery = battery;
         this.speed = speed;
