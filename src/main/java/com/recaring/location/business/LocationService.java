@@ -38,8 +38,8 @@ public class LocationService {
         return sseEmitterManager.connect(wardKey);
     }
 
-    public List<Gps> getHistory(String caregiverKey, String wardKey, LocalDate date) {
-        locationValidator.validateCaregiverAccess(caregiverKey, wardKey);
+    public List<Gps> getHistory(String requesterKey, String wardKey, LocalDate date) {
+        locationValidator.validateHistoryViewAccess(requesterKey, wardKey);
         return gpsHistoryManager.findDailyGpsHistory(wardKey, date);
     }
 }
