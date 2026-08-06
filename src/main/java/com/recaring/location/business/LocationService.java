@@ -5,14 +5,12 @@ import com.recaring.location.implement.LocationValidator;
 import com.recaring.location.implement.gps.GpsHistoryManager;
 import com.recaring.location.implement.sse.SseEmitterManager;
 import com.recaring.location.vo.Gps;
-import com.recaring.location.vo.GpsReport;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -24,10 +22,8 @@ public class LocationService {
     private final LocationValidator locationValidator;
     private final ApplicationEventPublisher eventPublisher;
 
-    public void receiveGps(String wardMemberKey, GpsReport report) {
-        Gps gps = report.toGps(LocalDateTime.now());
-
-        gpsHistoryManager.save(wardMemberKey, report);
+    public void receiveGps(String wardMemberKey, Gps gps) {
+        gpsHistoryManager.save(wardMemberKey, gps);
 
         // 캐시 write + 배터리/안심존 판정 (GpsLatestCacheListener, BatteryDetectionListener, SafeZoneDetectionListener)
         eventPublisher.publishEvent(new GpsSavedEvent(wardMemberKey, gps));

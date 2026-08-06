@@ -1,6 +1,6 @@
 package com.recaring.location.controller.request;
 
-import com.recaring.location.vo.GpsReport;
+import com.recaring.location.vo.Gps;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
@@ -36,8 +36,9 @@ public record GpsRequest(
                 example = "2026-08-04T14:23:11Z")
         Instant measuredAt
 ) {
-    public GpsReport toReport() {
-        return new GpsReport(latitude, longitude, accuracy, battery, speed, toUtcLocalDateTime(measuredAt));
+    public Gps toGps(LocalDateTime receivedAt) {
+        return new Gps(latitude, longitude, receivedAt,
+                accuracy, battery, speed, toUtcLocalDateTime(measuredAt));
     }
 
     private static LocalDateTime toUtcLocalDateTime(Instant instant) {
