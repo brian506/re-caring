@@ -87,9 +87,9 @@ class NotificationSettingControllerTest extends AbstractIntegrationTest {
                 .jsonPath("$.data.anomaly.sensitivityOptions[4]").isEqualTo("VERY_HIGH")
                 .jsonPath("$.data.emergencyCall.enabled").isEqualTo(true)
                 .jsonPath("$.data.battery.lowBatteryEnabled").isEqualTo(true)
-                .jsonPath("$.data.battery.thresholdPercent").isEqualTo(25)
+                .jsonPath("$.data.battery.thresholdPercents").isEmpty()
                 .jsonPath("$.data.battery.thresholdOptions[0]").isEqualTo(10)
-                .jsonPath("$.data.battery.thresholdOptions[18]").isEqualTo(100);
+                .jsonPath("$.data.battery.thresholdOptions[9]").isEqualTo(100);
     }
 
     @Test
@@ -181,7 +181,7 @@ class NotificationSettingControllerTest extends AbstractIntegrationTest {
                 .header(HttpHeaders.AUTHORIZATION, bearerToken(guardian))
                 .contentType(MediaType.APPLICATION_JSON)
                 .body("""
-                        {"lowBatteryEnabled": false, "thresholdPercent": 40}
+                        {"lowBatteryEnabled": false, "thresholdPercents": [40, 90]}
                         """)
                 .exchange()
                 .expectStatus().isOk();
@@ -193,7 +193,8 @@ class NotificationSettingControllerTest extends AbstractIntegrationTest {
                 .expectStatus().isOk()
                 .expectBody()
                 .jsonPath("$.data.battery.lowBatteryEnabled").isEqualTo(false)
-                .jsonPath("$.data.battery.thresholdPercent").isEqualTo(40);
+                .jsonPath("$.data.battery.thresholdPercents[0]").isEqualTo(40)
+                .jsonPath("$.data.battery.thresholdPercents[1]").isEqualTo(90);
     }
 
     @Test
@@ -241,7 +242,7 @@ class NotificationSettingControllerTest extends AbstractIntegrationTest {
                 .header(HttpHeaders.AUTHORIZATION, bearerToken(guardian))
                 .contentType(MediaType.APPLICATION_JSON)
                 .body("""
-                        {"lowBatteryEnabled": true, "thresholdPercent": 12}
+                        {"lowBatteryEnabled": true, "thresholdPercents": [12]}
                         """)
                 .exchange()
                 .expectStatus().isBadRequest()

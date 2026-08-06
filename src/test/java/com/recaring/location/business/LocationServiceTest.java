@@ -1,13 +1,18 @@
 package com.recaring.location.business;
 
+import com.recaring.location.event.GpsSavedEvent;
 import com.recaring.location.fixture.LocationFixture;
-import com.recaring.location.implement.*;
+import com.recaring.location.implement.LocationValidator;
+import com.recaring.location.implement.gps.GpsHistoryManager;
+import com.recaring.location.implement.sse.SseEmitterManager;
+import com.recaring.location.vo.GpsReport;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -21,29 +26,26 @@ class LocationServiceTest {
     private LocationService locationService;
 
     @Mock
-    private GpsHistoryWriter gpsHistoryWriter;
-    @Mock
-    private GpsHistoryReader gpsHistoryReader;
-    @Mock
-    private GpsLatestCacheWriter gpsLatestCacheWriter;
+    private GpsHistoryManager gpsHistoryManager;
     @Mock
     private SseEmitterManager sseEmitterManager;
     @Mock
     private LocationValidator locationValidator;
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @Test
-    @DisplayName("GPS 수신 시 DB에 저장하고 최신 위치를 캐시에 저장한다")
-    void receiveGps_saves_history_and_cache() {
+    @DisplayName("GPS 수신 시 DB에 저장하고 GpsSavedEvent를 발행한다")
+    void receiveGps_saves_history_and_publishes_event() {
+        // Given
+        GpsReport report = LocationFixture.createGpsReport();
+
         // When
-        locationService.receiveGps(
-                LocationFixture.WARD_KEY, LocationFixture.LATITUDE, LocationFixture.LONGITUDE,
-                LocationFixture.ACCURACY, LocationFixture.BATTERY);
+        locationService.receiveGps(LocationFixture.WARD_KEY, report);
 
         // Then
-        then(gpsHistoryWriter).should(times(1)).save(
-                LocationFixture.WARD_KEY, LocationFixture.LATITUDE, LocationFixture.LONGITUDE,
-                LocationFixture.ACCURACY, LocationFixture.BATTERY);
-        then(gpsLatestCacheWriter).should(times(1)).save(eq(LocationFixture.WARD_KEY), any());
+        then(gpsHistoryManager).should(times(1)).save(LocationFixture.WARD_KEY, report);
+        then(eventPublisher).should(times(1)).publishEvent(any(GpsSavedEvent.class));
     }
 
     @Test

@@ -76,9 +76,10 @@ class NotificationSettingControllerWebMvcTest {
                 .andExpect(jsonPath("$.data.anomaly.sensitivityOptions[0]").value("VERY_LOW"))
                 .andExpect(jsonPath("$.data.emergencyCall.enabled").value(true))
                 .andExpect(jsonPath("$.data.battery.lowBatteryEnabled").value(false))
-                .andExpect(jsonPath("$.data.battery.thresholdPercent").value(40))
+                .andExpect(jsonPath("$.data.battery.thresholdPercents[0]").value(40))
+                .andExpect(jsonPath("$.data.battery.thresholdPercents[1]").value(90))
                 .andExpect(jsonPath("$.data.battery.thresholdOptions[0]").value(10))
-                .andExpect(jsonPath("$.data.battery.thresholdOptions[18]").value(100));
+                .andExpect(jsonPath("$.data.battery.thresholdOptions[9]").value(100));
 
         then(notificationSettingService).should().getSetting(MEMBER_KEY, WARD_KEY);
     }
@@ -151,7 +152,7 @@ class NotificationSettingControllerWebMvcTest {
                         .requestAttr("memberKey", MEMBER_KEY)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"lowBatteryEnabled": true, "thresholdPercent": 12}
+                                {"lowBatteryEnabled": true, "thresholdPercents": [12, 90]}
                                 """))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.resultType").value("ERROR"))
@@ -169,7 +170,7 @@ class NotificationSettingControllerWebMvcTest {
         assertThat(response.anomaly().routeDeviationSensitivity()).isEqualTo("HIGH");
         assertThat(response.anomaly().speedAnomalySensitivity()).isEqualTo("LOW");
         assertThat(response.anomaly().wanderingAnomalySensitivity()).isEqualTo("VERY_HIGH");
-        assertThat(response.battery().thresholdOptions()).contains(10, 25, 100);
+        assertThat(response.battery().thresholdOptions()).contains(10, 20, 100);
     }
 
     private NotificationSetting setting() {

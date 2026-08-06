@@ -32,7 +32,11 @@ public class QGpsHistory extends EntityPathBase<GpsHistory> {
 
     public final NumberPath<Double> longitude = createNumber("longitude", Double.class);
 
+    public final DateTimePath<java.time.LocalDateTime> measuredAt = createDateTime("measuredAt", java.time.LocalDateTime.class);
+
     public final DateTimePath<java.time.LocalDateTime> recordedAt = createDateTime("recordedAt", java.time.LocalDateTime.class);
+
+    public final NumberPath<Double> speed = createNumber("speed", Double.class);
 
     public final StringPath wardMemberKey = createString("wardMemberKey");
 

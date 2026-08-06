@@ -85,7 +85,7 @@ public class NotificationFixture {
                 .wanderingAnomalySensitivity(AnomalySensitivity.VERY_HIGH)
                 .emergencyCallEnabled(true)
                 .lowBatteryEnabled(false)
-                .batteryThresholdPercent(40)
+                .batteryThresholdPercents("40,90")
                 .build();
     }
 

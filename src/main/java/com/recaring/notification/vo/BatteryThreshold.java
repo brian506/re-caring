@@ -10,8 +10,7 @@ public record BatteryThreshold(int percent) {
 
     public static final int MIN_PERCENT = 10;
     public static final int MAX_PERCENT = 100;
-    public static final int STEP_PERCENT = 5;
-    public static final BatteryThreshold DEFAULT = new BatteryThreshold(25);
+    public static final int STEP_PERCENT = 10;
 
     public BatteryThreshold {
         if (!isSupported(percent)) {

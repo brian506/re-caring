@@ -60,13 +60,13 @@ public record NotificationSettingResponse(
 
     public record BatterySettingResponse(
             boolean lowBatteryEnabled,
-            int thresholdPercent,
+            List<Integer> thresholdPercents,
             List<Integer> thresholdOptions
     ) {
         private static BatterySettingResponse from(NotificationSettingInfo.BatterySettingInfo info) {
             return new BatterySettingResponse(
                     info.lowBatteryEnabled(),
-                    info.thresholdPercent(),
+                    info.thresholdPercents(),
                     info.thresholdOptions()
             );
         }

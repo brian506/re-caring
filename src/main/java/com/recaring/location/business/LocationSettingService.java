@@ -1,8 +1,7 @@
 package com.recaring.location.business;
 
-import com.recaring.location.implement.LocationSettingManager;
-import com.recaring.location.implement.LocationSettingReader;
 import com.recaring.location.implement.LocationValidator;
+import com.recaring.location.implement.setting.LocationSettingManager;
 import com.recaring.location.vo.LocationCollectionInterval;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -11,15 +10,13 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class LocationSettingService {
 
-    private final LocationSettingReader locationSettingReader;
     private final LocationSettingManager locationSettingManager;
     private final LocationValidator locationValidator;
 
-    public LocationCollectionIntervalSettingInfo getCollectionInterval(String requesterKey, String wardKey) {
+    public LocationCollectionInterval getCollectionInterval(String requesterKey, String wardKey) {
         locationValidator.validateGuardianAccess(requesterKey, wardKey);
 
-        LocationCollectionInterval interval = locationSettingReader.findCollectionInterval(wardKey);
-        return LocationCollectionIntervalSettingInfo.from(interval);
+        return locationSettingManager.findCollectionInterval(wardKey);
     }
 
     public void updateCollectionInterval(String requesterKey, String wardKey, LocationCollectionInterval interval) {
@@ -28,8 +25,7 @@ public class LocationSettingService {
         locationSettingManager.updateCollectionInterval(wardKey, interval);
     }
 
-    public WardLocationCollectionIntervalInfo getMyCollectionInterval(String wardKey) {
-        LocationCollectionInterval interval = locationSettingReader.findCollectionInterval(wardKey);
-        return WardLocationCollectionIntervalInfo.from(interval);
+    public LocationCollectionInterval getMyCollectionInterval(String wardKey) {
+        return locationSettingManager.findCollectionInterval(wardKey);
     }
 }

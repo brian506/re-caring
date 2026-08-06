@@ -1,10 +1,14 @@
 package com.recaring.location.business;
 
-import com.recaring.location.implement.*;
+import com.recaring.location.event.GpsSavedEvent;
+import com.recaring.location.implement.LocationValidator;
+import com.recaring.location.implement.gps.GpsHistoryManager;
+import com.recaring.location.implement.sse.SseEmitterManager;
 import com.recaring.location.vo.Gps;
+import com.recaring.location.vo.GpsReport;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.time.LocalDate;
@@ -15,17 +19,18 @@ import java.util.List;
 @RequiredArgsConstructor
 public class LocationService {
 
-    private final GpsHistoryWriter gpsHistoryWriter;
-    private final GpsHistoryReader gpsHistoryReader;
-    private final GpsLatestCacheWriter gpsLatestCacheWriter;
+    private final GpsHistoryManager gpsHistoryManager;
     private final SseEmitterManager sseEmitterManager;
     private final LocationValidator locationValidator;
+    private final ApplicationEventPublisher eventPublisher;
 
-    public void receiveGps(String wardMemberKey, double latitude, double longitude, Double accuracy, Integer battery) {
-        Gps gps = new Gps(latitude, longitude, LocalDateTime.now(), accuracy, battery);
+    public void receiveGps(String wardMemberKey, GpsReport report) {
+        Gps gps = report.toGps(LocalDateTime.now());
 
-        gpsLatestCacheWriter.save(wardMemberKey, gps);
-        gpsHistoryWriter.save(wardMemberKey, latitude, longitude, accuracy, battery);
+        gpsHistoryManager.save(wardMemberKey, report);
+
+        // 캐시 write + 배터리/안심존 판정 (GpsLatestCacheListener, BatteryDetectionListener, SafeZoneDetectionListener)
+        eventPublisher.publishEvent(new GpsSavedEvent(wardMemberKey, gps));
     }
 
     public SseEmitter streamLocation(String caregiverKey, String wardKey) {
@@ -35,6 +40,6 @@ public class LocationService {
 
     public List<Gps> getHistory(String caregiverKey, String wardKey, LocalDate date) {
         locationValidator.validateCaregiverAccess(caregiverKey, wardKey);
-        return gpsHistoryReader.findDailyGpsHistory(wardKey, date);
+        return gpsHistoryManager.findDailyGpsHistory(wardKey, date);
     }
 }

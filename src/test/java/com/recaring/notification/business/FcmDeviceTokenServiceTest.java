@@ -4,7 +4,7 @@ import com.recaring.care.dataaccess.entity.CarePartyRole;
 import com.recaring.notification.dataaccess.entity.FcmDevicePlatform;
 import com.recaring.notification.dataaccess.entity.FcmDeviceToken;
 import com.recaring.notification.fixture.NotificationFixture;
-import com.recaring.notification.implement.FcmDeviceTokenManager;
+import com.recaring.notification.implement.fcm.FcmDeviceTokenManager;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

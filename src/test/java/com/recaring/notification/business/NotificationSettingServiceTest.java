@@ -2,11 +2,13 @@ package com.recaring.notification.business;
 
 import com.recaring.notification.business.command.UpdateAnomalyNotificationSettingCommand;
 import com.recaring.notification.fixture.NotificationFixture;
-import com.recaring.notification.implement.NotificationSettingManager;
-import com.recaring.notification.implement.NotificationSettingReader;
-import com.recaring.notification.implement.NotificationSettingValidator;
+import com.recaring.notification.implement.setting.NotificationSettingManager;
+import com.recaring.notification.implement.setting.NotificationSettingReader;
+import com.recaring.notification.implement.setting.NotificationSettingValidator;
 import com.recaring.notification.vo.AnomalySensitivity;
-import com.recaring.notification.vo.BatteryThreshold;
+import com.recaring.notification.vo.BatteryThresholds;
+
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -97,14 +99,14 @@ class NotificationSettingServiceTest {
     @Test
     @DisplayName("Validates access and delegates battery update to the manager")
     void updateBattery_validates_access_and_updates_setting() {
-        BatteryThreshold threshold = new BatteryThreshold(30);
+        BatteryThresholds thresholds = BatteryThresholds.ofPercents(List.of(30, 90));
 
         notificationSettingService.updateBattery(
-                NotificationFixture.WARD_KEY, NotificationFixture.WARD_KEY, true, threshold);
+                NotificationFixture.WARD_KEY, NotificationFixture.WARD_KEY, true, thresholds);
 
         then(notificationSettingValidator).should()
                 .validateSettingAccess(NotificationFixture.WARD_KEY, NotificationFixture.WARD_KEY);
         then(notificationSettingManager).should()
-                .updateBattery(NotificationFixture.WARD_KEY, true, threshold);
+                .updateBattery(NotificationFixture.WARD_KEY, true, thresholds);
     }
 }

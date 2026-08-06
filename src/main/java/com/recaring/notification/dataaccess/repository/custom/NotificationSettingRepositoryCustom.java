@@ -20,5 +20,5 @@ public interface NotificationSettingRepositoryCustom {
 
     void updateEmergencyCall(String wardMemberKey, boolean enabled);
 
-    void updateBattery(String wardMemberKey, boolean lowBatteryEnabled, int batteryThresholdPercent);
+    void updateBattery(String wardMemberKey, boolean lowBatteryEnabled, String batteryThresholdPercents);
 }

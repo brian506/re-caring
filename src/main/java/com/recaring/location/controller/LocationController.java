@@ -35,8 +35,7 @@ public class LocationController {
             @AuthMember String memberKey,
             @Valid @RequestBody GpsRequest request
     ) {
-        locationService.receiveGps(
-                memberKey, request.latitude(), request.longitude(), request.accuracy(), request.battery());
+        locationService.receiveGps(memberKey, request.toReport());
         return ResponseEntity.ok(ApiResponse.success());
     }
 

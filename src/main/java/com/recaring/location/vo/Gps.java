@@ -9,11 +9,14 @@ public record Gps(
         double longitude,
         LocalDateTime recordedAt,
         Double accuracy,
-        Integer battery
+        Integer battery,
+        Double speed,
+        LocalDateTime measuredAt
 ) {
     public static Gps from(GpsHistory entity) {
         return new Gps(
                 entity.getLatitude(), entity.getLongitude(), entity.getRecordedAt(),
-                entity.getAccuracy(), entity.getBattery());
+                entity.getAccuracy(), entity.getBattery(),
+                entity.getSpeed(), entity.getMeasuredAt());
     }
 }

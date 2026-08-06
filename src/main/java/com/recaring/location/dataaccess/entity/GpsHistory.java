@@ -20,6 +20,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "gps_histories")
 // TODO: CREATE INDEX idx_gps_ward_recorded ON gps_histories (ward_member_key, recorded_at);
+// TODO: CREATE INDEX idx_gps_ward_measured ON gps_histories (ward_member_key, measured_at);
 @EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class GpsHistory {
@@ -38,6 +39,7 @@ public class GpsHistory {
     @Column(nullable = false)
     private double longitude;
 
+    // Server-side receive time. Not the device measurement time — use measuredAt for that.
     @CreatedDate
     @Column(nullable = false, updatable = false)
     private LocalDateTime recordedAt;
@@ -48,12 +50,23 @@ public class GpsHistory {
     @Column
     private Integer battery;
 
+    @Column
+    private Double speed;
+
+    // Device measurement time in UTC. Null means the device did not report one,
+    // so any time-interval based analysis must exclude this row.
+    @Column
+    private LocalDateTime measuredAt;
+
     @Builder
-    public GpsHistory(String wardMemberKey, double latitude, double longitude, Double accuracy, Integer battery) {
+    public GpsHistory(String wardMemberKey, double latitude, double longitude,
+                      Double accuracy, Integer battery, Double speed, LocalDateTime measuredAt) {
         this.wardMemberKey = wardMemberKey;
         this.latitude = latitude;
         this.longitude = longitude;
         this.accuracy = accuracy;
         this.battery = battery;
+        this.speed = speed;
+        this.measuredAt = measuredAt;
     }
 }
