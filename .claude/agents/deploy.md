@@ -70,10 +70,19 @@ PR 번호가 반환되면 해당 번호를 재사용하고 `create-pr.sh`를 건
 
 PR이 없으면 `.claude/skills/deploy/assets/pr-template.md` 파일을 Read 도구로 읽는다.
 
-PR 제목은 이슈 제목을 그대로 사용한다:
+PR 제목은 커밋과 같은 컨벤션(`{type}[#{N}]: {설명}`)을 따른다. 설명에는 이슈 제목을 사용한다.
 
 ```bash
 gh issue view {N} --json title --jq '.title'
+```
+
+`create-pr.sh`가 브랜치 타입과 이슈 번호로 접두사를 직접 붙이므로, 여기서는 **이슈 제목만** 넘긴다.
+이슈 제목 앞의 `[Feature]:` 같은 대괄호 접두사도 스크립트가 제거한다.
+
+```
+이슈 제목: [Feature]: 보호 대상자 목록 응답에 성별 필드 추가
+브랜치:    feature/171
+PR 제목:   feature[#171]: 보호 대상자 목록 응답에 성별 필드 추가
 ```
 
 읽은 템플릿을 바탕으로 PR 본문을 작성한다. `closes #{N}` 을 반드시 포함한다.
