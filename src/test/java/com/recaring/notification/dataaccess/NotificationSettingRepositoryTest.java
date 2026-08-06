@@ -38,7 +38,7 @@ class NotificationSettingRepositoryTest extends AbstractRepositoryTest {
         assertThat(saved.getWanderingAnomalySensitivity()).isEqualTo(AnomalySensitivity.NORMAL);
         assertThat(saved.isEmergencyCallEnabled()).isTrue();
         assertThat(saved.isLowBatteryEnabled()).isTrue();
-        assertThat(saved.getBatteryThresholdPercent()).isEqualTo(25);
+        assertThat(saved.getBatteryThresholdPercents()).isEqualTo("20,100");
         assertThat(saved.getCreatedAt()).isNotNull();
         assertThat(saved.getUpdatedAt()).isNotNull();
     }
@@ -69,7 +69,7 @@ class NotificationSettingRepositoryTest extends AbstractRepositoryTest {
         // 나머지 컬럼은 건드리지 않았으므로 기본값 유지
         assertThat(updated.isRouteDeviationEnabled()).isTrue();
         assertThat(updated.isEmergencyCallEnabled()).isTrue();
-        assertThat(updated.getBatteryThresholdPercent()).isEqualTo(25);
+        assertThat(updated.getBatteryThresholdPercents()).isEqualTo("20,100");
         assertThat(updated.getUpdatedAt()).isNotNull();
     }
 
@@ -100,7 +100,7 @@ class NotificationSettingRepositoryTest extends AbstractRepositoryTest {
         assertThat(updated.getWanderingAnomalySensitivity()).isEqualTo(AnomalySensitivity.VERY_HIGH);
         // 안심존/배터리 컬럼은 그대로
         assertThat(updated.isSafeZoneEntryEnabled()).isTrue();
-        assertThat(updated.getBatteryThresholdPercent()).isEqualTo(25);
+        assertThat(updated.getBatteryThresholdPercents()).isEqualTo("20,100");
     }
 
     @Test
@@ -108,14 +108,14 @@ class NotificationSettingRepositoryTest extends AbstractRepositoryTest {
     void updateBattery_updates_only_battery_columns() {
         notificationSettingRepository.insertDefaultIfAbsent(NotificationFixture.WARD_KEY);
 
-        notificationSettingRepository.updateBattery(NotificationFixture.WARD_KEY, false, 40);
+        notificationSettingRepository.updateBattery(NotificationFixture.WARD_KEY, false, "40,90");
 
         NotificationSetting updated = notificationSettingRepository
                 .findByWardMemberKey(NotificationFixture.WARD_KEY)
                 .orElseThrow();
 
         assertThat(updated.isLowBatteryEnabled()).isFalse();
-        assertThat(updated.getBatteryThresholdPercent()).isEqualTo(40);
+        assertThat(updated.getBatteryThresholdPercents()).isEqualTo("40,90");
         assertThat(updated.isEmergencyCallEnabled()).isTrue();
     }
 }

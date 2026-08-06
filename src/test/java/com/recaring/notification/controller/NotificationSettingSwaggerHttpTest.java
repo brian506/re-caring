@@ -73,7 +73,7 @@ class NotificationSettingSwaggerHttpTest {
         assertThat(response.body()).contains("\"/api/v1/notifications/settings/{wardKey}/emergency-call\"");
         assertThat(response.body()).contains("\"summary\":\"응급호출 알림 설정 변경\"");
         assertThat(response.body()).contains("\"/api/v1/notifications/settings/{wardKey}/battery\"");
-        assertThat(response.body()).contains("\"summary\":\"배터리 부족 알림 설정 변경\"");
+        assertThat(response.body()).contains("\"summary\":\"배터리 알림 설정 변경\"");
         assertThat(response.body()).contains("\"/api/v1/notifications/device-tokens\"");
         assertThat(response.body()).contains("\"summary\":\"FCM device token 생성 및 업데이트\"");
     }

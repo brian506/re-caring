@@ -91,8 +91,8 @@ public class NotificationSettingController {
     }
 
     @Operation(
-            summary = "배터리 부족 알림 설정 변경",
-            description = "배터리 부족 알림 활성화 여부와 알림 기준 배터리 수치(%)를 변경합니다."
+            summary = "배터리 알림 설정 변경",
+            description = "배터리 알림 활성화 여부와 알림 받을 배터리 수치(%) 목록을 변경합니다. 10~100 사이 10 단위 값을 개수 제한 없이 선택할 수 있고, 기기 잔량이 선택한 수치에 도달하면 알림이 발송됩니다."
     )
     @PatchMapping("/{wardKey}/battery")
     public ResponseEntity<ApiResponse<Void>> updateBattery(
@@ -101,7 +101,7 @@ public class NotificationSettingController {
             @PathVariable String wardKey,
             @Valid @RequestBody UpdateBatteryNotificationSettingRequest request
     ) {
-        notificationSettingService.updateBattery(memberKey, wardKey, request.lowBatteryEnabled(), request.toThreshold());
+        notificationSettingService.updateBattery(memberKey, wardKey, request.lowBatteryEnabled(), request.toThresholds());
         return ResponseEntity.ok(ApiResponse.success());
     }
 }

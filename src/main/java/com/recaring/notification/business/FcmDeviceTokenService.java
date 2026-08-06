@@ -3,7 +3,7 @@ package com.recaring.notification.business;
 import com.recaring.care.dataaccess.entity.CarePartyRole;
 import com.recaring.notification.dataaccess.entity.FcmDevicePlatform;
 import com.recaring.notification.dataaccess.entity.FcmDeviceToken;
-import com.recaring.notification.implement.FcmDeviceTokenManager;
+import com.recaring.notification.implement.fcm.FcmDeviceTokenManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

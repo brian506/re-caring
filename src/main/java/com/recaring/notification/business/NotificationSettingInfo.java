@@ -3,6 +3,7 @@ package com.recaring.notification.business;
 import com.recaring.notification.dataaccess.entity.NotificationSetting;
 import com.recaring.notification.vo.AnomalySensitivity;
 import com.recaring.notification.vo.BatteryThreshold;
+import com.recaring.notification.vo.BatteryThresholds;
 
 import java.util.List;
 
@@ -30,7 +31,7 @@ public record NotificationSettingInfo(
                 new EmergencyCallSettingInfo(setting.isEmergencyCallEnabled()),
                 new BatterySettingInfo(
                         setting.isLowBatteryEnabled(),
-                        setting.getBatteryThresholdPercent(),
+                        BatteryThresholds.parse(setting.getBatteryThresholdPercents()).percents(),
                         BatteryThreshold.options()
                 )
         );
@@ -60,7 +61,7 @@ public record NotificationSettingInfo(
 
     public record BatterySettingInfo(
             boolean lowBatteryEnabled,
-            int thresholdPercent,
+            List<Integer> thresholdPercents,
             List<Integer> thresholdOptions
     ) {
     }

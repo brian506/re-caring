@@ -12,8 +12,9 @@ import com.recaring.care.implement.CareInvitationWriter;
 import com.recaring.care.implement.CareRelationshipWriter;
 import com.recaring.device.dataaccess.repository.WardDeviceTokenRepository;
 import com.recaring.location.dataaccess.repository.LocationSettingRepository;
-import com.recaring.location.implement.GpsHistoryWriter;
-import com.recaring.location.implement.GpsLatestCacheWriter;
+import com.recaring.location.implement.detection.BatteryAlertStateManager;
+import com.recaring.location.implement.gps.GpsHistoryManager;
+import com.recaring.location.implement.gps.GpsLatestCacheManager;
 import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.dataaccess.repository.MemberWithdrawalRepository;
 import com.recaring.member.fixture.MemberFixture;
@@ -72,13 +73,16 @@ class MemberWithdrawalManagerTest {
     private CareInvitationWriter careInvitationWriter;
 
     @Mock
-    private GpsHistoryWriter gpsHistoryWriter;
+    private GpsHistoryManager gpsHistoryManager;
 
     @Mock
     private SafeZoneWriter safeZoneWriter;
 
     @Mock
-    private GpsLatestCacheWriter gpsLatestCacheWriter;
+    private GpsLatestCacheManager gpsLatestCacheManager;
+
+    @Mock
+    private BatteryAlertStateManager batteryAlertStateManager;
 
     @Mock
     private LocalAuthRepository localAuthRepository;
@@ -129,13 +133,14 @@ class MemberWithdrawalManagerTest {
         then(notificationSettingRepository).should(times(1)).deleteByWardMemberKey(memberKey);
         then(careRelationshipWriter).should(times(1)).deleteAllByMemberKey(memberKey);
         then(careInvitationWriter).should(times(1)).deleteAllByMemberKey(memberKey);
-        then(gpsHistoryWriter).should(times(1)).deleteByWardMemberKey(memberKey);
+        then(gpsHistoryManager).should(times(1)).deleteByWardMemberKey(memberKey);
         then(locationSettingRepository).should(times(1)).deleteByWardMemberKey(memberKey);
         then(safeZoneWriter).should(times(1)).deleteByWardMemberKey(memberKey);
         then(wardDeviceTokenRepository).should(times(1)).deleteByWardKey(memberKey);
 
         then(memberWriter).should(times(1)).deleteByMemberKey(memberKey);
-        then(gpsLatestCacheWriter).should(times(1)).delete(memberKey);
+        then(gpsLatestCacheManager).should(times(1)).delete(memberKey);
+        then(batteryAlertStateManager).should(times(1)).delete(memberKey);
     }
 
     @Test

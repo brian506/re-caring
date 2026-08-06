@@ -2,7 +2,7 @@ package com.recaring.notification.dataaccess.entity;
 
 import com.recaring.common.entity.BaseEntity;
 import com.recaring.notification.vo.AnomalySensitivity;
-import com.recaring.notification.vo.BatteryThreshold;
+import com.recaring.notification.vo.BatteryThresholds;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -69,8 +69,10 @@ public class NotificationSetting extends BaseEntity {
     @Column(name = "low_battery_enabled", nullable = false, columnDefinition = "boolean not null default true")
     private boolean lowBatteryEnabled;
 
-    @Column(name = "battery_threshold_percent", nullable = false, columnDefinition = "integer not null default 25")
-    private int batteryThresholdPercent;
+    // 빈 문자열이 기본이다. 고른 값이 없으면 배터리 알림을 보내지 않는다.
+    @Column(name = "battery_threshold_percents", nullable = false, length = 64,
+            columnDefinition = "varchar(64) not null default ''")
+    private String batteryThresholdPercents;
 
     @Builder
     public NotificationSetting(
@@ -85,7 +87,7 @@ public class NotificationSetting extends BaseEntity {
             AnomalySensitivity wanderingAnomalySensitivity,
             boolean emergencyCallEnabled,
             boolean lowBatteryEnabled,
-            int batteryThresholdPercent
+            String batteryThresholdPercents
     ) {
         this.wardMemberKey = wardMemberKey;
         this.safeZoneEntryEnabled = safeZoneEntryEnabled;
@@ -98,7 +100,7 @@ public class NotificationSetting extends BaseEntity {
         this.wanderingAnomalySensitivity = wanderingAnomalySensitivity;
         this.emergencyCallEnabled = emergencyCallEnabled;
         this.lowBatteryEnabled = lowBatteryEnabled;
-        this.batteryThresholdPercent = batteryThresholdPercent;
+        this.batteryThresholdPercents = batteryThresholdPercents;
     }
 
     public static NotificationSetting defaultFor(String wardMemberKey) {
@@ -114,7 +116,7 @@ public class NotificationSetting extends BaseEntity {
                 .wanderingAnomalySensitivity(AnomalySensitivity.DEFAULT)
                 .emergencyCallEnabled(true)
                 .lowBatteryEnabled(true)
-                .batteryThresholdPercent(BatteryThreshold.DEFAULT.percent())
+                .batteryThresholdPercents(BatteryThresholds.NONE.format())
                 .build();
     }
 
@@ -146,9 +148,9 @@ public class NotificationSetting extends BaseEntity {
         update();
     }
 
-    public void updateBattery(boolean lowBatteryEnabled, BatteryThreshold threshold) {
+    public void updateBattery(boolean lowBatteryEnabled, BatteryThresholds thresholds) {
         this.lowBatteryEnabled = lowBatteryEnabled;
-        this.batteryThresholdPercent = threshold.percent();
+        this.batteryThresholdPercents = thresholds.format();
         update();
     }
 }

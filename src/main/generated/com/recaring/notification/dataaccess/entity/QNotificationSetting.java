@@ -24,7 +24,7 @@ public class QNotificationSetting extends EntityPathBase<NotificationSetting> {
 
     public final com.recaring.common.entity.QBaseEntity _super = new com.recaring.common.entity.QBaseEntity(this);
 
-    public final NumberPath<Integer> batteryThresholdPercent = createNumber("batteryThresholdPercent", Integer.class);
+    public final StringPath batteryThresholdPercents = createString("batteryThresholdPercents");
 
     //inherited
     public final DateTimePath<java.time.LocalDateTime> createdAt = _super.createdAt;

@@ -10,8 +10,9 @@ import com.recaring.care.implement.CareInvitationWriter;
 import com.recaring.care.implement.CareRelationshipWriter;
 import com.recaring.device.dataaccess.repository.WardDeviceTokenRepository;
 import com.recaring.location.dataaccess.repository.LocationSettingRepository;
-import com.recaring.location.implement.GpsHistoryWriter;
-import com.recaring.location.implement.GpsLatestCacheWriter;
+import com.recaring.location.implement.detection.BatteryAlertStateManager;
+import com.recaring.location.implement.gps.GpsHistoryManager;
+import com.recaring.location.implement.gps.GpsLatestCacheManager;
 import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.dataaccess.entity.MemberWithdrawal;
 import com.recaring.member.dataaccess.repository.MemberWithdrawalRepository;
@@ -39,9 +40,10 @@ public class MemberWithdrawalManager {
     private final MembersTermsAgreementWriter membersTermsAgreementWriter;
     private final CareRelationshipWriter careRelationshipWriter;
     private final CareInvitationWriter careInvitationWriter;
-    private final GpsHistoryWriter gpsHistoryWriter;
+    private final GpsHistoryManager gpsHistoryManager;
     private final SafeZoneWriter safeZoneWriter;
-    private final GpsLatestCacheWriter gpsLatestCacheWriter;
+    private final GpsLatestCacheManager gpsLatestCacheManager;
+    private final BatteryAlertStateManager batteryAlertStateManager;
 
     // Writer가 없는 도메인은 Repository를 직접 호출
     private final LocalAuthRepository localAuthRepository;
@@ -68,13 +70,14 @@ public class MemberWithdrawalManager {
         notificationSettingRepository.deleteByWardMemberKey(memberKey);
         careRelationshipWriter.deleteAllByMemberKey(memberKey);
         careInvitationWriter.deleteAllByMemberKey(memberKey);
-        gpsHistoryWriter.deleteByWardMemberKey(memberKey);
+        gpsHistoryManager.deleteByWardMemberKey(memberKey);
         locationSettingRepository.deleteByWardMemberKey(memberKey);
         safeZoneWriter.deleteByWardMemberKey(memberKey);
         wardDeviceTokenRepository.deleteByWardKey(memberKey);
 
         memberWriter.deleteByMemberKey(memberKey);
-        gpsLatestCacheWriter.delete(memberKey);
+        gpsLatestCacheManager.delete(memberKey);
+        batteryAlertStateManager.delete(memberKey);
 
         log.info("[회원 탈퇴 : 완료]: memberKey={}", memberKey);
     }

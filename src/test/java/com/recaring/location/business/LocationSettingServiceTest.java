@@ -1,8 +1,7 @@
 package com.recaring.location.business;
 
 import com.recaring.location.fixture.LocationFixture;
-import com.recaring.location.implement.LocationSettingManager;
-import com.recaring.location.implement.LocationSettingReader;
+import com.recaring.location.implement.setting.LocationSettingManager;
 import com.recaring.location.implement.LocationValidator;
 import com.recaring.location.vo.LocationCollectionInterval;
 import org.junit.jupiter.api.DisplayName;
@@ -24,27 +23,24 @@ class LocationSettingServiceTest {
     private LocationSettingService locationSettingService;
 
     @Mock
-    private LocationSettingReader locationSettingReader;
-    @Mock
     private LocationSettingManager locationSettingManager;
     @Mock
     private LocationValidator locationValidator;
 
     @Test
-    @DisplayName("주보호자는 현재 위치 수집 주기와 옵션을 조회한다")
-    void getCollectionInterval_returns_setting_info_for_guardian() {
-        given(locationSettingReader.findCollectionInterval(LocationFixture.WARD_KEY))
+    @DisplayName("주보호자는 피보호자의 현재 위치 수집 주기를 조회한다")
+    void getCollectionInterval_returns_current_interval_for_guardian() {
+        given(locationSettingManager.findCollectionInterval(LocationFixture.WARD_KEY))
                 .willReturn(LocationCollectionInterval.DEFAULT);
 
-        LocationCollectionIntervalSettingInfo result = locationSettingService.getCollectionInterval(
+        LocationCollectionInterval result = locationSettingService.getCollectionInterval(
                 LocationFixture.GUARDIAN_KEY,
                 LocationFixture.WARD_KEY
         );
 
         then(locationValidator).should().validateGuardianAccess(LocationFixture.GUARDIAN_KEY, LocationFixture.WARD_KEY);
-        assertThat(result.currentIntervalSeconds()).isEqualTo(30);
-        assertThat(result.defaultIntervalSeconds()).isEqualTo(30);
-        assertThat(result.options()).containsExactly(30, 60, 180, 300);
+        assertThat(result).isEqualTo(LocationCollectionInterval.THIRTY_SECONDS);
+        assertThat(result.seconds()).isEqualTo(30);
     }
 
     @Test
@@ -66,11 +62,11 @@ class LocationSettingServiceTest {
     @Test
     @DisplayName("보호 대상자는 자신의 현재 위치 수집 주기만 조회한다")
     void getMyCollectionInterval_returns_current_interval_only() {
-        given(locationSettingReader.findCollectionInterval(LocationFixture.WARD_KEY))
+        given(locationSettingManager.findCollectionInterval(LocationFixture.WARD_KEY))
                 .willReturn(LocationCollectionInterval.ONE_MINUTE);
 
-        WardLocationCollectionIntervalInfo result = locationSettingService.getMyCollectionInterval(LocationFixture.WARD_KEY);
+        LocationCollectionInterval result = locationSettingService.getMyCollectionInterval(LocationFixture.WARD_KEY);
 
-        assertThat(result.currentIntervalSeconds()).isEqualTo(60);
+        assertThat(result.seconds()).isEqualTo(60);
     }
 }

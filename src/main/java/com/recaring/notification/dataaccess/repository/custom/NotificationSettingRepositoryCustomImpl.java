@@ -64,10 +64,10 @@ public class NotificationSettingRepositoryCustomImpl extends QuerydslRepositoryS
     }
 
     @Override
-    public void updateBattery(String wardMemberKey, boolean lowBatteryEnabled, int batteryThresholdPercent) {
+    public void updateBattery(String wardMemberKey, boolean lowBatteryEnabled, String batteryThresholdPercents) {
         update(notificationSetting)
                 .set(notificationSetting.lowBatteryEnabled, lowBatteryEnabled)
-                .set(notificationSetting.batteryThresholdPercent, batteryThresholdPercent)
+                .set(notificationSetting.batteryThresholdPercents, batteryThresholdPercents)
                 .set(notificationSetting.updatedAt, LocalDateTime.now())
                 .where(notificationSetting.wardMemberKey.eq(wardMemberKey))
                 .execute();
