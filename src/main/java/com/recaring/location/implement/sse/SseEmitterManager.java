@@ -1,5 +1,6 @@
 package com.recaring.location.implement.sse;
 
+import com.recaring.location.implement.gps.GpsHistoryManager;
 import com.recaring.location.implement.gps.GpsLatestCacheManager;
 import com.recaring.location.vo.Gps;
 import io.micrometer.core.instrument.Counter;
@@ -25,6 +26,7 @@ public class SseEmitterManager {
     private static final String EVENT_NAME = "location";
 
     private final GpsLatestCacheManager gpsLatestCacheManager;
+    private final GpsHistoryManager gpsHistoryManager;
     private final Executor ssePollExecutor;
 
     private final AtomicInteger activeConnections = new AtomicInteger();
@@ -35,8 +37,10 @@ public class SseEmitterManager {
 
     public SseEmitterManager(MeterRegistry registry,
                              GpsLatestCacheManager gpsLatestCacheManager,
+                             GpsHistoryManager gpsHistoryManager,
                              @Qualifier("ssePollExecutor") Executor ssePollExecutor) {
         this.gpsLatestCacheManager = gpsLatestCacheManager;
+        this.gpsHistoryManager = gpsHistoryManager;
         this.ssePollExecutor = ssePollExecutor;
 
         this.sendFailures      = registry.counter("sse.emitter.send.failures");
@@ -69,7 +73,12 @@ public class SseEmitterManager {
     private void pollLoop(SseEmitter emitter, String wardKey, AtomicBoolean active) {
         Gps lastSent = null;
         try {
+            lastSent = sendInitial(emitter, wardKey);
             while (active.get()) {
+                Thread.sleep(POLL_INTERVAL_MS);
+                if (!active.get()) {
+                    break;
+                }
                 Optional<Gps> latest = gpsLatestCacheManager.find(wardKey);
                 if (latest.isPresent() && !latest.get().equals(lastSent)) {
                     emitter.send(SseEmitter.event().name(EVENT_NAME).data(latest.get()));
@@ -77,7 +86,6 @@ public class SseEmitterManager {
                 } else {
                     emitter.send(SseEmitter.event().comment("")); // heartbeat: prevent ALB idle timeout (60s)
                 }
-                Thread.sleep(POLL_INTERVAL_MS);
             }
         } catch (IOException | IllegalStateException e) {
             log.debug("[SSE 이벤트 : 전송 종료]: wardKey={} | error={}", wardKey, e.getMessage());
@@ -94,6 +102,19 @@ public class SseEmitterManager {
             stop(active, removedError);
             completeQuietly(emitter, null); // complete gracefully — completeWithError triggers Tomcat error dispatch on committed response
         }
+    }
+
+    // 연결 직후 1회. 캐시가 비어 있으면(WARD가 TTL 이상 GPS를 보내지 않음) DB의 마지막 위치로 대체한다.
+    // 폴링 중에는 캐시만 본다 — 매 주기 DB를 치면 연결 수에 비례해 부하가 늘기 때문이다.
+    private Gps sendInitial(SseEmitter emitter, String wardKey) throws IOException {
+        Optional<Gps> initial = gpsLatestCacheManager.find(wardKey)
+                .or(() -> gpsHistoryManager.findLatest(wardKey));
+        if (initial.isEmpty()) {
+            emitter.send(SseEmitter.event().comment(""));
+            return null;
+        }
+        emitter.send(SseEmitter.event().name(EVENT_NAME).data(initial.get()));
+        return initial.get();
     }
 
     private void stop(AtomicBoolean active, Counter reasonCounter) {

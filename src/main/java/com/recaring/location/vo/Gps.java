@@ -1,9 +1,11 @@
 package com.recaring.location.vo;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.recaring.location.dataaccess.entity.GpsHistory;
 
 import java.time.LocalDateTime;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public record Gps(
         double latitude,
         double longitude,

@@ -48,14 +48,6 @@ coolsms:
 client:
   url: re-caring.com
 
-aws:
-  access-key: ${AWS_ACCESS_KEY}
-  secret-key: ${AWS_SECRET_KEY}
-  region: ${AWS_REGION:ap-northeast-2}
-  sqs:
-    detection-request-queue-url: ${AWS_SQS_DETECTION_REQUEST_QUEUE_URL}
-    detection-result-queue-url: ${AWS_SQS_DETECTION_RESULT_QUEUE_URL}
-
 gps:
   pattern:
     analysis:

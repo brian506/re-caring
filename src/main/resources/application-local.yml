@@ -41,11 +41,6 @@ coolsms:
 client:
   url: http://localhost:3000
 
-aws:
-  sqs:
-    detection-request-queue-url: ""
-    detection-result-queue-url: ""
-
 management:
   endpoints:
     web:
