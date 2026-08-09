@@ -22,7 +22,7 @@ public record Gps(
                 entity.getSpeed(), entity.getMeasuredAt());
     }
 
-    // 기기가 좌표를 측정한 시각
+    // 기기가 좌표를 측정한 시각. 기기가 보고하지 않았을 때만 서버 수신 시각으로 대체한다.
     public LocalDateTime occurredAt() {
         return measuredAt != null ? measuredAt : recordedAt;
     }
