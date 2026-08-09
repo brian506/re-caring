@@ -12,6 +12,7 @@ import java.util.UUID;
 @Getter
 @Entity
 @Table(name = "safe_zones")
+// TODO: CREATE INDEX idx_safe_zones_ward_member_key ON safe_zones (ward_member_key);
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class SafeZone extends BaseEntity {
 

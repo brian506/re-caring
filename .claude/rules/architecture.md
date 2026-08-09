@@ -38,6 +38,17 @@ Controller → Business(Service) → Implement → DataAccess(JPA/QueryDSL)
 └── vo/             # 도메인 객체 (불변 record) — 레이어 간 흐름 객체
 ```
 
+`implement/`의 클래스가 많아지면 관심사별 하위 패키지로 나눈다. 도메인 전체에서 쓰는 공용 클래스만 `implement/` 바로 아래 둔다.
+
+```
+location/implement/
+├── gps/            # GpsHistoryManager, GpsLatestCacheManager, GpsLatestCacheListener
+├── detection/      # DetectionPublisher, DetectionListener, DetectionResultConsumer, ...
+├── sse/            # SseEmitterManager
+├── setting/        # LocationSettingManager
+└── LocationValidator.java, CareRelationshipCacheReader.java   # 공용
+```
+
 `vo/`는 해당 도메인의 핵심 성질을 담는 불변 record다. business DTO가 아니라 도메인 개념 자체를 표현한다.
 entity → VO 변환은 VO의 `from()` 팩토리 메서드에서 담당하며, implement 계층(Reader 등)이 변환해 반환한다.
 
@@ -57,6 +68,15 @@ entity → VO 변환은 VO의 `from()` 팩토리 메서드에서 담당하며, i
 - 조회 + 저장을 하나의 트랜잭션으로 묶어야 할 때 → Manager
 - 입력값이 아닌 비즈니스 규칙(중복, 권한, 한도) 검증 → Validator
 - 인증 관련 처리 → Authenticator
+
+**과분리 금지:** 같은 저장소를 다루는 Reader와 Writer가 각각 메서드 하나뿐이면 나누지 말고 Manager 하나로 합친다.
+역할 이름을 붙이는 것 자체가 목적이 아니다. 클래스가 늘어나 추적만 어려워진다.
+
+```
+DeviceStateReader(find) + DeviceStateWriter(save)  →  DeviceStateManager(find, save)
+```
+
+Reader/Writer 분리는 메서드가 여러 개로 늘어 각각의 책임이 뚜렷해질 때 하면 된다.
 
 ## 인증 흐름
 

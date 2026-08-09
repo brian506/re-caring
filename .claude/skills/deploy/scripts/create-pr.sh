@@ -1,6 +1,7 @@
 #!/bin/bash
 # PR을 생성하고 PR 번호를 출력한다
-# Usage: bash create-pr.sh {이슈번호} "PR 제목" "PR 본문"
+# Usage: bash create-pr.sh {이슈번호} "이슈 제목" "PR 본문"
+#   제목은 이슈 제목만 넘긴다. "{type}[#{N}]: " 접두사는 이 스크립트가 붙인다.
 
 set -euo pipefail
 
@@ -17,6 +18,13 @@ BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 TYPE="${BRANCH%%/*}"
 REPO="brian506/re-caring"
 ASSIGNEE=$(gh api user --jq '.login')
+
+# 제목 접두사는 호출자에게 맡기지 않는다 (매번 이슈 번호가 누락되던 원인).
+# 이미 붙어 있으면 중복되지 않도록 벗겨낸 뒤 다시 조립한다.
+TITLE="$(printf '%s' "$TITLE" | sed -E 's/^[a-z]+\[#[0-9]+\][[:space:]]*:[[:space:]]*//')"
+TITLE="$(printf '%s' "$TITLE" | sed -E 's/^\[[^]]+\][[:space:]]*:?[[:space:]]*//')"
+TITLE="${TYPE}[#${ISSUE_NUMBER}]: ${TITLE}"
+echo "PR title: $TITLE"
 
 PR_URL=$(gh pr create \
   --repo "$REPO" \

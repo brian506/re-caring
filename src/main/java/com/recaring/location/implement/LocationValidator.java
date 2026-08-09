@@ -18,6 +18,13 @@ public class LocationValidator {
         }
     }
 
+    public void validateHistoryViewAccess(String requesterKey, String wardKey) {
+        if (wardKey.equals(requesterKey)) {
+            return;
+        }
+        validateCaregiverAccess(requesterKey, wardKey);
+    }
+
     public void validateGuardianAccess(String caregiverKey, String wardKey) {
         boolean isGuardian = careRelationshipCacheReader.hasGuardianAccess(wardKey, caregiverKey);
         if (!isGuardian) {

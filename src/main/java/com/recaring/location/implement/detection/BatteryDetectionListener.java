@@ -61,6 +61,6 @@ public class BatteryDetectionListener {
 
         // FCM 알림 보내는 이벤트 호출
         eventPublisher.publishEvent(new BatteryThresholdAlertEvent(
-                memberKey, evaluation.reachedThreshold(), event.gps().recordedAt()));
+                memberKey, evaluation.reachedThreshold(), event.gps().occurredAt()));
     }
 }

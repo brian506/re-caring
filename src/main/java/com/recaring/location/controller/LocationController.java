@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -35,7 +36,7 @@ public class LocationController {
             @AuthMember String memberKey,
             @Valid @RequestBody GpsRequest request
     ) {
-        locationService.receiveGps(memberKey, request.toReport());
+        locationService.receiveGps(memberKey, request.toGps(LocalDateTime.now()));
         return ResponseEntity.ok(ApiResponse.success());
     }
 
@@ -53,7 +54,8 @@ public class LocationController {
 
     @Operation(
             summary = "날짜별 이동 경로 히스토리 조회",
-            description = "보호자(GUARDIAN/MANAGER)가 보호대상자의 날짜별 이동 경로를 조회합니다. [GUARDIAN 전용]"
+            description = "보호자(GUARDIAN/MANAGER)가 보호대상자의 날짜별 이동 경로를 조회합니다. "
+                    + "보호대상자(WARD)는 wardKey에 본인 memberKey를 넣어 자신의 이동 경로를 조회할 수 있습니다."
     )
     @GetMapping("/history/{wardKey}")
     public ResponseEntity<ApiResponse<List<GpsHistoryResponse>>> getHistory(

@@ -1572,7 +1572,7 @@
               "name": "/ecs/recaring"
             }
           ],
-          "expression": "fields @timestamp, @message | parse @message /\\s{2}(?P<level>ERROR|WARN|INFO)\\s/ | stats count(*) as count by level, bin(5m) | sort bin(5m) asc",
+          "expression": "fields @timestamp, @message | parse @message /\\s{2}(?<level>ERROR|WARN|INFO)\\s/ | stats count(*) as count by level, bin(5m) | sort bin(5m) asc",
           "region": "default",
           "refId": "A"
         }

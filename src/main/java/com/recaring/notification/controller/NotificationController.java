@@ -1,6 +1,6 @@
 package com.recaring.notification.controller;
 
-import com.recaring.notification.business.NotificationQueryService;
+import com.recaring.notification.business.NotificationService;
 import com.recaring.notification.controller.response.NotificationResponse;
 import com.recaring.security.vo.AuthMember;
 import com.recaring.support.response.ApiResponse;
@@ -21,7 +21,7 @@ import java.util.List;
 @Tag(name = "Notification", description = "Notification inbox API")
 public class NotificationController {
 
-    private final NotificationQueryService notificationQueryService;
+    private final NotificationService notificationService;
 
     @Operation(
             summary = "내 알림 목록 조회",
@@ -32,7 +32,7 @@ public class NotificationController {
             @Parameter(hidden = true)
             @AuthMember String memberKey
     ) {
-        List<NotificationResponse> responses = notificationQueryService.getMyNotifications(memberKey)
+        List<NotificationResponse> responses = notificationService.getMyNotifications(memberKey)
                 .stream()
                 .map(NotificationResponse::from)
                 .toList();

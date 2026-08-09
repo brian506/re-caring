@@ -48,6 +48,15 @@ public class SafeZoneFixture {
         return new SafeZoneInfo(safeZoneKey, NAME, ADDRESS, LATITUDE, LONGITUDE, RADIUS);
     }
 
+    public static SafeZoneInfo createSafeZoneInfoAt(
+            String safeZoneKey, String name, double latitude, double longitude) {
+        return new SafeZoneInfo(safeZoneKey, name, ADDRESS, latitude, longitude, RADIUS);
+    }
+
+    public static SafeZoneInfo createSafeZoneInfoWithRadius(String safeZoneKey, SafeZoneRadius radius) {
+        return new SafeZoneInfo(safeZoneKey, NAME, ADDRESS, LATITUDE, LONGITUDE, radius);
+    }
+
     public static SafeZoneCreation createCommand() {
         return new SafeZoneCreation(WARD_MEMBER_KEY, NAME, ADDRESS, LATITUDE, LONGITUDE, RADIUS);
     }

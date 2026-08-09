@@ -1,4 +1,4 @@
-package com.recaring.care.implement;
+package com.recaring.common.sqs;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -10,7 +10,7 @@ import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 
 @Slf4j
 @Component
-@Profile("prod")
+@Profile({"prod", "dev"})
 @RequiredArgsConstructor
 public class AwsSqsPublisher implements SqsPublisher {
 
@@ -25,8 +25,8 @@ public class AwsSqsPublisher implements SqsPublisher {
                     .queueUrl(queueUrl)
                     .messageBody(message)
                     .build());
-            log.info("[SQS 발행 : 완료]: queueUrl={}", queueUrl);
         } catch (Exception e) {
+            //todo 제시도 로직 구현 필요
             log.error("[SQS 발행 : 실패]: queueUrl={} | error={}", queueUrl, e.getMessage());
         }
     }
