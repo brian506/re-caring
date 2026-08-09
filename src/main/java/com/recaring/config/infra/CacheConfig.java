@@ -26,7 +26,6 @@ public class CacheConfig {
 
         return RedisCacheManager.builder(redisConnectionFactory)
                 .withCacheConfiguration("careRelationship", defaultConfig)
-                .withCacheConfiguration("safeZone", defaultConfig)
                 .build();
     }
 }

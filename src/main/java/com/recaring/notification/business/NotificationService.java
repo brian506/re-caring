@@ -9,7 +9,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class NotificationQueryService {
+public class NotificationService {
 
     private final NotificationReader notificationReader;
 

@@ -18,10 +18,10 @@ import static org.mockito.BDDMockito.then;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("알림 조회 서비스 단위 테스트")
-class NotificationQueryServiceTest {
+class NotificationServiceTest {
 
     @InjectMocks
-    private NotificationQueryService notificationQueryService;
+    private NotificationService notificationService;
 
     @Mock
     private NotificationReader notificationReader;
@@ -35,7 +35,7 @@ class NotificationQueryServiceTest {
         );
         given(notificationReader.findByRecipient(NotificationFixture.GUARDIAN_KEY)).willReturn(items);
 
-        List<NotificationItem> result = notificationQueryService.getMyNotifications(NotificationFixture.GUARDIAN_KEY);
+        List<NotificationItem> result = notificationService.getMyNotifications(NotificationFixture.GUARDIAN_KEY);
 
         assertThat(result).isEqualTo(items);
         then(notificationReader).should().findByRecipient(NotificationFixture.GUARDIAN_KEY);

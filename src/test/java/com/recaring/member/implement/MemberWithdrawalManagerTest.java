@@ -14,6 +14,7 @@ import com.recaring.device.dataaccess.repository.WardDeviceTokenRepository;
 import com.recaring.location.dataaccess.repository.LocationSettingRepository;
 import com.recaring.location.implement.detection.BatteryAlertStateManager;
 import com.recaring.location.implement.gps.GpsHistoryManager;
+import com.recaring.location.implement.safezone.SafeZoneStateManager;
 import com.recaring.location.implement.gps.GpsLatestCacheManager;
 import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.dataaccess.repository.MemberWithdrawalRepository;
@@ -85,6 +86,9 @@ class MemberWithdrawalManagerTest {
     private BatteryAlertStateManager batteryAlertStateManager;
 
     @Mock
+    private SafeZoneStateManager safeZoneStateManager;
+
+    @Mock
     private LocalAuthRepository localAuthRepository;
 
     @Mock
@@ -141,6 +145,7 @@ class MemberWithdrawalManagerTest {
         then(memberWriter).should(times(1)).deleteByMemberKey(memberKey);
         then(gpsLatestCacheManager).should(times(1)).delete(memberKey);
         then(batteryAlertStateManager).should(times(1)).delete(memberKey);
+        then(safeZoneStateManager).should(times(1)).delete(memberKey);
     }
 
     @Test

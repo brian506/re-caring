@@ -1,7 +1,7 @@
 package com.recaring.notification.controller;
 
 import com.recaring.common.controller.ApiControllerAdvice;
-import com.recaring.notification.business.NotificationQueryService;
+import com.recaring.notification.business.NotificationService;
 import com.recaring.notification.fixture.NotificationFixture;
 import com.recaring.security.vo.AuthMember;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,11 +36,11 @@ class NotificationControllerWebMvcTest {
     private MockMvc mockMvc;
 
     @Mock
-    private NotificationQueryService notificationQueryService;
+    private NotificationService notificationService;
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(new NotificationController(notificationQueryService))
+        mockMvc = MockMvcBuilders.standaloneSetup(new NotificationController(notificationService))
                 .setControllerAdvice(new ApiControllerAdvice())
                 .setCustomArgumentResolvers(authMemberArgumentResolver())
                 .build();
@@ -49,7 +49,7 @@ class NotificationControllerWebMvcTest {
     @Test
     @DisplayName("Returns the authenticated member's notification list")
     void getMyNotifications_returns_list() throws Exception {
-        given(notificationQueryService.getMyNotifications(MEMBER_KEY)).willReturn(List.of(
+        given(notificationService.getMyNotifications(MEMBER_KEY)).willReturn(List.of(
                 NotificationFixture.notificationItem("BATTERY_LOW", "배터리 부족", "배터리가 부족합니다. 잔량은 40% 입니다.")
         ));
 
@@ -63,13 +63,13 @@ class NotificationControllerWebMvcTest {
                 .andExpect(jsonPath("$.data[0].body").value("배터리가 부족합니다. 잔량은 40% 입니다."))
                 .andExpect(jsonPath("$.data[0].dataPayload.type").value("BATTERY_LOW"));
 
-        then(notificationQueryService).should().getMyNotifications(MEMBER_KEY);
+        then(notificationService).should().getMyNotifications(MEMBER_KEY);
     }
 
     @Test
     @DisplayName("Returns an empty list when there are no notifications")
     void getMyNotifications_returns_empty_list() throws Exception {
-        given(notificationQueryService.getMyNotifications(MEMBER_KEY)).willReturn(List.of());
+        given(notificationService.getMyNotifications(MEMBER_KEY)).willReturn(List.of());
 
         mockMvc.perform(get("/api/v1/notifications")
                         .requestAttr("memberKey", MEMBER_KEY))

@@ -13,6 +13,8 @@ public record Gps(
         Double speed,
         LocalDateTime measuredAt
 ) {
+    private static final double MAX_ACCURACY_METERS = 100.0;
+
     public static Gps from(GpsHistory entity) {
         return new Gps(
                 entity.getLatitude(), entity.getLongitude(), entity.getRecordedAt(),
@@ -23,5 +25,9 @@ public record Gps(
     // 기기가 좌표를 측정한 시각. 기기가 보고하지 않았을 때만 서버 수신 시각으로 대체한다.
     public LocalDateTime occurredAt() {
         return measuredAt != null ? measuredAt : recordedAt;
+    }
+
+    public boolean isAccurate() {
+        return accuracy == null || accuracy <= MAX_ACCURACY_METERS;
     }
 }

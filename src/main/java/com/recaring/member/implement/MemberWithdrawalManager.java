@@ -13,6 +13,7 @@ import com.recaring.location.dataaccess.repository.LocationSettingRepository;
 import com.recaring.location.implement.detection.BatteryAlertStateManager;
 import com.recaring.location.implement.gps.GpsHistoryManager;
 import com.recaring.location.implement.gps.GpsLatestCacheManager;
+import com.recaring.location.implement.safezone.SafeZoneStateManager;
 import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.dataaccess.entity.MemberWithdrawal;
 import com.recaring.member.dataaccess.repository.MemberWithdrawalRepository;
@@ -44,6 +45,7 @@ public class MemberWithdrawalManager {
     private final SafeZoneWriter safeZoneWriter;
     private final GpsLatestCacheManager gpsLatestCacheManager;
     private final BatteryAlertStateManager batteryAlertStateManager;
+    private final SafeZoneStateManager safeZoneStateManager;
 
     // Writer가 없는 도메인은 Repository를 직접 호출
     private final LocalAuthRepository localAuthRepository;
@@ -73,6 +75,7 @@ public class MemberWithdrawalManager {
         gpsHistoryManager.deleteByWardMemberKey(memberKey);
         locationSettingRepository.deleteByWardMemberKey(memberKey);
         safeZoneWriter.deleteByWardMemberKey(memberKey);
+        safeZoneStateManager.delete(memberKey);
         wardDeviceTokenRepository.deleteByWardKey(memberKey);
 
         memberWriter.deleteByMemberKey(memberKey);

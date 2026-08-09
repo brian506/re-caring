@@ -1,6 +1,6 @@
 # 프로젝트 스냅샷
 
-> 마지막 업데이트: 2026-07-10. 기능 추가·수정 시 해당 섹션을 갱신한다.
+> 마지막 업데이트: 2026-08-08. 기능 추가·수정 시 해당 섹션을 갱신한다.
 
 ## 도메인별 패키지 현황
 
@@ -9,9 +9,9 @@
 | `auth` | LocalAuthService, OAuthService, TokenRefreshService | LocalAuthAuthenticator, TokenIssuer, RefreshTokenReader/Writer, OAuthManager |
 | `care` | CareInvitationService, CareRelationshipService | CareInvitationManager, CareInvitationReader/Writer, CareRelationshipValidator, SqsPublisher(전략패턴) |
 | `device` | DeviceTokenService | WardDeviceTokenManager, WardDeviceTokenReader |
-| `location` | LocationService, LocationSettingService | GpsHistoryReader/Writer, GpsLatestCacheReader/Writer, SseEmitterManager, LocationValidator, GpsPatternAnalysisScheduler(SQS 발행), LocationSettingManager, LocationSettingReader |
+| `location` | LocationService, LocationSettingService | GpsHistoryManager, GpsLatestCacheManager/Listener, SseEmitterManager, LocationValidator, CareRelationshipCacheReader, BatteryThresholdEvaluator/BatteryDetectionListener/BatteryAlertStateManager(detection), SafeZoneStateManager/SafeZoneDetectionListener(safezone), LocationSettingManager |
 | `member` | MemberService | MemberReader/Writer/Validator, MembersTermsAgreementWriter, MemberWithdrawalManager |
-| `notification` | NotificationQueryService, NotificationSettingService, NotificationSendService, FcmDeviceTokenService | NotificationReader/Writer, NotificationSendManager, NotificationSettingReader/Manager/Validator, FcmDeviceTokenReader/Manager, FcmClient(Firebase/NoOp), CareInvitationNotificationListener |
+| `notification` | NotificationService, NotificationSettingService, FcmDeviceTokenService | NotificationReader/Writer, NotificationSendManager, NotificationSettingReader/Manager/Validator, FcmDeviceTokenReader/Manager, FcmClient(Firebase/NoOp), CareInvitationNotificationListener, BatteryThresholdNotificationListener, SafeZoneNotificationListener |
 | `safezone` | SafeZoneService | SafeZoneReader, SafeZoneWriter |
 | `sms` | PhoneVerificationService | SmsClient, SmsCodeGenerator, PhoneVerificationReader/Writer |
 | `alert` | AlertService, AlertResolutionService | AlertInvestigationOrchestrator, AlertInvestigationAgent(Tool Use Loop), SsmContextFetcher, PrometheusContextFetcher, ErrorHistoryFetcher, RunbookService, SlackAlertNotifier, GitHubPrCreator, AlertRetryHandler |
@@ -45,6 +45,11 @@
 | Location | PATCH | `/api/v1/location/settings/{wardKey}/collection-interval` | 위치 수집 주기 수정 (GUARDIAN only) |
 | Location | GET | `/api/v1/location/settings/collection-interval/me` | 내 위치 수집 주기 조회 (WARD, Device Token 인증) |
 | Notification | GET | `/api/v1/notifications` | 내 알림함 목록 조회 (WARD, GUARDIAN — recipient 기준, 최신순, 페이징 없음) |
+| Notification | GET | `/api/v1/notifications/settings/{wardKey}` | 알림 설정 조회 (안심존·이상탐지·응급호출·배터리) |
+| Notification | PATCH | `/api/v1/notifications/settings/{wardKey}/safe-zone` | 안심존 진입·이탈 알림 토글 |
+| Notification | PATCH | `/api/v1/notifications/settings/{wardKey}/anomaly` | 이상탐지 알림 토글·민감도 수정 |
+| Notification | PATCH | `/api/v1/notifications/settings/{wardKey}/emergency-call` | 응급호출 알림 토글 |
+| Notification | PATCH | `/api/v1/notifications/settings/{wardKey}/battery` | 배터리 알림 토글 + 알림 받을 잔량(%) 다중 선택 (10~100, 10 단위, 개수 제한 없음). 기본값 없음 — 빈 배열이면 알림 안 감 |
 | Member | GET | `/api/v1/members/me` | 내 정보 조회 (JWT 인증, Member+이메일+약관+안심존 통합) |
 | Member | PATCH | `/api/v1/members/me` | 내 정보 수정 (이름·생년월일·비밀번호 부분 수정, JWT 인증) |
 | Member | POST | `/api/v1/members/phones` | 연락처 기반 가입 회원 조회 (GUARDIAN) |
@@ -67,12 +72,14 @@
 | LoginHistory | login_histories | memberKey, ip, loginAt |
 | CareRelationship | care_relationships | caregiverKey, wardKey, role(GUARDIAN/MANAGER) |
 | CareInvitation | care_invitations | inviterKey, receiverKey, wardKey, status(PENDING/ACCEPTED/REJECTED/EXPIRED), createdAt |
-| GpsHistory | gps_histories | wardMemberKey, latitude, longitude, recordedAt |
+| GpsHistory | gps_histories | wardMemberKey, latitude, longitude, recordedAt(서버 수신 시각), accuracy, battery, speed(m/s, nullable), measuredAt(기기 측정 시각 UTC, nullable — null이면 시간 간격 신뢰 불가) |
 | LocationSetting | location_settings | wardMemberKey(UNIQUE), collectionIntervalSeconds(30/60/180/300, 기본 30) |
 | WardDeviceToken | ward_device_tokens | wardKey(UUID, UNIQUE), token(UUID, UNIQUE), createdAt, expiresAt |
 | MembersTermsAgreement | members_terms_agreements | memberKey, agreedAt |
 | SafeZone | safe_zones | safeZoneKey(UUID), wardMemberKey, name, address, latitude, longitude, radius(SMALL/MEDIUM/LARGE/XLARGE) |
+| SafeZoneState | safe_zone_states | wardMemberKey(UNIQUE), safeZoneKeys(CSV, 현재 속한 안심존). 행 없음=최초 관측(알림 안 함), 빈 문자열=존 밖 |
 | Notification | notifications | notificationKey(UUID, UNIQUE), recipientMemberKey, eventType, title, body, dataPayload(jsonb, 리다이렉트용), createdAt. 수신자별 개별 row. 읽음 필드 없음 |
+| NotificationSetting | notification_settings | wardMemberKey(UNIQUE), 안심존·이상탐지·응급호출 토글, 이상탐지 민감도, lowBatteryEnabled, batteryThresholdPercents(CSV, 기본 '' = 선택 없음 → 알림 없음) |
 | AlertRunbook | alert_runbooks | errorSignature, commands(jsonb), resolutionContext, successCount, isValid |
 | AlertInvestigation | alert_investigations | fingerprint, alertName, severity, threadTs, status, fixCommands(jsonb) |
 
@@ -82,13 +89,28 @@
 sms:{phone}                    SMS 인증코드          TTL: 3분
 gps:latest:{memberKey}         GPS 최신 위치         TTL: 5분  { lat, lng, timestamp }
 investigation:{fingerprint}    Alert 조사 상태       TTL: 10분  { threadTs, status, startedAt, fixCommands }
+device:state:{memberKey}       기기 상태             TTL 없음   ONLINE | LOW_BATTERY | OFFLINE
+device:battery:{memberKey}     배터리 재알림 억제(hash) TTL: 1일, 억제 해제·탈퇴 시 삭제  { lastNotifiedThreshold }
+careRelationship::*            케어관계 캐시           TTL: 10분
 ```
+
+안심존 상태는 Redis(`safezone:state:{wardKey}`)에서 `safe_zone_states` 테이블로 이전했다. 유실되면 복구 불가능한
+알림 이력이라 TTL이 있는 저장소와 성격이 맞지 않았고, 저장 실패 시 알림만 나가는 경로가 있었다.
+안심존 목록은 캐싱하지 않고 GPS 지점마다 DB를 조회한다(핫패스 아님 + 존 수정 시 오알림 방지).
+
+## 탐지 파이프라인
+
+결정론 판정(배터리·안심존)은 룰엔진 왕복 없이 **서버 인라인**으로 처리한다. GPS 수신 → `GpsSavedEvent` →
+`BatteryDetectionListener` / `SafeZoneDetectionListener`가 각각 판정하고, 도달·전이 시에만 알림 이벤트를 발행한다.
+이상이동 탐지(경로 이탈·배회·속도·시간대)는 향후 Claim-Check 방식(SQS는 트리거만, 엔진이 DB 조회)으로 붙인다.
+→ 결정 배경과 미해결 항목: `docs/detection-architecture-decisions.md`
 
 ## SqsPublisher 전략 패턴
 
-- `SqsPublisher` (interface) — care.implement
-- `AwsSqsPublisher` (AWS SQS 실제 구현, prod 프로파일)
-- `NoOpSqsPublisher` (로컬/테스트용 no-op, local/test 프로파일)
+- `SqsPublisher` (interface) — common.sqs (care.implement에 미사용 중복 3형제가 남아 있음)
+- `AwsSqsPublisher` (AWS SQS 실제 구현, prod/dev 프로파일)
+- `NoOpSqsPublisher` (로컬/테스트용 no-op)
+- 현재 사용처 없음 — 이상이동 탐지 경로 착수 시 재사용
 
 ---
 
@@ -104,3 +126,6 @@ investigation:{fingerprint}    Alert 조사 상태       TTL: 10분  { threadTs,
 | 4 | SSE 구독자 수 무제한 | `SseEmitterManager` | wardKey당 emitter 수 제한 없음 |
 | 5 | CareInvitation 만료 정리 배치 없음 | `CareInvitation` | PENDING 만료건 DB에 잔류, 주기적 정리 미구현 |
 | 6 | Device Token 검증 DB 직조회 | `DeviceTokenAuthFilter` | GPS 수신마다 `WardDeviceTokenRepository.findByToken()` DB 조회. Redis 캐싱(`device-token:{token}` → wardMemberKey, TTL 24h)으로 개선 가능. 단, 재발급(`reissue()`) 시 구 토큰 캐시 명시적 삭제 필요 — 트러블슈팅 비교 후 적용 결정 |
+| 7 | 안심존 설정 변경 시 가짜 진입·이탈 알림 | `SafeZoneDetectionListener` | `previousKeys`는 옛 존 설정 기준, `currentKeys`는 새 설정 기준이라 차집합의 전제가 깨진다. 존 신규 등록·반경 확대/축소·위치 이동 시 이동 없이 알림 발생. `zone == null` 체크는 삭제만 방어. 해결안: `SafeZoneChangedEvent` 발행 → 상태 리셋 |
+| 8 | 겹친 안심존 동시 알림 | `SafeZoneDetectionListener` | 반경 500~2000m라 도심에서 존이 겹치면 교집합 진입·이탈 시 알림이 존 개수만큼 발송된다. 해결안: 판정 1회당 이벤트 1건으로 병합("집, 병원에 도착했어요"). FCM data payload의 `safeZoneKey` 복수화가 필요해 앱 팀 확인 선행 |
+| 9 | 안심존 상태 동시 갱신 미방어 | `SafeZoneStateManager` | `findByWardMemberKey` → `replace`가 원자적이지 않다. GPS 최소 주기 30초라 정상 흐름에선 겹치지 않으나, 앱이 오프라인 버퍼링 후 일괄 전송하거나 재시도하면 중복 알림 가능. 실제 도착 간격 확인 후 필요 시 비관적 락 + `observed_at` 도입 |

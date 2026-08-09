@@ -22,7 +22,6 @@ public class LocationFixture {
     public static final Double SPEED = 1.4;
     public static final String BATTERY_ALERT_STATE_KEY = "device:battery:" + WARD_KEY;
     public static final String LAST_NOTIFIED_THRESHOLD_FIELD = "lastNotifiedThreshold";
-    public static final String SAFE_ZONE_STATE_KEY = "safezone:state:" + WARD_KEY;
     public static final LocalDateTime MEASURED_AT = LocalDateTime.of(2026, 7, 27, 10, 15, 0);
     public static final LocalDateTime RECORDED_AT = LocalDateTime.of(2026, 7, 27, 10, 15, 3);
 
@@ -32,6 +31,10 @@ public class LocationFixture {
 
     public static Gps createGps(Integer battery) {
         return new Gps(LATITUDE, LONGITUDE, RECORDED_AT, ACCURACY, battery, SPEED, MEASURED_AT);
+    }
+
+    public static Gps createGpsWithAccuracy(Double accuracy) {
+        return new Gps(LATITUDE, LONGITUDE, RECORDED_AT, accuracy, BATTERY, SPEED, MEASURED_AT);
     }
 
     public static Member createWard() {
