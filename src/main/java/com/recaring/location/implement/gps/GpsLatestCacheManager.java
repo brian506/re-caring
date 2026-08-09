@@ -31,6 +31,7 @@ public class GpsLatestCacheManager {
         try {
             return Optional.of(objectMapper.readValue(value, Gps.class));
         } catch (JsonProcessingException e) {
+            log.warn("[GPS 캐시 : 역직렬화 실패]: wardMemberKey={} | error={}", wardMemberKey, e.getOriginalMessage());
             return Optional.empty();
         }
     }

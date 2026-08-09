@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -20,6 +21,11 @@ public class GpsHistoryManager {
                 .stream()
                 .map(Gps::from)
                 .toList();
+    }
+
+    public Optional<Gps> findLatest(String wardMemberKey) {
+        return gpsHistoryRepository.findLatest(wardMemberKey)
+                .map(Gps::from);
     }
 
     public void save(String wardMemberKey, Gps gps) {

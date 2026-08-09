@@ -71,7 +71,6 @@ dependencies {
 	// AWS SDK v2
 	implementation platform('software.amazon.awssdk:bom:2.25.60')
 	implementation 'software.amazon.awssdk:sns'
-	implementation 'software.amazon.awssdk:sqs'
 	implementation 'software.amazon.awssdk:ssm'
 
 	// Swagger (springdoc-openapi)
