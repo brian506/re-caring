@@ -34,7 +34,6 @@ public class GpsHistory {
     @Column(nullable = false)
     private double longitude;
 
-    // Server-side receive time. Not the device measurement time — use measuredAt for that.
     @Column(nullable = false, updatable = false)
     private LocalDateTime recordedAt;
 
@@ -47,8 +46,6 @@ public class GpsHistory {
     @Column
     private Double speed;
 
-    // Device measurement time in UTC. Null means the device did not report one,
-    // so any time-interval based analysis must exclude this row.
     @Column
     private LocalDateTime measuredAt;
 

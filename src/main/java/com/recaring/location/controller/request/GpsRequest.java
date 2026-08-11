@@ -11,7 +11,7 @@ import jakarta.validation.constraints.PositiveOrZero;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 
 public record GpsRequest(
         @NotNull
@@ -36,15 +36,17 @@ public record GpsRequest(
                 example = "2026-08-04T14:23:11Z")
         Instant measuredAt
 ) {
+    private static final ZoneId STORAGE_ZONE = ZoneId.of("Asia/Seoul");
+
     public Gps toGps(LocalDateTime receivedAt) {
         return new Gps(latitude, longitude, receivedAt,
-                accuracy, battery, speed, toUtcLocalDateTime(measuredAt));
+                accuracy, battery, speed, toStorageLocalDateTime(measuredAt));
     }
 
-    private static LocalDateTime toUtcLocalDateTime(Instant instant) {
+    private static LocalDateTime toStorageLocalDateTime(Instant instant) {
         if (instant == null) {
             return null;
         }
-        return LocalDateTime.ofInstant(instant, ZoneOffset.UTC);
+        return LocalDateTime.ofInstant(instant, STORAGE_ZONE);
     }
 }
