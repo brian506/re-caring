@@ -1,6 +1,6 @@
 # 프로젝트 스냅샷
 
-> 마지막 업데이트: 2026-08-08. 기능 추가·수정 시 해당 섹션을 갱신한다.
+> 마지막 업데이트: 2026-08-13. 기능 추가·수정 시 해당 섹션을 갱신한다.
 
 ## 도메인별 패키지 현황
 
@@ -97,6 +97,37 @@ careRelationship::*            케어관계 캐시           TTL: 10분
 안심존 상태는 Redis(`safezone:state:{wardKey}`)에서 `safe_zone_states` 테이블로 이전했다. 유실되면 복구 불가능한
 알림 이력이라 TTL이 있는 저장소와 성격이 맞지 않았고, 저장 실패 시 알림만 나가는 경로가 있었다.
 안심존 목록은 캐싱하지 않고 GPS 지점마다 DB를 조회한다(핫패스 아님 + 존 수정 시 오알림 방지).
+
+## Redis 인프라 (ECS+EFS → ElastiCache 전환)
+
+이상탐지 파이프라인(Redis Stream으로 실시간 GPS 전달) 도입을 계기로, EC2에 종속된 ECS 컨테이너 Redis(EFS AOF)를
+ElastiCache로 전환했다. 기존엔 refresh token/SMS 코드/최신 위치 모두 유실 허용 데이터였지만(리프레시 토큰은
+애초에 Redis가 아니라 DB(`RefreshTokenRepository`) 저장이라 대상 아님), 이상탐지 알림 전달 경로가 되면서
+EC2 다운 시 탐지 흐름 자체가 멈추는 SPOF를 해소하기 위함.
+
+**AWS 콘솔에 인스턴스 생성 완료** (2026-08-13), 코드/설정 반영은 아직.
+
+| 항목 | 값 |
+|------|-----|
+| 클러스터 이름 | recaring-redis |
+| 엔진 | Valkey 9.1.0 |
+| 노드 유형 | cache.t3.micro |
+| 클러스터 모드 | 비활성화 (샤드 1) |
+| 노드 수 | 3 (Primary 1 + Replica 2) |
+| Multi-AZ / 자동 장애조치 | 활성화 |
+| 저장 시 암호화 | 활성화 |
+| 전송 중 암호화(TLS) | 활성화, **모드: 필수** |
+| 파라미터 그룹 | `recaring-parameter-policy` (커스텀) |
+| Primary/Reader Endpoint | ElastiCache 콘솔 → `recaring-redis` 클러스터에서 확인 (리포지토리에 평문 기록하지 않음) |
+
+**완료**
+- `application-dev.yml`에 `spring.data.redis.ssl.enabled: true` 반영, ECS 태스크 정의 `REDIS_HOST`를 Primary Endpoint로 갱신
+- 기존 ECS `redis`/`redis-exporter` 서비스 + EFS 볼륨(redis용) 제거
+
+**남은 작업 (TODO)**
+- AUTH 토큰 미사용 상태 — SG가 앱 서버 SG로만 제한돼 있어 dev는 진행 가능하나, prod 반영 전 AUTH 토큰 적용 검토 (SEC-001)
+- `recaring-parameter-policy`에 `maxmemory-policy`를 `volatile-lru`(또는 `noeviction`)로 설정했는지 확인 — Redis Stream(TTL 없는 키) 데이터가 메모리 압박 시 임의 삭제되지 않도록
+- 위 반영 후 dev 배포하여 연결 검증
 
 ## 탐지 파이프라인
 
