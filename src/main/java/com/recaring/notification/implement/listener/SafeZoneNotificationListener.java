@@ -51,7 +51,7 @@ public class SafeZoneNotificationListener {
             return;
         }
         send(wardMemberKey, event.safeZoneKey(), EVENT_TYPE_EXITED, TITLE_EXITED,
-                event.safeZoneName() + "을(를) 벗어났어요.");
+                event.safeZoneName() + "에서 벗어났어요.");
     }
 
     private void send(String wardMemberKey, String safeZoneKey, String eventType, String title, String body) {
