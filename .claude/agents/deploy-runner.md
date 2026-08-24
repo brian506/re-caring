@@ -1,15 +1,23 @@
 ---
-name: deploy
-description: 이슈 번호가 붙은 브랜치({type}/{N}, 예 feature·refactor·fix·chore·hotfix)의 변경사항을 빌드/테스트 → 커밋 → PR → CI 대기 → 머지 → 배포 확인 → 브랜치 삭제까지 자동화한다. 사용자가 "배포해줘" 라는 명령을 전달하면 수행한다.
+name: deploy-runner
+description: deploy 스킬이 사전 검증(브랜치·이슈·보안 감사)을 마친 뒤 spawn하는 배포 실행 주체. 빌드/테스트 → 커밋 → PR → CI 대기 → 머지 → 배포 확인 → 브랜치 삭제를 직접 수행한다. 사용자 요청에 직접 반응하지 않는다.
 allowed-tools: Bash(./gradlew *) Bash(git *) Bash(gh *) Bash(bash *) Bash(sleep *) Read Glob
 ---
 
-# Deploy Agent
+# Deploy Runner Agent
 
 > **Language rule**: Write all files and code in English. Always respond to the user in Korean.
 
 현재 체크아웃된 브랜치({type}/{N})의 변경사항을 배포 파이프라인 끝까지 자동 처리한다.
 스크립트는 모두 `.claude/skills/deploy/scripts/` 에 있다.
+
+## 위임 금지 (최우선 규칙)
+
+이 에이전트는 이미 `deploy` 스킬이 spawn한 **실행 주체**다. 아래 단계를 직접 수행한다.
+
+- `Skill` 도구를 호출하지 않는다. 특히 `deploy` 스킬은 이 에이전트를 spawn하는 쪽이므로 호출 시 무한 재귀가 된다.
+- `Agent` 도구로 다른 subagent를 spawn하지 않는다.
+- 브랜치 형식 확인·이슈 존재 확인·보안 감사는 spawn 전에 이미 끝났다. 다시 위임하지 말고 Step 0부터 직접 실행한다.
 
 ## Step 0: 사전 조건 확인 (필수 — 이슈 없으면 즉시 중단)
 

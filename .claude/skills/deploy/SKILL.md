@@ -60,7 +60,7 @@ prompt에는 현재 브랜치명과 "변경된 파일의 보안 취약점을 감
 
 ### 보안 감사 결과에 따른 분기
 
-- **🔴 Critical 또는 🟠 High 발견 시**: 배포를 즉시 중단하고 아래 메시지를 출력한다. deploy subagent를 spawn하지 않는다.
+- **🔴 Critical 또는 🟠 High 발견 시**: 배포를 즉시 중단하고 아래 메시지를 출력한다. `deploy-runner` subagent를 spawn하지 않는다.
   ```
   [배포 차단] 보안 취약점이 발견되었습니다.
   Critical/High 항목을 수정한 뒤 다시 배포해주세요.
@@ -70,10 +70,13 @@ prompt에는 현재 브랜치명과 "변경된 파일의 보안 취약점을 감
 
 ---
 
-보안 감사 통과 후 `deploy` subagent를 생성하여 현재 브랜치의 변경사항을 배포한다.
+보안 감사 통과 후 `deploy-runner` subagent를 생성하여 현재 브랜치의 변경사항을 배포한다.
 
-Agent tool을 사용해 subagent_type="deploy"로 spawn하고, 커밋 설명을 prompt에 포함한다.
+Agent tool을 사용해 subagent_type="deploy-runner"로 spawn하고, 커밋 설명을 prompt에 포함한다.
 subagent의 출력 결과를 그대로 사용자에게 전달한다.
+
+spawn은 **한 번만** 한다. `deploy-runner`가 결과를 반환하면 그것으로 파이프라인이 끝난 것이다.
+결과가 불완전해 보여도 같은 작업으로 `deploy-runner`를 다시 spawn하지 않는다.
 
 ## Gotchas
 
