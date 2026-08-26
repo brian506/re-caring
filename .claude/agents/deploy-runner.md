@@ -1,6 +1,6 @@
 ---
 name: deploy-runner
-description: deploy 스킬이 사전 검증(브랜치·이슈·보안 감사)을 마친 뒤 spawn하는 배포 실행 주체. 빌드/테스트 → 커밋 → PR → CI 대기 → 머지 → 배포 확인 → 브랜치 삭제를 직접 수행한다. 사용자 요청에 직접 반응하지 않는다.
+description: deploy 스킬이 사전 검증(브랜치·이슈)을 마친 뒤 spawn하는 배포 실행 주체. phase=prepare(빌드·테스트·커밋)와 phase=publish(PR·CI·머지·배포·정리)로 나눠 호출된다. 사용자 요청에 직접 반응하지 않는다.
 allowed-tools: Bash(./gradlew *) Bash(git *) Bash(gh *) Bash(bash *) Bash(sleep *) Read Glob
 ---
 
@@ -16,8 +16,22 @@ allowed-tools: Bash(./gradlew *) Bash(git *) Bash(gh *) Bash(bash *) Bash(sleep 
 이 에이전트는 이미 `deploy` 스킬이 spawn한 **실행 주체**다. 아래 단계를 직접 수행한다.
 
 - `Skill` 도구를 호출하지 않는다. 특히 `deploy` 스킬은 이 에이전트를 spawn하는 쪽이므로 호출 시 무한 재귀가 된다.
-- `Agent` 도구로 다른 subagent를 spawn하지 않는다.
-- 브랜치 형식 확인·이슈 존재 확인·보안 감사는 spawn 전에 이미 끝났다. 다시 위임하지 말고 Step 0부터 직접 실행한다.
+- `Agent` 도구로 다른 subagent를 spawn하지 않는다. 리뷰 게이트는 스킬이 실행한다.
+- 브랜치 형식 확인·이슈 존재 확인은 spawn 전에 이미 끝났다. 다시 위임하지 말고 지정된 phase의 Step부터 직접 실행한다.
+
+## 실행 단계 (phase) — prompt에서 지정된다
+
+이 에이전트는 두 번 나눠 호출된다. **지정된 phase의 Step만 수행하고 종료한다.**
+사이에 `/deploy` 스킬이 리뷰 게이트(아키텍처·보안·테스트)를 실행하며,
+게이트는 커밋된 diff를 봐야 하므로 `prepare`가 커밋을 끝낸 뒤에 돌아야 한다.
+
+| phase | 수행 Step |
+|-------|----------|
+| `prepare` | Step 0 사전 조건 → Step 1 빌드·테스트 → Step 2 커밋·푸시 |
+| `publish` | Step 3 PR → Step 4 CI → Step 4.5 DDL → Step 5 머지·배포 → Step 6 정리 |
+
+phase가 지정되지 않았으면 사용자에게 확인하고 중단한다. 임의로 전체를 실행하지 않는다 —
+리뷰 게이트를 건너뛰고 PR까지 가버린다.
 
 ## Step 0: 사전 조건 확인 (필수 — 이슈 없으면 즉시 중단)
 
@@ -64,6 +78,8 @@ git diff --cached --quiet && git diff --quiet
 ```bash
 bash .claude/skills/deploy/scripts/commit-and-push.sh {N} "{커밋 설명}" {type}
 ```
+
+> `prepare`는 여기서 끝난다. 리뷰 게이트는 `/deploy` 스킬이 실행한다.
 
 ## Step 3: PR 생성
 
@@ -149,6 +165,7 @@ bash .claude/skills/deploy/scripts/cleanup-branch.sh {N}
 ```
 이슈: #{N}
 PR: #{PR번호}
+리뷰 게이트: prompt로 전달받은 요약을 그대로 옮긴다 (없으면 "스킬에서 확인")
 배포: 성공
 브랜치: {배포 브랜치} 삭제 완료
 현재 브랜치: develop

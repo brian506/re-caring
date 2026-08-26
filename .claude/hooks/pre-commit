@@ -1,0 +1,57 @@
+#!/bin/sh
+
+FAIL=0
+WARN=0
+
+STAGED_TEST=$(git diff --cached --name-only --diff-filter=ACM -- 'src/test/*.java')
+STAGED_MAIN=$(git diff --cached --name-only --diff-filter=ACM -- 'src/main/*.java')
+
+for f in $STAGED_TEST; do
+    [ -f "$f" ] || continue
+
+    hit=$(awk '/ObjectMapper/ && (/@Mock/ || NR==m+1){print NR": "$0} /@Mock/{m=NR}' "$f")
+    if [ -n "$hit" ]; then
+        echo "FAIL  $f"
+        echo "      $hit"
+        echo "      ObjectMapper는 순수 변환기다. @Spy로 실제 객체를 쓴다 (test-antipatterns #3)"
+        FAIL=1
+    fi
+
+    if grep -q 'extends AbstractRepositoryTest' "$f" && ! grep -q '@Tag("integration")' "$f"; then
+        echo "FAIL  $f"
+        echo "      AbstractRepositoryTest 상속인데 @Tag(\"integration\")이 없다"
+        echo "      단위 테스트 suite에 섞여 실행 시간이 급증한다"
+        FAIL=1
+    fi
+
+    if grep -q 'doesNotThrowAnyException' "$f" && ! grep -q 'assertThat(' "$f"; then
+        echo "WARN  $f"
+        echo "      doesNotThrowAnyException이 유일한 단언이다"
+        echo "      빈 메서드 본문으로도 통과하는지 확인할 것 (test-antipatterns #6)"
+        WARN=1
+    fi
+done
+
+if [ -n "$STAGED_MAIN" ]; then
+    now=$(git diff --cached -U0 -- 'src/main/*.java' \
+        | awk '/^\+\+\+ b\//{f=substr($0,7)} /^\+/ && !/^\+\+\+/ && /(LocalDateTime|LocalDate|Instant|ZonedDateTime)\.now\(\)/{print "      "f": "substr($0,2)}')
+    if [ -n "$now" ]; then
+        echo "WARN  무인자 now() 호출이 추가됐다"
+        echo "$now"
+        echo "      경계값 테스트가 불가능해진다. Clock 주입 또는 파라미터 전달을 검토할 것"
+        WARN=1
+    fi
+fi
+
+if [ "$FAIL" -eq 1 ]; then
+    echo ""
+    echo "커밋이 차단됐다. 위 FAIL 항목을 고친 뒤 다시 커밋한다."
+    exit 1
+fi
+
+if [ "$WARN" -eq 1 ]; then
+    echo ""
+    echo "경고만 있다. 커밋은 진행된다."
+fi
+
+exit 0

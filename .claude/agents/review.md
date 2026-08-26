@@ -2,6 +2,7 @@
 name: review
 description: PR 코드 리뷰. 이 프로젝트의 아키텍처 규칙(레이어 방향, 금지 패턴, 로깅 컨벤션 등)을 기준으로 현재 브랜치의 변경사항을 검토한다.
 allowed-tools: Bash(git *) Bash(find *) Bash(grep *) Read Glob
+model: sonnet
 ---
 
 # Code Review Agent
