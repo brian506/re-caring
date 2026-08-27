@@ -24,6 +24,10 @@ public class MemberReader {
                 .orElseThrow(() -> new AppException(ErrorType.NOT_FOUND_ACCOUNT));
     }
 
+    public String findNameByMemberKey(String memberKey) {
+        return findByMemberKey(memberKey).getName();
+    }
+
     public Member findByPhone(PhoneNumber phoneNumber) {
         return memberRepository.findByPhone(phoneNumber.value())
                 .orElseThrow(() -> new AppException(ErrorType.NOT_FOUND_ACCOUNT));

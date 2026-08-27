@@ -1,6 +1,7 @@
 package com.recaring.notification.fixture;
 
 import com.recaring.care.dataaccess.entity.CarePartyRole;
+import com.recaring.location.fixture.LocationFixture;
 import com.recaring.member.dataaccess.entity.Gender;
 import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.dataaccess.entity.MemberRole;
@@ -9,7 +10,6 @@ import com.recaring.notification.dataaccess.entity.FcmDevicePlatform;
 import com.recaring.notification.dataaccess.entity.FcmDeviceToken;
 import com.recaring.notification.dataaccess.entity.Notification;
 import com.recaring.notification.dataaccess.entity.NotificationSetting;
-import com.recaring.notification.vo.AnomalySensitivity;
 import com.recaring.notification.vo.NotificationItem;
 
 import java.time.LocalDate;
@@ -18,9 +18,10 @@ import java.util.Map;
 
 public class NotificationFixture {
 
-    public static final String WARD_KEY = "ward-member-key-001";
-    public static final String GUARDIAN_KEY = "guardian-member-key-001";
-    public static final String MANAGER_KEY = "manager-member-key-001";
+    public static final String WARD_KEY = LocationFixture.WARD_KEY;
+    public static final String WARD_NAME = "김소연";
+    public static final String GUARDIAN_KEY = LocationFixture.GUARDIAN_KEY;
+    public static final String MANAGER_KEY = LocationFixture.MANAGER_KEY;
     public static final String OTHER_GUARDIAN_KEY = "other-guardian-member-key-001";
     public static final String GUARDIAN_FCM_TOKEN = "guardian-fcm-token-001";
     public static final String MANAGER_FCM_TOKEN = "manager-fcm-token-001";
@@ -48,7 +49,6 @@ public class NotificationFixture {
     }
 
     public static Member createManager() {
-        // A manager in a care relationship still uses the GUARDIAN member role.
         return Member.builder()
                 .phone("01055556666")
                 .name("Manager")
@@ -71,16 +71,26 @@ public class NotificationFixture {
     }
 
     public static NotificationSetting createSetting(String wardKey) {
+        return createSettingWithAnomalyToggles(wardKey, false, true, false, true, true);
+    }
+
+    public static NotificationSetting createSettingWithAnomalyToggles(
+            String wardKey,
+            boolean speedAnomalyEnabled,
+            boolean wanderingAnomalyEnabled,
+            boolean abnormalDwellingEnabled,
+            boolean routeDeviationEnabled,
+            boolean timeAnomalyEnabled
+    ) {
         return NotificationSetting.builder()
                 .wardMemberKey(wardKey)
                 .safeZoneEntryEnabled(true)
                 .safeZoneExitEnabled(false)
-                .routeDeviationEnabled(true)
-                .speedAnomalyEnabled(false)
-                .wanderingAnomalyEnabled(true)
-                .routeDeviationSensitivity(AnomalySensitivity.HIGH)
-                .speedAnomalySensitivity(AnomalySensitivity.LOW)
-                .wanderingAnomalySensitivity(AnomalySensitivity.VERY_HIGH)
+                .speedAnomalyEnabled(speedAnomalyEnabled)
+                .wanderingAnomalyEnabled(wanderingAnomalyEnabled)
+                .abnormalDwellingEnabled(abnormalDwellingEnabled)
+                .routeDeviationEnabled(routeDeviationEnabled)
+                .timeAnomalyEnabled(timeAnomalyEnabled)
                 .emergencyCallEnabled(true)
                 .lowBatteryEnabled(false)
                 .batteryThresholdPercents("40,90")
@@ -125,4 +135,5 @@ public class NotificationFixture {
                 LocalDateTime.of(2026, 7, 5, 9, 41)
         );
     }
+
 }

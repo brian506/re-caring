@@ -1,7 +1,6 @@
 package com.recaring.notification.dataaccess.repository.custom;
 
 import com.recaring.notification.dataaccess.entity.NotificationSetting;
-import com.recaring.notification.vo.AnomalySensitivity;
 import com.recaring.support.repository.QuerydslRepositorySupport;
 
 import java.time.LocalDateTime;
@@ -35,20 +34,18 @@ public class NotificationSettingRepositoryCustomImpl extends QuerydslRepositoryS
     @Override
     public void updateAnomaly(
             String wardMemberKey,
-            boolean routeDeviationEnabled,
             boolean speedAnomalyEnabled,
             boolean wanderingAnomalyEnabled,
-            AnomalySensitivity routeDeviationSensitivity,
-            AnomalySensitivity speedAnomalySensitivity,
-            AnomalySensitivity wanderingAnomalySensitivity
+            boolean abnormalDwellingEnabled,
+            boolean routeDeviationEnabled,
+            boolean timeAnomalyEnabled
     ) {
         update(notificationSetting)
-                .set(notificationSetting.routeDeviationEnabled, routeDeviationEnabled)
                 .set(notificationSetting.speedAnomalyEnabled, speedAnomalyEnabled)
                 .set(notificationSetting.wanderingAnomalyEnabled, wanderingAnomalyEnabled)
-                .set(notificationSetting.routeDeviationSensitivity, routeDeviationSensitivity)
-                .set(notificationSetting.speedAnomalySensitivity, speedAnomalySensitivity)
-                .set(notificationSetting.wanderingAnomalySensitivity, wanderingAnomalySensitivity)
+                .set(notificationSetting.abnormalDwellingEnabled, abnormalDwellingEnabled)
+                .set(notificationSetting.routeDeviationEnabled, routeDeviationEnabled)
+                .set(notificationSetting.timeAnomalyEnabled, timeAnomalyEnabled)
                 .set(notificationSetting.updatedAt, LocalDateTime.now())
                 .where(notificationSetting.wardMemberKey.eq(wardMemberKey))
                 .execute();

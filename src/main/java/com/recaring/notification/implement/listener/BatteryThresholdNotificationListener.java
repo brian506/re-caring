@@ -4,6 +4,7 @@ import com.recaring.care.dataaccess.entity.CareRole;
 import com.recaring.care.implement.CareRelationshipReader;
 import com.recaring.care.vo.CaregiverInfo;
 import com.recaring.location.event.BatteryThresholdAlertEvent;
+import com.recaring.member.implement.MemberReader;
 import com.recaring.notification.implement.NotificationSendManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +25,7 @@ public class BatteryThresholdNotificationListener {
 
     private final CareRelationshipReader careRelationshipReader;
     private final NotificationSendManager notificationSendManager;
+    private final MemberReader memberReader;
 
     @Async("broadcastExecutor")
     @EventListener
@@ -52,7 +54,7 @@ public class BatteryThresholdNotificationListener {
                 managerKeys,
                 EVENT_TYPE_BATTERY_THRESHOLD,
                 TITLE,
-                "기기 배터리 잔량이 " + thresholdPercent + "%에 도달했어요.",
+                memberReader.findNameByMemberKey(memberKey) + "님의 기기 배터리 잔량이 " + thresholdPercent + "%에 도달했어요.",
                 Map.of(
                         "type", EVENT_TYPE_BATTERY_THRESHOLD,
                         "wardKey", memberKey,

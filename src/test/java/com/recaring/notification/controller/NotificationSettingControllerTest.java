@@ -13,26 +13,24 @@ import com.recaring.support.AbstractIntegrationTest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 
 import java.util.Date;
+import org.springframework.http.MediaType;
 
 @DisplayName("NotificationSettingController HTTP 통합 테스트")
-@Tag("integration")
 class NotificationSettingControllerTest extends AbstractIntegrationTest {
 
     @Autowired
     private MemberRepository memberRepository;
     @Autowired
+    private JwtGenerator jwtGenerator;
+    @Autowired
     private CareRelationshipRepository careRelationshipRepository;
     @Autowired
     private NotificationSettingRepository notificationSettingRepository;
-    @Autowired
-    private JwtGenerator jwtGenerator;
 
     private Member ward;
     private Member guardian;
@@ -77,14 +75,11 @@ class NotificationSettingControllerTest extends AbstractIntegrationTest {
                 .jsonPath("$.resultType").isEqualTo("SUCCESS")
                 .jsonPath("$.data.safeZone.entryEnabled").isEqualTo(true)
                 .jsonPath("$.data.safeZone.exitEnabled").isEqualTo(true)
-                .jsonPath("$.data.anomaly.routeDeviationEnabled").isEqualTo(true)
                 .jsonPath("$.data.anomaly.speedAnomalyEnabled").isEqualTo(true)
                 .jsonPath("$.data.anomaly.wanderingAnomalyEnabled").isEqualTo(true)
-                .jsonPath("$.data.anomaly.routeDeviationSensitivity").isEqualTo("NORMAL")
-                .jsonPath("$.data.anomaly.speedAnomalySensitivity").isEqualTo("NORMAL")
-                .jsonPath("$.data.anomaly.wanderingAnomalySensitivity").isEqualTo("NORMAL")
-                .jsonPath("$.data.anomaly.sensitivityOptions[0]").isEqualTo("VERY_LOW")
-                .jsonPath("$.data.anomaly.sensitivityOptions[4]").isEqualTo("VERY_HIGH")
+                .jsonPath("$.data.anomaly.abnormalDwellingEnabled").isEqualTo(true)
+                .jsonPath("$.data.anomaly.routeDeviationEnabled").isEqualTo(true)
+                .jsonPath("$.data.anomaly.timeAnomalyEnabled").isEqualTo(true)
                 .jsonPath("$.data.emergencyCall.enabled").isEqualTo(true)
                 .jsonPath("$.data.battery.lowBatteryEnabled").isEqualTo(true)
                 .jsonPath("$.data.battery.thresholdPercents").isEmpty()
@@ -118,7 +113,7 @@ class NotificationSettingControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("PATCH /anomaly - 대상자 본인이 이상탐지 알림 설정을 수정한다")
+    @DisplayName("PATCH /anomaly - 대상자 본인이 탐지 유형별 토글을 수정한다")
     void updateAnomaly_by_ward_updates_setting() {
         client.patch()
                 .uri("/api/v1/notifications/settings/{wardKey}/anomaly", ward.getMemberKey())
@@ -126,12 +121,11 @@ class NotificationSettingControllerTest extends AbstractIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body("""
                         {
-                          "routeDeviationEnabled": false,
                           "speedAnomalyEnabled": true,
                           "wanderingAnomalyEnabled": false,
-                          "routeDeviationSensitivity": "VERY_HIGH",
-                          "speedAnomalySensitivity": "LOW",
-                          "wanderingAnomalySensitivity": "VERY_LOW"
+                          "abnormalDwellingEnabled": true,
+                          "routeDeviationEnabled": false,
+                          "timeAnomalyEnabled": true
                         }
                         """)
                 .exchange()
@@ -143,12 +137,11 @@ class NotificationSettingControllerTest extends AbstractIntegrationTest {
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
-                .jsonPath("$.data.anomaly.routeDeviationEnabled").isEqualTo(false)
                 .jsonPath("$.data.anomaly.speedAnomalyEnabled").isEqualTo(true)
                 .jsonPath("$.data.anomaly.wanderingAnomalyEnabled").isEqualTo(false)
-                .jsonPath("$.data.anomaly.routeDeviationSensitivity").isEqualTo("VERY_HIGH")
-                .jsonPath("$.data.anomaly.speedAnomalySensitivity").isEqualTo("LOW")
-                .jsonPath("$.data.anomaly.wanderingAnomalySensitivity").isEqualTo("VERY_LOW");
+                .jsonPath("$.data.anomaly.abnormalDwellingEnabled").isEqualTo(true)
+                .jsonPath("$.data.anomaly.routeDeviationEnabled").isEqualTo(false)
+                .jsonPath("$.data.anomaly.timeAnomalyEnabled").isEqualTo(true);
     }
 
     @Test
@@ -211,27 +204,25 @@ class NotificationSettingControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("PATCH /anomaly - 지원하지 않는 민감도면 400을 반환한다")
-    void updateAnomaly_returns_400_for_invalid_sensitivity() {
+    @DisplayName("PATCH /anomaly - 토글이 하나라도 빠지면 400을 반환한다")
+    void updateAnomaly_returns_400_when_a_toggle_is_missing() {
         client.patch()
                 .uri("/api/v1/notifications/settings/{wardKey}/anomaly", ward.getMemberKey())
                 .header(HttpHeaders.AUTHORIZATION, bearerToken(guardian))
                 .contentType(MediaType.APPLICATION_JSON)
                 .body("""
                         {
-                          "routeDeviationEnabled": true,
                           "speedAnomalyEnabled": true,
                           "wanderingAnomalyEnabled": true,
-                          "routeDeviationSensitivity": "INVALID",
-                          "speedAnomalySensitivity": "NORMAL",
-                          "wanderingAnomalySensitivity": "NORMAL"
+                          "abnormalDwellingEnabled": true,
+                          "routeDeviationEnabled": true
                         }
                         """)
                 .exchange()
                 .expectStatus().isBadRequest()
                 .expectBody()
                 .jsonPath("$.resultType").isEqualTo("ERROR")
-                .jsonPath("$.error.errorCode").isEqualTo("E9000");
+                .jsonPath("$.error.errorCode").isEqualTo("E400");
     }
 
     @Test
@@ -252,19 +243,25 @@ class NotificationSettingControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("GET /v3/api-docs - 알림 설정 엔드포인트 전부가 OpenAPI 문서에 등록된다")
+    @DisplayName("GET /v3/api-docs - Swagger OpenAPI 문서에 알림 설정 API가 노출된다")
     void swaggerApiDocs_contains_notification_setting_paths() {
         client.get()
                 .uri("/v3/api-docs")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
-                .jsonPath("$.paths['/api/v1/notifications/settings/{wardKey}'].get").exists()
-                .jsonPath("$.paths['/api/v1/notifications/settings/{wardKey}/safe-zone'].patch").exists()
-                .jsonPath("$.paths['/api/v1/notifications/settings/{wardKey}/anomaly'].patch").exists()
-                .jsonPath("$.paths['/api/v1/notifications/settings/{wardKey}/emergency-call'].patch").exists()
-                .jsonPath("$.paths['/api/v1/notifications/settings/{wardKey}/battery'].patch").exists()
-                .jsonPath("$.paths['/api/v1/notifications/device-tokens'].put").exists();
+                .jsonPath("$.paths['/api/v1/notifications/settings/{wardKey}'].get.summary")
+                .isEqualTo("알림 설정 조회")
+                .jsonPath("$.paths['/api/v1/notifications/settings/{wardKey}/safe-zone'].patch.summary")
+                .isEqualTo("안심존 알림 설정 변경")
+                .jsonPath("$.paths['/api/v1/notifications/settings/{wardKey}/anomaly'].patch.summary")
+                .isEqualTo("이상탐지 알림 설정 변경")
+                .jsonPath("$.paths['/api/v1/notifications/settings/{wardKey}/emergency-call'].patch.summary")
+                .isEqualTo("응급호출 알림 설정 변경")
+                .jsonPath("$.paths['/api/v1/notifications/settings/{wardKey}/battery'].patch.summary")
+                .isEqualTo("배터리 알림 설정 변경")
+                .jsonPath("$.paths['/api/v1/notifications/device-tokens'].put.summary")
+                .isEqualTo("FCM device token 생성 및 업데이트");
     }
 
     @Test
@@ -275,7 +272,6 @@ class NotificationSettingControllerTest extends AbstractIntegrationTest {
                 .exchange()
                 .expectStatus().isOk();
     }
-
     private String bearerToken(Member member) {
         return "Bearer " + jwtGenerator.generateJwt(
                 new TokenPayload(member.getMemberKey(), member.getRole(), new Date())

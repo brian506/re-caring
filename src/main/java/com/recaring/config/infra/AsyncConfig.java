@@ -18,6 +18,13 @@ public class AsyncConfig {
         );
     }
 
+    @Bean("detectionRetryExecutor")
+    public Executor detectionRetryExecutor() {
+        return Executors.newThreadPerTaskExecutor(
+                Thread.ofVirtual().name("detection-retry-", 0).factory()
+        );
+    }
+
     @Bean("ssePollExecutor")
     public Executor ssePollExecutor() {
         return Executors.newThreadPerTaskExecutor(
