@@ -37,6 +37,7 @@ class AuthControllerTest extends AbstractIntegrationTest {
 
     private static final String TOKEN_KEY_PREFIX = "phone:token:";
     private static final long REFRESH_EXPIRATION_MS = 1_209_600_000L;
+    private static final long ISSUED_EARLIER_MS = 60_000L;
 
     @Autowired
     private StringRedisTemplate redisTemplate;
@@ -88,10 +89,16 @@ class AuthControllerTest extends AbstractIntegrationTest {
         return member;
     }
 
+    /**
+     * JWT의 iat/exp는 초 단위라, 같은 초에 발급하면 재발급 토큰이 기존 토큰과 문자열까지 같아진다.
+     * 이미 한동안 쓰던 토큰을 갱신하는 상황이므로 발급 시각을 과거로 둔다.
+     */
     private String prepareStoredRefreshToken(Member member) {
-        Jwt jwt = jwtGenerator.generateJwt(
-                new TokenPayload(member.getMemberKey(), member.getRole(), new Date())
-        );
+        Jwt jwt = jwtGenerator.generateJwt(new TokenPayload(
+                member.getMemberKey(),
+                member.getRole(),
+                new Date(System.currentTimeMillis() - ISSUED_EARLIER_MS)
+        ));
         refreshTokenRepository.save(
                 RefreshToken.of(member.getMemberKey(), jwt.refreshToken(), REFRESH_EXPIRATION_MS)
         );
