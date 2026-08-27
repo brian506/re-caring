@@ -5,6 +5,7 @@ import com.recaring.care.implement.CareRelationshipReader;
 import com.recaring.care.vo.CaregiverInfo;
 import com.recaring.location.event.SafeZoneEnteredEvent;
 import com.recaring.location.event.SafeZoneExitedEvent;
+import com.recaring.member.implement.MemberReader;
 import com.recaring.notification.implement.NotificationSendManager;
 import com.recaring.notification.implement.setting.NotificationSettingReader;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,7 @@ public class SafeZoneNotificationListener {
     private final CareRelationshipReader careRelationshipReader;
     private final NotificationSettingReader notificationSettingReader;
     private final NotificationSendManager notificationSendManager;
+    private final MemberReader memberReader;
 
     @Async("broadcastExecutor")
     @EventListener
@@ -54,12 +56,15 @@ public class SafeZoneNotificationListener {
                 event.safeZoneName() + "에서 벗어났어요.");
     }
 
-    private void send(String wardMemberKey, String safeZoneKey, String eventType, String title, String body) {
+    // 보호자는 여러 대상자의 알림을 한 화면에서 본다. 누구에 대한 알림인지 본문 첫머리로 구분한다.
+    private void send(String wardMemberKey, String safeZoneKey, String eventType, String title, String bodySuffix) {
         List<CaregiverInfo> caregivers = careRelationshipReader.findCaregiverInfos(wardMemberKey);
         if (caregivers.isEmpty()) {
             log.warn("[안심존 알림 : 수신자 없음]: wardMemberKey={}", wardMemberKey);
             return;
         }
+
+        String body = memberReader.findNameByMemberKey(wardMemberKey) + "님이 " + bodySuffix;
 
         List<String> guardianKeys = caregivers.stream()
                 .filter(caregiver -> caregiver.careRole() == CareRole.GUARDIAN)

@@ -3,8 +3,8 @@ package com.recaring.notification.business;
 import com.recaring.notification.business.command.UpdateAnomalyNotificationSettingCommand;
 import com.recaring.notification.implement.setting.NotificationSettingManager;
 import com.recaring.notification.implement.setting.NotificationSettingReader;
+import com.recaring.notification.vo.NotificationSettings;
 import com.recaring.notification.implement.setting.NotificationSettingValidator;
-import com.recaring.notification.vo.AnomalySensitivity;
 import com.recaring.notification.vo.BatteryThresholds;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,7 +19,7 @@ public class NotificationSettingService {
     private final NotificationSettingValidator notificationSettingValidator;
 
     @Transactional(readOnly = true)
-    public NotificationSettingInfo getSetting(String requesterKey, String wardKey) {
+    public NotificationSettings getSetting(String requesterKey, String wardKey) {
         notificationSettingValidator.validateSettingAccess(requesterKey, wardKey);
         return notificationSettingReader.findSetting(wardKey);
     }
@@ -35,12 +35,11 @@ public class NotificationSettingService {
         notificationSettingValidator.validateSettingAccess(requesterKey, command.wardKey());
         notificationSettingManager.updateAnomaly(
                 command.wardKey(),
-                command.routeDeviationEnabled(),
                 command.speedAnomalyEnabled(),
                 command.wanderingAnomalyEnabled(),
-                command.routeDeviationSensitivity(),
-                command.speedAnomalySensitivity(),
-                command.wanderingAnomalySensitivity()
+                command.abnormalDwellingEnabled(),
+                command.routeDeviationEnabled(),
+                command.timeAnomalyEnabled()
         );
     }
 

@@ -10,6 +10,7 @@ import com.recaring.care.implement.CareInvitationWriter;
 import com.recaring.care.implement.CareRelationshipWriter;
 import com.recaring.device.dataaccess.repository.WardDeviceTokenRepository;
 import com.recaring.location.dataaccess.repository.LocationSettingRepository;
+import com.recaring.location.implement.detection.AnomalyDetectionManager;
 import com.recaring.location.implement.detection.BatteryAlertStateManager;
 import com.recaring.location.implement.gps.GpsHistoryManager;
 import com.recaring.location.implement.gps.GpsLatestCacheManager;
@@ -42,6 +43,7 @@ public class MemberWithdrawalManager {
     private final CareRelationshipWriter careRelationshipWriter;
     private final CareInvitationWriter careInvitationWriter;
     private final GpsHistoryManager gpsHistoryManager;
+    private final AnomalyDetectionManager anomalyDetectionManager;
     private final SafeZoneWriter safeZoneWriter;
     private final GpsLatestCacheManager gpsLatestCacheManager;
     private final BatteryAlertStateManager batteryAlertStateManager;
@@ -73,6 +75,7 @@ public class MemberWithdrawalManager {
         careRelationshipWriter.deleteAllByMemberKey(memberKey);
         careInvitationWriter.deleteAllByMemberKey(memberKey);
         gpsHistoryManager.deleteByWardMemberKey(memberKey);
+        anomalyDetectionManager.deleteByWardMemberKey(memberKey);
         locationSettingRepository.deleteByWardMemberKey(memberKey);
         safeZoneWriter.deleteByWardMemberKey(memberKey);
         safeZoneStateManager.delete(memberKey);

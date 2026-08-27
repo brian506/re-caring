@@ -1,8 +1,6 @@
 package com.recaring.notification.controller.response;
 
-import com.recaring.notification.business.NotificationSettingInfo;
-
-import java.util.List;
+import com.recaring.notification.vo.NotificationSettings;
 
 public record NotificationSettingResponse(
         SafeZoneSettingResponse safeZone,
@@ -10,65 +8,12 @@ public record NotificationSettingResponse(
         EmergencyCallSettingResponse emergencyCall,
         BatterySettingResponse battery
 ) {
-    public static NotificationSettingResponse from(NotificationSettingInfo info) {
+    public static NotificationSettingResponse from(NotificationSettings settings) {
         return new NotificationSettingResponse(
-                SafeZoneSettingResponse.from(info.safeZone()),
-                AnomalySettingResponse.from(info.anomaly()),
-                EmergencyCallSettingResponse.from(info.emergencyCall()),
-                BatterySettingResponse.from(info.battery())
+                SafeZoneSettingResponse.from(settings.safeZone()),
+                AnomalySettingResponse.from(settings.anomaly()),
+                EmergencyCallSettingResponse.from(settings.emergencyCall()),
+                BatterySettingResponse.from(settings.battery())
         );
-    }
-
-    public record SafeZoneSettingResponse(
-            boolean entryEnabled,
-            boolean exitEnabled
-    ) {
-        private static SafeZoneSettingResponse from(NotificationSettingInfo.SafeZoneSettingInfo info) {
-            return new SafeZoneSettingResponse(info.entryEnabled(), info.exitEnabled());
-        }
-    }
-
-    public record AnomalySettingResponse(
-            boolean routeDeviationEnabled,
-            boolean speedAnomalyEnabled,
-            boolean wanderingAnomalyEnabled,
-            String routeDeviationSensitivity,
-            String speedAnomalySensitivity,
-            String wanderingAnomalySensitivity,
-            List<String> sensitivityOptions
-    ) {
-        private static AnomalySettingResponse from(NotificationSettingInfo.AnomalySettingInfo info) {
-            return new AnomalySettingResponse(
-                    info.routeDeviationEnabled(),
-                    info.speedAnomalyEnabled(),
-                    info.wanderingAnomalyEnabled(),
-                    info.routeDeviationSensitivity(),
-                    info.speedAnomalySensitivity(),
-                    info.wanderingAnomalySensitivity(),
-                    info.sensitivityOptions()
-            );
-        }
-    }
-
-    public record EmergencyCallSettingResponse(
-            boolean enabled
-    ) {
-        private static EmergencyCallSettingResponse from(NotificationSettingInfo.EmergencyCallSettingInfo info) {
-            return new EmergencyCallSettingResponse(info.enabled());
-        }
-    }
-
-    public record BatterySettingResponse(
-            boolean lowBatteryEnabled,
-            List<Integer> thresholdPercents,
-            List<Integer> thresholdOptions
-    ) {
-        private static BatterySettingResponse from(NotificationSettingInfo.BatterySettingInfo info) {
-            return new BatterySettingResponse(
-                    info.lowBatteryEnabled(),
-                    info.thresholdPercents(),
-                    info.thresholdOptions()
-            );
-        }
     }
 }

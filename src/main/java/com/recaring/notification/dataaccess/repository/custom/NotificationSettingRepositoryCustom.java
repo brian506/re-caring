@@ -1,7 +1,5 @@
 package com.recaring.notification.dataaccess.repository.custom;
 
-import com.recaring.notification.vo.AnomalySensitivity;
-
 public interface NotificationSettingRepositoryCustom {
 
     void deleteByWardMemberKey(String wardMemberKey);
@@ -10,12 +8,11 @@ public interface NotificationSettingRepositoryCustom {
 
     void updateAnomaly(
             String wardMemberKey,
-            boolean routeDeviationEnabled,
             boolean speedAnomalyEnabled,
             boolean wanderingAnomalyEnabled,
-            AnomalySensitivity routeDeviationSensitivity,
-            AnomalySensitivity speedAnomalySensitivity,
-            AnomalySensitivity wanderingAnomalySensitivity
+            boolean abnormalDwellingEnabled,
+            boolean routeDeviationEnabled,
+            boolean timeAnomalyEnabled
     );
 
     void updateEmergencyCall(String wardMemberKey, boolean enabled);

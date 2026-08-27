@@ -1,12 +1,9 @@
 package com.recaring.notification.dataaccess.entity;
 
 import com.recaring.common.entity.BaseEntity;
-import com.recaring.notification.vo.AnomalySensitivity;
 import com.recaring.notification.vo.BatteryThresholds;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -51,17 +48,11 @@ public class NotificationSetting extends BaseEntity {
     @Column(name = "wandering_anomaly_enabled", nullable = false, columnDefinition = "boolean not null default true")
     private boolean wanderingAnomalyEnabled;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "route_deviation_sensitivity", nullable = false, columnDefinition = "varchar(20) not null default 'NORMAL'")
-    private AnomalySensitivity routeDeviationSensitivity;
+    @Column(name = "abnormal_dwelling_enabled", nullable = false, columnDefinition = "boolean not null default true")
+    private boolean abnormalDwellingEnabled;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "speed_anomaly_sensitivity", nullable = false, columnDefinition = "varchar(20) not null default 'NORMAL'")
-    private AnomalySensitivity speedAnomalySensitivity;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "wandering_anomaly_sensitivity", nullable = false, columnDefinition = "varchar(20) not null default 'NORMAL'")
-    private AnomalySensitivity wanderingAnomalySensitivity;
+    @Column(name = "time_anomaly_enabled", nullable = false, columnDefinition = "boolean not null default true")
+    private boolean timeAnomalyEnabled;
 
     @Column(name = "emergency_call_enabled", nullable = false, columnDefinition = "boolean not null default true")
     private boolean emergencyCallEnabled;
@@ -82,9 +73,8 @@ public class NotificationSetting extends BaseEntity {
             boolean routeDeviationEnabled,
             boolean speedAnomalyEnabled,
             boolean wanderingAnomalyEnabled,
-            AnomalySensitivity routeDeviationSensitivity,
-            AnomalySensitivity speedAnomalySensitivity,
-            AnomalySensitivity wanderingAnomalySensitivity,
+            boolean abnormalDwellingEnabled,
+            boolean timeAnomalyEnabled,
             boolean emergencyCallEnabled,
             boolean lowBatteryEnabled,
             String batteryThresholdPercents
@@ -95,9 +85,8 @@ public class NotificationSetting extends BaseEntity {
         this.routeDeviationEnabled = routeDeviationEnabled;
         this.speedAnomalyEnabled = speedAnomalyEnabled;
         this.wanderingAnomalyEnabled = wanderingAnomalyEnabled;
-        this.routeDeviationSensitivity = routeDeviationSensitivity;
-        this.speedAnomalySensitivity = speedAnomalySensitivity;
-        this.wanderingAnomalySensitivity = wanderingAnomalySensitivity;
+        this.abnormalDwellingEnabled = abnormalDwellingEnabled;
+        this.timeAnomalyEnabled = timeAnomalyEnabled;
         this.emergencyCallEnabled = emergencyCallEnabled;
         this.lowBatteryEnabled = lowBatteryEnabled;
         this.batteryThresholdPercents = batteryThresholdPercents;
@@ -111,9 +100,8 @@ public class NotificationSetting extends BaseEntity {
                 .routeDeviationEnabled(true)
                 .speedAnomalyEnabled(true)
                 .wanderingAnomalyEnabled(true)
-                .routeDeviationSensitivity(AnomalySensitivity.DEFAULT)
-                .speedAnomalySensitivity(AnomalySensitivity.DEFAULT)
-                .wanderingAnomalySensitivity(AnomalySensitivity.DEFAULT)
+                .abnormalDwellingEnabled(true)
+                .timeAnomalyEnabled(true)
                 .emergencyCallEnabled(true)
                 .lowBatteryEnabled(true)
                 .batteryThresholdPercents(BatteryThresholds.NONE.format())
@@ -130,16 +118,14 @@ public class NotificationSetting extends BaseEntity {
             boolean routeDeviationEnabled,
             boolean speedAnomalyEnabled,
             boolean wanderingAnomalyEnabled,
-            AnomalySensitivity routeDeviationSensitivity,
-            AnomalySensitivity speedAnomalySensitivity,
-            AnomalySensitivity wanderingAnomalySensitivity
+            boolean abnormalDwellingEnabled,
+            boolean timeAnomalyEnabled
     ) {
         this.routeDeviationEnabled = routeDeviationEnabled;
         this.speedAnomalyEnabled = speedAnomalyEnabled;
         this.wanderingAnomalyEnabled = wanderingAnomalyEnabled;
-        this.routeDeviationSensitivity = routeDeviationSensitivity;
-        this.speedAnomalySensitivity = speedAnomalySensitivity;
-        this.wanderingAnomalySensitivity = wanderingAnomalySensitivity;
+        this.abnormalDwellingEnabled = abnormalDwellingEnabled;
+        this.timeAnomalyEnabled = timeAnomalyEnabled;
         update();
     }
 

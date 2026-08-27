@@ -17,6 +17,10 @@ import java.util.Base64;
 @ConditionalOnProperty(prefix = "firebase", name = "enabled", havingValue = "true")
 public class FirebaseConfig {
 
+    private static final int CONNECT_TIMEOUT_MILLIS = 3_000;
+    private static final int READ_TIMEOUT_MILLIS = 5_000;
+    private static final int WRITE_TIMEOUT_MILLIS = 5_000;
+
     @Value("${firebase.service-account-json-base64}")
     private String serviceAccountJsonBase64;
 
@@ -30,6 +34,9 @@ public class FirebaseConfig {
         GoogleCredentials credentials = GoogleCredentials.fromStream(new ByteArrayInputStream(decoded));
         FirebaseOptions options = FirebaseOptions.builder()
                 .setCredentials(credentials)
+                .setConnectTimeout(CONNECT_TIMEOUT_MILLIS)
+                .setReadTimeout(READ_TIMEOUT_MILLIS)
+                .setWriteTimeout(WRITE_TIMEOUT_MILLIS)
                 .build();
 
         if (FirebaseApp.getApps().isEmpty()) {

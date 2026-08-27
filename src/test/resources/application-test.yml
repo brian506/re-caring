@@ -31,3 +31,6 @@ coolsms:
 
 client:
   url: "http://localhost:3000"
+
+firebase:
+  enabled: false

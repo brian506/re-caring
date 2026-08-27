@@ -62,7 +62,7 @@ public class NotificationSettingController {
 
     @Operation(
             summary = "이상탐지 알림 설정 변경",
-            description = "경로 이탈/속도 이상/배회 알림 활성화 여부와 알림 민감도를 변경합니다."
+            description = "빠른 이동/배회/장시간 정지/낯선 장소/평소와 다른 시간 외출 알림의 활성화 여부를 변경합니다."
     )
     @PatchMapping("/{wardKey}/anomaly")
     public ResponseEntity<ApiResponse<Void>> updateAnomaly(

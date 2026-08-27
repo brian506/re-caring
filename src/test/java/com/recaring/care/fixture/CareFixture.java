@@ -3,6 +3,7 @@ package com.recaring.care.fixture;
 import com.recaring.care.dataaccess.entity.CareInvitation;
 import com.recaring.care.dataaccess.entity.CareRelationship;
 import com.recaring.care.dataaccess.entity.CareRole;
+import com.recaring.care.vo.CaregiverInfo;
 import com.recaring.member.dataaccess.entity.Gender;
 import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.dataaccess.entity.MemberRole;
@@ -61,6 +62,10 @@ public class CareFixture {
                 .role(MemberRole.WARD)
                 .signUpType(SignUpType.LOCAL)
                 .build();
+    }
+
+    public static CaregiverInfo createCaregiverInfo(String memberKey, CareRole careRole) {
+        return new CaregiverInfo(memberKey, "보호자", GUARDIAN_PHONE, careRole);
     }
 
     public static CareRelationship createGuardianRelationship(String wardKey, String caregiverKey) {

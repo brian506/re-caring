@@ -2,7 +2,6 @@ package com.recaring.notification.implement.setting;
 
 import com.recaring.location.implement.detection.BatteryAlertStateManager;
 import com.recaring.notification.dataaccess.repository.NotificationSettingRepository;
-import com.recaring.notification.vo.AnomalySensitivity;
 import com.recaring.notification.vo.BatteryThresholds;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -29,18 +28,17 @@ public class NotificationSettingManager {
     @Transactional
     public void updateAnomaly(
             String wardKey,
-            boolean routeDeviationEnabled,
             boolean speedAnomalyEnabled,
             boolean wanderingAnomalyEnabled,
-            AnomalySensitivity routeDeviationSensitivity,
-            AnomalySensitivity speedAnomalySensitivity,
-            AnomalySensitivity wanderingAnomalySensitivity
+            boolean abnormalDwellingEnabled,
+            boolean routeDeviationEnabled,
+            boolean timeAnomalyEnabled
     ) {
         notificationSettingRepository.insertDefaultIfAbsent(wardKey);
         notificationSettingRepository.updateAnomaly(
                 wardKey,
-                routeDeviationEnabled, speedAnomalyEnabled, wanderingAnomalyEnabled,
-                routeDeviationSensitivity, speedAnomalySensitivity, wanderingAnomalySensitivity);
+                speedAnomalyEnabled, wanderingAnomalyEnabled, abnormalDwellingEnabled,
+                routeDeviationEnabled, timeAnomalyEnabled);
     }
 
     @Transactional

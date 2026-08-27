@@ -85,7 +85,6 @@ public enum ErrorType {
     INVALID_SAFE_ZONE_COORDINATE(HttpStatus.BAD_REQUEST, ErrorCode.E8002, "안심존 좌표가 유효한 범위를 벗어났습니다.", LogLevel.WARN),
 
     // Notification (E9xxx)
-    INVALID_NOTIFICATION_SENSITIVITY(HttpStatus.BAD_REQUEST, ErrorCode.E9000, "Unsupported notification sensitivity.", LogLevel.WARN),
     INVALID_BATTERY_THRESHOLD(HttpStatus.BAD_REQUEST, ErrorCode.E9001, "Unsupported battery threshold.", LogLevel.WARN),
     NOTIFICATION_SETTING_UPDATE_CONFLICT(HttpStatus.CONFLICT, ErrorCode.E9002, "Notification setting was updated by another request. Please retry.", LogLevel.WARN),
     INVALID_FCM_DEVICE_TOKEN(HttpStatus.BAD_REQUEST, ErrorCode.E9003, "Invalid FCM device token.", LogLevel.WARN);
