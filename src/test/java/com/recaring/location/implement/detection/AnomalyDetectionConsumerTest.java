@@ -16,8 +16,6 @@ import org.springframework.data.redis.connection.stream.RecordId;
 import org.springframework.data.redis.core.StreamOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
-import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
@@ -63,7 +61,7 @@ class AnomalyDetectionConsumerTest {
     void acknowledges_after_recording() {
         // given
         given(redisTemplate.<String, String>opsForStream()).willReturn(streamOperations);
-        MapRecord<String, String, String> record = record(fields());
+        MapRecord<String, String, String> record = record(anomalyFields());
 
         // when
         anomalyDetectionConsumer.onMessage(record);
@@ -76,11 +74,11 @@ class AnomalyDetectionConsumerTest {
         AnomalyAlert alert = captor.getValue();
         assertThat(alert.wardMemberKey()).isEqualTo(LocationFixture.WARD_KEY);
         assertThat(alert.detectionType()).isEqualTo(DetectionType.WANDERING);
-        assertThat(alert.score()).isEqualTo(0.82);
-        assertThat(alert.detectedAt()).isEqualTo(LocalDateTime.of(2026, 7, 27, 10, 15, 3));
+        assertThat(alert.score()).isEqualTo(LocationFixture.ANOMALY_SCORE);
+        assertThat(alert.detectedAt()).isEqualTo(LocationFixture.DETECTED_AT);
         assertThat(alert.latitude()).isEqualTo(LocationFixture.LATITUDE);
         assertThat(alert.longitude()).isEqualTo(LocationFixture.LONGITUDE);
-        assertThat(alert.evidence()).isEqualTo("{name} 님이 같은 곳을 맴돌고 계십니다.");
+        assertThat(alert.evidence()).isEqualTo(LocationFixture.WANDERING_EVIDENCE);
     }
 
     @Test
@@ -88,7 +86,7 @@ class AnomalyDetectionConsumerTest {
     void acknowledges_and_drops_unparsable_message() {
         // given
         given(redisTemplate.<String, String>opsForStream()).willReturn(streamOperations);
-        Map<String, String> fields = fields();
+        Map<String, String> fields = anomalyFields();
         fields.put("detection_type", "SIGNAL_LOST");
         MapRecord<String, String, String> record = record(fields);
 
@@ -107,7 +105,7 @@ class AnomalyDetectionConsumerTest {
                 .given(anomalyDetectionManager).record(any(AnomalyAlert.class));
 
         // when
-        anomalyDetectionConsumer.onMessage(record(fields()));
+        anomalyDetectionConsumer.onMessage(record(anomalyFields()));
 
         then(streamOperations).should(never()).acknowledge(any(String.class), any(MapRecord.class));
         then(detectionRetryExecutor).should().execute(any(Runnable.class));
@@ -117,15 +115,8 @@ class AnomalyDetectionConsumerTest {
         return MapRecord.create(AnomalyStreamProperties.STREAM_KEY, fields).withId(RECORD_ID);
     }
 
-    private Map<String, String> fields() {
-        Map<String, String> fields = new HashMap<>();
-        fields.put("ward_member_key", LocationFixture.WARD_KEY);
-        fields.put("detection_type", DetectionType.WANDERING.name());
-        fields.put("score", "0.82");
-        fields.put("detected_at", "2026-07-27 10:15:03");
-        fields.put("latitude", String.valueOf(LocationFixture.LATITUDE));
-        fields.put("longitude", String.valueOf(LocationFixture.LONGITUDE));
-        fields.put("evidence", "{name} 님이 같은 곳을 맴돌고 계십니다.");
-        return fields;
+    private Map<String, String> anomalyFields() {
+        return LocationFixture.createAnomalyStreamFields(
+                DetectionType.WANDERING, LocationFixture.WANDERING_EVIDENCE);
     }
 }

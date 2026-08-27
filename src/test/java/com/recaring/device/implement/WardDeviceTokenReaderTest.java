@@ -2,6 +2,7 @@ package com.recaring.device.implement;
 
 import com.recaring.device.dataaccess.entity.WardDeviceToken;
 import com.recaring.device.dataaccess.repository.WardDeviceTokenRepository;
+import com.recaring.device.fixture.DeviceFixture;
 import com.recaring.support.exception.AppException;
 import com.recaring.support.exception.ErrorType;
 import org.junit.jupiter.api.DisplayName;
@@ -13,20 +14,22 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 
+import java.time.Duration;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("WardDeviceTokenReader 단위 테스트")
 class WardDeviceTokenReaderTest {
+
+    private static final String TOKEN = "test-token";
+    private static final String CACHE_KEY = "deviceToken:" + TOKEN;
 
     @InjectMocks
     private WardDeviceTokenReader wardDeviceTokenReader;
@@ -37,52 +40,62 @@ class WardDeviceTokenReaderTest {
     @Mock
     private StringRedisTemplate stringRedisTemplate;
 
+    @Mock
+    private ValueOperations<String, String> valueOperations;
+
     @Test
-    @DisplayName("Redis에 캐시가 있으면 DB를 조회하지 않고 wardKey를 반환한다")
+    @DisplayName("캐시에 wardKey가 있으면 DB를 조회하지 않는다")
     void getByToken_returns_cached_wardKey_without_db_query() {
-        ValueOperations<String, String> valueOps = mock(ValueOperations.class);
-        given(stringRedisTemplate.opsForValue()).willReturn(valueOps);
-        given(valueOps.get("deviceToken:test-token")).willReturn("ward-key-001");
+        // given
+        given(stringRedisTemplate.opsForValue()).willReturn(valueOperations);
+        given(valueOperations.get(CACHE_KEY)).willReturn(DeviceFixture.WARD_KEY);
 
-        String result = wardDeviceTokenReader.getByToken("test-token");
+        // when
+        String result = wardDeviceTokenReader.getByToken(TOKEN);
 
-        assertThat(result).isEqualTo("ward-key-001");
+        // then
+        assertThat(result).isEqualTo(DeviceFixture.WARD_KEY);
         then(wardDeviceTokenRepository).should(never()).findByToken(any());
     }
 
     @Test
-    @DisplayName("Redis 캐시 미스 시 DB를 조회하고 결과를 Redis에 저장한다")
+    @DisplayName("캐시가 비어 있으면 DB에서 찾은 wardKey를 30일 TTL로 캐시에 채운다")
     void getByToken_queries_db_on_cache_miss_and_stores_in_redis() {
-        ValueOperations<String, String> valueOps = mock(ValueOperations.class);
-        given(stringRedisTemplate.opsForValue()).willReturn(valueOps);
-        WardDeviceToken entity = WardDeviceToken.builder().wardKey("ward-key-001").build();
-        given(valueOps.get("deviceToken:test-token")).willReturn(null);
-        given(wardDeviceTokenRepository.findByToken("test-token")).willReturn(Optional.of(entity));
+        // given
+        WardDeviceToken entity = DeviceFixture.createDeviceToken(DeviceFixture.WARD_KEY);
+        given(stringRedisTemplate.opsForValue()).willReturn(valueOperations);
+        given(valueOperations.get(CACHE_KEY)).willReturn(null);
+        given(wardDeviceTokenRepository.findByToken(TOKEN)).willReturn(Optional.of(entity));
 
-        String result = wardDeviceTokenReader.getByToken("test-token");
+        // when
+        String result = wardDeviceTokenReader.getByToken(TOKEN);
 
-        assertThat(result).isEqualTo("ward-key-001");
-        then(valueOps).should().set(eq("deviceToken:test-token"), eq("ward-key-001"), any());
+        // then
+        assertThat(result).isEqualTo(DeviceFixture.WARD_KEY);
+        then(valueOperations).should().set(CACHE_KEY, DeviceFixture.WARD_KEY, Duration.ofDays(30));
     }
 
     @Test
-    @DisplayName("DB에도 토큰이 없으면 INVALID_DEVICE_TOKEN 예외가 발생한다")
+    @DisplayName("캐시에도 DB에도 없는 토큰이면 INVALID_DEVICE_TOKEN 예외가 발생한다")
     void getByToken_throws_when_token_not_found_in_db() {
-        ValueOperations<String, String> valueOps = mock(ValueOperations.class);
-        given(stringRedisTemplate.opsForValue()).willReturn(valueOps);
-        given(valueOps.get("deviceToken:unknown-token")).willReturn(null);
-        given(wardDeviceTokenRepository.findByToken("unknown-token")).willReturn(Optional.empty());
+        // given
+        given(stringRedisTemplate.opsForValue()).willReturn(valueOperations);
+        given(valueOperations.get(CACHE_KEY)).willReturn(null);
+        given(wardDeviceTokenRepository.findByToken(TOKEN)).willReturn(Optional.empty());
 
-        assertThatThrownBy(() -> wardDeviceTokenReader.getByToken("unknown-token"))
+        // when / then
+        assertThatThrownBy(() -> wardDeviceTokenReader.getByToken(TOKEN))
                 .isInstanceOf(AppException.class)
                 .hasFieldOrPropertyWithValue("errorType", ErrorType.INVALID_DEVICE_TOKEN);
     }
 
     @Test
-    @DisplayName("evict() 호출 시 Redis에서 해당 토큰 키를 삭제한다")
-    void evict_deletes_token_from_redis() {
-        wardDeviceTokenReader.evict("old-token");
+    @DisplayName("무효화는 조회와 동일한 캐시 키를 지운다")
+    void evict_deletes_the_same_cache_key_used_by_lookup() {
+        // when
+        wardDeviceTokenReader.evict(TOKEN);
 
-        then(stringRedisTemplate).should().delete("deviceToken:old-token");
+        // then
+        then(stringRedisTemplate).should().delete(CACHE_KEY);
     }
 }

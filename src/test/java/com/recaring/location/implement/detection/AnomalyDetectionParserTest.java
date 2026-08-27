@@ -18,7 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class AnomalyDetectionParserTest {
 
     private static final int MAX_EVIDENCE_LENGTH = 1000;
-    private static final String EVIDENCE = "{name} 님이 같은 곳을 맴돌고 계십니다.";
+    private static final String EVIDENCE = LocationFixture.WANDERING_EVIDENCE;
 
     private final AnomalyDetectionParser anomalyDetectionParser = new AnomalyDetectionParser();
 

@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.client.RestTestClient;
 
 import java.time.format.DateTimeFormatter;
 import java.time.LocalDate;
@@ -35,19 +36,26 @@ class LocationControllerTest extends AbstractIntegrationTest {
 
     private Member ward;
     private Member guardian;
+    private Member manager;
     private String guardianJwtToken;
+    private String managerJwtToken;
+    private String wardJwtToken;
     private String wardDeviceToken;
 
     @BeforeEach
     void setUp() {
         ward = memberRepository.save(LocationFixture.createWard());
         guardian = memberRepository.save(LocationFixture.createGuardian());
+        manager = memberRepository.save(LocationFixture.createManager());
 
         String encoded = passwordEncoder.encode("password1");
         localAuthRepository.save(LocalAuth.of(ward.getMemberKey(), "ward@location-test.com", encoded));
         localAuthRepository.save(LocalAuth.of(guardian.getMemberKey(), "guardian@location-test.com", encoded));
+        localAuthRepository.save(LocalAuth.of(manager.getMemberKey(), "manager@location-test.com", encoded));
 
         guardianJwtToken = extractAccessToken("guardian@location-test.com", "password1");
+        managerJwtToken = extractAccessToken("manager@location-test.com", "password1");
+        wardJwtToken = extractAccessToken("ward@location-test.com", "password1");
 
         WardDeviceToken deviceToken = WardDeviceToken.builder().wardKey(ward.getMemberKey()).build();
         wardDeviceTokenRepository.save(deviceToken);
@@ -55,6 +63,8 @@ class LocationControllerTest extends AbstractIntegrationTest {
 
         careRelationshipRepository.save(CareRelationship.of(
                 ward.getMemberKey(), guardian.getMemberKey(), CareRole.GUARDIAN));
+        careRelationshipRepository.save(CareRelationship.of(
+                ward.getMemberKey(), manager.getMemberKey(), CareRole.MANAGER));
     }
 
     @AfterEach
@@ -126,17 +136,41 @@ class LocationControllerTest extends AbstractIntegrationTest {
     // ── 이동 경로 히스토리 조회 ───────────────────────────────────────────────
 
     @Test
-    @DisplayName("GET /api/v1/location/history/{wardKey} - GUARDIAN이 요청하면 200이 반환된다")
-    void getHistory_returns_200_for_guardian() {
-        String today = LocalDate.now().format(DateTimeFormatter.ISO_DATE);
+    @DisplayName("GET /api/v1/location/history/{wardKey} - GUARDIAN이 조회하면 전송된 좌표가 그대로 반환된다")
+    void getHistory_returns_recorded_coordinates_for_guardian() {
+        sendGps(LocationFixture.LATITUDE, LocationFixture.LONGITUDE).expectStatus().isOk();
 
-        client.get()
-                .uri("/api/v1/location/history/{wardKey}?date={date}", ward.getMemberKey(), today)
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + guardianJwtToken)
-                .exchange()
+        getHistoryAsToday(guardianJwtToken)
                 .expectStatus().isOk()
                 .expectBody()
-                .jsonPath("$.data").isArray();
+                .jsonPath("$.data.length()").isEqualTo(1)
+                .jsonPath("$.data[0].latitude").isEqualTo(LocationFixture.LATITUDE)
+                .jsonPath("$.data[0].longitude").isEqualTo(LocationFixture.LONGITUDE);
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/location/history/{wardKey} - MANAGER 역할의 케어 관계여도 좌표가 반환된다")
+    void getHistory_returns_recorded_coordinates_for_manager() {
+        sendGps(LocationFixture.LATITUDE, LocationFixture.LONGITUDE).expectStatus().isOk();
+
+        getHistoryAsToday(managerJwtToken)
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.data.length()").isEqualTo(1)
+                .jsonPath("$.data[0].latitude").isEqualTo(LocationFixture.LATITUDE)
+                .jsonPath("$.data[0].longitude").isEqualTo(LocationFixture.LONGITUDE);
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/location/history/{wardKey} - WARD 본인은 케어 관계 없이도 자신의 경로를 조회한다")
+    void getHistory_allows_ward_to_view_own_history() {
+        sendGps(LocationFixture.LATITUDE, LocationFixture.LONGITUDE).expectStatus().isOk();
+
+        getHistoryAsToday(wardJwtToken)
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.data.length()").isEqualTo(1)
+                .jsonPath("$.data[0].latitude").isEqualTo(LocationFixture.LATITUDE);
     }
 
     @Test
@@ -170,6 +204,25 @@ class LocationControllerTest extends AbstractIntegrationTest {
                 .uri("/api/v1/location/stream/{wardKey}", ward.getMemberKey())
                 .exchange()
                 .expectStatus().isUnauthorized();
+    }
+
+    private RestTestClient.ResponseSpec sendGps(double latitude, double longitude) {
+        return client.post()
+                .uri("/api/v1/location/gps")
+                .header(HttpHeaders.AUTHORIZATION, "Device " + wardDeviceToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"latitude": %s, "longitude": %s}
+                        """.formatted(latitude, longitude))
+                .exchange();
+    }
+
+    private RestTestClient.ResponseSpec getHistoryAsToday(String jwtToken) {
+        return client.get()
+                .uri("/api/v1/location/history/{wardKey}?date={date}",
+                        ward.getMemberKey(), LocalDate.now().format(DateTimeFormatter.ISO_DATE))
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtToken)
+                .exchange();
     }
 
     private String extractAccessToken(String email, String password) {

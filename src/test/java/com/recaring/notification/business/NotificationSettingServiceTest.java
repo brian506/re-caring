@@ -12,6 +12,8 @@ import com.recaring.support.exception.ErrorType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -85,19 +87,25 @@ class NotificationSettingServiceTest {
                 .updateSafeZone(NotificationFixture.WARD_KEY, false, true);
     }
 
-    @Test
-    @DisplayName("이상탐지 설정 변경은 토글 5개를 유형 순서 그대로 넘긴다")
-    void updateAnomaly_passes_five_toggles_in_order() {
+    @ParameterizedTest(name = "{0}번 토글만 끄면 그 자리만 false로 전달된다")
+    @ValueSource(ints = {0, 1, 2, 3, 4})
+    @DisplayName("이상탐지 토글 5개는 유형 순서를 유지한 채 각각 제자리로 전달된다")
+    void updateAnomaly_passes_each_toggle_to_its_own_position(int disabledIndex) {
+        // Given — 한 자리만 false로 두면 어느 두 자리를 뒤바꿔도 그 자리가 어긋난다
+        boolean[] toggles = {true, true, true, true, true};
+        toggles[disabledIndex] = false;
         UpdateAnomalyNotificationSettingCommand command = new UpdateAnomalyNotificationSettingCommand(
-                NotificationFixture.WARD_KEY, true, false, true, false, true);
+                NotificationFixture.WARD_KEY, toggles[0], toggles[1], toggles[2], toggles[3], toggles[4]);
 
+        // When
         notificationSettingService.updateAnomaly(NotificationFixture.MANAGER_KEY, command);
 
+        // Then
         InOrder inOrder = inOrder(notificationSettingValidator, notificationSettingManager);
         then(notificationSettingValidator).should(inOrder)
                 .validateSettingAccess(NotificationFixture.MANAGER_KEY, NotificationFixture.WARD_KEY);
         then(notificationSettingManager).should(inOrder).updateAnomaly(
-                NotificationFixture.WARD_KEY, true, false, true, false, true);
+                NotificationFixture.WARD_KEY, toggles[0], toggles[1], toggles[2], toggles[3], toggles[4]);
     }
 
     @Test

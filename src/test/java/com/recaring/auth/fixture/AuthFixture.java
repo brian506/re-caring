@@ -4,10 +4,13 @@ import com.recaring.auth.business.command.SignUpCommand;
 import com.recaring.auth.dataaccess.entity.RefreshToken;
 import com.recaring.auth.vo.EncodedPassword;
 import com.recaring.auth.vo.LocalEmail;
+import com.recaring.auth.vo.NewLocalMember;
 import com.recaring.auth.vo.Password;
 import com.recaring.member.dataaccess.entity.Gender;
 import com.recaring.member.dataaccess.entity.MemberRole;
+import com.recaring.member.fixture.MemberFixture;
 import com.recaring.security.vo.Jwt;
+import com.recaring.sms.vo.PhoneNumber;
 
 import java.time.LocalDate;
 
@@ -47,6 +50,18 @@ public class AuthFixture {
                 Gender.MALE,
                 MemberRole.GUARDIAN
         );
+    }
+
+    public static NewLocalMember createNewLocalMember() {
+        return NewLocalMember.builder()
+                .email(createLocalEmail())
+                .password(createEncodedPassword())
+                .phone(new PhoneNumber(MemberFixture.PHONE))
+                .name(MemberFixture.NAME)
+                .birth(MemberFixture.BIRTH)
+                .gender(MemberFixture.GENDER)
+                .role(MemberFixture.ROLE)
+                .build();
     }
 
     public static Jwt createJwt() {

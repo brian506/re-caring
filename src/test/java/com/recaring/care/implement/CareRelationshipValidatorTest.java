@@ -70,6 +70,24 @@ class CareRelationshipValidatorTest {
     }
 
     @Test
+    @DisplayName("보호 대상자 추가 검증 - 보호 대상자가 4명이면 한 명 더 추가할 수 있다")
+    void validateCanAddWard_passes_at_one_below_limit() {
+        // Given
+        given(careRelationshipRepository.findAllByCaregiverMemberKey(CareFixture.GUARDIAN_MEMBER_KEY))
+                .willReturn(List.of(
+                        CareFixture.createGuardianRelationship("ward-key-1", CareFixture.GUARDIAN_MEMBER_KEY),
+                        CareFixture.createGuardianRelationship("ward-key-2", CareFixture.GUARDIAN_MEMBER_KEY),
+                        CareFixture.createGuardianRelationship("ward-key-3", CareFixture.GUARDIAN_MEMBER_KEY),
+                        CareFixture.createGuardianRelationship("ward-key-4", CareFixture.GUARDIAN_MEMBER_KEY)));
+
+        // When / Then
+        assertThatCode(() ->
+                careRelationshipValidator.validateCanAddWard(
+                        CareFixture.GUARDIAN_MEMBER_KEY, "another-ward-key"))
+                .doesNotThrowAnyException();
+    }
+
+    @Test
     @DisplayName("보호 대상자 추가 검증 - 이미 동일한 대상자가 있으면 예외가 발생한다")
     void validateCanAddWard_fails_when_duplicated() {
         CareRelationship existing = CareFixture.createGuardianRelationship(CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY);
@@ -136,6 +154,25 @@ class CareRelationshipValidatorTest {
                         CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY))
                 .isInstanceOf(AppException.class)
                 .hasFieldOrPropertyWithValue("errorType", ErrorType.CARE_CAREGIVER_LIMIT_EXCEEDED);
+    }
+
+    @Test
+    @DisplayName("관리자 추가 검증 - 관리자가 2명이면 한 명 더 추가할 수 있다")
+    void validateCanAddManager_passes_at_one_below_limit() {
+        // Given
+        given(careRelationshipRepository.existsCareRelationship(
+                CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY, CareRole.GUARDIAN))
+                .willReturn(true);
+        given(careRelationshipRepository.findAllByWardMemberKey(CareFixture.WARD_MEMBER_KEY))
+                .willReturn(List.of(
+                        CareFixture.createManagerRelationship(CareFixture.WARD_MEMBER_KEY, "manager-1"),
+                        CareFixture.createManagerRelationship(CareFixture.WARD_MEMBER_KEY, "manager-2")));
+
+        // When / Then
+        assertThatCode(() ->
+                careRelationshipValidator.validateCanAddManager(
+                        CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY))
+                .doesNotThrowAnyException();
     }
 
     @Test

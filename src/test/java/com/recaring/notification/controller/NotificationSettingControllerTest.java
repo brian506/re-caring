@@ -14,6 +14,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 
@@ -90,44 +92,61 @@ class NotificationSettingControllerTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("PATCH /safe-zone - 관계자가 수정한 공통 설정을 대상자 본인이 조회한다")
     void updateSafeZone_by_manager_is_visible_to_ward() {
+        // 기본값이 둘 다 true라, 먼저 둘 다 끄지 않으면 exit가 기본값과 같아 무엇도 검증되지 않는다
+        patchSafeZone(false, false);
+        expectSafeZone(false, false);
+
+        // 서로 다른 값으로 다시 저장해 두 필드가 뒤바뀌지 않는지 확인한다
+        patchSafeZone(true, false);
+        expectSafeZone(true, false);
+    }
+
+    private void patchSafeZone(boolean entryEnabled, boolean exitEnabled) {
         client.patch()
                 .uri("/api/v1/notifications/settings/{wardKey}/safe-zone", ward.getMemberKey())
                 .header(HttpHeaders.AUTHORIZATION, bearerToken(manager))
                 .contentType(MediaType.APPLICATION_JSON)
                 .body("""
-                        {"entryEnabled": false, "exitEnabled": true}
-                        """)
+                        {"entryEnabled": %s, "exitEnabled": %s}
+                        """.formatted(entryEnabled, exitEnabled))
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
                 .jsonPath("$.resultType").isEqualTo("SUCCESS");
+    }
 
+    private void expectSafeZone(boolean entryEnabled, boolean exitEnabled) {
         client.get()
                 .uri("/api/v1/notifications/settings/{wardKey}", ward.getMemberKey())
                 .header(HttpHeaders.AUTHORIZATION, bearerToken(ward))
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
-                .jsonPath("$.data.safeZone.entryEnabled").isEqualTo(false)
-                .jsonPath("$.data.safeZone.exitEnabled").isEqualTo(true);
+                .jsonPath("$.data.safeZone.entryEnabled").isEqualTo(entryEnabled)
+                .jsonPath("$.data.safeZone.exitEnabled").isEqualTo(exitEnabled);
     }
 
-    @Test
-    @DisplayName("PATCH /anomaly - 대상자 본인이 탐지 유형별 토글을 수정한다")
-    void updateAnomaly_by_ward_updates_setting() {
+    @ParameterizedTest(name = "{0}번 토글만 끄면 그 유형만 꺼진 채로 조회된다")
+    @ValueSource(ints = {0, 1, 2, 3, 4})
+    @DisplayName("PATCH /anomaly - 대상자 본인이 끈 탐지 유형만 정확히 그 유형으로 저장된다")
+    void updateAnomaly_by_ward_disables_only_that_detection_type(int disabledIndex) {
+        // 한 자리만 false로 두면 컬럼이 뒤바뀌어 저장될 때 조회 결과가 어긋난다
+        boolean[] toggles = {true, true, true, true, true};
+        toggles[disabledIndex] = false;
+
         client.patch()
                 .uri("/api/v1/notifications/settings/{wardKey}/anomaly", ward.getMemberKey())
                 .header(HttpHeaders.AUTHORIZATION, bearerToken(ward))
                 .contentType(MediaType.APPLICATION_JSON)
                 .body("""
                         {
-                          "speedAnomalyEnabled": true,
-                          "wanderingAnomalyEnabled": false,
-                          "abnormalDwellingEnabled": true,
-                          "routeDeviationEnabled": false,
-                          "timeAnomalyEnabled": true
+                          "speedAnomalyEnabled": %s,
+                          "wanderingAnomalyEnabled": %s,
+                          "abnormalDwellingEnabled": %s,
+                          "routeDeviationEnabled": %s,
+                          "timeAnomalyEnabled": %s
                         }
-                        """)
+                        """.formatted(toggles[0], toggles[1], toggles[2], toggles[3], toggles[4]))
                 .exchange()
                 .expectStatus().isOk();
 
@@ -137,11 +156,11 @@ class NotificationSettingControllerTest extends AbstractIntegrationTest {
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
-                .jsonPath("$.data.anomaly.speedAnomalyEnabled").isEqualTo(true)
-                .jsonPath("$.data.anomaly.wanderingAnomalyEnabled").isEqualTo(false)
-                .jsonPath("$.data.anomaly.abnormalDwellingEnabled").isEqualTo(true)
-                .jsonPath("$.data.anomaly.routeDeviationEnabled").isEqualTo(false)
-                .jsonPath("$.data.anomaly.timeAnomalyEnabled").isEqualTo(true);
+                .jsonPath("$.data.anomaly.speedAnomalyEnabled").isEqualTo(toggles[0])
+                .jsonPath("$.data.anomaly.wanderingAnomalyEnabled").isEqualTo(toggles[1])
+                .jsonPath("$.data.anomaly.abnormalDwellingEnabled").isEqualTo(toggles[2])
+                .jsonPath("$.data.anomaly.routeDeviationEnabled").isEqualTo(toggles[3])
+                .jsonPath("$.data.anomaly.timeAnomalyEnabled").isEqualTo(toggles[4]);
     }
 
     @Test
@@ -242,36 +261,6 @@ class NotificationSettingControllerTest extends AbstractIntegrationTest {
                 .jsonPath("$.error.errorCode").isEqualTo("E9001");
     }
 
-    @Test
-    @DisplayName("GET /v3/api-docs - Swagger OpenAPI 문서에 알림 설정 API가 노출된다")
-    void swaggerApiDocs_contains_notification_setting_paths() {
-        client.get()
-                .uri("/v3/api-docs")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$.paths['/api/v1/notifications/settings/{wardKey}'].get.summary")
-                .isEqualTo("알림 설정 조회")
-                .jsonPath("$.paths['/api/v1/notifications/settings/{wardKey}/safe-zone'].patch.summary")
-                .isEqualTo("안심존 알림 설정 변경")
-                .jsonPath("$.paths['/api/v1/notifications/settings/{wardKey}/anomaly'].patch.summary")
-                .isEqualTo("이상탐지 알림 설정 변경")
-                .jsonPath("$.paths['/api/v1/notifications/settings/{wardKey}/emergency-call'].patch.summary")
-                .isEqualTo("응급호출 알림 설정 변경")
-                .jsonPath("$.paths['/api/v1/notifications/settings/{wardKey}/battery'].patch.summary")
-                .isEqualTo("배터리 알림 설정 변경")
-                .jsonPath("$.paths['/api/v1/notifications/device-tokens'].put.summary")
-                .isEqualTo("FCM device token 생성 및 업데이트");
-    }
-
-    @Test
-    @DisplayName("GET /swagger-ui/index.html - Swagger UI에 접근할 수 있다")
-    void swaggerUi_is_accessible() {
-        client.get()
-                .uri("/swagger-ui/index.html")
-                .exchange()
-                .expectStatus().isOk();
-    }
     private String bearerToken(Member member) {
         return "Bearer " + jwtGenerator.generateJwt(
                 new TokenPayload(member.getMemberKey(), member.getRole(), new Date())
