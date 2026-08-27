@@ -8,6 +8,7 @@ import com.recaring.support.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -31,7 +32,7 @@ public class FcmDeviceTokenController {
     public ResponseEntity<ApiResponse<FcmDeviceTokenResponse>> upsert(
             @Parameter(hidden = true)
             @AuthMember String memberKey,
-            @RequestBody UpsertFcmDeviceTokenRequest request
+            @Valid @RequestBody UpsertFcmDeviceTokenRequest request
     ) {
         FcmDeviceTokenResponse response = FcmDeviceTokenResponse.from(
                 fcmDeviceTokenService.upsert(memberKey, request.token(), request.careRole(), request.platform())

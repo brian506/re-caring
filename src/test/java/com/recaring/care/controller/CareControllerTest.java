@@ -1,7 +1,5 @@
 package com.recaring.care.controller;
 
-import com.recaring.auth.dataaccess.entity.LocalAuth;
-import com.recaring.auth.dataaccess.repository.LocalAuthRepository;
 import com.recaring.care.dataaccess.entity.CareInvitation;
 import com.recaring.care.dataaccess.entity.CareRelationship;
 import com.recaring.care.dataaccess.repository.CareInvitationRepository;
@@ -9,6 +7,8 @@ import com.recaring.care.dataaccess.repository.CareRelationshipRepository;
 import com.recaring.care.fixture.CareFixture;
 import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.dataaccess.repository.MemberRepository;
+import com.recaring.security.jwt.JwtGenerator;
+import com.recaring.security.vo.TokenPayload;
 import com.recaring.support.AbstractIntegrationTest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,61 +17,38 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.util.Date;
 
 @org.junit.jupiter.api.Tag("integration")
 @DisplayName("CareController HTTP 통합 테스트")
 class CareControllerTest extends AbstractIntegrationTest {
 
     @Autowired private MemberRepository memberRepository;
-    @Autowired private LocalAuthRepository localAuthRepository;
     @Autowired private CareInvitationRepository careInvitationRepository;
     @Autowired private CareRelationshipRepository careRelationshipRepository;
-    @Autowired private PasswordEncoder passwordEncoder;
+    @Autowired private JwtGenerator jwtGenerator;
 
     private Member guardian;
     private Member ward;
-    private String guardianToken;
-    private String wardToken;
 
     @BeforeEach
     void setUp() {
         guardian = memberRepository.save(CareFixture.createGuardianMember());
         ward = memberRepository.save(CareFixture.createWardMember());
-
-        String encoded = passwordEncoder.encode("password1!");
-        localAuthRepository.save(LocalAuth.of(guardian.getMemberKey(), "guardian@test.com", encoded));
-        localAuthRepository.save(LocalAuth.of(ward.getMemberKey(), "ward@test.com", encoded));
-
-        guardianToken = extractAccessToken("guardian@test.com", "password1!");
-        wardToken = extractAccessToken("ward@test.com", "password1!");
     }
 
     @AfterEach
     void tearDown() {
-        careRelationshipRepository.deleteAll();
-        careInvitationRepository.deleteAll();
-        localAuthRepository.deleteAll();
-        memberRepository.deleteAll();
+        careRelationshipRepository.deleteAllInBatch();
+        careInvitationRepository.deleteAllInBatch();
+        memberRepository.deleteAllInBatch();
     }
 
-    private String extractAccessToken(String email, String password) {
-        var result = client.post()
-                .uri("/api/v1/auth/sign-in/local")
-                .contentType(MediaType.APPLICATION_JSON)
-                .body("""
-                        {"email": "%s", "password": "%s"}
-                        """.formatted(email, password))
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$.data.accessToken").isNotEmpty()
-                .returnResult();
-        // Extract accessToken from response body
-        String body = new String(result.getResponseBody());
-        int start = body.indexOf("\"accessToken\":\"") + 15;
-        int end = body.indexOf("\"", start);
-        return body.substring(start, end);
+    private String bearerToken(Member member) {
+        return "Bearer " + jwtGenerator.generateJwt(
+                new TokenPayload(member.getMemberKey(), member.getRole(), new Date())
+        ).accessToken();
     }
 
     // ── 보호 대상자 초대 ────────────────────────────────────────────────────
@@ -94,7 +71,7 @@ class CareControllerTest extends AbstractIntegrationTest {
     void requestAddWard_success() {
         client.post()
                 .uri("/api/v1/care/requests/ward")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + guardianToken)
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(guardian))
                 .contentType(MediaType.APPLICATION_JSON)
                 .body("""
                         {"phoneNumber": "%s"}
@@ -110,7 +87,7 @@ class CareControllerTest extends AbstractIntegrationTest {
     void requestAddWard_fails_when_phone_not_found() {
         client.post()
                 .uri("/api/v1/care/requests/ward")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + guardianToken)
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(guardian))
                 .contentType(MediaType.APPLICATION_JSON)
                 .body("""
                         {"phoneNumber": "01099999999"}
@@ -130,7 +107,7 @@ class CareControllerTest extends AbstractIntegrationTest {
 
         client.get()
                 .uri("/api/v1/care/requests/received")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + wardToken)
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(ward))
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
@@ -160,7 +137,7 @@ class CareControllerTest extends AbstractIntegrationTest {
 
         client.patch()
                 .uri("/api/v1/care/requests/" + saved.getRequestKey() + "/accept")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + wardToken)
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(ward))
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
@@ -176,7 +153,7 @@ class CareControllerTest extends AbstractIntegrationTest {
 
         client.patch()
                 .uri("/api/v1/care/requests/" + saved.getRequestKey() + "/reject")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + wardToken)
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(ward))
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
@@ -194,7 +171,7 @@ class CareControllerTest extends AbstractIntegrationTest {
 
         client.get()
                 .uri("/api/v1/care/wards")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + guardianToken)
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(guardian))
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
@@ -213,11 +190,9 @@ class CareControllerTest extends AbstractIntegrationTest {
                 ward.getMemberKey(), guardian.getMemberKey());
         careRelationshipRepository.save(relationship);
 
-        String token = extractAccessToken("ward@test.com", "password1!");
-
         client.get()
                 .uri("/api/v1/care/wards/" + ward.getMemberKey() + "/caregivers")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(ward))
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
@@ -229,13 +204,10 @@ class CareControllerTest extends AbstractIntegrationTest {
     @DisplayName("GET /api/v1/care/wards/{wardKey}/caregivers - 관계없는 사람이 조회하면 403이 반환된다")
     void getCaregivers_fails_when_unauthorized() {
         Member stranger = memberRepository.save(CareFixture.createGuardianMember("01077778888"));
-        localAuthRepository.save(LocalAuth.of(stranger.getMemberKey(), "stranger@test.com",
-                passwordEncoder.encode("password1!")));
-        String strangerToken = extractAccessToken("stranger@test.com", "password1!");
 
         client.get()
                 .uri("/api/v1/care/wards/" + ward.getMemberKey() + "/caregivers")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + strangerToken)
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(stranger))
                 .exchange()
                 .expectStatus().isForbidden();
     }
@@ -251,7 +223,7 @@ class CareControllerTest extends AbstractIntegrationTest {
 
         client.delete()
                 .uri("/api/v1/care/wards/" + ward.getMemberKey())
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + guardianToken)
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(guardian))
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
@@ -263,7 +235,7 @@ class CareControllerTest extends AbstractIntegrationTest {
     void removeWard_fails_when_relationship_not_found() {
         client.delete()
                 .uri("/api/v1/care/wards/" + ward.getMemberKey())
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + guardianToken)
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(guardian))
                 .exchange()
                 .expectStatus().is4xxClientError();
     }
@@ -283,8 +255,6 @@ class CareControllerTest extends AbstractIntegrationTest {
     @DisplayName("DELETE /api/v1/care/wards/{wardKey}/caregivers/{caregiverKey} - GUARDIAN이 관리자를 삭제한다")
     void removeCaregiver_success() {
         Member manager = memberRepository.save(CareFixture.createGuardianMember(CareFixture.MANAGER_PHONE));
-        localAuthRepository.save(LocalAuth.of(manager.getMemberKey(), "manager@test.com",
-                passwordEncoder.encode("password1!")));
 
         careRelationshipRepository.save(
                 CareFixture.createGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
@@ -293,7 +263,7 @@ class CareControllerTest extends AbstractIntegrationTest {
 
         client.delete()
                 .uri("/api/v1/care/wards/" + ward.getMemberKey() + "/caregivers/" + manager.getMemberKey())
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + guardianToken)
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(guardian))
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
@@ -304,9 +274,6 @@ class CareControllerTest extends AbstractIntegrationTest {
     @DisplayName("DELETE /api/v1/care/wards/{wardKey}/caregivers/{caregiverKey} - GUARDIAN 역할이 아니면 4xx가 반환된다")
     void removeCaregiver_fails_when_not_guardian_role() {
         Member manager = memberRepository.save(CareFixture.createGuardianMember(CareFixture.MANAGER_PHONE));
-        localAuthRepository.save(LocalAuth.of(manager.getMemberKey(), "manager@test.com",
-                passwordEncoder.encode("password1!")));
-        String managerToken = extractAccessToken("manager@test.com", "password1!");
 
         careRelationshipRepository.save(
                 CareFixture.createGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
@@ -315,7 +282,7 @@ class CareControllerTest extends AbstractIntegrationTest {
 
         client.delete()
                 .uri("/api/v1/care/wards/" + ward.getMemberKey() + "/caregivers/" + guardian.getMemberKey())
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + managerToken)
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(manager))
                 .exchange()
                 .expectStatus().is4xxClientError();
     }

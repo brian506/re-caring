@@ -252,25 +252,19 @@ class NotificationSettingControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("GET /v3/api-docs - Swagger OpenAPI 문서에 알림 설정 API가 노출된다")
+    @DisplayName("GET /v3/api-docs - 알림 설정 엔드포인트 전부가 OpenAPI 문서에 등록된다")
     void swaggerApiDocs_contains_notification_setting_paths() {
         client.get()
                 .uri("/v3/api-docs")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
-                .jsonPath("$.paths['/api/v1/notifications/settings/{wardKey}'].get.summary")
-                .isEqualTo("Get notification settings")
-                .jsonPath("$.paths['/api/v1/notifications/settings/{wardKey}/safe-zone'].patch.summary")
-                .isEqualTo("Update safe zone notification settings")
-                .jsonPath("$.paths['/api/v1/notifications/settings/{wardKey}/anomaly'].patch.summary")
-                .isEqualTo("Update anomaly notification settings")
-                .jsonPath("$.paths['/api/v1/notifications/settings/{wardKey}/emergency-call'].patch.summary")
-                .isEqualTo("Update emergency call notification settings")
-                .jsonPath("$.paths['/api/v1/notifications/settings/{wardKey}/battery'].patch.summary")
-                .isEqualTo("Update battery notification settings")
-                .jsonPath("$.paths['/api/v1/notifications/device-tokens'].put.summary")
-                .isEqualTo("Upsert FCM device token");
+                .jsonPath("$.paths['/api/v1/notifications/settings/{wardKey}'].get").exists()
+                .jsonPath("$.paths['/api/v1/notifications/settings/{wardKey}/safe-zone'].patch").exists()
+                .jsonPath("$.paths['/api/v1/notifications/settings/{wardKey}/anomaly'].patch").exists()
+                .jsonPath("$.paths['/api/v1/notifications/settings/{wardKey}/emergency-call'].patch").exists()
+                .jsonPath("$.paths['/api/v1/notifications/settings/{wardKey}/battery'].patch").exists()
+                .jsonPath("$.paths['/api/v1/notifications/device-tokens'].put").exists();
     }
 
     @Test

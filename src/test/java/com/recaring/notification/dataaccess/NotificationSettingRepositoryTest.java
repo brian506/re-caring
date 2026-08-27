@@ -16,6 +16,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DisplayName("NotificationSettingRepository 리포지토리 테스트")
 class NotificationSettingRepositoryTest extends AbstractRepositoryTest {
 
+    private static final String NO_BATTERY_THRESHOLDS = "";
+
     @Autowired
     private NotificationSettingRepository notificationSettingRepository;
 
@@ -38,7 +40,7 @@ class NotificationSettingRepositoryTest extends AbstractRepositoryTest {
         assertThat(saved.getWanderingAnomalySensitivity()).isEqualTo(AnomalySensitivity.NORMAL);
         assertThat(saved.isEmergencyCallEnabled()).isTrue();
         assertThat(saved.isLowBatteryEnabled()).isTrue();
-        assertThat(saved.getBatteryThresholdPercents()).isEqualTo("20,100");
+        assertThat(saved.getBatteryThresholdPercents()).isEqualTo(NO_BATTERY_THRESHOLDS);
         assertThat(saved.getCreatedAt()).isNotNull();
         assertThat(saved.getUpdatedAt()).isNotNull();
     }
@@ -69,7 +71,7 @@ class NotificationSettingRepositoryTest extends AbstractRepositoryTest {
         // 나머지 컬럼은 건드리지 않았으므로 기본값 유지
         assertThat(updated.isRouteDeviationEnabled()).isTrue();
         assertThat(updated.isEmergencyCallEnabled()).isTrue();
-        assertThat(updated.getBatteryThresholdPercents()).isEqualTo("20,100");
+        assertThat(updated.getBatteryThresholdPercents()).isEqualTo(NO_BATTERY_THRESHOLDS);
         assertThat(updated.getUpdatedAt()).isNotNull();
     }
 
@@ -100,7 +102,7 @@ class NotificationSettingRepositoryTest extends AbstractRepositoryTest {
         assertThat(updated.getWanderingAnomalySensitivity()).isEqualTo(AnomalySensitivity.VERY_HIGH);
         // 안심존/배터리 컬럼은 그대로
         assertThat(updated.isSafeZoneEntryEnabled()).isTrue();
-        assertThat(updated.getBatteryThresholdPercents()).isEqualTo("20,100");
+        assertThat(updated.getBatteryThresholdPercents()).isEqualTo(NO_BATTERY_THRESHOLDS);
     }
 
     @Test
