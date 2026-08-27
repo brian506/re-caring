@@ -160,9 +160,8 @@ verify(historyManager, after(500).never()).findLatest(key);
   `./gradlew clean test` 만 돌린다. **통합 테스트는 CI에서 한 번도 실행되지 않는다.**
   그 결과 이미 깨진 통합 테스트가 방치된 상태였다. 통합 테스트를 새로 쓸 때는
   로컬에서 반드시 `./gradlew integrationTest`로 직접 확인한다 (Docker 필요).
-- `AbstractIntegrationTest`는 `@IntegrationTest` 메타 애노테이션으로 `@Tag("integration")`을
-  상속시키지만, `AbstractRepositoryTest`는 **태그가 없다.** 상속받는 Repository 테스트는
-  매번 손으로 `@Tag("integration")`을 붙여야 한다.
+- `AbstractIntegrationTest`·`AbstractRepositoryTest` 둘 다 `@Tag("integration")`을 상속시킨다.
+  이 둘을 상속하지 않고 DB에 붙는 테스트를 만들면 태그를 직접 붙여야 한다.
 - git bash의 `JAVA_HOME`이 JVM 8을 가리켜 gradle이 실패할 수 있다.
   `JAVA_HOME="C:/Users/SSAFY/.jdks/ms-21.0.12" ./gradlew test`
 

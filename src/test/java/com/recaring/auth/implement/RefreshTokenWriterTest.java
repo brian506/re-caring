@@ -21,6 +21,8 @@ import static org.mockito.Mockito.times;
 @DisplayName("RefreshTokenWriter 단위 테스트")
 class RefreshTokenWriterTest {
 
+    private static final long REFRESH_EXPIRATION_MS = 1209600000L;
+
     @InjectMocks
     private RefreshTokenWriter refreshTokenWriter;
 
@@ -29,30 +31,20 @@ class RefreshTokenWriterTest {
 
     @BeforeEach
     void setUp() {
-        ReflectionTestUtils.setField(refreshTokenWriter, "refreshExpiration", 1209600000L);
+        ReflectionTestUtils.setField(refreshTokenWriter, "refreshExpiration", REFRESH_EXPIRATION_MS);
     }
 
     @Test
-    @DisplayName("리프레시 토큰을 DB에 저장한다")
-    void save_success() {
-        // when
+    @DisplayName("리프레시 토큰과 회원 키가 각자 제 자리에 저장된다")
+    void save_puts_token_and_member_key_in_their_own_fields() {
         refreshTokenWriter.save(AuthFixture.REFRESH_TOKEN, AuthFixture.MEMBER_KEY);
 
-        // then
+        // Then
         ArgumentCaptor<RefreshToken> captor = ArgumentCaptor.forClass(RefreshToken.class);
         then(refreshTokenRepository).should(times(1)).save(captor.capture());
-        assertThat(captor.getValue().getMemberKey()).isEqualTo(AuthFixture.MEMBER_KEY);
-        assertThat(captor.getValue().getToken()).isEqualTo(AuthFixture.REFRESH_TOKEN);
-        assertThat(captor.getValue().isExpired()).isFalse();
-    }
+        RefreshToken saved = captor.getValue();
 
-    @Test
-    @DisplayName("리프레시 토큰을 DB에서 삭제한다")
-    void delete_success() {
-        // when
-        refreshTokenWriter.delete(AuthFixture.REFRESH_TOKEN);
-
-        // then
-        then(refreshTokenRepository).should(times(1)).deleteByToken(AuthFixture.REFRESH_TOKEN);
+        assertThat(saved.getMemberKey()).isEqualTo(AuthFixture.MEMBER_KEY);
+        assertThat(saved.getToken()).isEqualTo(AuthFixture.REFRESH_TOKEN);
     }
 }

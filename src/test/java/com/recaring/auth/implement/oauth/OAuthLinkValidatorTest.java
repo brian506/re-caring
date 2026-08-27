@@ -32,7 +32,6 @@ class OAuthLinkValidatorTest {
         OAuthProvider provider = OAuthProvider.KAKAO;
         given(oAuthReader.isLinked(memberKey, provider)).willReturn(false);
 
-        // when & then
         assertThatCode(() -> oAuthLinkValidator.validateLinkable(memberKey, provider))
                 .doesNotThrowAnyException();
     }
@@ -45,7 +44,6 @@ class OAuthLinkValidatorTest {
         OAuthProvider provider = OAuthProvider.KAKAO;
         given(oAuthReader.isLinked(memberKey, provider)).willReturn(true);
 
-        // when & then
         assertThatThrownBy(() -> oAuthLinkValidator.validateLinkable(memberKey, provider))
                 .isInstanceOf(AppException.class)
                 .hasFieldOrPropertyWithValue("errorType", ErrorType.OAUTH_ALREADY_LINKED);

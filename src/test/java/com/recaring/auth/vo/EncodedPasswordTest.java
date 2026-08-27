@@ -11,12 +11,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @DisplayName("EncodedPassword VO 단위 테스트")
 class EncodedPasswordTest {
 
+    private static final String BCRYPT_HASH = "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy";
+
     @Test
-    @DisplayName("유효한 인코딩된 비밀번호로 객체가 생성된다")
+    @DisplayName("인코딩된 해시는 길이·문자 제약 없이 그대로 보관된다")
     void create_success_with_valid_encoded_password() {
-        String bcryptHash = "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy";
-        EncodedPassword encodedPassword = new EncodedPassword(bcryptHash);
-        assertThat(encodedPassword.value()).isEqualTo(bcryptHash);
+        EncodedPassword encodedPassword = new EncodedPassword(BCRYPT_HASH);
+        assertThat(encodedPassword.value()).isEqualTo(BCRYPT_HASH);
     }
 
     @Test
@@ -24,16 +25,14 @@ class EncodedPasswordTest {
     void create_fail_when_value_is_null() {
         assertThatThrownBy(() -> new EncodedPassword(null))
                 .isInstanceOf(AppException.class)
-                .extracting(e -> ((AppException) e).getErrorType())
-                .isEqualTo(ErrorType.PASSWORD_IS_NULL);
+                .hasFieldOrPropertyWithValue("errorType", ErrorType.PASSWORD_IS_NULL);
     }
 
     @Test
-    @DisplayName("공백이면 PASSWORD_IS_NULL 예외가 발생한다")
+    @DisplayName("공백뿐이면 PASSWORD_IS_NULL 예외가 발생한다")
     void create_fail_when_value_is_blank() {
         assertThatThrownBy(() -> new EncodedPassword("   "))
                 .isInstanceOf(AppException.class)
-                .extracting(e -> ((AppException) e).getErrorType())
-                .isEqualTo(ErrorType.PASSWORD_IS_NULL);
+                .hasFieldOrPropertyWithValue("errorType", ErrorType.PASSWORD_IS_NULL);
     }
 }

@@ -40,7 +40,6 @@ class RefreshTokenReaderTest {
         // when
         String result = refreshTokenReader.findMemberKey(AuthFixture.REFRESH_TOKEN);
 
-        // then
         assertThat(result).isEqualTo(AuthFixture.MEMBER_KEY);
     }
 
@@ -50,7 +49,6 @@ class RefreshTokenReaderTest {
         // given
         given(refreshTokenRepository.findByToken(AuthFixture.REFRESH_TOKEN)).willReturn(Optional.empty());
 
-        // when & then
         assertThatThrownBy(() -> refreshTokenReader.findMemberKey(AuthFixture.REFRESH_TOKEN))
                 .isInstanceOf(AppException.class)
                 .hasFieldOrPropertyWithValue("errorType", ErrorType.REFRESH_TOKEN_NOT_FOUND);
@@ -64,7 +62,6 @@ class RefreshTokenReaderTest {
         ReflectionTestUtils.setField(expiredToken, "expiredAt", LocalDateTime.now().minusDays(1));
         given(refreshTokenRepository.findByToken(AuthFixture.REFRESH_TOKEN)).willReturn(Optional.of(expiredToken));
 
-        // when & then
         assertThatThrownBy(() -> refreshTokenReader.findMemberKey(AuthFixture.REFRESH_TOKEN))
                 .isInstanceOf(AppException.class)
                 .hasFieldOrPropertyWithValue("errorType", ErrorType.EXPIRED_JWT);

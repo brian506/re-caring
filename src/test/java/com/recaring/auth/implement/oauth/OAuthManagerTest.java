@@ -65,7 +65,6 @@ class OAuthManagerTest {
         willThrow(new AppException(ErrorType.OAUTH_ALREADY_LINKED))
                 .given(oAuthLinkValidator).validateLinkable(memberKey, provider);
 
-        // when & then
         assertThatThrownBy(() -> oAuthManager.link(memberKey, provider, "naver-user-789"))
                 .isInstanceOf(AppException.class)
                 .hasFieldOrPropertyWithValue("errorType", ErrorType.OAUTH_ALREADY_LINKED);

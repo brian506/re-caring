@@ -19,7 +19,7 @@ class LocalEmailTest {
     }
 
     @Test
-    @DisplayName("숫자와 특수문자가 포함된 이메일도 생성된다")
+    @DisplayName("점·플러스·서브도메인이 포함된 이메일도 생성된다")
     void create_success_with_complex_email() {
         LocalEmail email = new LocalEmail("user.name+tag@sub.domain.com");
         assertThat(email.value()).isEqualTo("user.name+tag@sub.domain.com");
@@ -30,34 +30,30 @@ class LocalEmailTest {
     void create_fail_when_email_is_null() {
         assertThatThrownBy(() -> new LocalEmail(null))
                 .isInstanceOf(AppException.class)
-                .extracting(e -> ((AppException) e).getErrorType())
-                .isEqualTo(ErrorType.EMAIL_IS_NULL);
+                .hasFieldOrPropertyWithValue("errorType", ErrorType.EMAIL_IS_NULL);
     }
 
     @Test
-    @DisplayName("이메일이 빈 문자열이면 EMAIL_IS_NULL 예외가 발생한다")
+    @DisplayName("이메일이 공백뿐이면 EMAIL_IS_NULL 예외가 발생한다")
     void create_fail_when_email_is_blank() {
         assertThatThrownBy(() -> new LocalEmail("   "))
                 .isInstanceOf(AppException.class)
-                .extracting(e -> ((AppException) e).getErrorType())
-                .isEqualTo(ErrorType.EMAIL_IS_NULL);
+                .hasFieldOrPropertyWithValue("errorType", ErrorType.EMAIL_IS_NULL);
     }
 
     @Test
-    @DisplayName("@ 없이는 INVALID_EMAIL_FORMAT 예외가 발생한다")
+    @DisplayName("@가 없으면 INVALID_EMAIL_FORMAT 예외가 발생한다")
     void create_fail_when_email_has_no_at_sign() {
         assertThatThrownBy(() -> new LocalEmail("invalidemail.com"))
                 .isInstanceOf(AppException.class)
-                .extracting(e -> ((AppException) e).getErrorType())
-                .isEqualTo(ErrorType.INVALID_EMAIL_FORMAT);
+                .hasFieldOrPropertyWithValue("errorType", ErrorType.INVALID_EMAIL_FORMAT);
     }
 
     @Test
-    @DisplayName("도메인 없이는 INVALID_EMAIL_FORMAT 예외가 발생한다")
+    @DisplayName("@ 뒤 도메인이 없으면 INVALID_EMAIL_FORMAT 예외가 발생한다")
     void create_fail_when_email_has_no_domain() {
         assertThatThrownBy(() -> new LocalEmail("user@"))
                 .isInstanceOf(AppException.class)
-                .extracting(e -> ((AppException) e).getErrorType())
-                .isEqualTo(ErrorType.INVALID_EMAIL_FORMAT);
+                .hasFieldOrPropertyWithValue("errorType", ErrorType.INVALID_EMAIL_FORMAT);
     }
 }

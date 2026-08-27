@@ -17,7 +17,7 @@ argument-hint: "[테스트 대상 기능 또는 클래스명]"
 |------|----------|
 | `references/test-design.md` | **Step 3 시작 전 (필수)** — 무엇을 어떻게 쓸지 |
 | `references/test-antipatterns.md` | Step 5에서 **`test-review` 에이전트가** 읽는다. 이쪽에서 미리 읽지 않는다 |
-| `references/test-conventions.md` | Step 4 (필수) — 형식·파일 위치·네이밍·기댓값 출처 주석 |
+| `references/test-conventions.md` | Step 4 (필수) — 형식·파일 위치·네이밍 |
 | `references/audit/` | 기존 테스트를 보강할 때만. 2026-08-25 시점 스냅샷이라 **먼저 유효성을 확인**할 것 |
 
 ---
@@ -29,6 +29,8 @@ git diff --name-only develop...HEAD -- 'src/main/**'
 ```
 
 각 파일의 계층(VO / Implement / Business / Controller)을 확인한다.
+Controller는 Testcontainers 통합 테스트로, 나머지는 단위 테스트로 쓴다.
+Repository·Entity만 바뀐 경우는 별도 테스트 작성 대상이 아니다 (`test-design.md` 참고).
 
 ## Step 2: 스펙 정리
 
@@ -72,7 +74,7 @@ git diff --name-only develop...HEAD -- 'src/main/**'
 ```
 Agent(subagent_type: "test-review", run_in_background: false)
 프롬프트에 포함할 것:
-  - 검토 대상 테스트 파일 경로
+  - 검토 대상 테스트 파일 경로 (필수 — 커밋 전이라 에이전트가 diff로 찾을 수 없다)
   - 대응하는 src/main 클래스 경로
   - Step 2에서 정리한 스펙
 ```

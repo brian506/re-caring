@@ -23,10 +23,12 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 
 @ExtendWith(MockitoExtension.class)
@@ -85,6 +87,10 @@ class TokenRefreshServiceTest {
                 .isInstanceOf(AppException.class)
                 .extracting(e -> ((AppException) e).getErrorType())
                 .isEqualTo(ErrorType.EXPIRED_JWT);
+
+        then(refreshTokenReader).should(never()).findMemberKey(any());
+        then(refreshTokenWriter).should(never()).delete(any());
+        then(tokenIssuer).should(never()).issue(any());
     }
 
     @Test
@@ -101,5 +107,9 @@ class TokenRefreshServiceTest {
                 .isInstanceOf(AppException.class)
                 .extracting(e -> ((AppException) e).getErrorType())
                 .isEqualTo(ErrorType.REFRESH_TOKEN_NOT_FOUND);
+
+        then(memberReader).should(never()).findByMemberKey(any());
+        then(refreshTokenWriter).should(never()).delete(any());
+        then(tokenIssuer).should(never()).issue(any());
     }
 }

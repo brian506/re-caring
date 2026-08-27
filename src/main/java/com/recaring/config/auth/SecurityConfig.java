@@ -64,6 +64,9 @@ public class SecurityConfig {
                                 mvc.matcher("/api/v1/auth/sign-out"),
                                 mvc.matcher("/api/v1/auth/phone/send-code"),
                                 mvc.matcher("/api/v1/auth/phone/verify"),
+                                // 로그인할 수 없는 사용자가 쓰는 복구 경로 — SMS 인증이 본인 확인을 대신한다
+                                mvc.matcher("/api/v1/auth/email"),
+                                mvc.matcher("/api/v1/auth/password"),
                                 // Swagger UI
                                 mvc.matcher("/swagger-ui/**"),
                                 mvc.matcher("/swagger-ui.html"),
