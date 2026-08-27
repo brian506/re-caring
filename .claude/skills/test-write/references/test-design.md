@@ -53,16 +53,28 @@ public boolean isExpired(LocalDateTime now) {
 
 ### 계층별 가치
 
-| 계층 | 가치 | 무엇을 |
-|------|------|--------|
-| VO / Entity | ★★★ | 상태 전이, 불변식, 생성자 검증. 가장 싸고 가장 많이 |
-| Implement | ★★★ | Validator 규칙, Manager 오케스트레이션 순서, 캐시 히트/미스 분기 |
-| Business | ★★ | 여러 Implement를 조합하는 시나리오, 예외 변환 |
-| Controller | ★ | `@Valid` 검증, 직렬화 포맷, 상태코드. 로직 검증이 아니다 |
-| Repository | 조건부 | 직접 쓴 QueryDSL/JPQL만. 파생 메서드 CRUD는 프레임워크 몫 |
+**단위 테스트 대상은 VO / Implement / Business뿐이고, Controller는 통합 테스트로 검증한다.**
+Repository·Entity는 별도 테스트 파일을 만들지 않는다 — DB에 위임하는 코드에는 결정이 없고,
+Entity의 상태 전이는 그 Entity를 다루는 Implement(Manager 등) 테스트와 Controller 통합 테스트가
+이미 통과시킨다.
 
-**배제:** getter, `equals`/`hashCode`, VO ↔ Entity 단순 매핑, `@NotBlank`가 동작하는지,
-JPA가 저장하는지. 내 코드가 아니다.
+| 계층 | 종류 | 가치 | 무엇을 |
+|------|------|------|--------|
+| VO | 단위 | ★★★ | 상태 전이, 불변식, 생성자 검증. 가장 싸고 가장 많이 |
+| Implement | 단위 | ★★★ | Validator 규칙, Manager 오케스트레이션 순서, 캐시 히트/미스 분기 |
+| Business | 단위 | ★★ | 여러 Implement를 조합하는 시나리오, 예외 변환 |
+| Controller | **통합** | ★★★ | API 전체 흐름. 실제 DB에 붙어 부수효과까지 확인 |
+
+**Controller는 반드시 Testcontainers 통합 테스트로 쓴다.**
+`AbstractIntegrationTest`를 상속해 실제 DB에 붙인다. `@WebMvcTest`·`MockMvc`+`@MockBean` 조합은 쓰지 않는다 —
+협력 객체를 전부 목으로 세우면 "내가 스텁한 걸 그대로 돌려받는" 테스트가 되고, 쿼리·트랜잭션·직렬화가
+실제로 동작하는지는 하나도 검증되지 않는다.
+
+상태코드만 보지 말고 저장된 행을 다시 읽어 확인한다 (`test-antipatterns.md` §5).
+
+**배제 — 아래는 별도 테스트 파일을 만들지 않는다:**
+- **Repository** — 직접 쓴 QueryDSL/JPQL이라도 단독 테스트를 만들지 않는다. 그 쿼리는 Controller 통합 테스트가 실제로 통과시킨다
+- **Entity** — getter, `equals`/`hashCode`, VO ↔ Entity 단순 매핑, `@NotBlank`가 동작하는지, JPA가 저장하는지, 상태 전이 메서드(`updateProfile` 등) 단독 테스트
 
 ### 실전 필터
 
@@ -154,6 +166,27 @@ given(objectMapper.readValue(json, Gps.class)).willReturn(expected);
 VO, Entity, Validator, 순수 계산기, `ObjectMapper`는 진짜를 쓴다.
 **목은 "실제 협력자가 이렇게 동작할 것"이라는 내 가정을 코드로 굳히는 일이다.**
 가정이 틀리면 테스트는 초록불이고 프로덕션만 터진다.
+
+### 목은 기댓값을 그냥 반환시킨다 — 가짜 서버를 세우지 않는다
+
+외부 HTTP 연동(카카오·네이버·FCM·CoolSMS)을 테스트할 때 `MockRestServiceServer`나 `MockWebServer` 같은
+**가짜 서버를 띄우지 않는다.** JSON 응답 본문을 문자열로 적어두고 역직렬화를 거치게 하면, 테스트가
+검증하려는 분기보다 HTTP 배선·직렬화 설정에 훨씬 많이 얽힌다. 깨질 때 원인도 그쪽에서 난다.
+
+협력 객체를 목으로 두고 **결과 객체를 곧바로 반환**시킨다.
+
+```java
+// 나쁨 — 가짜 서버에 JSON 본문을 심고 HTTP 배선까지 끌어들인다
+mockServer.expect(requestTo(KAKAO_URL))
+        .andRespond(withSuccess("{\"id\":123,...}", MediaType.APPLICATION_JSON));
+
+// 좋음 — 기댓값 객체를 그대로 돌려준다
+given(restClient.get().uri(KAKAO_URL).header(any(), any()).retrieve().body(KakaoUser.class))
+        .willReturn(new KakaoUser(123L, kakaoAccount));
+```
+
+이렇게 하면 테스트가 "응답이 이렇게 왔을 때 내 코드가 무슨 결정을 하는가"만 남긴다 —
+null이면 예외를 던지는지, provider 매칭이 맞는지, 필드가 제 자리에 매핑되는지.
 
 ### verify는 호출 자체가 요구사항일 때만
 

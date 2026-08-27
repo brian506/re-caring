@@ -10,6 +10,7 @@ import com.recaring.auth.implement.local.LocalAuthManager;
 import com.recaring.auth.implement.local.LocalAuthReader;
 import com.recaring.auth.vo.EncodedPassword;
 import com.recaring.auth.vo.LocalEmail;
+import com.recaring.auth.vo.NewLocalMember;
 import com.recaring.auth.vo.Password;
 import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.fixture.MemberFixture;
@@ -22,6 +23,7 @@ import com.recaring.sms.vo.PhoneNumber;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -32,6 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 
 @ExtendWith(MockitoExtension.class)
@@ -66,7 +69,7 @@ class LocalAuthServiceTest {
     private FcmDeviceTokenService fcmDeviceTokenService;
 
     @Test
-    @DisplayName("회원가입 시 전화번호 인증 후 멤버가 등록된다")
+    @DisplayName("회원가입 시 인증된 전화번호와 인코딩된 비밀번호로 멤버가 등록된다")
     void signUp_success() {
         // given
         String verificationToken = UUID.randomUUID().toString();
@@ -80,8 +83,13 @@ class LocalAuthServiceTest {
         // when
         localAuthService.signUp(command);
 
-        //then
-        then(localAuthManager).should(times(1)).register(any());
+        // then
+        ArgumentCaptor<NewLocalMember> captor = ArgumentCaptor.forClass(NewLocalMember.class);
+        then(localAuthManager).should(times(1)).register(captor.capture());
+        NewLocalMember registered = captor.getValue();
+        assertThat(registered.phone()).isEqualTo(phone);
+        assertThat(registered.password()).isEqualTo(encodedPassword);
+        assertThat(registered.email()).isEqualTo(command.email());
     }
 
     @Test
@@ -159,7 +167,7 @@ class LocalAuthServiceTest {
         localAuthService.signOut(refreshToken, null);
 
         then(refreshTokenWriter).should(times(1)).delete(refreshToken);
-        then(fcmDeviceTokenService).should(times(0)).delete(any());
+        then(fcmDeviceTokenService).should(never()).delete(any());
     }
 
     @Test
@@ -182,6 +190,6 @@ class LocalAuthServiceTest {
         localAuthService.signOut(refreshToken, "  ");
 
         then(refreshTokenWriter).should(times(1)).delete(refreshToken);
-        then(fcmDeviceTokenService).should(times(0)).delete(any());
+        then(fcmDeviceTokenService).should(never()).delete(any());
     }
 }

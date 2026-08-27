@@ -56,6 +56,14 @@
 
 ## Testing
 
+- **Repository·Entity에 대한 별도 단위 테스트 파일을 작성하면 안 된다**
+  - Repository는 커스텀 쿼리라도 단독 테스트를 만들지 않는다 — 쿼리는 Controller 통합 테스트가 실제로 통과시킨다
+  - Entity 상태 전이는 그 Entity를 다루는 Implement 테스트로 간접 검증한다
+
+- **Controller 테스트를 Mock 기반(`@WebMvcTest`, `MockMvc` + `@MockBean`)으로 작성하면 안 된다**
+  - Controller는 **Testcontainers 통합 테스트**로만 검증한다 (`AbstractIntegrationTest` 상속)
+  - 실제 DB에 붙어 부수효과(저장된 행·삭제 결과)까지 확인해야 한다. 상태코드만 보는 테스트는 반려
+
 - **동일 도메인에 기존 Fixture 클래스가 있는데 새 파일을 만들면 안 된다**
   - 반드시 기존 `*Fixture` 클래스에 메서드를 추가
 
@@ -72,9 +80,8 @@
   - 외부 I/O·비결정성·느림·재현 곤란 중 하나에 해당할 때만 Mock 대상
   - `ObjectMapper`는 `@Spy`로 실제 객체를 쓴다. Mock하면 직렬화 왕복이 검증되지 않는다 (실제 장애 이력)
 
-- **단언의 기댓값 출처를 밝히지 않으면 안 된다**
-  - 단언 위에 `// SPEC {근거 위치}` 또는 `// IMPL` 주석
-  - 한 클래스의 단언이 전부 `IMPL`이면 스펙을 검증하지 않는 것 → 리뷰에서 반려
+- **구현을 실행해 나온 값을 기댓값으로 적으면 안 된다**
+  - 버그를 정답으로 고정하게 된다. 기댓값은 이슈·요구사항·API 명세에서 가져온다
 
 > 작성 지침은 `.claude/skills/test-write/` (스킬 호출 시 로드). 위 금지 항목만 상시 적용.
 

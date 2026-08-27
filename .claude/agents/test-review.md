@@ -2,7 +2,7 @@
 name: test-review
 description: 작성된 테스트 코드를 안티패턴 체크리스트로 검증한다. 읽기 전용 — 코드를 고치지 않고 지적만 반환한다. test-write 스킬 Step 5에서 호출된다.
 allowed-tools: Bash(git *) Read Grep Glob
-model: sonnet
+model: claude-opus-4-8
 ---
 
 # Test Review Agent
@@ -21,12 +21,18 @@ model: sonnet
 
 ## Step 1: 대상 수집
 
+**호출자가 prompt로 넘긴 테스트 파일 경로가 검토 대상이다.** 그 파일들을 Read로 읽는다.
+
+경로가 없을 때만 아래로 찾는다. 호출 시점에 따라 diff 기준이 다르다 —
+`test-write`는 **커밋 전**에 부르므로 `develop...HEAD`는 비어 있다.
+
 ```bash
-git diff develop...HEAD --name-only -- 'src/test/**'
-git diff develop...HEAD -- 'src/test/**'
+git status --porcelain -- 'src/test/**'            # 커밋 전 (test-write Step 5)
+git diff develop...HEAD --name-only -- 'src/test/**' # 커밋 후 (deploy 리뷰 게이트)
 ```
 
-호출자가 특정 파일을 지정했으면 그 파일만 본다.
+두 결과를 합쳐 대상으로 삼는다. 둘 다 비어 있으면 "검토 대상 없음"으로 보고하고 끝낸다 —
+빈 diff를 "지적 없음"으로 바꿔 쓰지 않는다.
 
 ## Step 2: 프로덕션 코드 대조
 
@@ -43,10 +49,8 @@ git diff develop...HEAD -- 'src/test/**'
 `.claude/skills/test-write/references/test-antipatterns.md`를 읽고
 10개 항목을 **번호 순서대로** 대조한다. 건너뛰지 않는다.
 
-추가로 `.claude/skills/test-write/references/test-conventions.md`의 기댓값 출처 규칙을 확인한다:
-- 단언 위에 `// SPEC` 또는 `// IMPL` 주석이 있는가
-- `SPEC`이라 적혀 있는데 근거 위치(이슈 번호·명세)가 없으면 지적한다
-- **한 클래스의 단언이 전부 `IMPL`이면 반려한다**
+추가로 기댓값이 구현에서 역산된 것으로 보이면 지적한다
+(스펙에 없는 값을 단언하는데 그 값이 현재 구현의 출력과만 일치하는 경우).
 
 ## Step 4: 근거를 붙여 보고
 
@@ -86,12 +90,8 @@ git diff develop...HEAD -- 'src/test/**'
 
 - 발송 후 정확히 24시간이면 수락할 수 없다  (경계 / #8)
 
-### 기댓값 출처
-SPEC {n}건 / IMPL {m}건 / 주석 없음 {k}건
-> 전부 IMPL이면 여기에 "반려"라고 적는다
-
 ### 판정
 통과 / 수정 필요
 ```
 
-`통과`는 10개 항목 전부 해당 없고 SPEC 단언이 하나 이상일 때만 쓴다.
+`통과`는 10개 항목 전부 해당 없을 때만 쓴다.

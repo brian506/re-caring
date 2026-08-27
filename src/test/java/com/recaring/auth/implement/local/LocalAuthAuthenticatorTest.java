@@ -1,7 +1,7 @@
 package com.recaring.auth.implement.local;
 
+import com.recaring.auth.dataaccess.entity.LocalAuth;
 import com.recaring.auth.fixture.AuthFixture;
-import com.recaring.auth.vo.EncodedPassword;
 import com.recaring.auth.vo.LocalEmail;
 import com.recaring.auth.vo.Password;
 import com.recaring.member.dataaccess.entity.Member;
@@ -18,12 +18,18 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.never;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("LocalAuthAuthenticator 단위 테스트")
 class LocalAuthAuthenticatorTest {
+
+    private static final String OWNER_MEMBER_KEY = "owner-member-key-uuid";
 
     @InjectMocks
     private LocalAuthAuthenticator localAuthAuthenticator;
@@ -37,127 +43,72 @@ class LocalAuthAuthenticatorTest {
     @Mock
     private MemberReader memberReader;
 
-    @Test
-    @DisplayName("패스워드 인코딩 성공 - 평문 비밀번호를 BCrypt로 인코딩한다")
-    void encodePassword_success() {
-        // given
-        Password rawPassword = AuthFixture.createPassword();
-        String encodedValue = "$2a$10$encoded.password.hash";
-        given(passwordEncoder.encode(rawPassword.value())).willReturn(encodedValue);
-
-        // when
-        EncodedPassword result = localAuthAuthenticator.encodePassword(rawPassword);
-
-        // then
-        assertThat(result.value()).isEqualTo(encodedValue);
+    private LocalAuth storedAuth() {
+        return LocalAuth.builder()
+                .memberKey(OWNER_MEMBER_KEY)
+                .email(AuthFixture.EMAIL)
+                .password(AuthFixture.ENCODED_PASSWORD)
+                .build();
     }
 
     @Test
-    @DisplayName("인증 성공 - 올바른 이메일과 비밀번호로 회원 객체 반환")
-    void authenticate_success() {
-        // given
+    @DisplayName("비밀번호가 일치하면 그 이메일에 매인 회원을 돌려준다")
+    void authenticate_returns_member_owning_the_email() {
+        // Given
         LocalEmail email = AuthFixture.createLocalEmail();
         Password password = AuthFixture.createPassword();
-        String memberKey = "member-key-123";
-        Member expectedMember = MemberFixture.createMember();
+        Member owner = MemberFixture.createMemberWithKey(OWNER_MEMBER_KEY, MemberFixture.PHONE);
 
-        com.recaring.auth.dataaccess.entity.LocalAuth localAuth =
-            com.recaring.auth.dataaccess.entity.LocalAuth.builder()
-                .memberKey(memberKey)
-                .email(email.value())
-                .password(AuthFixture.ENCODED_PASSWORD)
-                .build();
+        given(localAuthReader.findByEmail(AuthFixture.EMAIL)).willReturn(storedAuth());
+        given(passwordEncoder.matches(AuthFixture.RAW_PASSWORD, AuthFixture.ENCODED_PASSWORD)).willReturn(true);
+        given(memberReader.findByMemberKey(OWNER_MEMBER_KEY)).willReturn(owner);
 
-        given(localAuthReader.findByEmail(email.value())).willReturn(localAuth);
-        given(passwordEncoder.matches(password.value(), AuthFixture.ENCODED_PASSWORD)).willReturn(true);
-        given(memberReader.findByMemberKey(memberKey)).willReturn(expectedMember);
-
-        // when
+        // When
         Member result = localAuthAuthenticator.authenticate(email, password);
 
-        // then
-        assertThat(result.getMemberKey()).isEqualTo(expectedMember.getMemberKey());
+        assertThat(result.getMemberKey()).isEqualTo(OWNER_MEMBER_KEY);
+        assertThat(result.getPhone()).isEqualTo(MemberFixture.PHONE);
     }
 
     @Test
-    @DisplayName("인증 실패 - 잘못된 비밀번호로 AppException 발생")
-    void authenticate_fail_with_wrong_password() {
-        // given
-        LocalEmail email = AuthFixture.createLocalEmail();
-        Password password = AuthFixture.createPassword();
-        String memberKey = "member-key-123";
-
-        com.recaring.auth.dataaccess.entity.LocalAuth localAuth =
-            com.recaring.auth.dataaccess.entity.LocalAuth.builder()
-                .memberKey(memberKey)
-                .email(email.value())
-                .password(AuthFixture.ENCODED_PASSWORD)
-                .build();
-
-        given(localAuthReader.findByEmail(email.value())).willReturn(localAuth);
-        given(passwordEncoder.matches(password.value(), AuthFixture.ENCODED_PASSWORD)).willReturn(false);
-
-        // when & then
-        assertThatThrownBy(() -> localAuthAuthenticator.authenticate(email, password))
-            .isInstanceOf(AppException.class)
-            .hasFieldOrPropertyWithValue("errorType", ErrorType.INVALID_PASSWORD);
-    }
-
-    @Test
-    @DisplayName("인증 실패 - 존재하지 않는 이메일로 AppException 발생")
-    void authenticate_fail_with_email_not_found() {
-        // given
+    @DisplayName("비밀번호가 일치하지 않으면 INVALID_PASSWORD 예외가 발생하고 회원을 조회하지 않는다")
+    void authenticate_throws_and_skips_member_lookup_when_password_mismatches() {
+        // Given
         LocalEmail email = AuthFixture.createLocalEmail();
         Password password = AuthFixture.createPassword();
 
-        given(localAuthReader.findByEmail(email.value()))
-            .willThrow(new AppException(ErrorType.NOT_FOUND_ACCOUNT));
+        given(localAuthReader.findByEmail(AuthFixture.EMAIL)).willReturn(storedAuth());
+        given(passwordEncoder.matches(AuthFixture.RAW_PASSWORD, AuthFixture.ENCODED_PASSWORD)).willReturn(false);
 
-        // when & then
         assertThatThrownBy(() -> localAuthAuthenticator.authenticate(email, password))
-            .isInstanceOf(AppException.class)
-            .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_FOUND_ACCOUNT);
+                .isInstanceOf(AppException.class)
+                .hasFieldOrPropertyWithValue("errorType", ErrorType.INVALID_PASSWORD);
+
+        then(memberReader).should(never()).findByMemberKey(anyString());
     }
 
     @Test
-    @DisplayName("비밀번호 검증 성공 - memberKey 기준으로 일치하는 비밀번호는 예외 없이 통과한다")
-    void verifyPassword_success() {
-        // given
+    @DisplayName("memberKey로 조회한 비밀번호가 일치하면 통과한다")
+    void verifyPassword_passes_when_password_matches() {
+        // Given
         Password password = AuthFixture.createPassword();
+        given(localAuthReader.findByMemberKey(AuthFixture.MEMBER_KEY)).willReturn(storedAuth());
+        given(passwordEncoder.matches(AuthFixture.RAW_PASSWORD, AuthFixture.ENCODED_PASSWORD)).willReturn(true);
 
-        com.recaring.auth.dataaccess.entity.LocalAuth localAuth =
-            com.recaring.auth.dataaccess.entity.LocalAuth.builder()
-                .memberKey(AuthFixture.MEMBER_KEY)
-                .email(AuthFixture.EMAIL)
-                .password(AuthFixture.ENCODED_PASSWORD)
-                .build();
-
-        given(localAuthReader.findByMemberKey(AuthFixture.MEMBER_KEY)).willReturn(localAuth);
-        given(passwordEncoder.matches(password.value(), AuthFixture.ENCODED_PASSWORD)).willReturn(true);
-
-        // when & then
-        localAuthAuthenticator.verifyPassword(AuthFixture.MEMBER_KEY, password);
+        assertThatCode(() -> localAuthAuthenticator.verifyPassword(AuthFixture.MEMBER_KEY, password))
+                .doesNotThrowAnyException();
     }
 
     @Test
-    @DisplayName("비밀번호 검증 실패 - memberKey 기준으로 비밀번호가 일치하지 않으면 AppException 발생")
-    void verifyPassword_fail_with_wrong_password() {
-        // given
+    @DisplayName("memberKey로 조회한 비밀번호가 일치하지 않으면 INVALID_PASSWORD 예외가 발생한다")
+    void verifyPassword_throws_when_password_mismatches() {
+        // Given
         Password password = AuthFixture.createPassword();
+        given(localAuthReader.findByMemberKey(AuthFixture.MEMBER_KEY)).willReturn(storedAuth());
+        given(passwordEncoder.matches(AuthFixture.RAW_PASSWORD, AuthFixture.ENCODED_PASSWORD)).willReturn(false);
 
-        com.recaring.auth.dataaccess.entity.LocalAuth localAuth =
-            com.recaring.auth.dataaccess.entity.LocalAuth.builder()
-                .memberKey(AuthFixture.MEMBER_KEY)
-                .email(AuthFixture.EMAIL)
-                .password(AuthFixture.ENCODED_PASSWORD)
-                .build();
-
-        given(localAuthReader.findByMemberKey(AuthFixture.MEMBER_KEY)).willReturn(localAuth);
-        given(passwordEncoder.matches(password.value(), AuthFixture.ENCODED_PASSWORD)).willReturn(false);
-
-        // when & then
         assertThatThrownBy(() -> localAuthAuthenticator.verifyPassword(AuthFixture.MEMBER_KEY, password))
-            .isInstanceOf(AppException.class)
-            .hasFieldOrPropertyWithValue("errorType", ErrorType.INVALID_PASSWORD);
+                .isInstanceOf(AppException.class)
+                .hasFieldOrPropertyWithValue("errorType", ErrorType.INVALID_PASSWORD);
     }
 }
