@@ -68,7 +68,8 @@ class AnomalyNotificationListenerTest {
                 List.of(NotificationFixture.GUARDIAN_KEY),
                 List.of(NotificationFixture.MANAGER_KEY),
                 DetectionType.SPEED_ANOMALY.name(),
-                DetectionType.SPEED_ANOMALY.notificationTitle(),
+                // 기댓값을 enum에서 되읽으면 유형↔제목이 뒤바뀌어도 통과하므로 문구를 직접 고정한다
+                "빠른 이동 알림",
                 "김소연 님이 차량 속도로 이동 중입니다.",
                 Map.of(
                         "type", DetectionType.SPEED_ANOMALY.name(),

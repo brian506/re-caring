@@ -56,9 +56,37 @@
 
 ## Testing
 
+> 테스트의 목적은 **비즈니스 로직의 중대한 오류를 막는 것**이다.
+> 순수 코드가 잘 도는지 확인하는 테스트는 작성하지 않는다.
+
+- **비교 한 번으로 끝나는 가드에 단위 테스트를 작성하면 안 된다**
+  - enum 비교(`if (role != GUARDIAN) throw`), null/blank 가드, 단순 삼항 판정이 대상
+  - 틀릴 수 있는 방법이 하나뿐이고, 그 하나는 그 값을 쓰는 흐름 테스트가 이미 통과시킨다
+  - VO 단위 테스트는 **그 검증이 실제로 호출되는지를 증명하지 못한다.** 진짜 결함은
+    `if`문이 틀리는 게 아니라 아무도 그 VO를 안 거치고 흐름이 지나가는 것이다 → 잘못된 안심을 준다
+  - 잘못된 값의 거부는 **그 값을 쓰는 Implement·Business·Controller 테스트에서** 확인한다
+  - 삭제 사례: `Caregiver.of`/`Ward.of` 역할 검증 → `CareInvitationManagerTest`가 이미 흐름으로 커버,
+    `DetectionType.find` 미지 값 → `AnomalyDetectionParserTest`가 커버,
+    `LocationCollectionInterval.fromSeconds` → `LocationSettingControllerTest`가 400으로 커버
+
+- **단위 테스트로 남길 VO는 "여러 방식으로 틀릴 수 있는 계산·파싱"뿐이다**
+  - 기준: 정답이 하나가 아니고, 그 경계를 흐름 테스트로 재현할 방법이 사실상 없을 때
+  - 대상: haversine 거리 판정(`SafeZoneInfo.contains`), CSV 파싱 왕복(`BatteryThresholds.parse/format`),
+    정규식·길이 경계(`PhoneNumber`, `Password`, `LocalEmail`, `SmsCode`, `BatteryThreshold`)
+  - 비대상: `from(Entity)` 매핑, getter 왕복, enum 상수 나열, 필드만 담는 record
+
 - **Repository·Entity에 대한 별도 단위 테스트 파일을 작성하면 안 된다**
   - Repository는 커스텀 쿼리라도 단독 테스트를 만들지 않는다 — 쿼리는 Controller 통합 테스트가 실제로 통과시킨다
   - Entity 상태 전이는 그 Entity를 다루는 Implement 테스트로 간접 검증한다
+
+- **`config/**` 클래스와 외부 API 클라이언트에 테스트를 작성하면 안 된다**
+  - 대상: `FirebaseConfig`, `SwaggerConfig`, `FirebaseFcmClient`, `SmsClient` 등
+  - 검증되는 것은 SDK 동작이 아니라 상상한 SDK 동작뿐이다
+  - 의존하는 쪽을 테스트할 때만 파사드를 Mock해 반환값을 고정한다
+
+- **테스트용 HTTP 서버나 별도 `@SpringBootTest` 컨텍스트를 세우면 안 된다**
+  - `webEnvironment = RANDOM_PORT` + `HttpClient`로 실제 서버를 띄우는 방식 포함
+  - 통합 검증이 필요하면 `AbstractIntegrationTest` 하나로 모은다
 
 - **Controller 테스트를 Mock 기반(`@WebMvcTest`, `MockMvc` + `@MockBean`)으로 작성하면 안 된다**
   - Controller는 **Testcontainers 통합 테스트**로만 검증한다 (`AbstractIntegrationTest` 상속)

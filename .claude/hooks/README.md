@@ -23,7 +23,7 @@ AI 판단이 필요한 검토는 `test-review` 에이전트가 맡는다 (`test-
 | 검사 | 수준 | 근거 |
 |------|------|------|
 | `@Mock ObjectMapper` | **차단** | 직렬화 왕복이 검증되지 않는다. 실제 장애 이력 있음 |
-| `AbstractRepositoryTest` 상속 + `@Tag("integration")` 누락 | **차단** | DB 테스트가 단위 suite에 섞인다 |
+| `@SpringBootTest` + `AbstractIntegrationTest` 미상속 | **차단** | 별도 컨텍스트가 단위 suite에 섞인다 |
 | `doesNotThrowAnyException`이 유일한 단언 | 경고 | 빈 메서드로도 통과한다 |
 | 무인자 `now()` 신규 추가 | 경고 | 경계값 테스트가 불가능해진다 |
 

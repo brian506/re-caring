@@ -35,21 +35,32 @@
 
 ## 1. 무엇을 테스트할 가치가 있는가
 
-판단 기준은 하나다 — **이 코드가 결정을 내리는가?**
-결정 = `if`, 계산, 상태 전이, 반복. 결정이 없으면 틀릴 수 없고, 틀릴 수 없으면 테스트할 게 없다.
+판단 기준은 하나다 — **이 코드가 틀릴 수 있는 방법이 여러 개인가?**
+`if`가 하나 있다는 것만으로는 부족하다. 정답이 하나뿐인 비교는 그 값을 쓰는 흐름 테스트가
+이미 통과시키므로, 따로 찌르면 같은 `if`를 한 겹 벗겨 다시 확인하는 중복이 된다.
 
 ```java
-// 결정 없음 → 테스트하지 않는다
+// 위임뿐 → 테스트하지 않는다
 public Gps findLatest(String wardKey) {
     return gpsHistoryRepository.findLatest(wardKey).orElseThrow();
 }
 
-// 결정 있음 → 테스트한다
-public boolean isExpired(LocalDateTime now) {
-    if (status != PENDING) return true;
-    return now.isAfter(createdAt.plusHours(24));
+// 비교 한 번 → 테스트하지 않는다. 이 거부는 Manager·Controller 테스트에서 확인한다
+public static Caregiver of(String memberKey, MemberRole role) {
+    if (role != MemberRole.GUARDIAN) throw new AppException(INVALID_CAREGIVER_ROLE);
+    return new Caregiver(memberKey);
+}
+
+// 계산·경계 → 테스트한다. 공식·단위·부호로 여러 가지로 틀릴 수 있고
+// "반경 정확히 경계값"은 통합 테스트로 재현할 방법이 없다
+public boolean contains(double lat, double lng) {
+    return distanceMetersTo(lat, lng) <= radius.getMeters();
 }
 ```
+
+**주의:** VO 단위 테스트는 그 검증이 **실제로 호출되는지를 증명하지 못한다.**
+진짜 결함은 `if`문이 틀리는 게 아니라 아무도 그 VO를 안 거치고 흐름이 지나가는 것이다.
+그래서 잘못된 값의 거부는 **그 값을 쓰는 Implement·Business·Controller 테스트에서** 확인한다.
 
 ### 계층별 가치
 
@@ -60,7 +71,7 @@ Entity의 상태 전이는 그 Entity를 다루는 Implement(Manager 등) 테스
 
 | 계층 | 종류 | 가치 | 무엇을 |
 |------|------|------|--------|
-| VO | 단위 | ★★★ | 상태 전이, 불변식, 생성자 검증. 가장 싸고 가장 많이 |
+| VO | 단위 | ★★ | **계산·파싱만.** haversine, CSV 왕복, 정규식·길이 경계. 비교 한 번짜리 가드는 제외 |
 | Implement | 단위 | ★★★ | Validator 규칙, Manager 오케스트레이션 순서, 캐시 히트/미스 분기 |
 | Business | 단위 | ★★ | 여러 Implement를 조합하는 시나리오, 예외 변환 |
 | Controller | **통합** | ★★★ | API 전체 흐름. 실제 DB에 붙어 부수효과까지 확인 |

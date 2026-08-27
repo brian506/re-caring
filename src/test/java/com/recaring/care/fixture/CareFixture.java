@@ -1,13 +1,19 @@
 package com.recaring.care.fixture;
 
 import com.recaring.care.dataaccess.entity.CareInvitation;
+import com.recaring.care.dataaccess.entity.CareInvitationStatus;
 import com.recaring.care.dataaccess.entity.CareRelationship;
 import com.recaring.care.dataaccess.entity.CareRole;
 import com.recaring.care.vo.CaregiverInfo;
+import com.recaring.care.vo.CareRelationshipRegistration;
+import com.recaring.care.vo.ReceivedRequestInfo;
+import com.recaring.care.vo.WardInfo;
 import com.recaring.member.dataaccess.entity.Gender;
 import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.dataaccess.entity.MemberRole;
 import com.recaring.member.dataaccess.entity.SignUpType;
+
+import java.time.LocalDateTime;
 
 public class CareFixture {
 
@@ -66,6 +72,21 @@ public class CareFixture {
 
     public static CaregiverInfo createCaregiverInfo(String memberKey, CareRole careRole) {
         return new CaregiverInfo(memberKey, "보호자", GUARDIAN_PHONE, careRole);
+    }
+
+    public static WardInfo createWardInfo(String memberKey, CareRole careRole) {
+        return new WardInfo(memberKey, "보호대상자", WARD_PHONE, Gender.FEMALE, careRole);
+    }
+
+    public static CareRelationshipRegistration createRegistration(String wardKey, String caregiverKey, CareRole careRole) {
+        return new CareRelationshipRegistration(wardKey, caregiverKey, careRole);
+    }
+
+    public static ReceivedRequestInfo createReceivedRequestInfo(
+            String requestKey, String requesterKey, String wardKey, CareRole careRole, LocalDateTime createdAt) {
+        return new ReceivedRequestInfo(
+                requestKey, requesterKey, "보호자", wardKey, "보호대상자",
+                careRole, CareInvitationStatus.PENDING, createdAt);
     }
 
     public static CareRelationship createGuardianRelationship(String wardKey, String caregiverKey) {

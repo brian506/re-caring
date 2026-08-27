@@ -179,14 +179,7 @@ class AnomalyPendingReclaimerTest {
     }
 
     private Map<String, String> fields() {
-        Map<String, String> fields = new HashMap<>();
-        fields.put("ward_member_key", LocationFixture.WARD_KEY);
-        fields.put("detection_type", DetectionType.WANDERING.name());
-        fields.put("score", "0.82");
-        fields.put("detected_at", "2026-07-27 10:15:03");
-        fields.put("latitude", String.valueOf(LocationFixture.LATITUDE));
-        fields.put("longitude", String.valueOf(LocationFixture.LONGITUDE));
-        fields.put("evidence", "{name} 님이 같은 곳을 맴돌고 계십니다.");
-        return fields;
+        return LocationFixture.createAnomalyStreamFields(
+                DetectionType.WANDERING, LocationFixture.WANDERING_EVIDENCE);
     }
 }

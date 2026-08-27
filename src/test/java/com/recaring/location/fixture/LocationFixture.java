@@ -36,6 +36,7 @@ public class LocationFixture {
     public static final LocalDateTime DETECTED_AT = LocalDateTime.of(2026, 7, 27, 10, 20, 5);
     public static final String DETECTED_AT_TEXT = "2026-07-27 10:20:05";
     public static final double ANOMALY_SCORE = 0.82;
+    public static final String WANDERING_EVIDENCE = "{name} 님이 같은 곳을 맴돌고 계십니다.";
     public static final String SAFE_ZONE_KEY = "safe-zone-key-001";
     public static final String SAFE_ZONE_NAME = "안심존 1";
 

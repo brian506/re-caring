@@ -17,10 +17,10 @@ for f in $STAGED_TEST; do
         FAIL=1
     fi
 
-    if grep -q 'extends AbstractRepositoryTest' "$f" && ! grep -q '@Tag("integration")' "$f"; then
+    if grep -q '@SpringBootTest' "$f" && ! grep -q 'extends AbstractIntegrationTest' "$f"; then
         echo "FAIL  $f"
-        echo "      AbstractRepositoryTest 상속인데 @Tag(\"integration\")이 없다"
-        echo "      단위 테스트 suite에 섞여 실행 시간이 급증한다"
+        echo "      @SpringBootTest인데 AbstractIntegrationTest를 상속하지 않는다"
+        echo "      별도 컨텍스트·HTTP 서버 금지. 단위 suite에 섞여 실행 시간이 급증한다"
         FAIL=1
     fi
 

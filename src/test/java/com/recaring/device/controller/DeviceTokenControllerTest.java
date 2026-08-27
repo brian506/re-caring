@@ -3,6 +3,7 @@ package com.recaring.device.controller;
 import com.recaring.auth.dataaccess.entity.LocalAuth;
 import com.recaring.auth.dataaccess.repository.LocalAuthRepository;
 import com.recaring.device.dataaccess.repository.WardDeviceTokenRepository;
+import com.recaring.location.dataaccess.repository.GpsHistoryRepository;
 import com.recaring.location.fixture.LocationFixture;
 import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.dataaccess.repository.MemberRepository;
@@ -15,6 +16,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.web.servlet.client.RestTestClient;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("DeviceTokenController HTTP 통합 테스트")
 class DeviceTokenControllerTest extends AbstractIntegrationTest {
@@ -22,6 +26,7 @@ class DeviceTokenControllerTest extends AbstractIntegrationTest {
     @Autowired private MemberRepository memberRepository;
     @Autowired private LocalAuthRepository localAuthRepository;
     @Autowired private WardDeviceTokenRepository wardDeviceTokenRepository;
+    @Autowired private GpsHistoryRepository gpsHistoryRepository;
     @Autowired private PasswordEncoder passwordEncoder;
 
     private Member ward;
@@ -44,21 +49,27 @@ class DeviceTokenControllerTest extends AbstractIntegrationTest {
 
     @AfterEach
     void tearDown() {
+        gpsHistoryRepository.deleteAllInBatch();
         wardDeviceTokenRepository.deleteAllInBatch();
         localAuthRepository.deleteAllInBatch();
         memberRepository.deleteAllInBatch();
     }
 
     @Test
-    @DisplayName("POST /api/v1/device/token - WARD가 요청하면 device token이 발급된다")
-    void issueToken_returns_200_with_token_for_ward() {
-        client.post()
+    @DisplayName("POST /api/v1/device/token - WARD가 요청하면 발급된 토큰이 그대로 저장된다")
+    void issueToken_returns_the_persisted_token_for_ward() {
+        byte[] body = client.post()
                 .uri("/api/v1/device/token")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + wardToken)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
-                .jsonPath("$.data.deviceToken").isNotEmpty();
+                .jsonPath("$.data.deviceToken").isNotEmpty()
+                .returnResult()
+                .getResponseBody();
+
+        String persisted = currentDeviceToken();
+        assertThat(new String(body)).contains(persisted);
     }
 
     @Test
@@ -73,7 +84,6 @@ class DeviceTokenControllerTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("POST /api/v1/device/token - GUARDIAN이 요청하면 403이 반환된다")
     void issueToken_returns_403_for_guardian() {
-        System.out.println("GUARDIAN JWT: [" + guardianToken + "]");
         client.post()
                 .uri("/api/v1/device/token")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + guardianToken)
@@ -82,21 +92,63 @@ class DeviceTokenControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("POST /api/v1/device/token - 두 번 요청해도 200이 반환된다 (재발급)")
-    void issueToken_returns_200_on_second_request() {
+    @DisplayName("POST /api/v1/device/token - 재발급하면 기존 행의 토큰이 교체되고 새 행은 생기지 않는다")
+    void issueToken_replaces_token_without_inserting_new_row() {
+        client.post()
+                .uri("/api/v1/device/token")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + wardToken)
+                .exchange()
+                .expectStatus().isOk();
+        String firstToken = currentDeviceToken();
+
+        client.post()
+                .uri("/api/v1/device/token")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + wardToken)
+                .exchange()
+                .expectStatus().isOk();
+        String reissuedToken = currentDeviceToken();
+
+        assertThat(reissuedToken).isNotEqualTo(firstToken);
+        assertThat(wardDeviceTokenRepository.count()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("재발급하면 캐시에 올라와 있던 직전 토큰도 즉시 거부된다")
+    void reissue_invalidates_the_cached_previous_token() {
+        client.post()
+                .uri("/api/v1/device/token")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + wardToken)
+                .exchange()
+                .expectStatus().isOk();
+        String previousToken = currentDeviceToken();
+
+        sendGps(previousToken).expectStatus().isOk();
+
         client.post()
                 .uri("/api/v1/device/token")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + wardToken)
                 .exchange()
                 .expectStatus().isOk();
 
-        client.post()
-                .uri("/api/v1/device/token")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + wardToken)
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$.data.deviceToken").isNotEmpty();
+        sendGps(previousToken).expectStatus().isUnauthorized();
+        sendGps(currentDeviceToken()).expectStatus().isOk();
+    }
+
+    private RestTestClient.ResponseSpec sendGps(String deviceToken) {
+        return client.post()
+                .uri("/api/v1/location/gps")
+                .header(HttpHeaders.AUTHORIZATION, "Device " + deviceToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"latitude": 37.5665, "longitude": 126.9780}
+                        """)
+                .exchange();
+    }
+
+    private String currentDeviceToken() {
+        return wardDeviceTokenRepository.findByWardKey(ward.getMemberKey())
+                .orElseThrow()
+                .getToken();
     }
 
     private String extractAccessToken(String email, String password) {
