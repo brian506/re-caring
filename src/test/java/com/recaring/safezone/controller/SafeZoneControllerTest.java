@@ -218,13 +218,15 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("존재하지 않는 안심존을 조회하면 400이 반환된다")
-    void getSafeZone_returns_400_when_not_found() {
+    @DisplayName("존재하지 않는 안심존을 조회하면 NOT_FOUND_SAFE_ZONE이 반환된다")
+    void getSafeZone_returns_not_found_safe_zone() {
         client.get()
                 .uri(zoneUri(SafeZoneFixture.UNKNOWN_SAFE_ZONE_KEY))
                 .header(HttpHeaders.AUTHORIZATION, guardianAuth)
                 .exchange()
-                .expectStatus().isBadRequest();
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.error.errorCode").isEqualTo("E8000");
     }
 
     // ── PATCH /api/v1/care/wards/{wardKey}/safe-zones/{safeZoneKey} ──────────
