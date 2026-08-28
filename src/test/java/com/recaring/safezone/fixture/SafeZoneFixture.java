@@ -10,6 +10,9 @@ import com.recaring.safezone.vo.SafeZoneUpdate;
 public class SafeZoneFixture {
 
     public static final String WARD_MEMBER_KEY = CareFixture.WARD_MEMBER_KEY;
+    public static final String SAFE_ZONE_KEY = "safe-zone-key-001";
+    public static final String UNKNOWN_SAFE_ZONE_KEY = "unknown-safe-zone-key";
+
     public static final String NAME = "우리집";
     public static final String ADDRESS = "서울시 강남구 테헤란로 1";
     public static final double LATITUDE = 37.5000;
@@ -23,14 +26,7 @@ public class SafeZoneFixture {
     public static final SafeZoneRadius UPDATED_RADIUS = SafeZoneRadius.LARGE;
 
     public static SafeZone createSafeZone() {
-        return SafeZone.builder()
-                .wardMemberKey(WARD_MEMBER_KEY)
-                .name(NAME)
-                .address(ADDRESS)
-                .latitude(LATITUDE)
-                .longitude(LONGITUDE)
-                .radius(RADIUS)
-                .build();
+        return createSafeZone(WARD_MEMBER_KEY);
     }
 
     public static SafeZone createSafeZone(String wardMemberKey) {

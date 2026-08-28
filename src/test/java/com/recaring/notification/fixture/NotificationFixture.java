@@ -25,6 +25,9 @@ public class NotificationFixture {
     public static final String OTHER_GUARDIAN_KEY = "other-guardian-member-key-001";
     public static final String GUARDIAN_FCM_TOKEN = "guardian-fcm-token-001";
     public static final String MANAGER_FCM_TOKEN = "manager-fcm-token-001";
+    public static final String BATTERY_LOW_EVENT_TYPE = "BATTERY_LOW";
+    public static final String BATTERY_LOW_TITLE = "배터리 부족";
+    public static final String BATTERY_LOW_BODY = "배터리가 부족합니다. 잔량은 40% 입니다.";
 
     public static Member createWard() {
         return Member.builder()
@@ -123,6 +126,10 @@ public class NotificationFixture {
                 .body(body)
                 .dataPayload(Map.of("type", eventType))
                 .build();
+    }
+
+    public static Notification batteryLowNotification(String recipientMemberKey) {
+        return notification(recipientMemberKey, BATTERY_LOW_EVENT_TYPE, BATTERY_LOW_TITLE, BATTERY_LOW_BODY);
     }
 
     public static NotificationItem notificationItem(String eventType, String title, String body) {
