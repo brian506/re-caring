@@ -70,6 +70,18 @@ public class CareRelationshipRepositoryCustomImpl extends QuerydslRepositorySupp
     }
 
     @Override
+    public boolean existsCareRelationshipWithRole(String wardKey, CareRole careRole) {
+        Integer result = selectOne()
+                .from(careRelationship)
+                .where(
+                        careRelationship.wardMemberKey.eq(wardKey),
+                        careRelationship.careRole.eq(careRole)
+                )
+                .fetchFirst();
+        return result != null;
+    }
+
+    @Override
     public Optional<CareRelationship> findCareRelationship(String wardKey, String caregiverKey) {
         CareRelationship result = selectFrom(careRelationship)
                 .where(

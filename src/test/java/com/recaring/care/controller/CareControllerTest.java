@@ -155,6 +155,50 @@ class CareControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @DisplayName("PATCH /api/v1/care/requests/{requestKey}/accept - 이미 주보호자가 있으면 먼저 받아둔 요청을 수락해도 두 번째 주보호자가 생기지 않는다")
+    void acceptRequest_rejects_second_primary_guardian() {
+        Member other = memberRepository.save(CareFixture.createGuardianMember("01066665555"));
+        CareInvitation pending = careInvitationRepository.save(
+                CareFixture.createWardInvitation(other.getMemberKey(), ward.getMemberKey()));
+        careRelationshipRepository.save(
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+
+        client.patch()
+                .uri("/api/v1/care/requests/" + pending.getRequestKey() + "/accept")
+                .header(HttpHeaders.AUTHORIZATION, authHeader(ward))
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.error.errorCode").isEqualTo("E5018");
+
+        assertThat(careRelationshipRepository.findCareRelationship(
+                ward.getMemberKey(), other.getMemberKey())).isEmpty();
+        assertThat(statusOf(pending)).isEqualTo(CareInvitationStatus.PENDING);
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/care/requests/ward - 이미 주보호자가 있는 대상자에게는 요청을 보낼 수 없다")
+    void requestAddWard_fails_when_ward_already_has_primary_guardian() {
+        Member other = memberRepository.save(CareFixture.createGuardianMember("01066665555"));
+        careRelationshipRepository.save(
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+
+        client.post()
+                .uri("/api/v1/care/requests/ward")
+                .header(HttpHeaders.AUTHORIZATION, authHeader(other))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"phoneNumber": "%s"}
+                        """.formatted(CareFixture.WARD_PHONE))
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.error.errorCode").isEqualTo("E5018");
+
+        assertThat(careInvitationRepository.findAll()).isEmpty();
+    }
+
+    @Test
     @DisplayName("PATCH /api/v1/care/requests/{requestKey}/reject - 거절 시 요청은 REJECTED가 되고 케어 관계는 생기지 않는다")
     void rejectRequest_marks_rejected_without_relationship() {
         CareInvitation saved = careInvitationRepository.save(

@@ -33,10 +33,21 @@ public class CareRelationshipValidator {
 
     public void validateCanAddWard(String caregiverMemberKey, String newWardMemberKey) {
         memberValidator.validateSubscription(caregiverMemberKey);
+        validateNoPrimaryGuardian(newWardMemberKey);
 
         List<CareRelationship> careRelationships = careRelationshipRepository.findAllByCaregiverMemberKey(caregiverMemberKey);
         checkGuardianLimit(careRelationships, MAX_WARD_COUNT, ErrorType.CARE_WARD_LIMIT_EXCEEDED);
         validateNotDuplicated(careRelationships, CareRelationship::getWardMemberKey,newWardMemberKey);
+    }
+
+    /**
+     * 주보호자는 대상자당 1명이어야 한다. 이 불변식이 깨지면 서로 삭제도 강등도 못 하는 주보호자가 공존해,
+     * 잘못 맺어진 관계를 끊을 주체가 사라진다.
+     */
+    public void validateNoPrimaryGuardian(String wardMemberKey) {
+        if (careRelationshipRepository.existsCareRelationshipWithRole(wardMemberKey, CareRole.PRIMARY_GUARDIAN)) {
+            throw new AppException(ErrorType.WARD_ALREADY_HAS_PRIMARY_GUARDIAN);
+        }
     }
 
     public void validateCanAddManager(String requesterKey, String wardMemberKey, String newManagerKey) {

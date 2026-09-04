@@ -19,6 +19,8 @@ public interface CareRelationshipRepositoryCustom {
 
     boolean existsCareRelationshipInRoles(String wardKey, String caregiverKey, Collection<CareRole> careRoles);
 
+    boolean existsCareRelationshipWithRole(String wardKey, CareRole careRole);
+
     Optional<CareRelationship> findCareRelationship(String wardKey, String caregiverKey);
 
     void deleteAllByMemberKey(String memberKey);

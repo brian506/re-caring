@@ -29,6 +29,9 @@ public class CareRelationshipWriter {
         if (member.getRole() == MemberRole.GUARDIAN) {
             relationshipValidator.validateCanAddWard(memberKey, registration.wardMemberKey());
         }
+        if (registration.careRole() == CareRole.PRIMARY_GUARDIAN) {
+            relationshipValidator.validateNoPrimaryGuardian(registration.wardMemberKey());
+        }
         //todo 보호 대상자의 보호자 수 제한?
         careRelationshipRepository.save(
                 CareRelationship.of(registration.wardMemberKey(), registration.caregiverKey(), registration.careRole())
