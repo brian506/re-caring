@@ -212,6 +212,25 @@ class CareControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @DisplayName("GET /api/v1/care/wards/{wardKey}/caregivers - 주보호자가 아닌 보호자도 조회할 수 있다")
+    void getCaregivers_success_as_co_guardian() {
+        Member coGuardian = memberRepository.save(CareFixture.createGuardianMember("01066665555"));
+        careRelationshipRepository.save(
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+        careRelationshipRepository.save(
+                CareFixture.createGuardianRelationship(ward.getMemberKey(), coGuardian.getMemberKey()));
+
+        client.get()
+                .uri("/api/v1/care/wards/" + ward.getMemberKey() + "/caregivers")
+                .header(HttpHeaders.AUTHORIZATION, authHeader(coGuardian))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.resultType").isEqualTo("SUCCESS")
+                .jsonPath("$.data.length()").isEqualTo(2);
+    }
+
+    @Test
     @DisplayName("GET /api/v1/care/wards/{wardKey}/caregivers - 관계없는 사람이 조회하면 403이 반환된다")
     void getCaregivers_fails_when_unauthorized() {
         Member stranger = memberRepository.save(CareFixture.createGuardianMember("01077778888"));
@@ -308,6 +327,27 @@ class CareControllerTest extends AbstractIntegrationTest {
 
         assertThat(careRelationshipRepository.findCareRelationship(
                 ward.getMemberKey(), guardian.getMemberKey())).isPresent();
+    }
+
+    @Test
+    @DisplayName("DELETE /api/v1/care/wards/{wardKey}/caregivers/{caregiverKey} - 주보호자는 삭제할 수 없고 400 E5017이 반환된다")
+    void removeCaregiver_fails_when_target_is_primary_guardian() {
+        Member otherPrimary = memberRepository.save(CareFixture.createGuardianMember("01066665555"));
+        careRelationshipRepository.save(
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+        careRelationshipRepository.save(
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), otherPrimary.getMemberKey()));
+
+        client.delete()
+                .uri("/api/v1/care/wards/" + ward.getMemberKey() + "/caregivers/" + otherPrimary.getMemberKey())
+                .header(HttpHeaders.AUTHORIZATION, authHeader(guardian))
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.error.errorCode").isEqualTo("E5017");
+
+        assertThat(careRelationshipRepository.findCareRelationship(
+                ward.getMemberKey(), otherPrimary.getMemberKey())).isPresent();
     }
 
     @Test

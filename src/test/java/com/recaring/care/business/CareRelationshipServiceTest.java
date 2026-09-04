@@ -108,6 +108,8 @@ class CareRelationshipServiceTest {
 
         then(careRelationshipValidator).should(times(1))
                 .validatePrimaryGuardianRole(CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY);
+        then(careRelationshipValidator).should(times(1))
+                .validateCaregiverRemovable(CareFixture.WARD_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY);
         then(careRelationshipWriter).should(times(1))
                 .delete(CareFixture.WARD_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY);
     }
@@ -124,6 +126,22 @@ class CareRelationshipServiceTest {
                         CareFixture.MANAGER_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY))
                 .isInstanceOf(AppException.class)
                 .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_PRIMARY_GUARDIAN_ROLE_IN_CARE);
+
+        then(careRelationshipWriter).should(times(0)).delete(any(), any());
+    }
+
+    @Test
+    @DisplayName("보호자/관계자 케어 관계 삭제 - 대상이 주보호자면 예외가 전파되고 삭제하지 않는다")
+    void removeCaregiver_propagates_exception_when_target_is_primary_guardian() {
+        willThrow(new AppException(ErrorType.CANNOT_REMOVE_PRIMARY_GUARDIAN))
+                .given(careRelationshipValidator)
+                .validateCaregiverRemovable(CareFixture.WARD_MEMBER_KEY, "other-primary-key");
+
+        assertThatThrownBy(() ->
+                careRelationshipService.removeCaregiver(
+                        CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY, "other-primary-key"))
+                .isInstanceOf(AppException.class)
+                .hasFieldOrPropertyWithValue("errorType", ErrorType.CANNOT_REMOVE_PRIMARY_GUARDIAN);
 
         then(careRelationshipWriter).should(times(0)).delete(any(), any());
     }

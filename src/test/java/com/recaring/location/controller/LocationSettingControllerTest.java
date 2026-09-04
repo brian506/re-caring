@@ -38,6 +38,7 @@ class LocationSettingControllerTest extends AbstractIntegrationTest {
 
     private Member ward;
     private Member guardian;
+    private Member coGuardian;
     private Member manager;
     private String wardDeviceToken;
 
@@ -45,12 +46,18 @@ class LocationSettingControllerTest extends AbstractIntegrationTest {
     void setUp() {
         ward = memberRepository.save(LocationFixture.createWard());
         guardian = memberRepository.save(LocationFixture.createGuardian());
+        coGuardian = memberRepository.save(LocationFixture.createCoGuardian());
         manager = memberRepository.save(LocationFixture.createManager());
 
         careRelationshipRepository.save(CareRelationship.of(
                 ward.getMemberKey(),
                 guardian.getMemberKey(),
                 CareRole.PRIMARY_GUARDIAN
+        ));
+        careRelationshipRepository.save(CareRelationship.of(
+                ward.getMemberKey(),
+                coGuardian.getMemberKey(),
+                CareRole.GUARDIAN
         ));
         careRelationshipRepository.save(CareRelationship.of(
                 ward.getMemberKey(),
@@ -112,6 +119,28 @@ class LocationSettingControllerTest extends AbstractIntegrationTest {
                 .expectStatus().isOk()
                 .expectBody()
                 .jsonPath("$.data.currentIntervalSeconds").isEqualTo(30);
+    }
+
+    @Test
+    @DisplayName("PATCH /api/v1/location/settings/{wardKey}/collection-interval - 주보호자가 아닌 보호자도 수정할 수 있다")
+    void updateCollectionInterval_updates_interval_for_co_guardian() {
+        client.patch()
+                .uri("/api/v1/location/settings/{wardKey}/collection-interval", ward.getMemberKey())
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(coGuardian))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"intervalSeconds": 180}
+                        """)
+                .exchange()
+                .expectStatus().isOk();
+
+        client.get()
+                .uri("/api/v1/location/settings/{wardKey}/collection-interval", ward.getMemberKey())
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(coGuardian))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.data.currentIntervalSeconds").isEqualTo(180);
     }
 
     @Test

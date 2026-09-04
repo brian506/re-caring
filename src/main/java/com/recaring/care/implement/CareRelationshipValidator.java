@@ -96,11 +96,7 @@ public class CareRelationshipValidator {
         }
 
         List<CareRelationship> careRelationships = careRelationshipRepository.findAllByWardMemberKey(wardKey);
-        CareRole currentCareRole = careRelationships.stream()
-                .filter(relationship -> relationship.getCaregiverMemberKey().equals(targetCaregiverKey))
-                .map(CareRelationship::getCareRole)
-                .findFirst()
-                .orElseThrow(() -> new AppException(ErrorType.NOT_FOUND_CARE_RELATIONSHIP));
+        CareRole currentCareRole = findCareRole(careRelationships, targetCaregiverKey);
 
         if (currentCareRole == CareRole.PRIMARY_GUARDIAN) {
             throw new AppException(ErrorType.CANNOT_CHANGE_PRIMARY_GUARDIAN_ROLE);
@@ -111,6 +107,26 @@ public class CareRelationshipValidator {
 
         int maxCount = newCareRole == CareRole.GUARDIAN ? MAX_GUARDIAN_COUNT : MAX_MANAGER_COUNT;
         checkRoleLimit(careRelationships, newCareRole, maxCount, ErrorType.CARE_CAREGIVER_LIMIT_EXCEEDED);
+    }
+
+    /**
+     * 주보호자를 내보낼 수 있으면 관리 주체가 없는 대상자가 생긴다. 역할 변경과 같은 불변식을 삭제에도 건다.
+     * 주보호자 본인이 관계를 끊는 것은 removeWard 경로라 여기서 막히지 않는다.
+     */
+    public void validateCaregiverRemovable(String wardKey, String targetCaregiverKey) {
+        CareRole currentCareRole = findCareRole(
+                careRelationshipRepository.findAllByWardMemberKey(wardKey), targetCaregiverKey);
+        if (currentCareRole == CareRole.PRIMARY_GUARDIAN) {
+            throw new AppException(ErrorType.CANNOT_REMOVE_PRIMARY_GUARDIAN);
+        }
+    }
+
+    private CareRole findCareRole(List<CareRelationship> careRelationships, String caregiverKey) {
+        return careRelationships.stream()
+                .filter(relationship -> relationship.getCaregiverMemberKey().equals(caregiverKey))
+                .map(CareRelationship::getCareRole)
+                .findFirst()
+                .orElseThrow(() -> new AppException(ErrorType.NOT_FOUND_CARE_RELATIONSHIP));
     }
 
     private void checkRoleLimit(List<CareRelationship> relationships, CareRole role, int maxCount, ErrorType errorType) {

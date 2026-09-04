@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class SafeZoneControllerTest extends AbstractIntegrationTest {
 
     private static final String STRANGER_PHONE = "01077778888";
+    private static final String CO_GUARDIAN_PHONE = "01066665555";
 
     private static final String NEW_NAME = "학교";
     private static final String NEW_ADDRESS = "서울시 마포구 1";
@@ -47,6 +48,7 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
 
     private Member ward;
     private String guardianAuth;
+    private String coGuardianAuth;
     private String managerAuth;
     private String strangerAuth;
     private SafeZone savedZone;
@@ -54,6 +56,7 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
     @BeforeEach
     void setUp() {
         Member guardian = memberRepository.save(CareFixture.createGuardianMember());
+        Member coGuardian = memberRepository.save(CareFixture.createGuardianMember(CO_GUARDIAN_PHONE));
         Member manager = memberRepository.save(CareFixture.createGuardianMember(CareFixture.MANAGER_PHONE));
         Member stranger = memberRepository.save(CareFixture.createGuardianMember(STRANGER_PHONE));
         ward = memberRepository.save(CareFixture.createWardMember());
@@ -61,9 +64,12 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
         careRelationshipRepository.save(
                 CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
         careRelationshipRepository.save(
+                CareFixture.createGuardianRelationship(ward.getMemberKey(), coGuardian.getMemberKey()));
+        careRelationshipRepository.save(
                 CareFixture.createManagerRelationship(ward.getMemberKey(), manager.getMemberKey()));
 
         guardianAuth = bearerToken(guardian.getMemberKey(), guardian.getRole());
+        coGuardianAuth = bearerToken(coGuardian.getMemberKey(), coGuardian.getRole());
         managerAuth = bearerToken(manager.getMemberKey(), manager.getRole());
         strangerAuth = bearerToken(stranger.getMemberKey(), stranger.getRole());
 
@@ -98,6 +104,20 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
         assertThat(added.getLatitude()).isEqualTo(NEW_LATITUDE);
         assertThat(added.getLongitude()).isEqualTo(NEW_LONGITUDE);
         assertThat(added.getRadius()).isEqualTo(NEW_RADIUS);
+    }
+
+    @Test
+    @DisplayName("주보호자가 아닌 보호자도 안심존을 추가할 수 있다")
+    void addSafeZone_persists_zone_when_co_guardian() {
+        client.post()
+                .uri(zonesUri())
+                .header(HttpHeaders.AUTHORIZATION, coGuardianAuth)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(CREATE_BODY)
+                .exchange()
+                .expectStatus().isCreated();
+
+        assertThat(findAddedZone().getName()).isEqualTo(NEW_NAME);
     }
 
     @Test

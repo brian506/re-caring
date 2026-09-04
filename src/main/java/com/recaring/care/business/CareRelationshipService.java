@@ -35,6 +35,7 @@ public class CareRelationshipService {
 
     public void removeCaregiver(String guardianKey, String wardKey, String caregiverKey) {
         careRelationshipValidator.validatePrimaryGuardianRole(guardianKey, wardKey);
+        careRelationshipValidator.validateCaregiverRemovable(wardKey, caregiverKey);
         careRelationshipWriter.delete(wardKey, caregiverKey);
     }
 

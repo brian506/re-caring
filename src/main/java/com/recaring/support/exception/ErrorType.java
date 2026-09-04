@@ -73,6 +73,7 @@ public enum ErrorType {
     NOT_PRIMARY_GUARDIAN_ROLE_IN_CARE(HttpStatus.FORBIDDEN, ErrorCode.E5014, "해당 보호 대상자의 주보호자만 할 수 있습니다.", LogLevel.WARN),
     CANNOT_CHANGE_PRIMARY_GUARDIAN_ROLE(HttpStatus.BAD_REQUEST, ErrorCode.E5015, "주보호자의 관계는 변경할 수 없습니다.", LogLevel.WARN),
     INVALID_TARGET_CARE_ROLE(HttpStatus.BAD_REQUEST, ErrorCode.E5016, "보호자 또는 관계자로만 변경할 수 있습니다.", LogLevel.WARN),
+    CANNOT_REMOVE_PRIMARY_GUARDIAN(HttpStatus.BAD_REQUEST, ErrorCode.E5017, "주보호자는 케어 관계에서 삭제할 수 없습니다.", LogLevel.WARN),
 
     // Location (E6xxx)
     NOT_WARD_MEMBER(HttpStatus.FORBIDDEN, ErrorCode.E6000, "보호 대상자로 가입한 회원만 GPS를 전송할 수 있습니다.", LogLevel.WARN),
