@@ -59,7 +59,7 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
         ward = memberRepository.save(CareFixture.createWardMember());
 
         careRelationshipRepository.save(
-                CareFixture.createGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
         careRelationshipRepository.save(
                 CareFixture.createManagerRelationship(ward.getMemberKey(), manager.getMemberKey()));
 

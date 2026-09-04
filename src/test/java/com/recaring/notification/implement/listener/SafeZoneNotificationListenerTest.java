@@ -108,6 +108,34 @@ class SafeZoneNotificationListenerTest {
         then(memberReader).should(never()).findNameByMemberKey(anyString());
     }
 
+    @Test
+    @DisplayName("주보호자와 보호자는 모두 보호자 수신자로, 관계자는 관계자 수신자로 분류된다")
+    void classifies_primary_guardian_and_guardian_as_guardian_recipients() {
+        given(notificationSettingReader.isSafeZoneEntryEnabled(NotificationFixture.WARD_KEY)).willReturn(true);
+        given(careRelationshipReader.findCaregiverInfos(NotificationFixture.WARD_KEY))
+                .willReturn(List.of(
+                        CareFixture.createCaregiverInfo(NotificationFixture.GUARDIAN_KEY, CareRole.PRIMARY_GUARDIAN),
+                        CareFixture.createCaregiverInfo(NotificationFixture.OTHER_GUARDIAN_KEY, CareRole.GUARDIAN),
+                        CareFixture.createCaregiverInfo(NotificationFixture.MANAGER_KEY, CareRole.MANAGER)));
+        given(memberReader.findNameByMemberKey(NotificationFixture.WARD_KEY))
+                .willReturn(NotificationFixture.WARD_NAME);
+
+        safeZoneNotificationListener.onSafeZoneEntered(LocationFixture.createSafeZoneEnteredEvent());
+
+        then(notificationSendManager).should().sendToCareParties(
+                List.of(NotificationFixture.GUARDIAN_KEY, NotificationFixture.OTHER_GUARDIAN_KEY),
+                List.of(NotificationFixture.MANAGER_KEY),
+                "SAFE_ZONE_ENTERED",
+                "안심존 진입 알림",
+                "김소연님이 안심존 1에 도착했어요.",
+                Map.of(
+                        "type", "SAFE_ZONE_ENTERED",
+                        "wardKey", NotificationFixture.WARD_KEY,
+                        "safeZoneKey", LocationFixture.SAFE_ZONE_KEY
+                )
+        );
+    }
+
     private void givenCaregiversAndWardName() {
         given(careRelationshipReader.findCaregiverInfos(NotificationFixture.WARD_KEY))
                 .willReturn(List.of(

@@ -2,6 +2,7 @@ package com.recaring.care.controller;
 
 import com.recaring.care.dataaccess.entity.CareInvitation;
 import com.recaring.care.dataaccess.entity.CareInvitationStatus;
+import com.recaring.care.dataaccess.entity.CareRelationship;
 import com.recaring.care.dataaccess.entity.CareRole;
 import com.recaring.care.dataaccess.repository.CareInvitationRepository;
 import com.recaring.care.dataaccess.repository.CareRelationshipRepository;
@@ -135,7 +136,7 @@ class CareControllerTest extends AbstractIntegrationTest {
     // ── 요청 수락/거절 ─────────────────────────────────────────────────────
 
     @Test
-    @DisplayName("PATCH /api/v1/care/requests/{requestKey}/accept - 수락 시 GUARDIAN 케어 관계가 생성되고 요청은 ACCEPTED가 된다")
+    @DisplayName("PATCH /api/v1/care/requests/{requestKey}/accept - 수락 시 주보호자 케어 관계가 생성되고 요청은 ACCEPTED가 된다")
     void acceptRequest_creates_relationship_and_marks_accepted() {
         CareInvitation saved = careInvitationRepository.save(
                 CareFixture.createWardInvitation(guardian.getMemberKey(), ward.getMemberKey()));
@@ -149,7 +150,7 @@ class CareControllerTest extends AbstractIntegrationTest {
                 .jsonPath("$.resultType").isEqualTo("SUCCESS");
 
         assertThat(careRelationshipRepository.existsCareRelationship(
-                ward.getMemberKey(), guardian.getMemberKey(), CareRole.GUARDIAN)).isTrue();
+                ward.getMemberKey(), guardian.getMemberKey(), CareRole.PRIMARY_GUARDIAN)).isTrue();
         assertThat(statusOf(saved)).isEqualTo(CareInvitationStatus.ACCEPTED);
     }
 
@@ -178,7 +179,7 @@ class CareControllerTest extends AbstractIntegrationTest {
     @DisplayName("GET /api/v1/care/wards - 내가 보호자인 보호 대상자 목록을 반환한다")
     void getMyWards_success() {
         careRelationshipRepository.save(
-                CareFixture.createGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
 
         client.get()
                 .uri("/api/v1/care/wards")
@@ -198,7 +199,7 @@ class CareControllerTest extends AbstractIntegrationTest {
     @DisplayName("GET /api/v1/care/wards/{wardKey}/caregivers - 보호자 본인이 조회하면 성공한다")
     void getCaregivers_success_as_ward_self() {
         careRelationshipRepository.save(
-                CareFixture.createGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
 
         client.get()
                 .uri("/api/v1/care/wards/" + ward.getMemberKey() + "/caregivers")
@@ -228,7 +229,7 @@ class CareControllerTest extends AbstractIntegrationTest {
     @DisplayName("DELETE /api/v1/care/wards/{wardKey} - 보호자가 삭제하면 케어 관계 행이 제거된다")
     void removeWard_deletes_relationship_row() {
         careRelationshipRepository.save(
-                CareFixture.createGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
 
         client.delete()
                 .uri("/api/v1/care/wards/" + ward.getMemberKey())
@@ -266,11 +267,11 @@ class CareControllerTest extends AbstractIntegrationTest {
     // ── 보호자/관계자 케어 관계 삭제 ───────────────────────────────────────
 
     @Test
-    @DisplayName("DELETE /api/v1/care/wards/{wardKey}/caregivers/{caregiverKey} - GUARDIAN이 관리자를 삭제하면 관리자 관계만 제거된다")
+    @DisplayName("DELETE /api/v1/care/wards/{wardKey}/caregivers/{caregiverKey} - 주보호자가 관리자를 삭제하면 관리자 관계만 제거된다")
     void removeCaregiver_deletes_only_target_relationship() {
         Member manager = memberRepository.save(CareFixture.createGuardianMember(CareFixture.MANAGER_PHONE));
         careRelationshipRepository.save(
-                CareFixture.createGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
         careRelationshipRepository.save(
                 CareFixture.createManagerRelationship(ward.getMemberKey(), manager.getMemberKey()));
 
@@ -289,11 +290,11 @@ class CareControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("DELETE /api/v1/care/wards/{wardKey}/caregivers/{caregiverKey} - GUARDIAN 역할이 아니면 403이 반환되고 관계가 남는다")
-    void removeCaregiver_fails_when_not_guardian_role() {
+    @DisplayName("DELETE /api/v1/care/wards/{wardKey}/caregivers/{caregiverKey} - 주보호자가 아니면 403이 반환되고 관계가 남는다")
+    void removeCaregiver_fails_when_not_primary_guardian_role() {
         Member manager = memberRepository.save(CareFixture.createGuardianMember(CareFixture.MANAGER_PHONE));
         careRelationshipRepository.save(
-                CareFixture.createGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
         careRelationshipRepository.save(
                 CareFixture.createManagerRelationship(ward.getMemberKey(), manager.getMemberKey()));
 
@@ -303,7 +304,7 @@ class CareControllerTest extends AbstractIntegrationTest {
                 .exchange()
                 .expectStatus().isForbidden()
                 .expectBody()
-                .jsonPath("$.error.errorCode").isEqualTo("E5012");
+                .jsonPath("$.error.errorCode").isEqualTo("E5014");
 
         assertThat(careRelationshipRepository.findCareRelationship(
                 ward.getMemberKey(), guardian.getMemberKey())).isPresent();
@@ -316,6 +317,270 @@ class CareControllerTest extends AbstractIntegrationTest {
                 .uri("/api/v1/care/wards/" + ward.getMemberKey() + "/caregivers/" + guardian.getMemberKey())
                 .exchange()
                 .expectStatus().isUnauthorized();
+    }
+
+    // ── 보호 대상자 별명 수정 ──────────────────────────────────────────────
+
+    @Test
+    @DisplayName("PATCH /api/v1/care/wards/{wardKey}/nickname - 별명을 설정하면 내 관계 행에만 저장되고 다른 보호자 행은 그대로다")
+    void updateWardNickname_saves_only_on_requester_relationship() {
+        Member otherGuardian = memberRepository.save(CareFixture.createGuardianMember("01077778888"));
+        careRelationshipRepository.save(
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+        careRelationshipRepository.save(
+                CareFixture.createGuardianRelationship(ward.getMemberKey(), otherGuardian.getMemberKey()));
+
+        client.patch()
+                .uri("/api/v1/care/wards/" + ward.getMemberKey() + "/nickname")
+                .header(HttpHeaders.AUTHORIZATION, authHeader(guardian))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"nickname": "할머니"}
+                        """)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.resultType").isEqualTo("SUCCESS");
+
+        assertThat(nicknameOf(guardian)).isEqualTo("할머니");
+        assertThat(nicknameOf(otherGuardian)).isNull();
+    }
+
+    @Test
+    @DisplayName("PATCH /api/v1/care/wards/{wardKey}/nickname - 빈 문자열을 보내면 별명이 해제된다")
+    void updateWardNickname_clears_nickname_when_blank() {
+        careRelationshipRepository.save(
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+        patchNickname(guardian, "할머니");
+
+        client.patch()
+                .uri("/api/v1/care/wards/" + ward.getMemberKey() + "/nickname")
+                .header(HttpHeaders.AUTHORIZATION, authHeader(guardian))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"nickname": ""}
+                        """)
+                .exchange()
+                .expectStatus().isOk();
+
+        assertThat(nicknameOf(guardian)).isNull();
+    }
+
+    @Test
+    @DisplayName("PATCH /api/v1/care/wards/{wardKey}/nickname - 별명이 20자면 저장된다")
+    void updateWardNickname_accepts_nickname_at_max_length() {
+        careRelationshipRepository.save(
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+        String maxLengthNickname = "가".repeat(20);
+
+        client.patch()
+                .uri("/api/v1/care/wards/" + ward.getMemberKey() + "/nickname")
+                .header(HttpHeaders.AUTHORIZATION, authHeader(guardian))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"nickname": "%s"}
+                        """.formatted(maxLengthNickname))
+                .exchange()
+                .expectStatus().isOk();
+
+        assertThat(nicknameOf(guardian)).isEqualTo(maxLengthNickname);
+    }
+
+    @Test
+    @DisplayName("PATCH /api/v1/care/wards/{wardKey}/nickname - 별명이 21자면 400이고 저장되지 않는다")
+    void updateWardNickname_fails_when_nickname_too_long() {
+        careRelationshipRepository.save(
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+
+        client.patch()
+                .uri("/api/v1/care/wards/" + ward.getMemberKey() + "/nickname")
+                .header(HttpHeaders.AUTHORIZATION, authHeader(guardian))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"nickname": "%s"}
+                        """.formatted("가".repeat(21)))
+                .exchange()
+                .expectStatus().isBadRequest();
+
+        assertThat(nicknameOf(guardian)).isNull();
+    }
+
+    @Test
+    @DisplayName("PATCH /api/v1/care/wards/{wardKey}/nickname - 관계자도 별명을 설정할 수 있다")
+    void updateWardNickname_allowed_for_manager() {
+        Member manager = memberRepository.save(CareFixture.createGuardianMember(CareFixture.MANAGER_PHONE));
+        careRelationshipRepository.save(
+                CareFixture.createManagerRelationship(ward.getMemberKey(), manager.getMemberKey()));
+
+        client.patch()
+                .uri("/api/v1/care/wards/" + ward.getMemberKey() + "/nickname")
+                .header(HttpHeaders.AUTHORIZATION, authHeader(manager))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"nickname": "이모님"}
+                        """)
+                .exchange()
+                .expectStatus().isOk();
+
+        assertThat(nicknameOf(manager)).isEqualTo("이모님");
+    }
+
+    @Test
+    @DisplayName("PATCH /api/v1/care/wards/{wardKey}/nickname - 케어 관계가 없으면 400 E5011이 반환된다")
+    void updateWardNickname_fails_when_relationship_not_found() {
+        client.patch()
+                .uri("/api/v1/care/wards/" + ward.getMemberKey() + "/nickname")
+                .header(HttpHeaders.AUTHORIZATION, authHeader(guardian))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"nickname": "할머니"}
+                        """)
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.error.errorCode").isEqualTo("E5011");
+
+        assertThat(careRelationshipRepository.findAll()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/care/wards - 별명을 설정하면 실명과 별명이 함께 내려간다")
+    void getMyWards_returns_real_name_and_nickname() {
+        careRelationshipRepository.save(
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+        patchNickname(guardian, "할머니");
+
+        client.get()
+                .uri("/api/v1/care/wards")
+                .header(HttpHeaders.AUTHORIZATION, authHeader(guardian))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.data[0].wardName").isEqualTo("보호대상자")
+                .jsonPath("$.data[0].wardNickname").isEqualTo("할머니")
+                .jsonPath("$.data[0].myRole").isEqualTo("PRIMARY_GUARDIAN");
+    }
+
+    // ── 보호자/관계자 관계 수정 ────────────────────────────────────────────
+
+    @Test
+    @DisplayName("PATCH /api/v1/care/wards/{wardKey}/caregivers/{caregiverKey}/role - 주보호자가 보호자를 관계자로 바꾸면 역할이 MANAGER가 된다")
+    void updateCaregiverRole_changes_guardian_to_manager() {
+        Member coGuardian = memberRepository.save(CareFixture.createGuardianMember("01077778888"));
+        careRelationshipRepository.save(
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+        careRelationshipRepository.save(
+                CareFixture.createGuardianRelationship(ward.getMemberKey(), coGuardian.getMemberKey()));
+
+        client.patch()
+                .uri("/api/v1/care/wards/" + ward.getMemberKey() + "/caregivers/" + coGuardian.getMemberKey() + "/role")
+                .header(HttpHeaders.AUTHORIZATION, authHeader(guardian))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"careRole": "MANAGER"}
+                        """)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.resultType").isEqualTo("SUCCESS");
+
+        assertThat(careRoleOf(coGuardian)).isEqualTo(CareRole.MANAGER);
+        assertThat(careRoleOf(guardian)).isEqualTo(CareRole.PRIMARY_GUARDIAN);
+    }
+
+    @Test
+    @DisplayName("PATCH /api/v1/care/wards/{wardKey}/caregivers/{caregiverKey}/role - 요청자가 주보호자가 아니면 403 E5014이고 역할이 그대로다")
+    void updateCaregiverRole_fails_when_requester_not_primary_guardian() {
+        Member manager = memberRepository.save(CareFixture.createGuardianMember(CareFixture.MANAGER_PHONE));
+        careRelationshipRepository.save(
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+        careRelationshipRepository.save(
+                CareFixture.createManagerRelationship(ward.getMemberKey(), manager.getMemberKey()));
+
+        client.patch()
+                .uri("/api/v1/care/wards/" + ward.getMemberKey() + "/caregivers/" + manager.getMemberKey() + "/role")
+                .header(HttpHeaders.AUTHORIZATION, authHeader(manager))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"careRole": "GUARDIAN"}
+                        """)
+                .exchange()
+                .expectStatus().isForbidden()
+                .expectBody()
+                .jsonPath("$.error.errorCode").isEqualTo("E5014");
+
+        assertThat(careRoleOf(manager)).isEqualTo(CareRole.MANAGER);
+    }
+
+    @Test
+    @DisplayName("PATCH /api/v1/care/wards/{wardKey}/caregivers/{caregiverKey}/role - 대상이 주보호자면 400 E5015이고 역할이 그대로다")
+    void updateCaregiverRole_fails_when_target_is_primary_guardian() {
+        careRelationshipRepository.save(
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+
+        client.patch()
+                .uri("/api/v1/care/wards/" + ward.getMemberKey() + "/caregivers/" + guardian.getMemberKey() + "/role")
+                .header(HttpHeaders.AUTHORIZATION, authHeader(guardian))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"careRole": "MANAGER"}
+                        """)
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.error.errorCode").isEqualTo("E5015");
+
+        assertThat(careRoleOf(guardian)).isEqualTo(CareRole.PRIMARY_GUARDIAN);
+    }
+
+    @Test
+    @DisplayName("PATCH /api/v1/care/wards/{wardKey}/caregivers/{caregiverKey}/role - 주보호자로 올려달라고 하면 400 E5016이고 역할이 그대로다")
+    void updateCaregiverRole_fails_when_target_role_is_primary_guardian() {
+        Member manager = memberRepository.save(CareFixture.createGuardianMember(CareFixture.MANAGER_PHONE));
+        careRelationshipRepository.save(
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+        careRelationshipRepository.save(
+                CareFixture.createManagerRelationship(ward.getMemberKey(), manager.getMemberKey()));
+
+        client.patch()
+                .uri("/api/v1/care/wards/" + ward.getMemberKey() + "/caregivers/" + manager.getMemberKey() + "/role")
+                .header(HttpHeaders.AUTHORIZATION, authHeader(guardian))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"careRole": "PRIMARY_GUARDIAN"}
+                        """)
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.error.errorCode").isEqualTo("E5016");
+
+        assertThat(careRoleOf(manager)).isEqualTo(CareRole.MANAGER);
+    }
+
+    private void patchNickname(Member caregiver, String nickname) {
+        client.patch()
+                .uri("/api/v1/care/wards/" + ward.getMemberKey() + "/nickname")
+                .header(HttpHeaders.AUTHORIZATION, authHeader(caregiver))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"nickname": "%s"}
+                        """.formatted(nickname))
+                .exchange()
+                .expectStatus().isOk();
+    }
+
+    private String nicknameOf(Member caregiver) {
+        return relationshipOf(caregiver).getWardNickname();
+    }
+
+    private CareRole careRoleOf(Member caregiver) {
+        return relationshipOf(caregiver).getCareRole();
+    }
+
+    private CareRelationship relationshipOf(Member caregiver) {
+        return careRelationshipRepository
+                .findCareRelationship(ward.getMemberKey(), caregiver.getMemberKey())
+                .orElseThrow(() -> new AssertionError("케어 관계가 존재하지 않는다"));
     }
 
     private CareInvitationStatus statusOf(CareInvitation invitation) {

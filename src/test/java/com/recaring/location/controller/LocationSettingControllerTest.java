@@ -50,7 +50,7 @@ class LocationSettingControllerTest extends AbstractIntegrationTest {
         careRelationshipRepository.save(CareRelationship.of(
                 ward.getMemberKey(),
                 guardian.getMemberKey(),
-                CareRole.GUARDIAN
+                CareRole.PRIMARY_GUARDIAN
         ));
         careRelationshipRepository.save(CareRelationship.of(
                 ward.getMemberKey(),

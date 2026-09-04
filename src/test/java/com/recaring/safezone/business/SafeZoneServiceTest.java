@@ -1,6 +1,5 @@
 package com.recaring.safezone.business;
 
-import com.recaring.care.dataaccess.entity.CareRole;
 import com.recaring.care.fixture.CareFixture;
 import com.recaring.care.implement.CareRelationshipReader;
 import com.recaring.safezone.fixture.SafeZoneFixture;
@@ -168,7 +167,7 @@ class SafeZoneServiceTest {
     }
 
     private void givenGuardianOfWard(boolean result) {
-        given(careRelationshipReader.existsWithCareRole(WARD_KEY, REQUESTER_KEY, CareRole.GUARDIAN)).willReturn(result);
+        given(careRelationshipReader.existsWithGuardianRole(WARD_KEY, REQUESTER_KEY)).willReturn(result);
     }
 
     private void givenCaregiverOfWard(boolean result) {

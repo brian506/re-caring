@@ -75,7 +75,11 @@ public class CareFixture {
     }
 
     public static WardInfo createWardInfo(String memberKey, CareRole careRole) {
-        return new WardInfo(memberKey, "보호대상자", WARD_PHONE, Gender.FEMALE, careRole);
+        return createWardInfo(memberKey, null, careRole);
+    }
+
+    public static WardInfo createWardInfo(String memberKey, String wardNickname, CareRole careRole) {
+        return new WardInfo(memberKey, "보호대상자", wardNickname, WARD_PHONE, Gender.FEMALE, careRole);
     }
 
     public static CareRelationshipRegistration createRegistration(String wardKey, String caregiverKey, CareRole careRole) {
@@ -87,6 +91,10 @@ public class CareFixture {
         return new ReceivedRequestInfo(
                 requestKey, requesterKey, "보호자", wardKey, "보호대상자",
                 careRole, CareInvitationStatus.PENDING, createdAt);
+    }
+
+    public static CareRelationship createPrimaryGuardianRelationship(String wardKey, String caregiverKey) {
+        return CareRelationship.of(wardKey, caregiverKey, CareRole.PRIMARY_GUARDIAN);
     }
 
     public static CareRelationship createGuardianRelationship(String wardKey, String caregiverKey) {
@@ -102,7 +110,7 @@ public class CareFixture {
                 .requesterMemberKey(requesterKey)
                 .targetMemberKey(wardKey)
                 .wardMemberKey(wardKey)
-                .careRole(CareRole.GUARDIAN)
+                .careRole(CareRole.PRIMARY_GUARDIAN)
                 .build();
     }
 

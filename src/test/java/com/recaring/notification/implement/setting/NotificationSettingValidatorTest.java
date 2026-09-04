@@ -1,6 +1,5 @@
 package com.recaring.notification.implement.setting;
 
-import com.recaring.care.dataaccess.entity.CareRole;
 import com.recaring.care.implement.CareRelationshipReader;
 import com.recaring.member.implement.MemberReader;
 import com.recaring.notification.fixture.NotificationFixture;
@@ -50,10 +49,9 @@ class NotificationSettingValidatorTest {
                 .willReturn(NotificationFixture.createGuardian());
         given(memberReader.findByMemberKey(NotificationFixture.WARD_KEY))
                 .willReturn(NotificationFixture.createWard());
-        given(careRelationshipReader.existsWithCareRole(
+        given(careRelationshipReader.exists(
                 NotificationFixture.WARD_KEY,
-                NotificationFixture.GUARDIAN_KEY,
-                CareRole.GUARDIAN
+                NotificationFixture.GUARDIAN_KEY
         )).willReturn(true);
 
         notificationSettingValidator.validateSettingAccess(
@@ -61,10 +59,9 @@ class NotificationSettingValidatorTest {
                 NotificationFixture.WARD_KEY
         );
 
-        then(careRelationshipReader).should().existsWithCareRole(
+        then(careRelationshipReader).should().exists(
                 NotificationFixture.WARD_KEY,
-                NotificationFixture.GUARDIAN_KEY,
-                CareRole.GUARDIAN
+                NotificationFixture.GUARDIAN_KEY
         );
     }
 
@@ -75,15 +72,9 @@ class NotificationSettingValidatorTest {
                 .willReturn(NotificationFixture.createManager());
         given(memberReader.findByMemberKey(NotificationFixture.WARD_KEY))
                 .willReturn(NotificationFixture.createWard());
-        given(careRelationshipReader.existsWithCareRole(
+        given(careRelationshipReader.exists(
                 NotificationFixture.WARD_KEY,
-                NotificationFixture.MANAGER_KEY,
-                CareRole.GUARDIAN
-        )).willReturn(false);
-        given(careRelationshipReader.existsWithCareRole(
-                NotificationFixture.WARD_KEY,
-                NotificationFixture.MANAGER_KEY,
-                CareRole.MANAGER
+                NotificationFixture.MANAGER_KEY
         )).willReturn(true);
 
         notificationSettingValidator.validateSettingAccess(
@@ -91,15 +82,9 @@ class NotificationSettingValidatorTest {
                 NotificationFixture.WARD_KEY
         );
 
-        then(careRelationshipReader).should().existsWithCareRole(
+        then(careRelationshipReader).should().exists(
                 NotificationFixture.WARD_KEY,
-                NotificationFixture.MANAGER_KEY,
-                CareRole.GUARDIAN
-        );
-        then(careRelationshipReader).should().existsWithCareRole(
-                NotificationFixture.WARD_KEY,
-                NotificationFixture.MANAGER_KEY,
-                CareRole.MANAGER
+                NotificationFixture.MANAGER_KEY
         );
     }
 
