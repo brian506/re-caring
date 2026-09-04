@@ -10,10 +10,12 @@ import com.recaring.member.implement.MemberReader;
 import com.recaring.support.exception.AppException;
 import com.recaring.support.exception.ErrorType;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class CareRelationshipWriter {
@@ -29,13 +31,30 @@ public class CareRelationshipWriter {
         if (member.getRole() == MemberRole.GUARDIAN) {
             relationshipValidator.validateCanAddWard(memberKey, registration.wardMemberKey());
         }
-        if (registration.careRole() == CareRole.PRIMARY_GUARDIAN) {
-            relationshipValidator.validateNoPrimaryGuardian(registration.wardMemberKey());
-        }
         //todo 보호 대상자의 보호자 수 제한?
         careRelationshipRepository.save(
-                CareRelationship.of(registration.wardMemberKey(), registration.caregiverKey(), registration.careRole())
+                CareRelationship.of(registration.wardMemberKey(), registration.caregiverKey(),
+                        resolveCareRole(registration))
         );
+    }
+
+    /**
+     * 주보호자가 없는 대상자에 맺어지는 관계는 역할과 무관하게 주보호자가 된다.
+     * 관계자로 들어오게 두면 그를 내보낼 주체가 없는 대상자가 만들어진다.
+     */
+    private CareRole resolveCareRole(CareRelationshipRegistration registration) {
+        if (registration.careRole() == CareRole.PRIMARY_GUARDIAN) {
+            relationshipValidator.validateNoPrimaryGuardian(registration.wardMemberKey());
+            return CareRole.PRIMARY_GUARDIAN;
+        }
+        boolean hasPrimaryGuardian = careRelationshipRepository
+                .existsCareRelationshipWithRole(registration.wardMemberKey(), CareRole.PRIMARY_GUARDIAN);
+        if (hasPrimaryGuardian) {
+            return registration.careRole();
+        }
+        log.info("[케어 관계 : 주보호자 부재로 승격]: wardKey={} | caregiverKey={} | requestedRole={}",
+                registration.wardMemberKey(), registration.caregiverKey(), registration.careRole());
+        return CareRole.PRIMARY_GUARDIAN;
     }
 
     @CacheEvict(value = "careRelationship", allEntries = true)

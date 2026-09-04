@@ -193,6 +193,22 @@ class CareControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @DisplayName("PATCH /api/v1/care/requests/{requestKey}/accept - 주보호자가 없는 대상자에 관계자 요청을 수락하면 주보호자로 임명된다")
+    void acceptRequest_promotes_to_primary_guardian_when_ward_has_none() {
+        Member manager = memberRepository.save(CareFixture.createGuardianMember(CareFixture.MANAGER_PHONE));
+        CareInvitation saved = careInvitationRepository.save(CareFixture.createManagerInvitation(
+                guardian.getMemberKey(), manager.getMemberKey(), ward.getMemberKey()));
+
+        client.patch()
+                .uri("/api/v1/care/requests/" + saved.getRequestKey() + "/accept")
+                .header(HttpHeaders.AUTHORIZATION, authHeader(manager))
+                .exchange()
+                .expectStatus().isOk();
+
+        assertThat(careRoleOf(manager)).isEqualTo(CareRole.PRIMARY_GUARDIAN);
+    }
+
+    @Test
     @DisplayName("PATCH /api/v1/care/requests/{requestKey}/accept - 이미 주보호자가 있으면 먼저 받아둔 요청을 수락해도 두 번째 주보호자가 생기지 않는다")
     void acceptRequest_rejects_second_primary_guardian() {
         Member other = memberRepository.save(CareFixture.createGuardianMember("01066665555"));

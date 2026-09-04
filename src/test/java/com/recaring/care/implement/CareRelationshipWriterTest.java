@@ -56,6 +56,7 @@ class CareRelationshipWriterTest {
         CareRelationshipRegistration registration = CareFixture.createRegistration(
                 CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY, CareRole.GUARDIAN);
         given(memberReader.findForUpdate(CareFixture.GUARDIAN_MEMBER_KEY)).willReturn(guardian);
+        givenPrimaryGuardianExists(true);
 
         // when
         careRelationshipWriter.register(registration, CareFixture.GUARDIAN_MEMBER_KEY);
@@ -80,6 +81,7 @@ class CareRelationshipWriterTest {
         CareRelationshipRegistration registration = CareFixture.createRegistration(
                 CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY, CareRole.GUARDIAN);
         given(memberReader.findForUpdate(CareFixture.WARD_MEMBER_KEY)).willReturn(ward);
+        givenPrimaryGuardianExists(true);
 
         // when
         careRelationshipWriter.register(registration, CareFixture.WARD_MEMBER_KEY);
@@ -148,5 +150,46 @@ class CareRelationshipWriterTest {
                 careRelationshipWriter.delete(CareFixture.WARD_MEMBER_KEY, "unknown-key"))
                 .isInstanceOf(AppException.class)
                 .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_FOUND_CARE_RELATIONSHIP);
+    }
+
+    @Test
+    @DisplayName("주보호자가 없는 대상자에 관계자로 등록하면 주보호자로 승격해 저장한다")
+    void register_promotes_to_primary_guardian_when_ward_has_none() {
+        // given
+        Member manager = CareFixture.createGuardianMember();
+        CareRelationshipRegistration registration = CareFixture.createRegistration(
+                CareFixture.WARD_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY, CareRole.MANAGER);
+        given(memberReader.findForUpdate(CareFixture.MANAGER_MEMBER_KEY)).willReturn(manager);
+        givenPrimaryGuardianExists(false);
+
+        // when
+        careRelationshipWriter.register(registration, CareFixture.MANAGER_MEMBER_KEY);
+
+        // then
+        then(careRelationshipRepository).should(times(1)).save(relationshipCaptor.capture());
+        assertThat(relationshipCaptor.getValue().getCareRole()).isEqualTo(CareRole.PRIMARY_GUARDIAN);
+    }
+
+    @Test
+    @DisplayName("주보호자가 있는 대상자에 관계자로 등록하면 요청한 역할 그대로 저장한다")
+    void register_keeps_requested_role_when_ward_has_primary_guardian() {
+        // given
+        Member manager = CareFixture.createGuardianMember();
+        CareRelationshipRegistration registration = CareFixture.createRegistration(
+                CareFixture.WARD_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY, CareRole.MANAGER);
+        given(memberReader.findForUpdate(CareFixture.MANAGER_MEMBER_KEY)).willReturn(manager);
+        givenPrimaryGuardianExists(true);
+
+        // when
+        careRelationshipWriter.register(registration, CareFixture.MANAGER_MEMBER_KEY);
+
+        // then
+        then(careRelationshipRepository).should(times(1)).save(relationshipCaptor.capture());
+        assertThat(relationshipCaptor.getValue().getCareRole()).isEqualTo(CareRole.MANAGER);
+    }
+
+    private void givenPrimaryGuardianExists(boolean result) {
+        given(careRelationshipRepository.existsCareRelationshipWithRole(
+                CareFixture.WARD_MEMBER_KEY, CareRole.PRIMARY_GUARDIAN)).willReturn(result);
     }
 }

@@ -115,8 +115,15 @@
 클라이언트는 삭제 전 "연결된 N명도 함께 해제됩니다" 확인을 받아야 한다.
 
 **케어 관계와 함께 `care_invitation`도 지운다.** 초대에는 만료가 없어서(`expiredAt` 없음, `EXPIRED` 사용처 0건)
-남겨두면 뒤늦은 수락으로 주보호자 없는 대상자에 관계가 되살아나고, 그 상태에서는 `removeCaregiver`가
-주보호자를 요구하므로 아무도 그 관계를 끊을 수 없다.
+남겨두면 뒤늦은 수락으로 관계가 되살아난다.
+
+**주보호자가 없는 대상자에 맺어지는 관계는 역할과 무관하게 주보호자가 된다**(`CareRelationshipWriter.resolveCareRole`).
+관계자로 들어오게 두면 그를 내보낼 주체가 없는 대상자가 만들어진다 — `removeCaregiver`가 주보호자를 요구하기 때문이다.
+초대 정리와 이 승격은 같은 구멍을 앞뒤로 막는다: 정리가 새 관계의 유입을 줄이고, 승격이 그래도 들어온 관계를 안전하게 만든다.
+
+**케어 관계가 끊겨도 대상자 데이터는 남는다** — `safe_zones`·`location_settings`·`notification_settings`·
+`ward_device_tokens`·`gps_histories`·`anomaly_detections`. **의도한 동작이다.** 새 주보호자가 등록되면 이전 설정과
+이력을 그대로 물려받는다. 대상자를 기준으로 쌓인 데이터라 보호자가 바뀐다고 초기화할 이유가 없다는 판단.
 
 안심존 단건 조회·수정·삭제는 `(safeZoneKey, wardMemberKey)` 쌍으로 스코프한다. `safeZoneKey`만으로 찾으면
 경로의 `wardKey`로 인가를 통과한 뒤 **다른 대상자의 안심존**을 읽고 고치고 지울 수 있다 —
