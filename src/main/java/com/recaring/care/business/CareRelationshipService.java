@@ -1,6 +1,7 @@
 package com.recaring.care.business;
 
 import com.recaring.care.dataaccess.entity.CareRole;
+import com.recaring.care.implement.CareRelationshipManager;
 import com.recaring.care.implement.CareRelationshipReader;
 import com.recaring.care.implement.CareRelationshipValidator;
 import com.recaring.care.implement.CareRelationshipWriter;
@@ -15,6 +16,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CareRelationshipService {
 
+    private final CareRelationshipManager careRelationshipManager;
     private final CareRelationshipReader careRelationshipReader;
     private final CareRelationshipWriter careRelationshipWriter;
     private final CareRelationshipValidator careRelationshipValidator;
@@ -30,7 +32,7 @@ public class CareRelationshipService {
 
     public void removeWard(String guardianKey, String wardKey) {
         careRelationshipValidator.validateCaregiver(guardianKey, wardKey);
-        careRelationshipWriter.deleteWithRemainingCaregivers(wardKey, guardianKey);
+        careRelationshipManager.leaveCare(wardKey, guardianKey);
     }
 
     public void removeCaregiver(String guardianKey, String wardKey, String caregiverKey) {

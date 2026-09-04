@@ -2,6 +2,7 @@ package com.recaring.care.business;
 
 import com.recaring.care.dataaccess.entity.CareRole;
 import com.recaring.care.fixture.CareFixture;
+import com.recaring.care.implement.CareRelationshipManager;
 import com.recaring.care.implement.CareRelationshipReader;
 import com.recaring.care.implement.CareRelationshipValidator;
 import com.recaring.care.implement.CareRelationshipWriter;
@@ -28,6 +29,9 @@ class CareRelationshipServiceTest {
 
     @InjectMocks
     private CareRelationshipService careRelationshipService;
+
+    @Mock
+    private CareRelationshipManager careRelationshipManager;
 
     @Mock
     private CareRelationshipReader careRelationshipReader;
@@ -79,8 +83,8 @@ class CareRelationshipServiceTest {
 
         then(careRelationshipValidator).should(times(1))
                 .validateCaregiver(CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY);
-        then(careRelationshipWriter).should(times(1))
-                .deleteWithRemainingCaregivers(CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY);
+        then(careRelationshipManager).should(times(1))
+                .leaveCare(CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY);
     }
 
     @Test
@@ -95,7 +99,7 @@ class CareRelationshipServiceTest {
                 .isInstanceOf(AppException.class)
                 .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_FOUND_CARE_RELATIONSHIP);
 
-        then(careRelationshipWriter).should(times(0)).deleteWithRemainingCaregivers(any(), any());
+        then(careRelationshipManager).should(times(0)).leaveCare(any(), any());
     }
 
     // ── removeCaregiver ────────────────────────────────────────────────────

@@ -23,12 +23,12 @@ public class SafeZoneReader {
                 .toList();
     }
 
-    public SafeZoneInfo findBySafeZoneKey(String safeZoneKey) {
-        return SafeZoneInfo.from(getEntity(safeZoneKey));
+    public SafeZoneInfo findBySafeZoneKey(String safeZoneKey, String wardMemberKey) {
+        return SafeZoneInfo.from(getEntity(safeZoneKey, wardMemberKey));
     }
 
-    public SafeZone getEntity(String safeZoneKey) {
-        return safeZoneRepository.findBySafeZoneKey(safeZoneKey)
+    public SafeZone getEntity(String safeZoneKey, String wardMemberKey) {
+        return safeZoneRepository.findBySafeZoneKeyAndWardMemberKey(safeZoneKey, wardMemberKey)
                 .orElseThrow(() -> new AppException(ErrorType.NOT_FOUND_SAFE_ZONE));
     }
 }

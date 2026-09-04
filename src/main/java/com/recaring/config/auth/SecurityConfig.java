@@ -87,8 +87,14 @@ public class SecurityConfig {
 
                         // GUARDIAN 전용 (보호자만 접근 가능)
                         .requestMatchers(
-                                mvc.matcher(HttpMethod.POST, "/api/v1/care/requests"),
+                                mvc.matcher(HttpMethod.POST, "/api/v1/care/requests/ward"),
+                                mvc.matcher(HttpMethod.POST, "/api/v1/care/requests/manager"),
+                                mvc.matcher(HttpMethod.POST, "/api/v1/care/requests/guardian"),
                                 mvc.matcher(HttpMethod.POST, "/api/v1/members/phones"),
+                                mvc.matcher(HttpMethod.PATCH, "/api/v1/care/wards/{wardKey}/nickname"),
+                                mvc.matcher(HttpMethod.PATCH, "/api/v1/care/wards/{wardKey}/caregivers/{caregiverKey}/role"),
+                                mvc.matcher(HttpMethod.DELETE, "/api/v1/care/wards/{wardKey}"),
+                                mvc.matcher(HttpMethod.DELETE, "/api/v1/care/wards/{wardKey}/caregivers/{caregiverKey}"),
                                 mvc.matcher(HttpMethod.GET,  "/api/v1/location/settings/{wardKey}/collection-interval"),
                                 mvc.matcher(HttpMethod.PATCH, "/api/v1/location/settings/{wardKey}/collection-interval"),
                                 // SafeZone (GUARDIAN/MANAGER 모두 MemberRole.GUARDIAN)

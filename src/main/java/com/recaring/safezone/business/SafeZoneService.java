@@ -37,19 +37,19 @@ public class SafeZoneService {
     @Transactional(readOnly = true)
     public SafeZoneInfo getSafeZone(String requesterKey,  String wardKey, String safeZoneKey) {
         validateCareAccess(requesterKey, wardKey);
-        return safeZoneReader.findBySafeZoneKey(safeZoneKey);
+        return safeZoneReader.findBySafeZoneKey(safeZoneKey, wardKey);
     }
 
     @Transactional
     public void updateSafeZone(String requesterKey, String wardKey, String safeZoneKey, SafeZoneUpdate command) {
         validateGuardianAccess(requesterKey, wardKey);
-        safeZoneWriter.update(safeZoneKey, command);
+        safeZoneWriter.update(safeZoneKey, wardKey, command);
     }
 
     @Transactional
     public void deleteSafeZone(String requesterKey, String wardKey, String safeZoneKey) {
         validateGuardianAccess(requesterKey, wardKey);
-        safeZoneWriter.delete(safeZoneKey);
+        safeZoneWriter.delete(safeZoneKey, wardKey);
     }
 
     private void validateCareAccess(String requesterKey, String wardKey) {

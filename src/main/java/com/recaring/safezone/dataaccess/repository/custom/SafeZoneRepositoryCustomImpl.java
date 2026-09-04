@@ -24,10 +24,13 @@ public class SafeZoneRepositoryCustomImpl extends QuerydslRepositorySupport
     }
 
     @Override
-    public Optional<SafeZone> findBySafeZoneKey(String safeZoneKey) {
+    public Optional<SafeZone> findBySafeZoneKeyAndWardMemberKey(String safeZoneKey, String wardMemberKey) {
         return Optional.ofNullable(
                 selectFrom(safeZone)
-                        .where(safeZone.safeZoneKey.eq(safeZoneKey))
+                        .where(
+                                safeZone.safeZoneKey.eq(safeZoneKey),
+                                safeZone.wardMemberKey.eq(wardMemberKey)
+                        )
                         .fetchOne()
         );
     }

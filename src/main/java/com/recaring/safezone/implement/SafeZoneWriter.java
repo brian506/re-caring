@@ -26,17 +26,17 @@ public class SafeZoneWriter {
                 .build());
     }
 
-    public void update(String safeZoneKey, SafeZoneUpdate command) {
-        SafeZone zone = getEntity(safeZoneKey);
+    public void update(String safeZoneKey, String wardMemberKey, SafeZoneUpdate command) {
+        SafeZone zone = getEntity(safeZoneKey, wardMemberKey);
         zone.update(command.name(), command.address(), command.latitude(), command.longitude(), command.radius());
     }
 
-    public void delete(String safeZoneKey) {
-        safeZoneRepository.delete(getEntity(safeZoneKey));
+    public void delete(String safeZoneKey, String wardMemberKey) {
+        safeZoneRepository.delete(getEntity(safeZoneKey, wardMemberKey));
     }
 
-    private SafeZone getEntity(String safeZoneKey) {
-        return safeZoneRepository.findBySafeZoneKey(safeZoneKey)
+    private SafeZone getEntity(String safeZoneKey, String wardMemberKey) {
+        return safeZoneRepository.findBySafeZoneKeyAndWardMemberKey(safeZoneKey, wardMemberKey)
                 .orElseThrow(() -> new AppException(ErrorType.NOT_FOUND_SAFE_ZONE));
     }
 

@@ -12,4 +12,6 @@ public interface CareInvitationRepositoryCustom {
     Optional<CareInvitation> findInvitationForRecipient(String requestKey, String memberKey);
 
     void deleteAllByMemberKey(String memberKey);
+
+    void deleteAllByWardMemberKey(String wardMemberKey);
 }

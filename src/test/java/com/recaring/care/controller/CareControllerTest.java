@@ -390,6 +390,45 @@ class CareControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @DisplayName("DELETE /api/v1/care/wards/{wardKey} - 주보호자가 삭제하면 아직 수락되지 않은 초대도 함께 사라진다")
+    void removeWard_cascade_clears_pending_invitations() {
+        Member invitee = memberRepository.save(CareFixture.createGuardianMember("01066665555"));
+        careRelationshipRepository.save(
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+        CareInvitation pending = careInvitationRepository.save(CareFixture.createManagerInvitation(
+                guardian.getMemberKey(), invitee.getMemberKey(), ward.getMemberKey()));
+
+        client.delete()
+                .uri("/api/v1/care/wards/" + ward.getMemberKey())
+                .header(HttpHeaders.AUTHORIZATION, authHeader(guardian))
+                .exchange()
+                .expectStatus().isOk();
+
+        assertThat(careInvitationRepository.findByRequestKey(pending.getRequestKey())).isEmpty();
+        assertThat(careRelationshipRepository.findAllByWardMemberKey(ward.getMemberKey())).isEmpty();
+    }
+
+    @Test
+    @DisplayName("DELETE /api/v1/care/wards/{wardKey} - 주보호자가 아닌 보호자가 삭제하면 자기 관계만 빠진다")
+    void removeWard_deletes_only_own_relationship_when_co_guardian() {
+        Member coGuardian = memberRepository.save(CareFixture.createGuardianMember("01066665555"));
+        careRelationshipRepository.save(
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+        careRelationshipRepository.save(
+                CareFixture.createGuardianRelationship(ward.getMemberKey(), coGuardian.getMemberKey()));
+
+        client.delete()
+                .uri("/api/v1/care/wards/" + ward.getMemberKey())
+                .header(HttpHeaders.AUTHORIZATION, authHeader(coGuardian))
+                .exchange()
+                .expectStatus().isOk();
+
+        assertThat(careRelationshipRepository.findCareRelationship(
+                ward.getMemberKey(), coGuardian.getMemberKey())).isEmpty();
+        assertThat(careRoleOf(guardian)).isEqualTo(CareRole.PRIMARY_GUARDIAN);
+    }
+
+    @Test
     @DisplayName("DELETE /api/v1/care/wards/{wardKey} - 관계자 본인이 삭제하면 자기 관계만 빠지고 주보호자는 남는다")
     void removeWard_deletes_only_own_relationship_when_manager() {
         Member manager = memberRepository.save(CareFixture.createGuardianMember(CareFixture.MANAGER_PHONE));

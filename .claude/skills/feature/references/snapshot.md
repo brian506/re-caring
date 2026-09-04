@@ -111,8 +111,16 @@
 삭제 대상이 될 수도(E5017) 없다. 그래서 주보호자가 그냥 떠나면 남은 보호자·관계자를 정리할 주체가 영영 사라진다.
 `removeWard`에서 **주보호자가 나가면 그 대상자의 케어 관계를 통째로 삭제**하는 이유다. 남은 사람들은 모두
 주보호자가 초대해 들어온 사람들이라 의미상으로도 맞다. JPA 연관관계·cascade는 쓰지 않는다 —
-`CareRelationshipWriter.deleteWithRemainingCaregivers`가 역할을 보고 분기해 `ward_member_key` 단일 조건
-벌크 삭제를 날린다. 클라이언트는 삭제 전 "연결된 N명도 함께 해제됩니다" 확인을 받아야 한다.
+`CareRelationshipManager.leaveCare`가 역할을 보고 분기해 `ward_member_key` 단일 조건 벌크 삭제를 날린다.
+클라이언트는 삭제 전 "연결된 N명도 함께 해제됩니다" 확인을 받아야 한다.
+
+**케어 관계와 함께 `care_invitation`도 지운다.** 초대에는 만료가 없어서(`expiredAt` 없음, `EXPIRED` 사용처 0건)
+남겨두면 뒤늦은 수락으로 주보호자 없는 대상자에 관계가 되살아나고, 그 상태에서는 `removeCaregiver`가
+주보호자를 요구하므로 아무도 그 관계를 끊을 수 없다.
+
+안심존 단건 조회·수정·삭제는 `(safeZoneKey, wardMemberKey)` 쌍으로 스코프한다. `safeZoneKey`만으로 찾으면
+경로의 `wardKey`로 인가를 통과한 뒤 **다른 대상자의 안심존**을 읽고 고치고 지울 수 있다 —
+캐스케이드로 관계가 끊긴 전 보호자가 키를 기억하고 있으면 그대로 악용된다.
 
 대상자당 주보호자가 1명이라는 불변식은 **발급(`sendWardInvitation`)·수락(`register`)·DB(부분 유니크 인덱스)**
 세 겹으로 강제한다(E5018). 수락 시점 검사가 따로 필요한 이유는 PENDING 초대가 첫 주보호자보다 먼저

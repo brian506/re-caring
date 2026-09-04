@@ -58,9 +58,9 @@ class SafeZoneWriterTest {
     void update_applies_command_values_to_existing_zone() {
         SafeZone zone = SafeZoneFixture.createSafeZone();
         SafeZoneUpdate command = SafeZoneFixture.updateCommand();
-        given(safeZoneRepository.findBySafeZoneKey(zone.getSafeZoneKey())).willReturn(Optional.of(zone));
+        given(safeZoneRepository.findBySafeZoneKeyAndWardMemberKey(zone.getSafeZoneKey(), zone.getWardMemberKey())).willReturn(Optional.of(zone));
 
-        safeZoneWriter.update(zone.getSafeZoneKey(), command);
+        safeZoneWriter.update(zone.getSafeZoneKey(), zone.getWardMemberKey(), command);
 
         assertThat(zone.getName()).isEqualTo(SafeZoneFixture.UPDATED_NAME);
         assertThat(zone.getAddress()).isEqualTo(SafeZoneFixture.UPDATED_ADDRESS);
@@ -72,9 +72,9 @@ class SafeZoneWriterTest {
     @Test
     @DisplayName("존재하지 않는 안심존은 수정할 수 없고 NOT_FOUND_SAFE_ZONE 예외가 발생한다")
     void update_throws_when_not_found() {
-        given(safeZoneRepository.findBySafeZoneKey(UNKNOWN_KEY)).willReturn(Optional.empty());
+        given(safeZoneRepository.findBySafeZoneKeyAndWardMemberKey(UNKNOWN_KEY, SafeZoneFixture.WARD_MEMBER_KEY)).willReturn(Optional.empty());
 
-        assertThatThrownBy(() -> safeZoneWriter.update(UNKNOWN_KEY, SafeZoneFixture.updateCommand()))
+        assertThatThrownBy(() -> safeZoneWriter.update(UNKNOWN_KEY, SafeZoneFixture.WARD_MEMBER_KEY, SafeZoneFixture.updateCommand()))
                 .isInstanceOf(AppException.class)
                 .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_FOUND_SAFE_ZONE);
     }
@@ -83,9 +83,9 @@ class SafeZoneWriterTest {
     @DisplayName("삭제는 조회한 안심존을 hard-delete 한다")
     void delete_hard_deletes_entity() {
         SafeZone zone = SafeZoneFixture.createSafeZone();
-        given(safeZoneRepository.findBySafeZoneKey(zone.getSafeZoneKey())).willReturn(Optional.of(zone));
+        given(safeZoneRepository.findBySafeZoneKeyAndWardMemberKey(zone.getSafeZoneKey(), zone.getWardMemberKey())).willReturn(Optional.of(zone));
 
-        safeZoneWriter.delete(zone.getSafeZoneKey());
+        safeZoneWriter.delete(zone.getSafeZoneKey(), zone.getWardMemberKey());
 
         then(safeZoneRepository).should().delete(zone);
     }
@@ -93,9 +93,9 @@ class SafeZoneWriterTest {
     @Test
     @DisplayName("존재하지 않는 안심존은 삭제하지 않고 NOT_FOUND_SAFE_ZONE 예외가 발생한다")
     void delete_throws_when_not_found() {
-        given(safeZoneRepository.findBySafeZoneKey(UNKNOWN_KEY)).willReturn(Optional.empty());
+        given(safeZoneRepository.findBySafeZoneKeyAndWardMemberKey(UNKNOWN_KEY, SafeZoneFixture.WARD_MEMBER_KEY)).willReturn(Optional.empty());
 
-        assertThatThrownBy(() -> safeZoneWriter.delete(UNKNOWN_KEY))
+        assertThatThrownBy(() -> safeZoneWriter.delete(UNKNOWN_KEY, SafeZoneFixture.WARD_MEMBER_KEY))
                 .isInstanceOf(AppException.class)
                 .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_FOUND_SAFE_ZONE);
         then(safeZoneRepository).should(never()).delete(any());

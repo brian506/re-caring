@@ -101,7 +101,7 @@ class SafeZoneServiceTest {
 
         safeZoneService.getSafeZone(REQUESTER_KEY, WARD_KEY, SAFE_ZONE_KEY);
 
-        then(safeZoneReader).should().findBySafeZoneKey(SAFE_ZONE_KEY);
+        then(safeZoneReader).should().findBySafeZoneKey(SAFE_ZONE_KEY, WARD_KEY);
     }
 
     @Test
@@ -113,7 +113,7 @@ class SafeZoneServiceTest {
                 .isInstanceOf(AppException.class)
                 .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_CAREGIVER_OF_WARD);
 
-        then(safeZoneReader).should(never()).findBySafeZoneKey(any());
+        then(safeZoneReader).should(never()).findBySafeZoneKey(any(), any());
     }
 
     // ── updateSafeZone ───────────────────────────────────────────────────────
@@ -126,7 +126,7 @@ class SafeZoneServiceTest {
 
         safeZoneService.updateSafeZone(REQUESTER_KEY, WARD_KEY, SAFE_ZONE_KEY, command);
 
-        then(safeZoneWriter).should().update(SAFE_ZONE_KEY, command);
+        then(safeZoneWriter).should().update(SAFE_ZONE_KEY, WARD_KEY, command);
     }
 
     @Test
@@ -139,7 +139,7 @@ class SafeZoneServiceTest {
                 .isInstanceOf(AppException.class)
                 .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_GUARDIAN_OF_WARD);
 
-        then(safeZoneWriter).should(never()).update(any(), any());
+        then(safeZoneWriter).should(never()).update(any(), any(), any());
     }
 
     // ── deleteSafeZone ───────────────────────────────────────────────────────
@@ -151,7 +151,7 @@ class SafeZoneServiceTest {
 
         safeZoneService.deleteSafeZone(REQUESTER_KEY, WARD_KEY, SAFE_ZONE_KEY);
 
-        then(safeZoneWriter).should().delete(SAFE_ZONE_KEY);
+        then(safeZoneWriter).should().delete(SAFE_ZONE_KEY, WARD_KEY);
     }
 
     @Test
@@ -163,7 +163,7 @@ class SafeZoneServiceTest {
                 .isInstanceOf(AppException.class)
                 .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_GUARDIAN_OF_WARD);
 
-        then(safeZoneWriter).should(never()).delete(any());
+        then(safeZoneWriter).should(never()).delete(any(), any());
     }
 
     private void givenGuardianOfWard(boolean result) {
