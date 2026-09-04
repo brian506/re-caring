@@ -55,6 +55,22 @@ public class CareRelationshipWriter {
         findRelationship(wardKey, caregiverKey).changeCareRole(careRole);
     }
 
+    /**
+     * 주보호자가 떠나면 남은 보호자·관계자를 정리할 주체가 사라진다 — 주보호자 자리는 넘길 수도 없고
+     * 대상자 본인에게 회수 수단도 없다. 그래서 주보호자의 이탈은 그 대상자의 케어 관계 전체를 끝낸다.
+     * 남은 사람들은 모두 주보호자가 초대해 들어온 사람들이다.
+     */
+    @CacheEvict(value = "careRelationship", allEntries = true)
+    @Transactional
+    public void deleteWithRemainingCaregivers(String wardKey, String caregiverKey) {
+        CareRelationship relationship = findRelationship(wardKey, caregiverKey);
+        if (relationship.getCareRole() != CareRole.PRIMARY_GUARDIAN) {
+            careRelationshipRepository.delete(relationship);
+            return;
+        }
+        careRelationshipRepository.deleteAllByWardMemberKey(wardKey);
+    }
+
     @CacheEvict(value = "careRelationship", allEntries = true)
     @Transactional
     public void deleteAllByMemberKey(String memberKey) {

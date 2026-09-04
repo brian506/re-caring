@@ -24,4 +24,6 @@ public interface CareRelationshipRepositoryCustom {
     Optional<CareRelationship> findCareRelationship(String wardKey, String caregiverKey);
 
     void deleteAllByMemberKey(String memberKey);
+
+    void deleteAllByWardMemberKey(String wardMemberKey);
 }

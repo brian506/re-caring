@@ -36,7 +36,7 @@
 | Care | PATCH | `/api/v1/care/requests/{key}/reject` | 케어 요청 거절 |
 | Care | GET | `/api/v1/care/wards` | 내 보호대상자 목록 |
 | Care | GET | `/api/v1/care/wards/{wardKey}/caregivers` | 보호자/관리자 목록 |
-| Care | DELETE | `/api/v1/care/wards/{wardKey}` | 보호 대상자 케어 관계 삭제 (케어 관계가 있는 회원 전원. 주보호자는 연결된 보호자·관계자를 먼저 삭제해야 함) |
+| Care | DELETE | `/api/v1/care/wards/{wardKey}` | 보호 대상자 케어 관계 삭제 (케어 관계가 있는 회원 전원. **주보호자가 삭제하면 그 대상자의 케어 관계 전체가 함께 해제됨**) |
 | Care | DELETE | `/api/v1/care/wards/{wardKey}/caregivers/{caregiverKey}` | 특정 보호자/관계자 케어 관계 삭제 (PRIMARY_GUARDIAN only) |
 | Care | PATCH | `/api/v1/care/wards/{wardKey}/nickname` | 보호 대상자 별명 수정 (케어 관계가 있는 회원 전원, 보호자별로 따로 보임. 빈 값이면 해제) |
 | Care | PATCH | `/api/v1/care/wards/{wardKey}/caregivers/{caregiverKey}/role` | 보호자/관계자 관계 수정 (PRIMARY_GUARDIAN only, GUARDIAN↔MANAGER만) |
@@ -109,7 +109,10 @@
 
 **주보호자 자리는 고정이다 — 넘길 수 없다.** 자기 역할을 바꿀 수도(E5015), 다른 사람을 주보호자로 올릴 수도(E5016),
 삭제 대상이 될 수도(E5017) 없다. 그래서 주보호자가 그냥 떠나면 남은 보호자·관계자를 정리할 주체가 영영 사라진다.
-`removeWard`는 주보호자에게 연결된 사람이 남아 있으면 거부한다(E5019) — 먼저 정리한 뒤에 떠나야 한다.
+`removeWard`에서 **주보호자가 나가면 그 대상자의 케어 관계를 통째로 삭제**하는 이유다. 남은 사람들은 모두
+주보호자가 초대해 들어온 사람들이라 의미상으로도 맞다. JPA 연관관계·cascade는 쓰지 않는다 —
+`CareRelationshipWriter.deleteWithRemainingCaregivers`가 역할을 보고 분기해 `ward_member_key` 단일 조건
+벌크 삭제를 날린다. 클라이언트는 삭제 전 "연결된 N명도 함께 해제됩니다" 확인을 받아야 한다.
 
 대상자당 주보호자가 1명이라는 불변식은 **발급(`sendWardInvitation`)·수락(`register`)·DB(부분 유니크 인덱스)**
 세 겹으로 강제한다(E5018). 수락 시점 검사가 따로 필요한 이유는 PENDING 초대가 첫 주보호자보다 먼저

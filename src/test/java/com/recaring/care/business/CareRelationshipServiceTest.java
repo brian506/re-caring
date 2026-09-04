@@ -79,10 +79,8 @@ class CareRelationshipServiceTest {
 
         then(careRelationshipValidator).should(times(1))
                 .validateCaregiver(CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY);
-        then(careRelationshipValidator).should(times(1))
-                .validateWardRemovable(CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY);
         then(careRelationshipWriter).should(times(1))
-                .delete(CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY);
+                .deleteWithRemainingCaregivers(CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY);
     }
 
     @Test
@@ -97,22 +95,7 @@ class CareRelationshipServiceTest {
                 .isInstanceOf(AppException.class)
                 .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_FOUND_CARE_RELATIONSHIP);
 
-        then(careRelationshipWriter).should(times(0)).delete(any(), any());
-    }
-
-    @Test
-    @DisplayName("보호 대상자 케어 관계 삭제 - 주보호자가 다른 보호자를 두고 떠나려 하면 예외가 전파되고 삭제하지 않는다")
-    void removeWard_propagates_exception_when_caregivers_remain() {
-        willThrow(new AppException(ErrorType.PRIMARY_GUARDIAN_HAS_CAREGIVERS))
-                .given(careRelationshipValidator)
-                .validateWardRemovable(CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY);
-
-        assertThatThrownBy(() ->
-                careRelationshipService.removeWard(CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY))
-                .isInstanceOf(AppException.class)
-                .hasFieldOrPropertyWithValue("errorType", ErrorType.PRIMARY_GUARDIAN_HAS_CAREGIVERS);
-
-        then(careRelationshipWriter).should(times(0)).delete(any(), any());
+        then(careRelationshipWriter).should(times(0)).deleteWithRemainingCaregivers(any(), any());
     }
 
     // ── removeCaregiver ────────────────────────────────────────────────────

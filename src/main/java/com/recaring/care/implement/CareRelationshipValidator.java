@@ -131,22 +131,6 @@ public class CareRelationshipValidator {
         }
     }
 
-    /**
-     * 주보호자는 자기 역할을 바꿀 수도(E5015) 삭제될 수도(E5017) 없으므로, 그냥 떠나면 남은 보호자·관계자를
-     * 정리할 주체가 영영 사라진다. 먼저 다른 사람들을 정리하게 해서 관리 주체 없는 대상자가 생기지 않도록 한다.
-     */
-    public void validateWardRemovable(String requesterKey, String wardKey) {
-        List<CareRelationship> careRelationships = careRelationshipRepository.findAllByWardMemberKey(wardKey);
-        if (findCareRole(careRelationships, requesterKey) != CareRole.PRIMARY_GUARDIAN) {
-            return;
-        }
-        boolean hasOtherCaregiver = careRelationships.stream()
-                .anyMatch(relationship -> !relationship.getCaregiverMemberKey().equals(requesterKey));
-        if (hasOtherCaregiver) {
-            throw new AppException(ErrorType.PRIMARY_GUARDIAN_HAS_CAREGIVERS);
-        }
-    }
-
     private CareRole findCareRole(List<CareRelationship> careRelationships, String caregiverKey) {
         return careRelationships.stream()
                 .filter(relationship -> relationship.getCaregiverMemberKey().equals(caregiverKey))

@@ -93,6 +93,13 @@ public class CareRelationshipRepositoryCustomImpl extends QuerydslRepositorySupp
     }
 
     @Override
+    public void deleteAllByWardMemberKey(String wardMemberKey) {
+        delete(careRelationship)
+                .where(careRelationship.wardMemberKey.eq(wardMemberKey))
+                .execute();
+    }
+
+    @Override
     public void deleteAllByMemberKey(String memberKey) {
         delete(careRelationship)
                 .where(
