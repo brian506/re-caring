@@ -114,7 +114,9 @@ public class SecurityConfig {
                                 mvc.matcher(HttpMethod.PATCH, "/api/v1/notifications/settings/{wardKey}/safe-zone"),
                                 mvc.matcher(HttpMethod.PATCH, "/api/v1/notifications/settings/{wardKey}/anomaly"),
                                 mvc.matcher(HttpMethod.PATCH, "/api/v1/notifications/settings/{wardKey}/emergency-call"),
-                                mvc.matcher(HttpMethod.PATCH, "/api/v1/notifications/settings/{wardKey}/battery")
+                                mvc.matcher(HttpMethod.PATCH, "/api/v1/notifications/settings/{wardKey}/battery"),
+                                // 안심존 등록 화면의 장소 검색 (카카오 로컬 API 프록시)
+                                mvc.matcher(HttpMethod.GET,   "/api/v1/places/search")
                         ).hasAnyRole("GUARDIAN", "WARD")
 
                         .anyRequest().authenticated())

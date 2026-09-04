@@ -38,6 +38,9 @@ coolsms:
   api-secret: local
   sender: local
 
+kakao:
+  rest-api-key: ${KAKAO_REST_API_KEY:local}
+
 client:
   url: http://localhost:3000
 

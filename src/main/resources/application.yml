@@ -12,3 +12,6 @@ firebase:
   enabled: ${FIREBASE_ENABLED:false}
   service-account-json-base64: ${FIREBASE_SERVICE_ACCOUNT_JSON_BASE64:}
 
+kakao:
+  rest-api-key: ${KAKAO_REST_API_KEY:}
+
