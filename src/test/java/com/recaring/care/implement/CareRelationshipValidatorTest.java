@@ -462,6 +462,50 @@ class CareRelationshipValidatorTest {
         then(careRelationshipRepository).should(times(0)).findAllByWardMemberKey(anyString());
     }
 
+    // ── validateWardRemovable ──────────────────────────────────────────────
+
+    @Test
+    @DisplayName("대상자 삭제 검증 - 주보호자에게 다른 보호자가 남아 있으면 거부한다")
+    void validateWardRemovable_fails_when_primary_guardian_has_other_caregivers() {
+        given(careRelationshipRepository.findAllByWardMemberKey(CareFixture.WARD_MEMBER_KEY))
+                .willReturn(List.of(
+                        CareFixture.createPrimaryGuardianRelationship(CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY),
+                        CareFixture.createManagerRelationship(CareFixture.WARD_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY)));
+
+        assertThatThrownBy(() ->
+                careRelationshipValidator.validateWardRemovable(
+                        CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY))
+                .isInstanceOf(AppException.class)
+                .hasFieldOrPropertyWithValue("errorType", ErrorType.PRIMARY_GUARDIAN_HAS_CAREGIVERS);
+    }
+
+    @Test
+    @DisplayName("대상자 삭제 검증 - 주보호자 혼자 남았으면 떠날 수 있다")
+    void validateWardRemovable_passes_when_primary_guardian_is_alone() {
+        given(careRelationshipRepository.findAllByWardMemberKey(CareFixture.WARD_MEMBER_KEY))
+                .willReturn(List.of(CareFixture.createPrimaryGuardianRelationship(
+                        CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY)));
+
+        assertThatCode(() ->
+                careRelationshipValidator.validateWardRemovable(
+                        CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY))
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    @DisplayName("대상자 삭제 검증 - 주보호자가 아니면 다른 사람이 남아 있어도 떠날 수 있다")
+    void validateWardRemovable_passes_when_requester_is_not_primary_guardian() {
+        given(careRelationshipRepository.findAllByWardMemberKey(CareFixture.WARD_MEMBER_KEY))
+                .willReturn(List.of(
+                        CareFixture.createPrimaryGuardianRelationship(CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY),
+                        CareFixture.createManagerRelationship(CareFixture.WARD_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY)));
+
+        assertThatCode(() ->
+                careRelationshipValidator.validateWardRemovable(
+                        CareFixture.MANAGER_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY))
+                .doesNotThrowAnyException();
+    }
+
     @Test
     @DisplayName("관계 수정 검증 - 케어 관계에 없는 사람이면 예외가 발생한다")
     void validateCareRoleChange_fails_when_relationship_not_found() {

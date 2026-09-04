@@ -143,7 +143,11 @@ public class CareController {
 
     @Operation(
             summary = "보호 대상자(Ward) 케어 관계 삭제",
-            description = "보호자/관계자가 자신과 특정 보호 대상자 사이의 케어 관계를 삭제합니다. [케어 관계가 있는 회원 전용]"
+            description = """
+                    보호자/관계자가 자신과 특정 보호 대상자 사이의 케어 관계를 삭제합니다.
+                    주보호자는 연결된 보호자·관계자를 먼저 삭제해야 합니다 — 주보호자가 없으면 그들을 정리할 주체가 사라집니다.
+                    [케어 관계가 있는 회원 전용]
+                    """
     )
     @DeleteMapping("/wards/{wardKey}")
     public ResponseEntity<ApiResponse<Void>> removeWard(

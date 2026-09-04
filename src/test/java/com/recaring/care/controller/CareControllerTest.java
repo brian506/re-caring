@@ -345,6 +345,71 @@ class CareControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @DisplayName("DELETE /api/v1/care/wards/{wardKey} - 주보호자는 연결된 관계자가 남아 있으면 400 E5019이고 관계가 유지된다")
+    void removeWard_fails_when_primary_guardian_has_remaining_caregivers() {
+        Member manager = memberRepository.save(CareFixture.createGuardianMember(CareFixture.MANAGER_PHONE));
+        careRelationshipRepository.save(
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+        careRelationshipRepository.save(
+                CareFixture.createManagerRelationship(ward.getMemberKey(), manager.getMemberKey()));
+
+        client.delete()
+                .uri("/api/v1/care/wards/" + ward.getMemberKey())
+                .header(HttpHeaders.AUTHORIZATION, authHeader(guardian))
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.error.errorCode").isEqualTo("E5019");
+
+        assertThat(careRelationshipRepository.findCareRelationship(
+                ward.getMemberKey(), guardian.getMemberKey())).isPresent();
+    }
+
+    @Test
+    @DisplayName("DELETE /api/v1/care/wards/{wardKey} - 관계자를 먼저 삭제하면 주보호자도 케어 관계를 삭제할 수 있다")
+    void removeWard_succeeds_after_removing_remaining_caregivers() {
+        Member manager = memberRepository.save(CareFixture.createGuardianMember(CareFixture.MANAGER_PHONE));
+        careRelationshipRepository.save(
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+        careRelationshipRepository.save(
+                CareFixture.createManagerRelationship(ward.getMemberKey(), manager.getMemberKey()));
+
+        client.delete()
+                .uri("/api/v1/care/wards/" + ward.getMemberKey() + "/caregivers/" + manager.getMemberKey())
+                .header(HttpHeaders.AUTHORIZATION, authHeader(guardian))
+                .exchange()
+                .expectStatus().isOk();
+
+        client.delete()
+                .uri("/api/v1/care/wards/" + ward.getMemberKey())
+                .header(HttpHeaders.AUTHORIZATION, authHeader(guardian))
+                .exchange()
+                .expectStatus().isOk();
+
+        assertThat(careRelationshipRepository.findAllByWardMemberKey(ward.getMemberKey())).isEmpty();
+    }
+
+    @Test
+    @DisplayName("DELETE /api/v1/care/wards/{wardKey} - 관계자 본인은 다른 보호자가 남아 있어도 케어 관계를 삭제할 수 있다")
+    void removeWard_succeeds_for_manager_with_other_caregivers() {
+        Member manager = memberRepository.save(CareFixture.createGuardianMember(CareFixture.MANAGER_PHONE));
+        careRelationshipRepository.save(
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+        careRelationshipRepository.save(
+                CareFixture.createManagerRelationship(ward.getMemberKey(), manager.getMemberKey()));
+
+        client.delete()
+                .uri("/api/v1/care/wards/" + ward.getMemberKey())
+                .header(HttpHeaders.AUTHORIZATION, authHeader(manager))
+                .exchange()
+                .expectStatus().isOk();
+
+        assertThat(careRelationshipRepository.findCareRelationship(
+                ward.getMemberKey(), manager.getMemberKey())).isEmpty();
+        assertThat(careRoleOf(guardian)).isEqualTo(CareRole.PRIMARY_GUARDIAN);
+    }
+
+    @Test
     @DisplayName("DELETE /api/v1/care/wards/{wardKey} - 케어 관계가 없으면 NOT_FOUND_CARE_RELATIONSHIP이 반환된다")
     void removeWard_fails_when_relationship_not_found() {
         client.delete()

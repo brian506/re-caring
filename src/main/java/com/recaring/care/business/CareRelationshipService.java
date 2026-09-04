@@ -30,6 +30,7 @@ public class CareRelationshipService {
 
     public void removeWard(String guardianKey, String wardKey) {
         careRelationshipValidator.validateCaregiver(guardianKey, wardKey);
+        careRelationshipValidator.validateWardRemovable(guardianKey, wardKey);
         careRelationshipWriter.delete(wardKey, guardianKey);
     }
 
