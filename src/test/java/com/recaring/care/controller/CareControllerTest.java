@@ -382,10 +382,11 @@ class CareControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("DELETE /api/v1/care/wards/{wardKey} - 주보호자 삭제는 다른 보호 대상자의 케어 관계까지 건드리지 않는다")
+    @DisplayName("DELETE /api/v1/care/wards/{wardKey} - 주보호자 삭제는 다른 보호 대상자의 케어 관계와 초대까지 건드리지 않는다")
     void removeWard_cascade_is_scoped_to_the_target_ward() {
         Member otherWard = memberRepository.save(CareFixture.createWardMember("01088889999"));
         Member manager = memberRepository.save(CareFixture.createGuardianMember(CareFixture.MANAGER_PHONE));
+        Member invitee = memberRepository.save(CareFixture.createGuardianMember("01066665555"));
         careRelationshipRepository.save(
                 CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
         careRelationshipRepository.save(
@@ -394,6 +395,10 @@ class CareControllerTest extends AbstractIntegrationTest {
                 CareFixture.createPrimaryGuardianRelationship(otherWard.getMemberKey(), guardian.getMemberKey()));
         careRelationshipRepository.save(
                 CareFixture.createManagerRelationship(otherWard.getMemberKey(), manager.getMemberKey()));
+        CareInvitation targetWardInvitation = careInvitationRepository.save(CareFixture.createManagerInvitation(
+                guardian.getMemberKey(), invitee.getMemberKey(), ward.getMemberKey()));
+        CareInvitation otherWardInvitation = careInvitationRepository.save(CareFixture.createManagerInvitation(
+                guardian.getMemberKey(), invitee.getMemberKey(), otherWard.getMemberKey()));
 
         client.delete()
                 .uri("/api/v1/care/wards/" + ward.getMemberKey())
@@ -402,7 +407,9 @@ class CareControllerTest extends AbstractIntegrationTest {
                 .expectStatus().isOk();
 
         assertThat(careRelationshipRepository.findAllByWardMemberKey(ward.getMemberKey())).isEmpty();
+        assertThat(careInvitationRepository.findByRequestKey(targetWardInvitation.getRequestKey())).isEmpty();
         assertThat(careRelationshipRepository.findAllByWardMemberKey(otherWard.getMemberKey())).hasSize(2);
+        assertThat(careInvitationRepository.findByRequestKey(otherWardInvitation.getRequestKey())).isPresent();
     }
 
     @Test

@@ -370,7 +370,7 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
 
     @Test
     @DisplayName("자기 대상자 경로에 남의 안심존 키를 붙여 조회하면 400 E8000이 반환된다")
-    void getSafeZone_returns_404_for_other_wards_zone_key() {
+    void getSafeZone_returns_400_for_other_wards_zone_key() {
         SafeZone victimZone = safeZoneRepository.save(SafeZoneFixture.createSafeZone(victimWard.getMemberKey()));
 
         client.get()
@@ -384,7 +384,7 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
 
     @Test
     @DisplayName("자기 대상자 경로에 남의 안심존 키를 붙여 삭제하면 400 E8000이고 행이 남아 있다")
-    void deleteSafeZone_returns_404_for_other_wards_zone_key() {
+    void deleteSafeZone_returns_400_for_other_wards_zone_key() {
         SafeZone victimZone = safeZoneRepository.save(SafeZoneFixture.createSafeZone(victimWard.getMemberKey()));
 
         client.delete()
@@ -401,7 +401,7 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
 
     @Test
     @DisplayName("자기 대상자 경로에 남의 안심존 키를 붙여 수정하면 400 E8000이고 값이 그대로다")
-    void updateSafeZone_returns_404_for_other_wards_zone_key() {
+    void updateSafeZone_returns_400_for_other_wards_zone_key() {
         SafeZone victimZone = safeZoneRepository.save(SafeZoneFixture.createSafeZone(victimWard.getMemberKey()));
 
         client.patch()
