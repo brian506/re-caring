@@ -92,7 +92,7 @@ public enum ErrorType {
     // Place (E10xxx)
     INVALID_PLACE_QUERY(HttpStatus.BAD_REQUEST, ErrorCode.E10000, "검색어를 입력해주세요.", LogLevel.WARN),
     PLACE_SEARCH_UNAVAILABLE(HttpStatus.BAD_GATEWAY, ErrorCode.E10001, "장소 검색을 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도해주세요.", LogLevel.ERROR),
-    PLACE_SEARCH_RATE_LIMITED(HttpStatus.TOO_MANY_REQUESTS, ErrorCode.E10002, "장소 검색 요청이 많습니다. 잠시 후 다시 시도해주세요.", LogLevel.ERROR);
+    PLACE_SEARCH_RATE_LIMITED(HttpStatus.TOO_MANY_REQUESTS, ErrorCode.E10002, "장소 검색 요청이 많습니다. 잠시 후 다시 시도해주세요.", LogLevel.WARN);
 
     private final HttpStatus status;
     private final ErrorCode errorCode;

@@ -21,6 +21,7 @@ import java.util.List;
 public class KakaoPlaceSearchClient {
 
     private static final String KEYWORD_SEARCH_PATH = "/v2/local/search/keyword.json";
+    private static final String QUERY_TEMPLATE = "{query}";
     private static final int SEARCH_SIZE = 5;
 
     private final RestClient kakaoLocalRestClient;
@@ -33,7 +34,7 @@ public class KakaoPlaceSearchClient {
         KakaoKeywordSearchResponse response = request(condition);
 
         if (response == null || response.documents() == null) {
-            log.warn("[장소 검색 : 빈 응답]: query={}", condition.keyword().value());
+            log.info("[장소 검색 : 빈 응답]: query={}", condition.keyword().value());
             return List.of();
         }
 
@@ -49,19 +50,19 @@ public class KakaoPlaceSearchClient {
             return kakaoLocalRestClient.get()
                     .uri(uriBuilder -> {
                         uriBuilder.path(KEYWORD_SEARCH_PATH)
-                                .queryParam("query", query)
+                                .queryParam("query", QUERY_TEMPLATE)
                                 .queryParam("size", SEARCH_SIZE);
                         if (condition.hasBias()) {
                             uriBuilder.queryParam("x", condition.longitude())
                                     .queryParam("y", condition.latitude())
                                     .queryParam("radius", condition.radiusMeters());
                         }
-                        return uriBuilder.build();
+                        return uriBuilder.build(query);
                     })
                     .retrieve()
                     .body(KakaoKeywordSearchResponse.class);
         } catch (HttpClientErrorException.TooManyRequests e) {
-            log.error("[장소 검색 : 호출 한도 초과]: query={} | biased={}", query, condition.hasBias());
+            log.warn("[장소 검색 : 호출 한도 초과]: query={} | biased={}", query, condition.hasBias());
             throw new AppException(ErrorType.PLACE_SEARCH_RATE_LIMITED);
         } catch (HttpClientErrorException.Unauthorized | HttpClientErrorException.Forbidden e) {
             log.error("[장소 검색 : 키 인증 실패]: query={} | status={}", query, e.getStatusCode());

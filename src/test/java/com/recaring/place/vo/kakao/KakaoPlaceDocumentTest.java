@@ -31,6 +31,17 @@ class KakaoPlaceDocumentTest {
     }
 
     @Test
+    @DisplayName("카카오가 준 장소 이름을 그대로 결과 이름으로 쓴다")
+    void uses_kakao_place_name_as_name() {
+        KakaoPlaceDocument document =
+                new KakaoPlaceDocument(PLACE_NAME, ROAD_ADDRESS, JIBUN_ADDRESS, LONGITUDE, LATITUDE);
+
+        Place place = document.toPlace();
+
+        assertThat(place.name()).isEqualTo(PLACE_NAME);
+    }
+
+    @Test
     @DisplayName("도로명 주소가 있는 장소는 도로명 주소를 주소로 쓴다")
     void uses_road_address_when_present() {
         KakaoPlaceDocument document =

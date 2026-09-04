@@ -65,6 +65,18 @@ class PlaceSearchConditionTest {
 
     @ParameterizedTest
     @CsvSource({
+            "90.0, 180.0",
+            "-90.0, -180.0"
+    })
+    @DisplayName("위경도 범위의 경계값 좌표는 편향 검색에 그대로 쓴다")
+    void bias_applies_on_coordinate_range_boundary(double latitude, double longitude) {
+        PlaceSearchCondition condition = PlaceSearchCondition.of(QUERY, latitude, longitude, null);
+
+        assertThat(condition.hasBias()).isTrue();
+    }
+
+    @ParameterizedTest
+    @CsvSource({
             "90.1, 126.91",
             "37.55, 180.1",
             "-90.1, 126.91",
