@@ -33,7 +33,6 @@ public class CareRelationshipValidator {
 
     public void validateCanAddWard(String caregiverMemberKey, String newWardMemberKey) {
         memberValidator.validateSubscription(caregiverMemberKey);
-        validateNoPrimaryGuardian(newWardMemberKey);
 
         List<CareRelationship> careRelationships = careRelationshipRepository.findAllByCaregiverMemberKey(caregiverMemberKey);
         checkGuardianLimit(careRelationships, MAX_WARD_COUNT, ErrorType.CARE_WARD_LIMIT_EXCEEDED);

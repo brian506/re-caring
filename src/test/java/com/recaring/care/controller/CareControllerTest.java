@@ -155,6 +155,44 @@ class CareControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @DisplayName("PATCH /api/v1/care/requests/{requestKey}/accept - 주보호자가 있어도 관계자 요청 수락은 막히지 않는다")
+    void acceptRequest_allows_manager_when_ward_has_primary_guardian() {
+        Member manager = memberRepository.save(CareFixture.createGuardianMember(CareFixture.MANAGER_PHONE));
+        careRelationshipRepository.save(
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+        CareInvitation saved = careInvitationRepository.save(CareFixture.createManagerInvitation(
+                guardian.getMemberKey(), manager.getMemberKey(), ward.getMemberKey()));
+
+        client.patch()
+                .uri("/api/v1/care/requests/" + saved.getRequestKey() + "/accept")
+                .header(HttpHeaders.AUTHORIZATION, authHeader(manager))
+                .exchange()
+                .expectStatus().isOk();
+
+        assertThat(careRoleOf(manager)).isEqualTo(CareRole.MANAGER);
+        assertThat(statusOf(saved)).isEqualTo(CareInvitationStatus.ACCEPTED);
+    }
+
+    @Test
+    @DisplayName("PATCH /api/v1/care/requests/{requestKey}/accept - 주보호자가 있어도 보호자 요청 수락은 막히지 않는다")
+    void acceptRequest_allows_guardian_when_ward_has_primary_guardian() {
+        Member coGuardian = memberRepository.save(CareFixture.createGuardianMember("01066665555"));
+        careRelationshipRepository.save(
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+        CareInvitation saved = careInvitationRepository.save(CareFixture.createGuardianInvitation(
+                guardian.getMemberKey(), coGuardian.getMemberKey(), ward.getMemberKey()));
+
+        client.patch()
+                .uri("/api/v1/care/requests/" + saved.getRequestKey() + "/accept")
+                .header(HttpHeaders.AUTHORIZATION, authHeader(coGuardian))
+                .exchange()
+                .expectStatus().isOk();
+
+        assertThat(careRoleOf(coGuardian)).isEqualTo(CareRole.GUARDIAN);
+        assertThat(statusOf(saved)).isEqualTo(CareInvitationStatus.ACCEPTED);
+    }
+
+    @Test
     @DisplayName("PATCH /api/v1/care/requests/{requestKey}/accept - 이미 주보호자가 있으면 먼저 받아둔 요청을 수락해도 두 번째 주보호자가 생기지 않는다")
     void acceptRequest_rejects_second_primary_guardian() {
         Member other = memberRepository.save(CareFixture.createGuardianMember("01066665555"));

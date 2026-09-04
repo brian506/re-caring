@@ -36,6 +36,7 @@ public class CareInvitationManager {
         Member ward = memberReader.findByPhone(new PhoneNumber(phoneNumber));
         NewCareInvitation invitation = NewCareInvitation.ofWardRequest(requesterMemberKey, Ward.of(ward.getMemberKey(), ward.getRole()));
 
+        careRelationshipValidator.validateNoPrimaryGuardian(invitation.wardMemberKey());
         careRelationshipValidator.validateCanAddWard(invitation.requesterMemberKey(), invitation.wardMemberKey());
         CareInvitation saved = careInvitationWriter.register(invitation);
         eventPublisher.publishEvent(new CareInvitationSentEvent(saved.getRequestKey(), saved.getTargetMemberKey(), saved.getRequesterMemberKey(), saved.targetRole()));

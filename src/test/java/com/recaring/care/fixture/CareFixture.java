@@ -114,6 +114,15 @@ public class CareFixture {
                 .build();
     }
 
+    public static CareInvitation createGuardianInvitation(String requesterKey, String targetKey, String wardKey) {
+        return CareInvitation.builder()
+                .requesterMemberKey(requesterKey)
+                .targetMemberKey(targetKey)
+                .wardMemberKey(wardKey)
+                .careRole(CareRole.GUARDIAN)
+                .build();
+    }
+
     public static CareInvitation createManagerInvitation(String requesterKey, String targetKey, String wardKey) {
         return CareInvitation.builder()
                 .requesterMemberKey(requesterKey)
