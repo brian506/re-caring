@@ -1,6 +1,5 @@
 package com.recaring.notification.implement.setting;
 
-import com.recaring.care.dataaccess.entity.CareRole;
 import com.recaring.care.implement.CareRelationshipReader;
 import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.dataaccess.entity.MemberRole;
@@ -39,9 +38,7 @@ public class NotificationSettingValidator {
     }
 
     private void validateCaregiverAccess(String caregiverKey, String wardKey) {
-        boolean hasRelationship =
-                careRelationshipReader.existsWithCareRole(wardKey, caregiverKey, CareRole.GUARDIAN) ||
-                        careRelationshipReader.existsWithCareRole(wardKey, caregiverKey, CareRole.MANAGER);
+        boolean hasRelationship = careRelationshipReader.exists(wardKey, caregiverKey);
         if (!hasRelationship) {
             throw new AppException(ErrorType.NOT_CARE_RELATED_WARD);
         }

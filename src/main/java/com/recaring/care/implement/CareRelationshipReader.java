@@ -36,7 +36,7 @@ public class CareRelationshipReader {
         return relationships.stream()
                 .map(r -> {
                     Member ward = memberMap.get(r.getWardMemberKey());
-                    return new WardInfo(ward.getMemberKey(), ward.getName(), ward.getPhone(), ward.getGender(), r.getCareRole());
+                    return new WardInfo(ward.getMemberKey(), ward.getName(), r.getWardNickname(), ward.getPhone(), ward.getGender(), r.getCareRole());
                 })
                 .toList();
     }
@@ -69,6 +69,10 @@ public class CareRelationshipReader {
 
     public boolean existsWithCareRole(String wardKey, String caregiverKey, CareRole careRole) {
         return careRelationshipRepository.existsCareRelationship(wardKey, caregiverKey, careRole);
+    }
+
+    public boolean existsWithGuardianRole(String wardKey, String caregiverKey) {
+        return careRelationshipRepository.existsCareRelationshipInRoles(wardKey, caregiverKey, CareRole.guardianRoles());
     }
 
     public boolean exists(String wardKey, String caregiverKey) {

@@ -7,6 +7,7 @@ import com.recaring.member.dataaccess.entity.Gender;
 public record WardResponse(
         String wardMemberKey,
         String wardName,
+        String wardNickname,
         String wardPhone,
         Gender wardGender,
         CareRole myRole
@@ -15,6 +16,7 @@ public record WardResponse(
         return new WardResponse(
                 info.wardMemberKey(),
                 info.wardName(),
+                info.wardNickname(),
                 info.wardPhone(),
                 info.wardGender(),
                 info.myRole()

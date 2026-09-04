@@ -1,6 +1,6 @@
 # 프로젝트 스냅샷
 
-> 마지막 업데이트: 2026-09-04. 기능 추가·수정 시 해당 섹션을 갱신한다.
+> 마지막 업데이트: 2026-09-05. 기능 추가·수정 시 해당 섹션을 갱신한다.
 
 ## 도메인별 패키지 현황
 
@@ -36,8 +36,10 @@
 | Care | PATCH | `/api/v1/care/requests/{key}/reject` | 케어 요청 거절 |
 | Care | GET | `/api/v1/care/wards` | 내 보호대상자 목록 |
 | Care | GET | `/api/v1/care/wards/{wardKey}/caregivers` | 보호자/관리자 목록 |
-| Care | DELETE | `/api/v1/care/wards/{wardKey}` | 보호 대상자 케어 관계 삭제 (GUARDIAN, MANAGER) |
-| Care | DELETE | `/api/v1/care/wards/{wardKey}/caregivers/{caregiverKey}` | 특정 보호자/관리자 케어 관계 삭제 (GUARDIAN only) |
+| Care | DELETE | `/api/v1/care/wards/{wardKey}` | 보호 대상자 케어 관계 삭제 (케어 관계가 있는 회원 전원) |
+| Care | DELETE | `/api/v1/care/wards/{wardKey}/caregivers/{caregiverKey}` | 특정 보호자/관계자 케어 관계 삭제 (PRIMARY_GUARDIAN only) |
+| Care | PATCH | `/api/v1/care/wards/{wardKey}/nickname` | 보호 대상자 별명 수정 (케어 관계가 있는 회원 전원, 보호자별로 따로 보임. 빈 값이면 해제) |
+| Care | PATCH | `/api/v1/care/wards/{wardKey}/caregivers/{caregiverKey}/role` | 보호자/관계자 관계 수정 (PRIMARY_GUARDIAN only, GUARDIAN↔MANAGER만) |
 | Device | POST | `/api/v1/device/token` | Device Token 발급 (WARD, JWT 인증) |
 | Location | POST | `/api/v1/location/gps` | GPS 좌표 전송 (WARD, Device Token 인증) |
 | Location | GET | `/api/v1/location/stream/{wardKey}` | SSE 실시간 위치 스트림 (GUARDIAN) |
@@ -72,8 +74,8 @@
 | LocalAuth | local_auths | account, encodedPassword, memberKey |
 | OAuth | oauths | provider(KAKAO/NAVER), providerId, memberKey |
 | LoginHistory | login_histories | memberKey, ip, loginAt |
-| CareRelationship | care_relationships | caregiverKey, wardKey, role(GUARDIAN/MANAGER) |
-| CareInvitation | care_invitations | inviterKey, receiverKey, wardKey, status(PENDING/ACCEPTED/REJECTED/EXPIRED), createdAt |
+| CareRelationship | care_relationships | caregiverKey, wardKey, role(PRIMARY_GUARDIAN/GUARDIAN/MANAGER), wardNickname(nullable, 보호자별 별명. null이면 대상자 실명 사용) |
+| CareInvitation | care_invitation | inviterKey, receiverKey, wardKey, careRole(수락 시 부여될 역할. 대상자 추가 요청은 PRIMARY_GUARDIAN), status(PENDING/ACCEPTED/REJECTED/EXPIRED), createdAt |
 | GpsHistory | gps_histories | wardMemberKey, latitude, longitude, recordedAt(서버 수신 시각), accuracy, battery, speed(m/s, nullable), measuredAt(기기 측정 시각, nullable — null이면 시간 간격 신뢰 불가). 시각 컬럼은 모두 KST 저장 |
 | LocationSetting | location_settings | wardMemberKey(UNIQUE), collectionIntervalSeconds(30/60/180/300, 기본 30) |
 | WardDeviceToken | ward_device_tokens | wardKey(UUID, UNIQUE), token(UUID, UNIQUE), createdAt, expiresAt |
@@ -85,6 +87,34 @@
 | NotificationSetting | notification_settings | wardMemberKey(UNIQUE), 안심존·응급호출 토글, 이상탐지 토글 5종(speed/wandering/abnormalDwelling/routeDeviation/timeAnomaly), lowBatteryEnabled, batteryThresholdPercents(CSV, 기본 '' = 선택 없음 → 알림 없음) |
 | AlertRunbook | alert_runbooks | errorSignature, commands(jsonb), resolutionContext, successCount, isValid |
 | AlertInvestigation | alert_investigations | fingerprint, alertName, severity, threadTs, status, fixCommands(jsonb) |
+
+## 케어 역할(CareRole) 3단계
+
+대상자를 등록한 사람이 `PRIMARY_GUARDIAN`(주보호자)이 되고, 그 사람만 다른 사람을 케어에 추가·삭제하거나
+역할을 바꿀 수 있다. 이전에는 `GUARDIAN`/`MANAGER` 2단계였고 주보호자도 `GUARDIAN`이었는데,
+`validateCanAddGuardian`이 GUARDIAN 한도 1을 검사해 **보호자 추가가 항상 실패**했다. 3단계로 나누며 함께 해소됐다.
+
+| 기능 | PRIMARY_GUARDIAN | GUARDIAN | MANAGER |
+|------|------|------|------|
+| 보호자/관계자 추가 | O | X | X |
+| 케어관계 삭제(타인) | O | X | X |
+| 관계(역할) 변경 | O | X | X |
+| 안심존 등록·수정·삭제 | O | O | X |
+| 위치 수집주기 변경 | O | O | X |
+| 위치 조회·SSE | O | O | O |
+| 알림 수신·설정 | O | O | O |
+| 별명 설정 | O | O | O |
+
+한도: PRIMARY_GUARDIAN 1명, GUARDIAN 1명, MANAGER 3명. 보호자가 맡을 수 있는 대상자는 5명.
+
+**주의**: 보호자 계열 판정은 반드시 `CareRole.guardianRoles()` / `CareRole.isGuardian()`을 쓴다.
+`== CareRole.GUARDIAN`으로 적으면 주보호자가 권한·알림 대상에서 조용히 빠진다 —
+위치 SSE, 안심존 CRUD, 알림 수신자 분류가 모두 이 판정을 탄다.
+
+별명은 `(보호자, 대상자)` 쌍마다 하나라 `care_relationships`의 UNIQUE 키와 카디널리티가 같다.
+그래서 별도 테이블을 만들지 않고 `ward_nickname` 컬럼을 뒀다. 관계가 삭제되면 별명도 같이 사라진다.
+알림 본문은 별명이 아니라 실명을 쓴다 — 발행 시점에 본문이 확정되는 구조라 수신자별 별명을 적용하려면
+조회가 한 번 더 들어간다.
 
 ## Redis 키 구조
 

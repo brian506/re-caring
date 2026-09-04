@@ -1,6 +1,5 @@
 package com.recaring.safezone.business;
 
-import com.recaring.care.dataaccess.entity.CareRole;
 import com.recaring.care.implement.CareRelationshipReader;
 import com.recaring.safezone.vo.SafeZoneCreation;
 import com.recaring.safezone.vo.SafeZoneUpdate;
@@ -60,7 +59,7 @@ public class SafeZoneService {
     }
 
     private void validateGuardianAccess(String requesterKey, String wardKey) {
-        if (!careRelationshipReader.existsWithCareRole(wardKey, requesterKey, CareRole.GUARDIAN)) {
+        if (!careRelationshipReader.existsWithGuardianRole(wardKey, requesterKey)) {
             throw new AppException(ErrorType.NOT_GUARDIAN_OF_WARD);
         }
     }

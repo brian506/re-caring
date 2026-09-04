@@ -35,12 +35,12 @@ public class CareRelationshipValidator {
         memberValidator.validateSubscription(caregiverMemberKey);
 
         List<CareRelationship> careRelationships = careRelationshipRepository.findAllByCaregiverMemberKey(caregiverMemberKey);
-        checkRoleLimit(careRelationships, CareRole.GUARDIAN, MAX_WARD_COUNT, ErrorType.CARE_WARD_LIMIT_EXCEEDED);
+        checkGuardianLimit(careRelationships, MAX_WARD_COUNT, ErrorType.CARE_WARD_LIMIT_EXCEEDED);
         validateNotDuplicated(careRelationships, CareRelationship::getWardMemberKey,newWardMemberKey);
     }
 
     public void validateCanAddManager(String requesterKey, String wardMemberKey, String newManagerKey) {
-        validateGuardianRole(requesterKey, wardMemberKey);
+        validatePrimaryGuardianRole(requesterKey, wardMemberKey);
 
         // memberValidator.validatePremium(requesterKey);
         List<CareRelationship> careRelationships = careRelationshipRepository.findAllByWardMemberKey(wardMemberKey);
@@ -49,7 +49,7 @@ public class CareRelationshipValidator {
     }
 
     public void validateCanAddGuardian(String requesterKey, String wardMemberKey, String newGuardianKey) {
-        validateGuardianRole(requesterKey, wardMemberKey);
+        validatePrimaryGuardianRole(requesterKey, wardMemberKey);
 
         // memberValidator.validatePremium(requesterKey);
         List<CareRelationship> careRelationships = careRelationshipRepository.findAllByWardMemberKey(wardMemberKey);
@@ -59,7 +59,7 @@ public class CareRelationshipValidator {
 
     public void validateCaregiverViewAccess(String requesterKey, String wardKey) {
         boolean isWardSelf = wardKey.equals(requesterKey);
-        boolean isGuardian = careRelationshipRepository.existsCareRelationship(wardKey, requesterKey, CareRole.GUARDIAN);
+        boolean isGuardian = careRelationshipRepository.existsCareRelationshipInRoles(wardKey, requesterKey, CareRole.guardianRoles());
         if (!isWardSelf && !isGuardian) {
             throw new AppException(ErrorType.NOT_GUARDIAN_OF_WARD);
         }
@@ -73,10 +73,44 @@ public class CareRelationshipValidator {
     }
 
     public void validateGuardianRole(String requesterKey, String wardKey) {
-        boolean isGuardian = careRelationshipRepository.existsCareRelationship(wardKey, requesterKey, CareRole.GUARDIAN);
+        boolean isGuardian = careRelationshipRepository.existsCareRelationshipInRoles(wardKey, requesterKey, CareRole.guardianRoles());
         if (!isGuardian) {
             throw new AppException(ErrorType.NOT_GUARDIAN_ROLE_IN_CARE);
         }
+    }
+
+    public void validatePrimaryGuardianRole(String requesterKey, String wardKey) {
+        boolean isPrimaryGuardian = careRelationshipRepository.existsCareRelationship(wardKey, requesterKey, CareRole.PRIMARY_GUARDIAN);
+        if (!isPrimaryGuardian) {
+            throw new AppException(ErrorType.NOT_PRIMARY_GUARDIAN_ROLE_IN_CARE);
+        }
+    }
+
+    /**
+     * 주보호자는 대상자를 등록한 본인이라 역할을 넘겨줄 수 없고, 다른 사람을 주보호자로 올릴 수도 없다.
+     * 넘길 수 있게 하면 주보호자가 0명이 되는 순간 보호자·관계자를 추가할 주체가 사라진다.
+     */
+    public void validateCareRoleChange(String wardKey, String targetCaregiverKey, CareRole newCareRole) {
+        if (newCareRole == CareRole.PRIMARY_GUARDIAN) {
+            throw new AppException(ErrorType.INVALID_TARGET_CARE_ROLE);
+        }
+
+        List<CareRelationship> careRelationships = careRelationshipRepository.findAllByWardMemberKey(wardKey);
+        CareRole currentCareRole = careRelationships.stream()
+                .filter(relationship -> relationship.getCaregiverMemberKey().equals(targetCaregiverKey))
+                .map(CareRelationship::getCareRole)
+                .findFirst()
+                .orElseThrow(() -> new AppException(ErrorType.NOT_FOUND_CARE_RELATIONSHIP));
+
+        if (currentCareRole == CareRole.PRIMARY_GUARDIAN) {
+            throw new AppException(ErrorType.CANNOT_CHANGE_PRIMARY_GUARDIAN_ROLE);
+        }
+        if (currentCareRole == newCareRole) {
+            return;
+        }
+
+        int maxCount = newCareRole == CareRole.GUARDIAN ? MAX_GUARDIAN_COUNT : MAX_MANAGER_COUNT;
+        checkRoleLimit(careRelationships, newCareRole, maxCount, ErrorType.CARE_CAREGIVER_LIMIT_EXCEEDED);
     }
 
     private void checkRoleLimit(List<CareRelationship> relationships, CareRole role, int maxCount, ErrorType errorType) {
@@ -84,6 +118,15 @@ public class CareRelationshipValidator {
                 .filter(r -> r.getCareRole() == role)
                 .count();
         if(count >= maxCount) {
+            throw new AppException(errorType);
+        }
+    }
+
+    private void checkGuardianLimit(List<CareRelationship> relationships, int maxCount, ErrorType errorType) {
+        long count = relationships.stream()
+                .filter(r -> r.getCareRole().isGuardian())
+                .count();
+        if (count >= maxCount) {
             throw new AppException(errorType);
         }
     }

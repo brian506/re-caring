@@ -1,6 +1,7 @@
 package com.recaring.care.implement;
 
 import com.recaring.care.dataaccess.entity.CareRelationship;
+import com.recaring.care.dataaccess.entity.CareRole;
 import com.recaring.care.dataaccess.repository.CareRelationshipRepository;
 import com.recaring.care.vo.CareRelationshipRegistration;
 import com.recaring.member.dataaccess.entity.Member;
@@ -37,15 +38,29 @@ public class CareRelationshipWriter {
     @CacheEvict(value = "careRelationship", allEntries = true)
     @Transactional
     public void delete(String wardKey, String caregiverKey) {
-        CareRelationship relationship = careRelationshipRepository
-                .findCareRelationship(wardKey, caregiverKey)
-                .orElseThrow(() -> new AppException(ErrorType.NOT_FOUND_CARE_RELATIONSHIP));
-        careRelationshipRepository.delete(relationship);
+        careRelationshipRepository.delete(findRelationship(wardKey, caregiverKey));
+    }
+
+    @Transactional
+    public void updateWardNickname(String wardKey, String caregiverKey, String wardNickname) {
+        findRelationship(wardKey, caregiverKey).changeWardNickname(wardNickname);
+    }
+
+    @CacheEvict(value = "careRelationship", allEntries = true)
+    @Transactional
+    public void updateCareRole(String wardKey, String caregiverKey, CareRole careRole) {
+        findRelationship(wardKey, caregiverKey).changeCareRole(careRole);
     }
 
     @CacheEvict(value = "careRelationship", allEntries = true)
     @Transactional
     public void deleteAllByMemberKey(String memberKey) {
         careRelationshipRepository.deleteAllByMemberKey(memberKey);
+    }
+
+    private CareRelationship findRelationship(String wardKey, String caregiverKey) {
+        return careRelationshipRepository
+                .findCareRelationship(wardKey, caregiverKey)
+                .orElseThrow(() -> new AppException(ErrorType.NOT_FOUND_CARE_RELATIONSHIP));
     }
 }

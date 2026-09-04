@@ -16,6 +16,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class CareRelationship extends BaseEntity {
 
+    public static final int MAX_WARD_NICKNAME_LENGTH = 20;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "care_relationship_id")
@@ -25,11 +27,14 @@ public class CareRelationship extends BaseEntity {
     private String wardMemberKey; // 보호 대상자
 
     @Column(nullable = false)
-    private String caregiverMemberKey; // 보호자 or 관리자
+    private String caregiverMemberKey; // 보호자 or 관계자
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private CareRole careRole;
+
+    @Column(length = MAX_WARD_NICKNAME_LENGTH)
+    private String wardNickname; // null이면 대상자 실명을 그대로 쓴다
 
     @Builder
     public CareRelationship(String wardMemberKey, String caregiverMemberKey, CareRole careRole) {
@@ -44,5 +49,13 @@ public class CareRelationship extends BaseEntity {
                 .caregiverMemberKey(caregiverMemberKey)
                 .careRole(careRole)
                 .build();
+    }
+
+    public void changeWardNickname(String wardNickname) {
+        this.wardNickname = wardNickname;
+    }
+
+    public void changeCareRole(CareRole careRole) {
+        this.careRole = careRole;
     }
 }

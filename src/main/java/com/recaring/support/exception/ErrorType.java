@@ -70,6 +70,9 @@ public enum ErrorType {
     NOT_FOUND_CARE_RELATIONSHIP(HttpStatus.BAD_REQUEST, ErrorCode.E5011, "존재하지 않는 케어 관계입니다.", LogLevel.WARN),
     NOT_GUARDIAN_ROLE_IN_CARE(HttpStatus.FORBIDDEN, ErrorCode.E5012, "해당 보호 대상자의 보호자(GUARDIAN) 역할이 아닙니다.", LogLevel.WARN),
     CARE_WARD_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, ErrorCode.E5013, "보호 대상자는 최대 5명까지 등록할 수 있습니다.", LogLevel.WARN),
+    NOT_PRIMARY_GUARDIAN_ROLE_IN_CARE(HttpStatus.FORBIDDEN, ErrorCode.E5014, "해당 보호 대상자의 주보호자만 할 수 있습니다.", LogLevel.WARN),
+    CANNOT_CHANGE_PRIMARY_GUARDIAN_ROLE(HttpStatus.BAD_REQUEST, ErrorCode.E5015, "주보호자의 관계는 변경할 수 없습니다.", LogLevel.WARN),
+    INVALID_TARGET_CARE_ROLE(HttpStatus.BAD_REQUEST, ErrorCode.E5016, "보호자 또는 관계자로만 변경할 수 있습니다.", LogLevel.WARN),
 
     // Location (E6xxx)
     NOT_WARD_MEMBER(HttpStatus.FORBIDDEN, ErrorCode.E6000, "보호 대상자로 가입한 회원만 GPS를 전송할 수 있습니다.", LogLevel.WARN),

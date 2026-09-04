@@ -4,6 +4,8 @@ import com.recaring.care.business.CareInvitationService;
 import com.recaring.care.business.CareRelationshipService;
 import com.recaring.care.controller.request.AddCaregiverRequest;
 import com.recaring.care.controller.request.AddWardRequest;
+import com.recaring.care.controller.request.UpdateCareRoleRequest;
+import com.recaring.care.controller.request.UpdateWardNicknameRequest;
 import com.recaring.care.controller.response.CaregiverResponse;
 import com.recaring.care.controller.response.ReceivedCareRequestResponse;
 import com.recaring.care.controller.response.WardResponse;
@@ -141,7 +143,7 @@ public class CareController {
 
     @Operation(
             summary = "보호 대상자(Ward) 케어 관계 삭제",
-            description = "보호자/관리자가 특정 보호 대상자와의 케어 관계를 삭제합니다. [GUARDIAN 전용]"
+            description = "보호자/관계자가 자신과 특정 보호 대상자 사이의 케어 관계를 삭제합니다. [케어 관계가 있는 회원 전용]"
     )
     @DeleteMapping("/wards/{wardKey}")
     public ResponseEntity<ApiResponse<Void>> removeWard(
@@ -154,7 +156,7 @@ public class CareController {
 
     @Operation(
             summary = "보호자/관리자(Caregiver) 케어 관계 삭제",
-            description = "보호자(GUARDIAN CareRole)가 특정 보호 대상자에 연결된 보호자 또는 관리자를 케어 관계에서 삭제합니다. [GUARDIAN 전용]"
+            description = "주보호자가 특정 보호 대상자에 연결된 보호자 또는 관계자를 케어 관계에서 삭제합니다. [PRIMARY_GUARDIAN 전용]"
     )
     @DeleteMapping("/wards/{wardKey}/caregivers/{caregiverKey}")
     public ResponseEntity<ApiResponse<Void>> removeCaregiver(
@@ -163,6 +165,43 @@ public class CareController {
             @Parameter(description = "삭제할 보호자/관리자 memberKey") @PathVariable String caregiverKey
     ) {
         careRelationshipService.removeCaregiver(memberKey, wardKey, caregiverKey);
+        return ResponseEntity.ok(ApiResponse.success());
+    }
+
+    @Operation(
+            summary = "보호 대상자(Ward) 별명 수정",
+            description = """
+                    보호자/관계자가 자신에게만 보이는 보호 대상자의 별명을 설정합니다.
+                    대상자의 실명은 그대로 유지되며, 조회 응답의 wardName(실명)과 wardNickname(별명)은 분리되어 내려갑니다.
+                    nickname을 비우거나 생략하면 별명이 해제되어 실명이 표시됩니다. [보호 대상자와 케어 관계가 있는 회원 전용]
+                    """
+    )
+    @PatchMapping("/wards/{wardKey}/nickname")
+    public ResponseEntity<ApiResponse<Void>> updateWardNickname(
+            @AuthMember String memberKey,
+            @Parameter(description = "보호 대상자 memberKey") @PathVariable String wardKey,
+            @Valid @RequestBody UpdateWardNicknameRequest request
+    ) {
+        careRelationshipService.updateWardNickname(memberKey, wardKey, request.nickname());
+        return ResponseEntity.ok(ApiResponse.success());
+    }
+
+    @Operation(
+            summary = "보호자/관계자(Caregiver) 관계 수정",
+            description = """
+                    주보호자가 같은 보호 대상자에 연결된 다른 사람의 관계를 GUARDIAN(보호자) 또는 MANAGER(관계자)로 변경합니다.
+                    주보호자 자신의 관계는 변경할 수 없고, 다른 사람을 주보호자로 올릴 수도 없습니다.
+                    보호자는 최대 1명, 관계자는 최대 3명입니다. [PRIMARY_GUARDIAN 전용]
+                    """
+    )
+    @PatchMapping("/wards/{wardKey}/caregivers/{caregiverKey}/role")
+    public ResponseEntity<ApiResponse<Void>> updateCaregiverRole(
+            @AuthMember String memberKey,
+            @Parameter(description = "보호 대상자 memberKey") @PathVariable String wardKey,
+            @Parameter(description = "관계를 변경할 보호자/관계자 memberKey") @PathVariable String caregiverKey,
+            @Valid @RequestBody UpdateCareRoleRequest request
+    ) {
+        careRelationshipService.updateCaregiverRole(memberKey, wardKey, caregiverKey, request.careRole());
         return ResponseEntity.ok(ApiResponse.success());
     }
 }
