@@ -30,6 +30,9 @@ public enum ErrorCode {
     E8000, E8001, E8002,
 
     // Notification (E9xxx)
-    E9001, E9002, E9003
+    E9001, E9002, E9003,
+
+    // Place (E10xxx) - 장소 검색
+    E10000, E10001, E10002
 
 }

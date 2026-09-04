@@ -20,7 +20,12 @@ throw new AppException(ErrorType.CARE_INVITATION_EXPIRED);
 | `E2000` ~ `E2xxx` | Auth (JWT, OAuth, 로컬 인증) |
 | `E3000` ~ `E3xxx` | Member |
 | `E4000` ~ `E4xxx` | SMS / Phone Verification |
-| `E5000` ~ `E5010` | Care (현재까지 사용) |
+| `E5000` ~ `E5xxx` | Care |
+| `E6000` ~ `E6xxx` | Location (GPS, SSE) |
+| `E7000` ~ `E7xxx` | Device |
+| `E8000` ~ `E8xxx` | SafeZone |
+| `E9000` ~ `E9xxx` | Notification |
+| `E10000` ~ `E10xxx` | Place (장소 검색) |
 
 ## 새 에러 추가 절차
 

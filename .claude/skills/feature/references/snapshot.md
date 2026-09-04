@@ -1,6 +1,6 @@
 # 프로젝트 스냅샷
 
-> 마지막 업데이트: 2026-08-26. 기능 추가·수정 시 해당 섹션을 갱신한다.
+> 마지막 업데이트: 2026-09-04. 기능 추가·수정 시 해당 섹션을 갱신한다.
 
 ## 도메인별 패키지 현황
 
@@ -12,6 +12,7 @@
 | `location` | LocationService, LocationSettingService | GpsHistoryManager, GpsLatestCacheManager/Listener, SseEmitterManager, LocationValidator, CareRelationshipCacheReader, BatteryThresholdEvaluator/BatteryDetectionListener/BatteryAlertStateManager/DetectionPublisher/DetectionListener/AnomalyDetectionConsumer/AnomalyDetectionParser/AnomalyDetectionManager(detection), SafeZoneStateManager/SafeZoneDetectionListener(safezone), LocationSettingManager |
 | `member` | MemberService | MemberReader/Writer/Validator, MembersTermsAgreementWriter, MemberWithdrawalManager |
 | `notification` | NotificationService, NotificationSettingService, FcmDeviceTokenService | NotificationReader/Writer, NotificationSendManager, NotificationSettingReader/Manager/Validator, FcmDeviceTokenReader/Manager, FcmClient(Firebase/NoOp), CareInvitationNotificationListener, BatteryThresholdNotificationListener, SafeZoneNotificationListener, AnomalyNotificationListener |
+| `place` | PlaceService | KakaoPlaceSearchClient (카카오 로컬 키워드 검색 프록시, 엔티티 없음) |
 | `safezone` | SafeZoneService | SafeZoneReader, SafeZoneWriter |
 | `sms` | PhoneVerificationService | SmsClient, SmsCodeGenerator, PhoneVerificationReader/Writer |
 | `alert` | AlertService, AlertResolutionService | AlertInvestigationOrchestrator, AlertInvestigationAgent(Tool Use Loop), SsmContextFetcher, PrometheusContextFetcher, ErrorHistoryFetcher, RunbookService, SlackAlertNotifier, GitHubPrCreator, AlertRetryHandler |
@@ -54,6 +55,7 @@
 | Member | PATCH | `/api/v1/members/me` | 내 정보 수정 (이름·생년월일·비밀번호 부분 수정, JWT 인증) |
 | Member | POST | `/api/v1/members/phones` | 연락처 기반 가입 회원 조회 (GUARDIAN) |
 | Member | DELETE | `/api/v1/members/me` | 회원 탈퇴 |
+| Place | GET | `/api/v1/places/search?query=&latitude=&longitude=&radiusMeters=` | 장소 검색 (GUARDIAN·WARD, 카카오 로컬 키워드 검색 프록시, 최대 5건, 편향 반경 결과 없으면 전국 재검색, 결과 없음은 빈 배열 200) |
 | SafeZone | POST | `/api/v1/care/wards/{wardKey}/safe-zones` | 안심존 추가 (GUARDIAN only) |
 | SafeZone | GET | `/api/v1/care/wards/{wardKey}/safe-zones` | 안심존 목록 조회 (GUARDIAN, MANAGER) |
 | SafeZone | GET | `/api/v1/care/wards/{wardKey}/safe-zones/{safeZoneKey}` | 안심존 상세 조회 (GUARDIAN, MANAGER) |
@@ -275,3 +277,5 @@ AnomalyDetectionConsumer(수동 ACK)
 | 7 | 안심존 설정 변경 시 가짜 진입·이탈 알림 | `SafeZoneDetectionListener` | `previousKeys`는 옛 존 설정 기준, `currentKeys`는 새 설정 기준이라 차집합의 전제가 깨진다. 존 신규 등록·반경 확대/축소·위치 이동 시 이동 없이 알림 발생. `zone == null` 체크는 삭제만 방어. 해결안: `SafeZoneChangedEvent` 발행 → 상태 리셋 |
 | 8 | 겹친 안심존 동시 알림 | `SafeZoneDetectionListener` | 반경 500~2000m라 도심에서 존이 겹치면 교집합 진입·이탈 시 알림이 존 개수만큼 발송된다. 해결안: 판정 1회당 이벤트 1건으로 병합("집, 병원에 도착했어요"). FCM data payload의 `safeZoneKey` 복수화가 필요해 앱 팀 확인 선행 |
 | 9 | 안심존 상태 동시 갱신 미방어 | `SafeZoneStateManager` | `findByWardMemberKey` → `replace`가 원자적이지 않다. GPS 최소 주기 30초라 정상 흐름에선 겹치지 않으나, 앱이 오프라인 버퍼링 후 일괄 전송하거나 재시도하면 중복 알림 가능. 실제 도착 간격 확인 후 필요 시 비관적 락 + `observed_at` 도입 |
+| 10 | 장소 검색 캐시·호출 제한 없음 | `KakaoPlaceSearchClient` | 프록시에 캐시도 회원별 제한도 없다. 앱이 타이핑마다 호출하면 카카오 일일 쿼터가 소진되고 그 시점부터 429 → `PLACE_SEARCH_RATE_LIMITED`로 검색 기능 전체 정지. 개선안: `query` + 반올림 좌표 Redis 캐시(10분) → 회원별 분당 호출 제한 |
+| 11 | 편향 폴백이 카카오 호출을 2배로 만든다 | `PlaceService` | 카카오의 `x/y/radius`는 우선순위가 아니라 필터라, 편향 반경 밖 장소는 검색이 안 되거나 엉뚱한 결과가 1~2건 섞여 온다(`해운대역` + 서울 편향 → '해운대연탄생갈비 부평갈산역점'). 그래서 "결과 0건"이 아니라 "검색어 토큰이 결과 이름에 하나도 안 걸림"을 폴백 조건으로 쓴다. 대신 편향 밖 검색마다 호출 2회 + 지연 최대 2배(읽기 타임아웃 3초 × 2). 이름 기반 휴리스틱이라 주소 문자열 검색(`서울 마포구 …`)은 항상 폴백을 탄다 |

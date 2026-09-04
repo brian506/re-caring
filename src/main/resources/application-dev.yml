@@ -63,6 +63,9 @@ coolsms:
   api-secret: ${COOLSMS_API_SECRET}
   sender: ${COOLSMS_SENDER}
 
+kakao:
+  rest-api-key: ${KAKAO_REST_API_KEY}
+
 client:
   url: re-caring.com
 
