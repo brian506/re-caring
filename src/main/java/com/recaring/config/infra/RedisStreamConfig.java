@@ -70,7 +70,6 @@ public class RedisStreamConfig {
         }
     }
 
-    // 최상위 메시지는 "Error in execution"뿐이라 원인 문구를 꺼내 남긴다.
     private String rootMessage(Throwable e) {
         Throwable root = e;
         while (root.getCause() != null) {
@@ -79,7 +78,6 @@ public class RedisStreamConfig {
         return root.getMessage();
     }
 
-    // BUSYGROUP 문구는 래핑된 원인 예외에만 담긴다. 최상위 메시지만 보면 정상 재기동도 실패로 읽힌다.
     private boolean isGroupAlreadyExists(DataAccessException e) {
         for (Throwable cause = e; cause != null; cause = cause.getCause()) {
             if (cause.getMessage() != null && cause.getMessage().contains("BUSYGROUP")) {

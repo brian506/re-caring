@@ -86,6 +86,18 @@ class AnomalyDetectionParserTest {
         assertThat(result.get().detectedAt()).isEqualTo(LocationFixture.DETECTED_AT);
     }
 
+    @ParameterizedTest(name = "탐지 시각이 [{0}]이면 버린다")
+    @ValueSource(strings = {"2026-07-2710:20:05", "2026-07-27T 10:20:05"})
+    @DisplayName("탐지 시각의 날짜와 시각 사이 구분자가 없거나 섞여 있으면 메시지를 버린다")
+    void discards_message_with_broken_detected_at_separator(String detectedAt) {
+        Map<String, String> fields = LocationFixture.createAnomalyStreamFields(DetectionType.WANDERING, EVIDENCE);
+        fields.put("detected_at", detectedAt);
+
+        Optional<AnomalyAlert> result = anomalyDetectionParser.parse(fields);
+
+        assertThat(result).isEmpty();
+    }
+
     @Test
     @DisplayName("탐지 시각에 오프셋이 붙어 있으면 메시지를 버린다")
     void discards_message_with_malformed_detected_at() {
