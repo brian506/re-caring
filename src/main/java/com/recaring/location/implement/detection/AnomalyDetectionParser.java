@@ -16,7 +16,6 @@ import java.util.Optional;
 @Component
 public class AnomalyDetectionParser {
 
-    // 엔진은 'T' 구분자로 발행한다. 공백 구분자도 함께 받되, 구분자가 없거나 섞인 값·오프셋이 붙은 값은 거부한다.
     private static final DateTimeFormatter DETECTED_AT_FORMAT = new DateTimeFormatterBuilder()
             .append(DateTimeFormatter.ISO_LOCAL_DATE)
             .optionalStart().appendLiteral('T').append(DateTimeFormatter.ISO_LOCAL_TIME).optionalEnd()
