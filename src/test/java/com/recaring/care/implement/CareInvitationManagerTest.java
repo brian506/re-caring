@@ -91,7 +91,7 @@ class CareInvitationManagerTest {
                 CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.MANAGER_PHONE, CareFixture.WARD_MEMBER_KEY);
 
         then(careRelationshipValidator).should(times(1))
-                .validateCanAddManager(
+                .validateCanAddCaregiver(
                         eq(CareFixture.GUARDIAN_MEMBER_KEY),
                         eq(CareFixture.WARD_MEMBER_KEY),
                         eq(manager.getMemberKey()));

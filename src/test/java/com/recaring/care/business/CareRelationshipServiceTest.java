@@ -201,7 +201,7 @@ class CareRelationshipServiceTest {
         then(careRelationshipValidator).should(times(1))
                 .validatePrimaryGuardianRole(CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY);
         then(careRelationshipValidator).should(times(1))
-                .validateCareRoleChange(CareFixture.WARD_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY, CareRole.GUARDIAN);
+                .validateCareRoleChange(CareFixture.WARD_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY);
         then(careRelationshipWriter).should(times(1))
                 .updateCareRole(CareFixture.WARD_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY, CareRole.GUARDIAN);
     }
