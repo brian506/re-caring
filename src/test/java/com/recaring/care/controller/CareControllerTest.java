@@ -477,6 +477,53 @@ class CareControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @DisplayName("DELETE /api/v1/care/wards/{wardKey} - 떠나는 사람이 보낸 초대라도 이미 수락된 것은 남는다")
+    void removeWard_keeps_already_accepted_invitations_sent_by_the_leaver() {
+        Member coPrimary = memberRepository.save(CareFixture.createGuardianMember(CareFixture.MANAGER_PHONE));
+        Member accepted = memberRepository.save(CareFixture.createGuardianMember("01066665555"));
+        careRelationshipRepository.save(
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+        careRelationshipRepository.save(
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), coPrimary.getMemberKey()));
+        CareInvitation acceptedInvitation = CareFixture.createManagerInvitation(
+                guardian.getMemberKey(), accepted.getMemberKey(), ward.getMemberKey());
+        acceptedInvitation.accept();
+        careInvitationRepository.save(acceptedInvitation);
+
+        client.delete()
+                .uri("/api/v1/care/wards/" + ward.getMemberKey())
+                .header(HttpHeaders.AUTHORIZATION, authHeader(guardian))
+                .exchange()
+                .expectStatus().isOk();
+
+        assertThat(careInvitationRepository.findByRequestKey(acceptedInvitation.getRequestKey())).isPresent();
+    }
+
+    @Test
+    @DisplayName("DELETE /api/v1/care/wards/{wardKey} - 떠나는 사람이 다른 보호 대상자에게 보낸 초대는 남는다")
+    void removeWard_keeps_invitations_the_leaver_sent_for_other_wards() {
+        Member otherWard = memberRepository.save(CareFixture.createWardMember("01088889999"));
+        Member coPrimary = memberRepository.save(CareFixture.createGuardianMember(CareFixture.MANAGER_PHONE));
+        Member invitee = memberRepository.save(CareFixture.createGuardianMember("01066665555"));
+        careRelationshipRepository.save(
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+        careRelationshipRepository.save(
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), coPrimary.getMemberKey()));
+        careRelationshipRepository.save(
+                CareFixture.createPrimaryGuardianRelationship(otherWard.getMemberKey(), guardian.getMemberKey()));
+        CareInvitation otherWardInvitation = careInvitationRepository.save(CareFixture.createManagerInvitation(
+                guardian.getMemberKey(), invitee.getMemberKey(), otherWard.getMemberKey()));
+
+        client.delete()
+                .uri("/api/v1/care/wards/" + ward.getMemberKey())
+                .header(HttpHeaders.AUTHORIZATION, authHeader(guardian))
+                .exchange()
+                .expectStatus().isOk();
+
+        assertThat(careInvitationRepository.findByRequestKey(otherWardInvitation.getRequestKey())).isPresent();
+    }
+
+    @Test
     @DisplayName("DELETE /api/v1/care/wards/{wardKey} - 주보호자가 아닌 보호자가 삭제하면 자기 관계만 빠진다")
     void removeWard_deletes_only_own_relationship_when_co_guardian() {
         Member coGuardian = memberRepository.save(CareFixture.createGuardianMember("01066665555"));
