@@ -452,16 +452,19 @@ class CareControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("DELETE /api/v1/care/wards/{wardKey} - 케어 관계가 남아 있으면 대기 중 초대는 사라지지 않는다")
-    void removeWard_keeps_pending_invitations_while_a_relationship_remains() {
-        Member manager = memberRepository.save(CareFixture.createGuardianMember(CareFixture.MANAGER_PHONE));
+    @DisplayName("DELETE /api/v1/care/wards/{wardKey} - 떠나는 사람이 보낸 대기 중 초대는 케어 관계가 남아 있어도 사라진다")
+    void removeWard_clears_pending_invitations_sent_by_the_leaver() {
+        Member coPrimary = memberRepository.save(CareFixture.createGuardianMember(CareFixture.MANAGER_PHONE));
         Member invitee = memberRepository.save(CareFixture.createGuardianMember("01066665555"));
+        Member otherInvitee = memberRepository.save(CareFixture.createGuardianMember("01077778888"));
         careRelationshipRepository.save(
                 CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
         careRelationshipRepository.save(
-                CareFixture.createManagerRelationship(ward.getMemberKey(), manager.getMemberKey()));
-        CareInvitation pending = careInvitationRepository.save(CareFixture.createManagerInvitation(
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), coPrimary.getMemberKey()));
+        CareInvitation sentByLeaver = careInvitationRepository.save(CareFixture.createManagerInvitation(
                 guardian.getMemberKey(), invitee.getMemberKey(), ward.getMemberKey()));
+        CareInvitation sentByRemaining = careInvitationRepository.save(CareFixture.createManagerInvitation(
+                coPrimary.getMemberKey(), otherInvitee.getMemberKey(), ward.getMemberKey()));
 
         client.delete()
                 .uri("/api/v1/care/wards/" + ward.getMemberKey())
@@ -469,7 +472,8 @@ class CareControllerTest extends AbstractIntegrationTest {
                 .exchange()
                 .expectStatus().isOk();
 
-        assertThat(careInvitationRepository.findByRequestKey(pending.getRequestKey())).isPresent();
+        assertThat(careInvitationRepository.findByRequestKey(sentByLeaver.getRequestKey())).isEmpty();
+        assertThat(careInvitationRepository.findByRequestKey(sentByRemaining.getRequestKey())).isPresent();
     }
 
     @Test

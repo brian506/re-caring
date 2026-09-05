@@ -14,4 +14,6 @@ public interface CareInvitationRepositoryCustom {
     void deleteAllByMemberKey(String memberKey);
 
     void deleteAllByWardMemberKey(String wardMemberKey);
+
+    void deletePendingByWardMemberKeyAndRequesterMemberKey(String wardMemberKey, String requesterMemberKey);
 }

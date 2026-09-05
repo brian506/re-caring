@@ -44,7 +44,7 @@ public class CareRelationshipManager {
                 wardKey, caregiverKey, leaving.getCareRole());
 
         // 방금 지운 행을 메모리에서 걷어낸다. 다시 조회하면 삭제 flush 시점에 기대게 된다.
-        settleAfterLeave(wardKey, relationships.stream()
+        settleAfterLeave(wardKey, caregiverKey, relationships.stream()
                 .filter(relationship -> !relationship.getCaregiverMemberKey().equals(caregiverKey))
                 .toList());
     }
@@ -59,19 +59,25 @@ public class CareRelationshipManager {
                 .map(CareRelationship::getWardMemberKey)
                 .toList();
 
+        // 벌크 삭제된 행은 DB에서 사라져 아래 재조회에 잡히지 않고, 영속성 컨텍스트에 남은 행은
+        // 수정하지 않으므로 커밋 시 되살아나지 않는다.
         careRelationshipRepository.deleteAllByMemberKey(memberKey);
 
         for (String wardKey : caredWardKeys) {
-            settleAfterLeave(wardKey, careRelationshipRepository.findAllByWardMemberKey(wardKey));
+            settleAfterLeave(wardKey, memberKey, careRelationshipRepository.findAllByWardMemberKey(wardKey));
         }
     }
 
     /**
      * 주보호자가 0명인 대상자를 남기지 않는다. 그런 대상자는 보호자를 부를 주체도, 관계를 끊을 주체도 없다.
-     * 남은 사람이 아무도 없으면 아직 수락되지 않은 초대까지 정리한다. 초대를 남겨두면 뒤늦은 수락으로
-     * 관계가 되살아나고, 초대를 보낸 주보호자는 이미 떠난 뒤라 아무도 그 관계를 책임지지 않는다.
+     *
+     * 떠나는 사람이 보낸 초대는 함께 지운다. 초대에는 만료가 없고 수락 시점에 발신자의 권한을 다시 보지 않으므로,
+     * 남겨두면 이탈 후 뒤늦은 수락으로 관계가 생긴다. 그 관계는 승계된 주보호자가 승인한 적 없는 것이다.
+     * 남은 사람이 아무도 없을 때는 발신자를 가리지 않고 그 대상자의 초대를 모두 정리한다.
      */
-    private void settleAfterLeave(String wardKey, List<CareRelationship> remaining) {
+    private void settleAfterLeave(String wardKey, String leavingCaregiverKey, List<CareRelationship> remaining) {
+        careInvitationWriter.deletePendingSentBy(wardKey, leavingCaregiverKey);
+
         if (remaining.isEmpty()) {
             careInvitationWriter.deleteAllByWardMemberKey(wardKey);
             log.info("[케어 관계 : 마지막 관계 해제로 초대 정리]: wardKey={}", wardKey);

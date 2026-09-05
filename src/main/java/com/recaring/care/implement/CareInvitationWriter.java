@@ -40,6 +40,11 @@ public class CareInvitationWriter {
     }
 
     @Transactional
+    public void deletePendingSentBy(String wardMemberKey, String requesterMemberKey) {
+        careInvitationRepository.deletePendingByWardMemberKeyAndRequesterMemberKey(wardMemberKey, requesterMemberKey);
+    }
+
+    @Transactional
     public void deleteAllByMemberKey(String memberKey) {
         careInvitationRepository.deleteAllByMemberKey(memberKey);
     }

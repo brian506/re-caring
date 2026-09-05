@@ -72,13 +72,6 @@ public class CareRelationshipValidator {
         }
     }
 
-    public void validateGuardianRole(String requesterKey, String wardKey) {
-        boolean isGuardian = careRelationshipRepository.existsCareRelationshipInRoles(wardKey, requesterKey, CareRole.guardianRoles());
-        if (!isGuardian) {
-            throw new AppException(ErrorType.NOT_GUARDIAN_ROLE_IN_CARE);
-        }
-    }
-
     public void validatePrimaryGuardianRole(String requesterKey, String wardKey) {
         boolean isPrimaryGuardian = careRelationshipRepository.existsCareRelationship(wardKey, requesterKey, CareRole.PRIMARY_GUARDIAN);
         if (!isPrimaryGuardian) {

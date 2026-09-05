@@ -245,35 +245,6 @@ class CareRelationshipValidatorTest {
                 .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_FOUND_CARE_RELATIONSHIP);
     }
 
-    // ── validateGuardianRole ─────────────────────────────────────────────
-
-    @Test
-    @DisplayName("보호자 역할 검증 - 주보호자와 보호자를 모두 통과시킨다")
-    void validateGuardianRole_success() {
-        given(careRelationshipRepository.existsCareRelationshipInRoles(
-                CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY, CareRole.guardianRoles()))
-                .willReturn(true);
-
-        assertThatCode(() ->
-                careRelationshipValidator.validateGuardianRole(
-                        CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY))
-                .doesNotThrowAnyException();
-    }
-
-    @Test
-    @DisplayName("보호자 역할 검증 - 관계자는 예외가 발생한다")
-    void validateGuardianRole_fails_when_not_guardian_role() {
-        given(careRelationshipRepository.existsCareRelationshipInRoles(
-                CareFixture.WARD_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY, CareRole.guardianRoles()))
-                .willReturn(false);
-
-        assertThatThrownBy(() ->
-                careRelationshipValidator.validateGuardianRole(
-                        CareFixture.MANAGER_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY))
-                .isInstanceOf(AppException.class)
-                .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_GUARDIAN_ROLE_IN_CARE);
-    }
-
     // ── validateCaregiverViewAccess ────────────────────────────────────────
 
     @Test

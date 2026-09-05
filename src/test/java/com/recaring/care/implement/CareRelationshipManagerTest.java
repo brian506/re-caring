@@ -144,6 +144,36 @@ class CareRelationshipManagerTest {
     }
 
     @Test
+    @DisplayName("이탈하면 그 사람이 보낸 대기 중 초대는 케어 관계가 남아 있어도 정리된다")
+    void leaveCare_clears_pending_invitations_sent_by_the_leaver() {
+        CareRelationship primary = CareFixture.createRelationship(WARD_KEY, PRIMARY_KEY, CareRole.PRIMARY_GUARDIAN, 1L);
+        CareRelationship guardian = CareFixture.createRelationship(WARD_KEY, OLDER_GUARDIAN_KEY, CareRole.GUARDIAN, 2L);
+        given(careRelationshipRepository.findAllByWardMemberKey(WARD_KEY)).willReturn(List.of(primary, guardian));
+
+        careRelationshipManager.leaveCare(WARD_KEY, PRIMARY_KEY);
+
+        then(careInvitationWriter).should().deletePendingSentBy(WARD_KEY, PRIMARY_KEY);
+        then(careInvitationWriter).should(never()).deleteAllByWardMemberKey(anyString());
+    }
+
+    @Test
+    @DisplayName("탈퇴하면 그 회원이 각 보호 대상자에게 보낸 대기 중 초대도 정리된다")
+    void leaveAllCare_clears_pending_invitations_sent_by_the_withdrawing_member() {
+        given(careRelationshipRepository.findAllByCaregiverMemberKey(PRIMARY_KEY)).willReturn(List.of(
+                CareFixture.createRelationship(WARD_KEY, PRIMARY_KEY, CareRole.PRIMARY_GUARDIAN, 1L),
+                CareFixture.createRelationship(OTHER_WARD_KEY, PRIMARY_KEY, CareRole.PRIMARY_GUARDIAN, 2L)));
+        given(careRelationshipRepository.findAllByWardMemberKey(WARD_KEY)).willReturn(
+                List.of(CareFixture.createRelationship(WARD_KEY, OLDER_GUARDIAN_KEY, CareRole.GUARDIAN, 3L)));
+        given(careRelationshipRepository.findAllByWardMemberKey(OTHER_WARD_KEY)).willReturn(
+                List.of(CareFixture.createRelationship(OTHER_WARD_KEY, OLDER_MANAGER_KEY, CareRole.MANAGER, 4L)));
+
+        careRelationshipManager.leaveAllCare(PRIMARY_KEY);
+
+        then(careInvitationWriter).should().deletePendingSentBy(WARD_KEY, PRIMARY_KEY);
+        then(careInvitationWriter).should().deletePendingSentBy(OTHER_WARD_KEY, PRIMARY_KEY);
+    }
+
+    @Test
     @DisplayName("케어 관계가 없는 사람이 이탈하려 하면 예외가 발생한다")
     void leaveCare_fails_when_relationship_not_found() {
         CareRelationship primary = CareFixture.createRelationship(WARD_KEY, PRIMARY_KEY, CareRole.PRIMARY_GUARDIAN, 1L);
