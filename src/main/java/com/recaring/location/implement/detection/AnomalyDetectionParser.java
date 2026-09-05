@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
 import java.util.Map;
 import java.util.Optional;
@@ -15,8 +16,11 @@ import java.util.Optional;
 @Component
 public class AnomalyDetectionParser {
 
-    private static final DateTimeFormatter DETECTED_AT_FORMAT =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final DateTimeFormatter DETECTED_AT_FORMAT = new DateTimeFormatterBuilder()
+            .append(DateTimeFormatter.ISO_LOCAL_DATE)
+            .optionalStart().appendLiteral('T').append(DateTimeFormatter.ISO_LOCAL_TIME).optionalEnd()
+            .optionalStart().appendLiteral(' ').append(DateTimeFormatter.ISO_LOCAL_TIME).optionalEnd()
+            .toFormatter();
 
     private static final int MAX_EVIDENCE_LENGTH = 1000;
 

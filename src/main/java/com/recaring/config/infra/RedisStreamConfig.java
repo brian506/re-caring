@@ -66,11 +66,24 @@ public class RedisStreamConfig {
                 return;
             }
             log.error("[이상탐지 스트림 : 컨슈머 그룹 생성 실패]: group={} | error={}",
-                    AnomalyStreamProperties.GROUP_NAME, e.getMessage());
+                    AnomalyStreamProperties.GROUP_NAME, rootMessage(e));
         }
     }
 
+    private String rootMessage(Throwable e) {
+        Throwable root = e;
+        while (root.getCause() != null) {
+            root = root.getCause();
+        }
+        return root.getMessage();
+    }
+
     private boolean isGroupAlreadyExists(DataAccessException e) {
-        return e.getMessage() != null && e.getMessage().contains("BUSYGROUP");
+        for (Throwable cause = e; cause != null; cause = cause.getCause()) {
+            if (cause.getMessage() != null && cause.getMessage().contains("BUSYGROUP")) {
+                return true;
+            }
+        }
+        return false;
     }
 }
