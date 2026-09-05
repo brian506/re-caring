@@ -1,5 +1,6 @@
 package com.recaring.care.implement;
 
+import com.recaring.care.dataaccess.entity.CareRelationship;
 import com.recaring.care.dataaccess.entity.CareRole;
 import com.recaring.care.dataaccess.repository.CareRelationshipRepository;
 import com.recaring.care.fixture.CareFixture;
@@ -44,7 +45,7 @@ class CareRelationshipReaderTest {
         // given
         Member ward = CareFixture.createWardMember();
         given(careRelationshipRepository.findAllByCaregiverMemberKey(CareFixture.GUARDIAN_MEMBER_KEY))
-                .willReturn(List.of(CareFixture.createGuardianRelationship(
+                .willReturn(List.of(CareFixture.createPrimaryGuardianRelationship(
                         CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY)));
         given(memberReader.findAllByMemberKeys(List.of(CareFixture.WARD_MEMBER_KEY)))
                 .willReturn(Map.of(CareFixture.WARD_MEMBER_KEY, ward));
@@ -54,7 +55,50 @@ class CareRelationshipReaderTest {
 
         // then
         assertThat(result).containsExactly(
-                CareFixture.createWardInfo(ward.getMemberKey(), CareRole.GUARDIAN));
+                CareFixture.createWardInfo(ward.getMemberKey(), CareRole.PRIMARY_GUARDIAN));
+    }
+
+    @Test
+    @DisplayName("보호 대상자 목록에는 실명과 별명이 함께 담긴다")
+    void findWardInfos_includes_both_real_name_and_nickname() {
+        // given
+        Member ward = CareFixture.createWardMember();
+        CareRelationship relationship = CareFixture.createPrimaryGuardianRelationship(
+                CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY);
+        relationship.changeWardNickname("할머니");
+        given(careRelationshipRepository.findAllByCaregiverMemberKey(CareFixture.GUARDIAN_MEMBER_KEY))
+                .willReturn(List.of(relationship));
+        given(memberReader.findAllByMemberKeys(List.of(CareFixture.WARD_MEMBER_KEY)))
+                .willReturn(Map.of(CareFixture.WARD_MEMBER_KEY, ward));
+
+        // when
+        List<WardInfo> result = careRelationshipReader.findWardInfos(CareFixture.GUARDIAN_MEMBER_KEY);
+
+        // then
+        assertThat(result).containsExactly(
+                CareFixture.createWardInfo(ward.getMemberKey(), "할머니", CareRole.PRIMARY_GUARDIAN));
+    }
+
+    @Test
+    @DisplayName("보호 대상자 목록 - 별명을 설정하지 않았으면 별명은 null이고 실명은 유지된다")
+    void findWardInfos_returns_null_nickname_when_not_set() {
+        // given
+        Member ward = CareFixture.createWardMember();
+        given(careRelationshipRepository.findAllByCaregiverMemberKey(CareFixture.GUARDIAN_MEMBER_KEY))
+                .willReturn(List.of(CareFixture.createPrimaryGuardianRelationship(
+                        CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY)));
+        given(memberReader.findAllByMemberKeys(List.of(CareFixture.WARD_MEMBER_KEY)))
+                .willReturn(Map.of(CareFixture.WARD_MEMBER_KEY, ward));
+
+        // when
+        List<WardInfo> result = careRelationshipReader.findWardInfos(CareFixture.GUARDIAN_MEMBER_KEY);
+
+        // then
+        assertThat(result).singleElement()
+                .satisfies(info -> {
+                    assertThat(info.wardNickname()).isNull();
+                    assertThat(info.wardName()).isEqualTo("보호대상자");
+                });
     }
 
     @Test

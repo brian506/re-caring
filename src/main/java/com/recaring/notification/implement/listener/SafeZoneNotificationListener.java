@@ -67,7 +67,7 @@ public class SafeZoneNotificationListener {
         String body = memberReader.findNameByMemberKey(wardMemberKey) + "님이 " + bodySuffix;
 
         List<String> guardianKeys = caregivers.stream()
-                .filter(caregiver -> caregiver.careRole() == CareRole.GUARDIAN)
+                .filter(caregiver -> caregiver.careRole().isGuardian())
                 .map(CaregiverInfo::memberKey)
                 .toList();
         List<String> managerKeys = caregivers.stream()

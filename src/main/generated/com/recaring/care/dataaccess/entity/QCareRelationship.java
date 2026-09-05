@@ -38,6 +38,8 @@ public class QCareRelationship extends EntityPathBase<CareRelationship> {
 
     public final StringPath wardMemberKey = createString("wardMemberKey");
 
+    public final StringPath wardNickname = createString("wardNickname");
+
     public QCareRelationship(String variable) {
         super(CareRelationship.class, forVariable(variable));
     }

@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class SafeZoneControllerTest extends AbstractIntegrationTest {
 
     private static final String STRANGER_PHONE = "01077778888";
+    private static final String CO_GUARDIAN_PHONE = "01066665555";
 
     private static final String NEW_NAME = "학교";
     private static final String NEW_ADDRESS = "서울시 마포구 1";
@@ -46,7 +47,9 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
     @Autowired private SafeZoneRepository safeZoneRepository;
 
     private Member ward;
+    private Member victimWard;
     private String guardianAuth;
+    private String coGuardianAuth;
     private String managerAuth;
     private String strangerAuth;
     private SafeZone savedZone;
@@ -54,16 +57,21 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
     @BeforeEach
     void setUp() {
         Member guardian = memberRepository.save(CareFixture.createGuardianMember());
+        Member coGuardian = memberRepository.save(CareFixture.createGuardianMember(CO_GUARDIAN_PHONE));
         Member manager = memberRepository.save(CareFixture.createGuardianMember(CareFixture.MANAGER_PHONE));
         Member stranger = memberRepository.save(CareFixture.createGuardianMember(STRANGER_PHONE));
         ward = memberRepository.save(CareFixture.createWardMember());
+        victimWard = memberRepository.save(CareFixture.createWardMember("01044445555"));
 
         careRelationshipRepository.save(
-                CareFixture.createGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+        careRelationshipRepository.save(
+                CareFixture.createGuardianRelationship(ward.getMemberKey(), coGuardian.getMemberKey()));
         careRelationshipRepository.save(
                 CareFixture.createManagerRelationship(ward.getMemberKey(), manager.getMemberKey()));
 
         guardianAuth = bearerToken(guardian.getMemberKey(), guardian.getRole());
+        coGuardianAuth = bearerToken(coGuardian.getMemberKey(), coGuardian.getRole());
         managerAuth = bearerToken(manager.getMemberKey(), manager.getRole());
         strangerAuth = bearerToken(stranger.getMemberKey(), stranger.getRole());
 
@@ -98,6 +106,20 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
         assertThat(added.getLatitude()).isEqualTo(NEW_LATITUDE);
         assertThat(added.getLongitude()).isEqualTo(NEW_LONGITUDE);
         assertThat(added.getRadius()).isEqualTo(NEW_RADIUS);
+    }
+
+    @Test
+    @DisplayName("주보호자가 아닌 보호자도 안심존을 추가할 수 있다")
+    void addSafeZone_persists_zone_when_co_guardian() {
+        client.post()
+                .uri(zonesUri())
+                .header(HttpHeaders.AUTHORIZATION, coGuardianAuth)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(CREATE_BODY)
+                .exchange()
+                .expectStatus().isCreated();
+
+        assertThat(findAddedZone().getName()).isEqualTo(NEW_NAME);
     }
 
     @Test
@@ -293,7 +315,7 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
                 .expectBody()
                 .jsonPath("$.resultType").isEqualTo("SUCCESS");
 
-        assertThat(safeZoneRepository.findBySafeZoneKey(savedZone.getSafeZoneKey())).isEmpty();
+        assertThat(safeZoneRepository.findBySafeZoneKeyAndWardMemberKey(savedZone.getSafeZoneKey(), ward.getMemberKey())).isEmpty();
     }
 
     @Test
@@ -305,7 +327,7 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
                 .exchange()
                 .expectStatus().isForbidden();
 
-        assertThat(safeZoneRepository.findBySafeZoneKey(savedZone.getSafeZoneKey())).isPresent();
+        assertThat(safeZoneRepository.findBySafeZoneKeyAndWardMemberKey(savedZone.getSafeZoneKey(), ward.getMemberKey())).isPresent();
     }
 
     @Test
@@ -317,7 +339,7 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
                 .exchange()
                 .expectStatus().isForbidden();
 
-        assertThat(safeZoneRepository.findBySafeZoneKey(savedZone.getSafeZoneKey())).isPresent();
+        assertThat(safeZoneRepository.findBySafeZoneKeyAndWardMemberKey(savedZone.getSafeZoneKey(), ward.getMemberKey())).isPresent();
     }
 
     private String zonesUri() {
@@ -340,7 +362,60 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
     }
 
     private SafeZone reloadSavedZone() {
-        return safeZoneRepository.findBySafeZoneKey(savedZone.getSafeZoneKey())
+        return safeZoneRepository.findBySafeZoneKeyAndWardMemberKey(savedZone.getSafeZoneKey(), ward.getMemberKey())
                 .orElseThrow(() -> new AssertionError("안심존이 존재하지 않는다"));
+    }
+
+    // ── 다른 대상자의 안심존 키로 접근 (IDOR) ────────────────────────────────
+
+    @Test
+    @DisplayName("자기 대상자 경로에 남의 안심존 키를 붙여 조회하면 400 E8000이 반환된다")
+    void getSafeZone_returns_400_for_other_wards_zone_key() {
+        SafeZone victimZone = safeZoneRepository.save(SafeZoneFixture.createSafeZone(victimWard.getMemberKey()));
+
+        client.get()
+                .uri("/api/v1/care/wards/" + ward.getMemberKey() + "/safe-zones/" + victimZone.getSafeZoneKey())
+                .header(HttpHeaders.AUTHORIZATION, guardianAuth)
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.error.errorCode").isEqualTo("E8000");
+    }
+
+    @Test
+    @DisplayName("자기 대상자 경로에 남의 안심존 키를 붙여 삭제하면 400 E8000이고 행이 남아 있다")
+    void deleteSafeZone_returns_400_for_other_wards_zone_key() {
+        SafeZone victimZone = safeZoneRepository.save(SafeZoneFixture.createSafeZone(victimWard.getMemberKey()));
+
+        client.delete()
+                .uri("/api/v1/care/wards/" + ward.getMemberKey() + "/safe-zones/" + victimZone.getSafeZoneKey())
+                .header(HttpHeaders.AUTHORIZATION, guardianAuth)
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.error.errorCode").isEqualTo("E8000");
+
+        assertThat(safeZoneRepository.findBySafeZoneKeyAndWardMemberKey(
+                victimZone.getSafeZoneKey(), victimWard.getMemberKey())).isPresent();
+    }
+
+    @Test
+    @DisplayName("자기 대상자 경로에 남의 안심존 키를 붙여 수정하면 400 E8000이고 값이 그대로다")
+    void updateSafeZone_returns_400_for_other_wards_zone_key() {
+        SafeZone victimZone = safeZoneRepository.save(SafeZoneFixture.createSafeZone(victimWard.getMemberKey()));
+
+        client.patch()
+                .uri("/api/v1/care/wards/" + ward.getMemberKey() + "/safe-zones/" + victimZone.getSafeZoneKey())
+                .header(HttpHeaders.AUTHORIZATION, guardianAuth)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(UPDATE_BODY)
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.error.errorCode").isEqualTo("E8000");
+
+        assertThat(safeZoneRepository.findBySafeZoneKeyAndWardMemberKey(
+                victimZone.getSafeZoneKey(), victimWard.getMemberKey())
+        ).get().extracting(SafeZone::getName).isEqualTo(SafeZoneFixture.NAME);
     }
 }

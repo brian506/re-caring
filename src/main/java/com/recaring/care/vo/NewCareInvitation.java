@@ -30,7 +30,7 @@ public record NewCareInvitation(
                 requesterMemberKey,
                 ward.memberKey(),
                 ward.memberKey(),
-                CareRole.GUARDIAN
+                CareRole.PRIMARY_GUARDIAN
         );
     }
 

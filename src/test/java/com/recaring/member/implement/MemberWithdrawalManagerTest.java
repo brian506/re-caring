@@ -9,7 +9,7 @@ import com.recaring.auth.implement.local.LocalAuthAuthenticator;
 import com.recaring.auth.implement.local.LocalAuthReader;
 import com.recaring.auth.vo.Password;
 import com.recaring.care.implement.CareInvitationWriter;
-import com.recaring.care.implement.CareRelationshipWriter;
+import com.recaring.care.implement.CareRelationshipManager;
 import com.recaring.device.dataaccess.repository.WardDeviceTokenRepository;
 import com.recaring.location.dataaccess.repository.LocationSettingRepository;
 import com.recaring.location.implement.detection.AnomalyDetectionManager;
@@ -61,7 +61,7 @@ class MemberWithdrawalManagerTest {
 
     @Mock private RefreshTokenWriter refreshTokenWriter;
     @Mock private MembersTermsAgreementWriter membersTermsAgreementWriter;
-    @Mock private CareRelationshipWriter careRelationshipWriter;
+    @Mock private CareRelationshipManager careRelationshipManager;
     @Mock private CareInvitationWriter careInvitationWriter;
     @Mock private GpsHistoryManager gpsHistoryManager;
     @Mock private SafeZoneWriter safeZoneWriter;
@@ -96,7 +96,7 @@ class MemberWithdrawalManagerTest {
         then(membersTermsAgreementWriter).should().deleteByMemberKey(MEMBER_KEY);
         then(fcmDeviceTokenRepository).should().deleteByMemberKey(MEMBER_KEY);
         then(notificationSettingRepository).should().deleteByWardMemberKey(MEMBER_KEY);
-        then(careRelationshipWriter).should().deleteAllByMemberKey(MEMBER_KEY);
+        then(careRelationshipManager).should().leaveAllCare(MEMBER_KEY);
         then(careInvitationWriter).should().deleteAllByMemberKey(MEMBER_KEY);
         then(gpsHistoryManager).should().deleteByWardMemberKey(MEMBER_KEY);
         then(anomalyDetectionManager).should().deleteByWardMemberKey(MEMBER_KEY);

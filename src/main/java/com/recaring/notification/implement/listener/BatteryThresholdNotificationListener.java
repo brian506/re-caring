@@ -41,7 +41,7 @@ public class BatteryThresholdNotificationListener {
         }
         // 보호 대상자와 연관된 보호자 + 관계자 조회
         List<String> guardianKeys = caregivers.stream()
-                .filter(caregiver -> caregiver.careRole() == CareRole.GUARDIAN)
+                .filter(caregiver -> caregiver.careRole().isGuardian())
                 .map(CaregiverInfo::memberKey)
                 .toList();
         List<String> managerKeys = caregivers.stream()

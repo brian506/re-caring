@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.Map;
 
 @Slf4j
@@ -56,8 +57,8 @@ public class AnomalyNotificationListener {
         String wardName = memberReader.findNameByMemberKey(wardMemberKey);
         String eventType = detection.detectionType().name();
         notificationSendManager.sendToCareParties(
-                memberKeysOf(caregivers, CareRole.GUARDIAN),
-                memberKeysOf(caregivers, CareRole.MANAGER),
+                memberKeysOf(caregivers, caregiver -> caregiver.careRole().isGuardian()),
+                memberKeysOf(caregivers, caregiver -> caregiver.careRole() == CareRole.MANAGER),
                 eventType,
                 detection.detectionType().notificationTitle(),
                 buildBody(detection.evidence(), wardName),
@@ -87,9 +88,9 @@ public class AnomalyNotificationListener {
         return body.substring(0, MAX_BODY_LENGTH);
     }
 
-    private List<String> memberKeysOf(List<CaregiverInfo> caregivers, CareRole careRole) {
+    private List<String> memberKeysOf(List<CaregiverInfo> caregivers, Predicate<CaregiverInfo> filter) {
         return caregivers.stream()
-                .filter(caregiver -> caregiver.careRole() == careRole)
+                .filter(filter)
                 .map(CaregiverInfo::memberKey)
                 .toList();
     }

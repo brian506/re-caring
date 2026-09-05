@@ -74,6 +74,17 @@ public class LocationFixture {
                 .build();
     }
 
+    public static Member createCoGuardian() {
+        return Member.builder()
+                .phone("01066665555")
+                .name("공동보호자")
+                .birth(LocalDate.of(1985, 1, 1))
+                .gender(Gender.FEMALE)
+                .role(MemberRole.GUARDIAN)
+                .signUpType(SignUpType.LOCAL)
+                .build();
+    }
+
     public static Member createManager() {
         return Member.builder()
                 .phone("01055556666")

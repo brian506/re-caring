@@ -62,7 +62,7 @@ class LocationControllerTest extends AbstractIntegrationTest {
         wardDeviceToken = deviceToken.getToken();
 
         careRelationshipRepository.save(CareRelationship.of(
-                ward.getMemberKey(), guardian.getMemberKey(), CareRole.GUARDIAN));
+                ward.getMemberKey(), guardian.getMemberKey(), CareRole.PRIMARY_GUARDIAN));
         careRelationshipRepository.save(CareRelationship.of(
                 ward.getMemberKey(), manager.getMemberKey(), CareRole.MANAGER));
     }

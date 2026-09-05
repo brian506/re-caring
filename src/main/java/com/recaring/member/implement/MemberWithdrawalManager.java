@@ -7,7 +7,7 @@ import com.recaring.auth.implement.local.LocalAuthAuthenticator;
 import com.recaring.auth.implement.local.LocalAuthReader;
 import com.recaring.auth.vo.Password;
 import com.recaring.care.implement.CareInvitationWriter;
-import com.recaring.care.implement.CareRelationshipWriter;
+import com.recaring.care.implement.CareRelationshipManager;
 import com.recaring.device.dataaccess.repository.WardDeviceTokenRepository;
 import com.recaring.location.dataaccess.repository.LocationSettingRepository;
 import com.recaring.location.implement.detection.AnomalyDetectionManager;
@@ -40,7 +40,7 @@ public class MemberWithdrawalManager {
     // 기존 Writer가 존재하는 도메인
     private final RefreshTokenWriter refreshTokenWriter;
     private final MembersTermsAgreementWriter membersTermsAgreementWriter;
-    private final CareRelationshipWriter careRelationshipWriter;
+    private final CareRelationshipManager careRelationshipManager;
     private final CareInvitationWriter careInvitationWriter;
     private final GpsHistoryManager gpsHistoryManager;
     private final AnomalyDetectionManager anomalyDetectionManager;
@@ -72,7 +72,7 @@ public class MemberWithdrawalManager {
         membersTermsAgreementWriter.deleteByMemberKey(memberKey);
         fcmDeviceTokenRepository.deleteByMemberKey(memberKey);
         notificationSettingRepository.deleteByWardMemberKey(memberKey);
-        careRelationshipWriter.deleteAllByMemberKey(memberKey);
+        careRelationshipManager.leaveAllCare(memberKey);
         careInvitationWriter.deleteAllByMemberKey(memberKey);
         gpsHistoryManager.deleteByWardMemberKey(memberKey);
         anomalyDetectionManager.deleteByWardMemberKey(memberKey);

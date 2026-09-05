@@ -9,7 +9,7 @@ public interface SafeZoneRepositoryCustom {
 
     List<SafeZone> findAllByWardMemberKey(String wardMemberKey);
 
-    Optional<SafeZone> findBySafeZoneKey(String safeZoneKey);
+    Optional<SafeZone> findBySafeZoneKeyAndWardMemberKey(String safeZoneKey, String wardMemberKey);
 
     void deleteByWardMemberKey(String wardMemberKey);
 }

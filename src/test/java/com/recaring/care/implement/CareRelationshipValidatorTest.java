@@ -51,14 +51,14 @@ class CareRelationshipValidatorTest {
     }
 
     @Test
-    @DisplayName("보호 대상자 추가 검증 - 이미 5명의 보호 대상자가 있으면 예외가 발생한다")
+    @DisplayName("보호 대상자 추가 검증 - 주보호자 4명과 보호자 1명을 합쳐 5명이면 예외가 발생한다")
     void validateCanAddWard_fails_when_limit_exceeded() {
         List<CareRelationship> existing = List.of(
                 CareFixture.createGuardianRelationship("ward-key-1", CareFixture.GUARDIAN_MEMBER_KEY),
                 CareFixture.createGuardianRelationship("ward-key-2", CareFixture.GUARDIAN_MEMBER_KEY),
                 CareFixture.createGuardianRelationship("ward-key-3", CareFixture.GUARDIAN_MEMBER_KEY),
                 CareFixture.createGuardianRelationship("ward-key-4", CareFixture.GUARDIAN_MEMBER_KEY),
-                CareFixture.createGuardianRelationship("ward-key-5", CareFixture.GUARDIAN_MEMBER_KEY));
+                CareFixture.createPrimaryGuardianRelationship("ward-key-5", CareFixture.GUARDIAN_MEMBER_KEY));
         given(careRelationshipRepository.findAllByCaregiverMemberKey(CareFixture.GUARDIAN_MEMBER_KEY))
                 .willReturn(existing);
 
@@ -102,147 +102,119 @@ class CareRelationshipValidatorTest {
                 .hasFieldOrPropertyWithValue("errorType", ErrorType.ALREADY_CARE_RELATIONSHIP);
     }
 
-    // ── validateCanAddManager ──────────────────────────────────────────────
+    // ── validateCanAddCaregiver ────────────────────────────────────────────
 
     @Test
-    @DisplayName("관리자 추가 검증 - 관리자가 없으면 정상 통과한다")
-    void validateCanAddManager_success() {
+    @DisplayName("케어 관계 추가 검증 - 주보호자가 요청하면 정상 통과한다")
+    void validateCanAddCaregiver_success() {
         given(careRelationshipRepository.existsCareRelationship(
-                CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY, CareRole.GUARDIAN))
+                CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY, CareRole.PRIMARY_GUARDIAN))
                 .willReturn(true);
         given(careRelationshipRepository.findAllByWardMemberKey(CareFixture.WARD_MEMBER_KEY))
-                .willReturn(List.of());
+                .willReturn(List.of(CareFixture.createPrimaryGuardianRelationship(
+                        CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY)));
 
         assertThatCode(() ->
-                careRelationshipValidator.validateCanAddManager(
+                careRelationshipValidator.validateCanAddCaregiver(
                         CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY))
                 .doesNotThrowAnyException();
     }
 
     @Test
-    @DisplayName("관리자 추가 검증 - 요청자가 해당 대상자의 보호자가 아니면 예외가 발생한다")
-    void validateCanAddManager_fails_when_requester_not_guardian() {
+    @DisplayName("케어 관계 추가 검증 - 요청자가 해당 대상자의 주보호자가 아니면 예외가 발생한다")
+    void validateCanAddCaregiver_fails_when_requester_is_not_primary_guardian() {
         given(careRelationshipRepository.existsCareRelationship(
-                CareFixture.WARD_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY, CareRole.GUARDIAN))
+                CareFixture.WARD_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY, CareRole.PRIMARY_GUARDIAN))
                 .willReturn(false);
 
         assertThatThrownBy(() ->
-                careRelationshipValidator.validateCanAddManager(
+                careRelationshipValidator.validateCanAddCaregiver(
                         CareFixture.MANAGER_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY, "another-manager-key"))
                 .isInstanceOf(AppException.class)
-                .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_GUARDIAN_ROLE_IN_CARE);
+                .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_PRIMARY_GUARDIAN_ROLE_IN_CARE);
 
         then(careRelationshipRepository).should(times(0)).findAllByWardMemberKey(anyString());
     }
 
     @Test
-    @DisplayName("관리자 추가 검증 - 관리자가 3명이면 예외가 발생한다")
-    void validateCanAddManager_fails_when_limit_exceeded() {
-        List<CareRelationship> existingManagers = List.of(
-                CareFixture.createManagerRelationship(CareFixture.WARD_MEMBER_KEY, "manager-1"),
-                CareFixture.createManagerRelationship(CareFixture.WARD_MEMBER_KEY, "manager-2"),
-                CareFixture.createManagerRelationship(CareFixture.WARD_MEMBER_KEY, "manager-3")
-        );
+    @DisplayName("케어 관계 추가 검증 - 대상자에 연결된 사람이 4명이면 한 명 더 추가할 수 있다")
+    void validateCanAddCaregiver_passes_at_one_below_limit() {
         given(careRelationshipRepository.existsCareRelationship(
-                CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY, CareRole.GUARDIAN))
+                CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY, CareRole.PRIMARY_GUARDIAN))
                 .willReturn(true);
         given(careRelationshipRepository.findAllByWardMemberKey(CareFixture.WARD_MEMBER_KEY))
-                .willReturn(existingManagers);
+                .willReturn(List.of(
+                        CareFixture.createPrimaryGuardianRelationship(CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY),
+                        CareFixture.createManagerRelationship(CareFixture.WARD_MEMBER_KEY, "manager-1"),
+                        CareFixture.createManagerRelationship(CareFixture.WARD_MEMBER_KEY, "manager-2"),
+                        CareFixture.createManagerRelationship(CareFixture.WARD_MEMBER_KEY, "manager-3")));
+
+        assertThatCode(() ->
+                careRelationshipValidator.validateCanAddCaregiver(
+                        CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY))
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    @DisplayName("케어 관계 추가 검증 - 역할이 섞여 5명이면 예외가 발생한다")
+    void validateCanAddCaregiver_fails_when_limit_exceeded() {
+        given(careRelationshipRepository.existsCareRelationship(
+                CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY, CareRole.PRIMARY_GUARDIAN))
+                .willReturn(true);
+        given(careRelationshipRepository.findAllByWardMemberKey(CareFixture.WARD_MEMBER_KEY))
+                .willReturn(List.of(
+                        CareFixture.createPrimaryGuardianRelationship(CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY),
+                        CareFixture.createGuardianRelationship(CareFixture.WARD_MEMBER_KEY, "guardian-2"),
+                        CareFixture.createManagerRelationship(CareFixture.WARD_MEMBER_KEY, "manager-1"),
+                        CareFixture.createManagerRelationship(CareFixture.WARD_MEMBER_KEY, "manager-2"),
+                        CareFixture.createManagerRelationship(CareFixture.WARD_MEMBER_KEY, "manager-3")));
 
         assertThatThrownBy(() ->
-                careRelationshipValidator.validateCanAddManager(
+                careRelationshipValidator.validateCanAddCaregiver(
                         CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY))
                 .isInstanceOf(AppException.class)
                 .hasFieldOrPropertyWithValue("errorType", ErrorType.CARE_CAREGIVER_LIMIT_EXCEEDED);
     }
 
     @Test
-    @DisplayName("관리자 추가 검증 - 관리자가 2명이면 한 명 더 추가할 수 있다")
-    void validateCanAddManager_passes_at_one_below_limit() {
-        // Given
+    @DisplayName("케어 관계 추가 검증 - 한도는 역할별로 세지 않는다. 보호자 자리가 비어 있어도 총원이 5명이면 막는다")
+    void validateCanAddCaregiver_counts_every_role_together() {
         given(careRelationshipRepository.existsCareRelationship(
-                CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY, CareRole.GUARDIAN))
+                CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY, CareRole.PRIMARY_GUARDIAN))
                 .willReturn(true);
         given(careRelationshipRepository.findAllByWardMemberKey(CareFixture.WARD_MEMBER_KEY))
                 .willReturn(List.of(
+                        CareFixture.createPrimaryGuardianRelationship(CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY),
                         CareFixture.createManagerRelationship(CareFixture.WARD_MEMBER_KEY, "manager-1"),
-                        CareFixture.createManagerRelationship(CareFixture.WARD_MEMBER_KEY, "manager-2")));
+                        CareFixture.createManagerRelationship(CareFixture.WARD_MEMBER_KEY, "manager-2"),
+                        CareFixture.createManagerRelationship(CareFixture.WARD_MEMBER_KEY, "manager-3"),
+                        CareFixture.createManagerRelationship(CareFixture.WARD_MEMBER_KEY, "manager-4")));
 
-        // When / Then
-        assertThatCode(() ->
-                careRelationshipValidator.validateCanAddManager(
-                        CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY))
-                .doesNotThrowAnyException();
+        assertThatThrownBy(() ->
+                careRelationshipValidator.validateCanAddCaregiver(
+                        CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY, "new-guardian-key"))
+                .isInstanceOf(AppException.class)
+                .hasFieldOrPropertyWithValue("errorType", ErrorType.CARE_CAREGIVER_LIMIT_EXCEEDED);
     }
 
     @Test
-    @DisplayName("관리자 추가 검증 - 동일한 관리자가 이미 존재하면 예외가 발생한다")
-    void validateCanAddManager_fails_when_duplicated() {
-        CareRelationship existing = CareFixture.createManagerRelationship(
-                CareFixture.WARD_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY);
+    @DisplayName("케어 관계 추가 검증 - 이미 연결된 사람을 다시 추가하면 예외가 발생한다")
+    void validateCanAddCaregiver_fails_when_duplicated() {
         given(careRelationshipRepository.existsCareRelationship(
-                CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY, CareRole.GUARDIAN))
+                CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY, CareRole.PRIMARY_GUARDIAN))
                 .willReturn(true);
         given(careRelationshipRepository.findAllByWardMemberKey(CareFixture.WARD_MEMBER_KEY))
-                .willReturn(List.of(existing));
+                .willReturn(List.of(
+                        CareFixture.createPrimaryGuardianRelationship(CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY),
+                        CareFixture.createManagerRelationship(CareFixture.WARD_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY)));
 
         assertThatThrownBy(() ->
-                careRelationshipValidator.validateCanAddManager(
+                careRelationshipValidator.validateCanAddCaregiver(
                         CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY))
                 .isInstanceOf(AppException.class)
                 .hasFieldOrPropertyWithValue("errorType", ErrorType.ALREADY_CARE_RELATIONSHIP);
     }
 
-    // ── validateCanAddGuardian ───────────────────────────────────────────
-
-    @Test
-    @DisplayName("공동 보호자 추가 검증 - 공동 보호자가 없으면 정상 통과한다")
-    void validateCanAddGuardian_success() {
-        given(careRelationshipRepository.existsCareRelationship(
-                CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY, CareRole.GUARDIAN))
-                .willReturn(true);
-        given(careRelationshipRepository.findAllByWardMemberKey(CareFixture.WARD_MEMBER_KEY))
-                .willReturn(List.of());
-
-        assertThatCode(() ->
-                careRelationshipValidator.validateCanAddGuardian(
-                        CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY, "another-guardian-key"))
-                .doesNotThrowAnyException();
-    }
-
-    @Test
-    @DisplayName("공동 보호자 추가 검증 - 요청자가 해당 대상자의 보호자가 아니면 예외가 발생한다")
-    void validateCanAddGuardian_fails_when_requester_not_guardian() {
-        given(careRelationshipRepository.existsCareRelationship(
-                CareFixture.WARD_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY, CareRole.GUARDIAN))
-                .willReturn(false);
-
-        assertThatThrownBy(() ->
-                careRelationshipValidator.validateCanAddGuardian(
-                        CareFixture.MANAGER_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY, "another-guardian-key"))
-                .isInstanceOf(AppException.class)
-                .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_GUARDIAN_ROLE_IN_CARE);
-
-        then(careRelationshipRepository).should(times(0)).findAllByWardMemberKey(anyString());
-    }
-
-    @Test
-    @DisplayName("공동 보호자 추가 검증 - 이미 공동 보호자가 있으면 예외가 발생한다")
-    void validateCanAddGuardian_fails_when_limit_exceeded() {
-        CareRelationship existing = CareFixture.createGuardianRelationship(
-                CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY);
-        given(careRelationshipRepository.existsCareRelationship(
-                CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY, CareRole.GUARDIAN))
-                .willReturn(true);
-        given(careRelationshipRepository.findAllByWardMemberKey(CareFixture.WARD_MEMBER_KEY))
-                .willReturn(List.of(existing));
-
-        assertThatThrownBy(() ->
-                careRelationshipValidator.validateCanAddGuardian(
-                        CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY, "another-guardian-key"))
-                .isInstanceOf(AppException.class)
-                .hasFieldOrPropertyWithValue("errorType", ErrorType.CARE_CAREGIVER_LIMIT_EXCEEDED);
-    }
 
     // ── validateCaregiver ────────────────────────────────────────────────
 
@@ -273,41 +245,11 @@ class CareRelationshipValidatorTest {
                 .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_FOUND_CARE_RELATIONSHIP);
     }
 
-    // ── validateGuardianRole ─────────────────────────────────────────────
-
-    @Test
-    @DisplayName("보호자 역할 검증 - CareRole이 GUARDIAN이면 정상 통과한다")
-    void validateGuardianRole_success() {
-        given(careRelationshipRepository.existsCareRelationship(
-                CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY, CareRole.GUARDIAN))
-                .willReturn(true);
-
-        assertThatCode(() ->
-                careRelationshipValidator.validateGuardianRole(
-                        CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY))
-                .doesNotThrowAnyException();
-    }
-
-    @Test
-    @DisplayName("보호자 역할 검증 - CareRole이 GUARDIAN이 아니면 예외가 발생한다")
-    void validateGuardianRole_fails_when_not_guardian_role() {
-        given(careRelationshipRepository.existsCareRelationship(
-                CareFixture.WARD_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY, CareRole.GUARDIAN))
-                .willReturn(false);
-
-        assertThatThrownBy(() ->
-                careRelationshipValidator.validateGuardianRole(
-                        CareFixture.MANAGER_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY))
-                .isInstanceOf(AppException.class)
-                .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_GUARDIAN_ROLE_IN_CARE);
-    }
-
     // ── validateCaregiverViewAccess ────────────────────────────────────────
 
     @Test
     @DisplayName("보호자 목록 조회 권한 - 본인(보호 대상자)은 접근 가능하다")
     void validateCaregiverViewAccess_success_when_ward_self() {
-        // wardKey == requesterKey 이면 본인 접근
         assertThatCode(() ->
                 careRelationshipValidator.validateCaregiverViewAccess(
                         CareFixture.WARD_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY))
@@ -315,10 +257,10 @@ class CareRelationshipValidatorTest {
     }
 
     @Test
-    @DisplayName("보호자 목록 조회 권한 - 해당 ward의 보호자(GUARDIAN)는 접근 가능하다")
+    @DisplayName("보호자 목록 조회 권한 - 해당 대상자의 보호자 계열은 접근 가능하다")
     void validateCaregiverViewAccess_success_when_guardian() {
-        given(careRelationshipRepository.existsCareRelationship(
-                CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY, CareRole.GUARDIAN))
+        given(careRelationshipRepository.existsCareRelationshipInRoles(
+                CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY, CareRole.guardianRoles()))
                 .willReturn(true);
 
         assertThatCode(() ->
@@ -330,8 +272,8 @@ class CareRelationshipValidatorTest {
     @Test
     @DisplayName("보호자 목록 조회 권한 - 관계없는 사람은 예외가 발생한다")
     void validateCaregiverViewAccess_fails_when_unauthorized() {
-        given(careRelationshipRepository.existsCareRelationship(
-                CareFixture.WARD_MEMBER_KEY, "stranger-key", CareRole.GUARDIAN))
+        given(careRelationshipRepository.existsCareRelationshipInRoles(
+                CareFixture.WARD_MEMBER_KEY, "stranger-key", CareRole.guardianRoles()))
                 .willReturn(false);
 
         assertThatThrownBy(() ->
@@ -339,5 +281,125 @@ class CareRelationshipValidatorTest {
                         "stranger-key", CareFixture.WARD_MEMBER_KEY))
                 .isInstanceOf(AppException.class)
                 .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_GUARDIAN_OF_WARD);
+    }
+
+    // ── validateCareRoleChange ─────────────────────────────────────────────
+
+    @Test
+    @DisplayName("관계 수정 검증 - 보호자의 관계는 바꿀 수 있다")
+    void validateCareRoleChange_allows_guardian() {
+        given(careRelationshipRepository.findAllByWardMemberKey(CareFixture.WARD_MEMBER_KEY))
+                .willReturn(List.of(
+                        CareFixture.createPrimaryGuardianRelationship(CareFixture.WARD_MEMBER_KEY, "primary-key"),
+                        CareFixture.createGuardianRelationship(CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY)));
+
+        assertThatCode(() ->
+                careRelationshipValidator.validateCareRoleChange(
+                        CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY))
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    @DisplayName("관계 수정 검증 - 관계자의 관계는 바꿀 수 있다")
+    void validateCareRoleChange_allows_manager() {
+        given(careRelationshipRepository.findAllByWardMemberKey(CareFixture.WARD_MEMBER_KEY))
+                .willReturn(List.of(
+                        CareFixture.createPrimaryGuardianRelationship(CareFixture.WARD_MEMBER_KEY, "primary-key"),
+                        CareFixture.createManagerRelationship(CareFixture.WARD_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY)));
+
+        assertThatCode(() ->
+                careRelationshipValidator.validateCareRoleChange(
+                        CareFixture.WARD_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY))
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    @DisplayName("관계 수정 검증 - 대상자에 연결된 사람이 5명으로 꽉 차 있어도 역할 변경은 통과한다")
+    void validateCareRoleChange_ignores_caregiver_limit() {
+        given(careRelationshipRepository.findAllByWardMemberKey(CareFixture.WARD_MEMBER_KEY))
+                .willReturn(List.of(
+                        CareFixture.createPrimaryGuardianRelationship(CareFixture.WARD_MEMBER_KEY, "primary-key"),
+                        CareFixture.createManagerRelationship(CareFixture.WARD_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY),
+                        CareFixture.createManagerRelationship(CareFixture.WARD_MEMBER_KEY, "manager-2"),
+                        CareFixture.createManagerRelationship(CareFixture.WARD_MEMBER_KEY, "manager-3"),
+                        CareFixture.createManagerRelationship(CareFixture.WARD_MEMBER_KEY, "manager-4")));
+
+        assertThatCode(() ->
+                careRelationshipValidator.validateCareRoleChange(
+                        CareFixture.WARD_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY))
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    @DisplayName("관계 수정 검증 - 주보호자의 관계는 바꿀 수 없다")
+    void validateCareRoleChange_fails_when_target_is_primary_guardian() {
+        given(careRelationshipRepository.findAllByWardMemberKey(CareFixture.WARD_MEMBER_KEY))
+                .willReturn(List.of(CareFixture.createPrimaryGuardianRelationship(
+                        CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY)));
+
+        assertThatThrownBy(() ->
+                careRelationshipValidator.validateCareRoleChange(
+                        CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY))
+                .isInstanceOf(AppException.class)
+                .hasFieldOrPropertyWithValue("errorType", ErrorType.CANNOT_CHANGE_PRIMARY_GUARDIAN_ROLE);
+    }
+
+    @Test
+    @DisplayName("관계 수정 검증 - 케어 관계에 없는 사람이면 예외가 발생한다")
+    void validateCareRoleChange_fails_when_relationship_not_found() {
+        given(careRelationshipRepository.findAllByWardMemberKey(CareFixture.WARD_MEMBER_KEY))
+                .willReturn(List.of(CareFixture.createPrimaryGuardianRelationship(
+                        CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY)));
+
+        assertThatThrownBy(() ->
+                careRelationshipValidator.validateCareRoleChange(
+                        CareFixture.WARD_MEMBER_KEY, "stranger-key"))
+                .isInstanceOf(AppException.class)
+                .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_FOUND_CARE_RELATIONSHIP);
+    }
+
+    // ── validateCaregiverRemovable ─────────────────────────────────────────
+
+    @Test
+    @DisplayName("케어 관계 삭제 검증 - 보호자는 삭제할 수 있다")
+    void validateCaregiverRemovable_allows_guardian() {
+        given(careRelationshipRepository.findAllByWardMemberKey(CareFixture.WARD_MEMBER_KEY))
+                .willReturn(List.of(
+                        CareFixture.createPrimaryGuardianRelationship(CareFixture.WARD_MEMBER_KEY, "primary-key"),
+                        CareFixture.createGuardianRelationship(CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY)));
+
+        assertThatCode(() ->
+                careRelationshipValidator.validateCaregiverRemovable(
+                        CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY))
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    @DisplayName("케어 관계 삭제 검증 - 주보호자는 삭제할 수 없다")
+    void validateCaregiverRemovable_fails_when_target_is_primary_guardian() {
+        given(careRelationshipRepository.findAllByWardMemberKey(CareFixture.WARD_MEMBER_KEY))
+                .willReturn(List.of(
+                        CareFixture.createPrimaryGuardianRelationship(CareFixture.WARD_MEMBER_KEY, "primary-key"),
+                        CareFixture.createPrimaryGuardianRelationship(CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY)));
+
+        assertThatThrownBy(() ->
+                careRelationshipValidator.validateCaregiverRemovable(
+                        CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY))
+                .isInstanceOf(AppException.class)
+                .hasFieldOrPropertyWithValue("errorType", ErrorType.CANNOT_REMOVE_PRIMARY_GUARDIAN);
+    }
+
+    @Test
+    @DisplayName("케어 관계 삭제 검증 - 케어 관계에 없는 사람이면 예외가 발생한다")
+    void validateCaregiverRemovable_fails_when_relationship_not_found() {
+        given(careRelationshipRepository.findAllByWardMemberKey(CareFixture.WARD_MEMBER_KEY))
+                .willReturn(List.of(CareFixture.createPrimaryGuardianRelationship(
+                        CareFixture.WARD_MEMBER_KEY, "primary-key")));
+
+        assertThatThrownBy(() ->
+                careRelationshipValidator.validateCaregiverRemovable(
+                        CareFixture.WARD_MEMBER_KEY, "stranger-key"))
+                .isInstanceOf(AppException.class)
+                .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_FOUND_CARE_RELATIONSHIP);
     }
 }

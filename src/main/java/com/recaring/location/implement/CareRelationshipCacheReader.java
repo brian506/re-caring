@@ -14,12 +14,11 @@ public class CareRelationshipCacheReader {
 
     @Cacheable(value = "careRelationship", key = "#wardKey + ':' + #caregiverKey + ':CAREGIVER'")
     public boolean hasCaregiverAccess(String wardKey, String caregiverKey) {
-        return careRelationshipRepository.existsCareRelationship(wardKey, caregiverKey, CareRole.GUARDIAN)
-                || careRelationshipRepository.existsCareRelationship(wardKey, caregiverKey, CareRole.MANAGER);
+        return careRelationshipRepository.existsCareRelationship(wardKey, caregiverKey);
     }
 
     @Cacheable(value = "careRelationship", key = "#wardKey + ':' + #caregiverKey + ':GUARDIAN'")
     public boolean hasGuardianAccess(String wardKey, String caregiverKey) {
-        return careRelationshipRepository.existsCareRelationship(wardKey, caregiverKey, CareRole.GUARDIAN);
+        return careRelationshipRepository.existsCareRelationshipInRoles(wardKey, caregiverKey, CareRole.guardianRoles());
     }
 }

@@ -38,6 +38,24 @@ public class CareInvitationRepositoryCustomImpl extends QuerydslRepositorySuppor
     }
 
     @Override
+    public void deleteAllByWardMemberKey(String wardMemberKey) {
+        delete(careInvitation)
+                .where(careInvitation.wardMemberKey.eq(wardMemberKey))
+                .execute();
+    }
+
+    @Override
+    public void deletePendingByWardMemberKeyAndRequesterMemberKey(String wardMemberKey, String requesterMemberKey) {
+        delete(careInvitation)
+                .where(
+                        careInvitation.wardMemberKey.eq(wardMemberKey),
+                        careInvitation.requesterMemberKey.eq(requesterMemberKey),
+                        careInvitation.status.eq(CareInvitationStatus.PENDING)
+                )
+                .execute();
+    }
+
+    @Override
     public void deleteAllByMemberKey(String memberKey) {
         delete(careInvitation)
                 .where(

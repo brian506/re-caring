@@ -12,6 +12,7 @@ import com.recaring.member.dataaccess.entity.Gender;
 import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.dataaccess.entity.MemberRole;
 import com.recaring.member.dataaccess.entity.SignUpType;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
 
@@ -75,7 +76,11 @@ public class CareFixture {
     }
 
     public static WardInfo createWardInfo(String memberKey, CareRole careRole) {
-        return new WardInfo(memberKey, "보호대상자", WARD_PHONE, Gender.FEMALE, careRole);
+        return createWardInfo(memberKey, null, careRole);
+    }
+
+    public static WardInfo createWardInfo(String memberKey, String wardNickname, CareRole careRole) {
+        return new WardInfo(memberKey, "보호대상자", wardNickname, WARD_PHONE, Gender.FEMALE, careRole);
     }
 
     public static CareRelationshipRegistration createRegistration(String wardKey, String caregiverKey, CareRole careRole) {
@@ -87,6 +92,17 @@ public class CareFixture {
         return new ReceivedRequestInfo(
                 requestKey, requesterKey, "보호자", wardKey, "보호대상자",
                 careRole, CareInvitationStatus.PENDING, createdAt);
+    }
+
+    // 승계 순서(먼저 등록된 쪽이 이긴다)를 검증하려면 등록 순서를 나타내는 id가 필요하다.
+    public static CareRelationship createRelationship(String wardKey, String caregiverKey, CareRole careRole, long id) {
+        CareRelationship relationship = CareRelationship.of(wardKey, caregiverKey, careRole);
+        ReflectionTestUtils.setField(relationship, "id", id);
+        return relationship;
+    }
+
+    public static CareRelationship createPrimaryGuardianRelationship(String wardKey, String caregiverKey) {
+        return CareRelationship.of(wardKey, caregiverKey, CareRole.PRIMARY_GUARDIAN);
     }
 
     public static CareRelationship createGuardianRelationship(String wardKey, String caregiverKey) {
@@ -101,6 +117,15 @@ public class CareFixture {
         return CareInvitation.builder()
                 .requesterMemberKey(requesterKey)
                 .targetMemberKey(wardKey)
+                .wardMemberKey(wardKey)
+                .careRole(CareRole.PRIMARY_GUARDIAN)
+                .build();
+    }
+
+    public static CareInvitation createGuardianInvitation(String requesterKey, String targetKey, String wardKey) {
+        return CareInvitation.builder()
+                .requesterMemberKey(requesterKey)
+                .targetMemberKey(targetKey)
                 .wardMemberKey(wardKey)
                 .careRole(CareRole.GUARDIAN)
                 .build();

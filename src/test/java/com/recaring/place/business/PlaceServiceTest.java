@@ -30,23 +30,66 @@ class PlaceServiceTest {
     private KakaoPlaceSearchClient kakaoPlaceSearchClient;
 
     @Test
-    @DisplayName("편향 검색 결과에 검색어가 걸리면 전국으로 다시 검색하지 않는다")
-    void keeps_biased_result_when_keyword_matched() {
+    @DisplayName("편향 검색이 검색어에 맞는 결과를 3건 주면 전국으로 다시 검색하지 않는다")
+    void keeps_biased_result_when_it_has_three_matching_places() {
         PlaceSearchCondition biased = PlaceFixture.createBiasedCondition(PlaceFixture.NEARBY_KEYWORD);
-        given(kakaoPlaceSearchClient.search(biased))
-                .willReturn(List.of(PlaceFixture.MANGWON_STATION, PlaceFixture.OLIVE_YOUNG_MANGWON));
+        given(kakaoPlaceSearchClient.search(biased)).willReturn(List.of(
+                PlaceFixture.MANGWON_STATION,
+                PlaceFixture.OLIVE_YOUNG_MANGWON,
+                PlaceFixture.MANGWON_STATION_EXIT));
 
         List<Place> result = placeService.searchPlaces(biased);
 
-        assertThat(result).containsExactly(PlaceFixture.MANGWON_STATION, PlaceFixture.OLIVE_YOUNG_MANGWON);
+        assertThat(result).containsExactly(
+                PlaceFixture.MANGWON_STATION,
+                PlaceFixture.OLIVE_YOUNG_MANGWON,
+                PlaceFixture.MANGWON_STATION_EXIT);
         then(kakaoPlaceSearchClient).should(never()).search(biased.withoutBias());
     }
 
     @Test
-    @DisplayName("편향 검색 결과가 비면 전국으로 다시 검색한다")
-    void falls_back_to_nationwide_when_biased_result_is_empty() {
+    @DisplayName("편향 검색 결과가 2건이면 검색어에 맞더라도 전국으로 다시 검색해 전국 결과를 앞에 둔다")
+    void falls_back_to_nationwide_when_biased_result_has_two_places() {
+        PlaceSearchCondition biased = PlaceFixture.createBiasedCondition(PlaceFixture.NEARBY_KEYWORD);
+        given(kakaoPlaceSearchClient.search(biased))
+                .willReturn(List.of(PlaceFixture.MANGWON_STATION, PlaceFixture.OLIVE_YOUNG_MANGWON));
+        given(kakaoPlaceSearchClient.search(biased.withoutBias()))
+                .willReturn(List.of(PlaceFixture.MANGWON_STATION_EXIT));
+
+        List<Place> result = placeService.searchPlaces(biased);
+
+        assertThat(result).containsExactly(
+                PlaceFixture.MANGWON_STATION_EXIT,
+                PlaceFixture.MANGWON_STATION,
+                PlaceFixture.OLIVE_YOUNG_MANGWON);
+    }
+
+    @Test
+    @DisplayName("편향 검색 결과가 3건이어도 검색어에 맞는 장소가 하나도 없으면 전국으로 다시 검색한다")
+    void falls_back_to_nationwide_when_no_biased_place_matches_keyword() {
         PlaceSearchCondition biased = PlaceFixture.createBiasedCondition(PlaceFixture.FAR_KEYWORD);
-        given(kakaoPlaceSearchClient.search(biased)).willReturn(List.of());
+        given(kakaoPlaceSearchClient.search(biased)).willReturn(List.of(
+                PlaceFixture.UNRELATED_RESTAURANT,
+                PlaceFixture.UNRELATED_CAFE,
+                PlaceFixture.UNRELATED_MART));
+        given(kakaoPlaceSearchClient.search(biased.withoutBias()))
+                .willReturn(List.of(PlaceFixture.HAEUNDAE_STATION));
+
+        List<Place> result = placeService.searchPlaces(biased);
+
+        assertThat(result).containsExactly(
+                PlaceFixture.HAEUNDAE_STATION,
+                PlaceFixture.UNRELATED_RESTAURANT,
+                PlaceFixture.UNRELATED_CAFE,
+                PlaceFixture.UNRELATED_MART);
+    }
+
+    @Test
+    @DisplayName("전국 결과와 편향 결과에 같은 장소가 있으면 한 번만 남긴다")
+    void keeps_one_entry_for_the_same_place_id() {
+        PlaceSearchCondition biased = PlaceFixture.createBiasedCondition(PlaceFixture.FAR_KEYWORD);
+        given(kakaoPlaceSearchClient.search(biased))
+                .willReturn(List.of(PlaceFixture.HAEUNDAE_STATION_JIBUN));
         given(kakaoPlaceSearchClient.search(biased.withoutBias()))
                 .willReturn(List.of(PlaceFixture.HAEUNDAE_STATION));
 
@@ -56,27 +99,33 @@ class PlaceServiceTest {
     }
 
     @Test
-    @DisplayName("편향 반경 안에서 검색어와 무관한 결과만 오면 전국으로 다시 검색한다")
-    void falls_back_to_nationwide_when_biased_result_does_not_match_keyword() {
+    @DisplayName("전국 결과와 편향 결과를 합쳐 5건이 넘으면 앞에서 5건만 반환한다")
+    void returns_at_most_five_places_after_merge() {
         PlaceSearchCondition biased = PlaceFixture.createBiasedCondition(PlaceFixture.FAR_KEYWORD);
-        given(kakaoPlaceSearchClient.search(biased)).willReturn(List.of(PlaceFixture.UNRELATED_RESTAURANT));
-        given(kakaoPlaceSearchClient.search(biased.withoutBias()))
-                .willReturn(List.of(PlaceFixture.HAEUNDAE_STATION));
+        List<Place> nationwide = List.of(
+                PlaceFixture.createPlace("n1", "해운대역 1번출구"),
+                PlaceFixture.createPlace("n2", "해운대역 2번출구"),
+                PlaceFixture.createPlace("n3", "해운대역 3번출구"),
+                PlaceFixture.createPlace("n4", "해운대역 4번출구"),
+                PlaceFixture.createPlace("n5", "해운대역 5번출구"));
+        given(kakaoPlaceSearchClient.search(biased))
+                .willReturn(List.of(PlaceFixture.UNRELATED_RESTAURANT, PlaceFixture.UNRELATED_CAFE));
+        given(kakaoPlaceSearchClient.search(biased.withoutBias())).willReturn(nationwide);
 
         List<Place> result = placeService.searchPlaces(biased);
 
-        assertThat(result).containsExactly(PlaceFixture.HAEUNDAE_STATION);
+        assertThat(result).containsExactlyElementsOf(nationwide);
     }
 
     @Test
-    @DisplayName("편향 없이 검색하면 결과가 비어도 다시 검색하지 않는다")
+    @DisplayName("편향 없이 검색하면 결과가 3건에 못 미쳐도 다시 검색하지 않는다")
     void does_not_search_twice_without_bias() {
         PlaceSearchCondition condition = PlaceFixture.createCondition(PlaceFixture.FAR_KEYWORD);
-        given(kakaoPlaceSearchClient.search(condition)).willReturn(List.of());
+        given(kakaoPlaceSearchClient.search(condition)).willReturn(List.of(PlaceFixture.HAEUNDAE_STATION));
 
         List<Place> result = placeService.searchPlaces(condition);
 
-        assertThat(result).isEmpty();
+        assertThat(result).containsExactly(PlaceFixture.HAEUNDAE_STATION);
         then(kakaoPlaceSearchClient).should(times(1)).search(condition);
     }
 
