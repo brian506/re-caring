@@ -75,7 +75,19 @@ class AnomalyDetectionParserTest {
     }
 
     @Test
-    @DisplayName("탐지 시각 형식이 규격과 다르면 메시지를 버린다")
+    @DisplayName("탐지 엔진이 보낸 'T' 구분자 탐지 시각도 같은 시각으로 읽는다")
+    void parses_detected_at_separated_by_t() {
+        Map<String, String> fields = LocationFixture.createAnomalyStreamFields(DetectionType.WANDERING, EVIDENCE);
+        fields.put("detected_at", LocationFixture.DETECTED_AT_ISO_TEXT);
+
+        Optional<AnomalyAlert> result = anomalyDetectionParser.parse(fields);
+
+        assertThat(result).isPresent();
+        assertThat(result.get().detectedAt()).isEqualTo(LocationFixture.DETECTED_AT);
+    }
+
+    @Test
+    @DisplayName("탐지 시각에 오프셋이 붙어 있으면 메시지를 버린다")
     void discards_message_with_malformed_detected_at() {
         Map<String, String> fields = LocationFixture.createAnomalyStreamFields(DetectionType.WANDERING, EVIDENCE);
         fields.put("detected_at", "2026-07-27T10:15:03+09:00");

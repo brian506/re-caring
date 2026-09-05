@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
 import java.util.Map;
 import java.util.Optional;
@@ -15,8 +16,13 @@ import java.util.Optional;
 @Component
 public class AnomalyDetectionParser {
 
-    private static final DateTimeFormatter DETECTED_AT_FORMAT =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    // 엔진은 'T' 구분자로 발행한다. 공백 구분자도 함께 받되, 오프셋이 붙은 값은 거부한다.
+    private static final DateTimeFormatter DETECTED_AT_FORMAT = new DateTimeFormatterBuilder()
+            .append(DateTimeFormatter.ISO_LOCAL_DATE)
+            .optionalStart().appendLiteral('T').optionalEnd()
+            .optionalStart().appendLiteral(' ').optionalEnd()
+            .append(DateTimeFormatter.ISO_LOCAL_TIME)
+            .toFormatter();
 
     private static final int MAX_EVIDENCE_LENGTH = 1000;
 

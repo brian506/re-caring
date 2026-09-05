@@ -82,6 +82,24 @@ class AnomalyDetectionConsumerTest {
     }
 
     @Test
+    @DisplayName("탐지 엔진이 보낸 'T' 구분자 탐지 시각도 저장까지 이어진다")
+    void records_alert_with_detected_at_separated_by_t() {
+        // given
+        given(redisTemplate.<String, String>opsForStream()).willReturn(streamOperations);
+        Map<String, String> fields = anomalyFields();
+        fields.put("detected_at", LocationFixture.DETECTED_AT_ISO_TEXT);
+        MapRecord<String, String, String> record = record(fields);
+
+        // when
+        anomalyDetectionConsumer.onMessage(record);
+
+        ArgumentCaptor<AnomalyAlert> captor = ArgumentCaptor.forClass(AnomalyAlert.class);
+        then(anomalyDetectionManager).should().record(captor.capture());
+        then(streamOperations).should().acknowledge(GROUP_NAME, record);
+        assertThat(captor.getValue().detectedAt()).isEqualTo(LocationFixture.DETECTED_AT);
+    }
+
+    @Test
     @DisplayName("해석할 수 없는 메시지는 저장하지 않고 ACK만 한다")
     void acknowledges_and_drops_unparsable_message() {
         // given
