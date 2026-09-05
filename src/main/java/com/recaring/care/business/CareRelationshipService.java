@@ -48,7 +48,7 @@ public class CareRelationshipService {
 
     public void updateCaregiverRole(String requesterKey, String wardKey, String caregiverKey, CareRole careRole) {
         careRelationshipValidator.validatePrimaryGuardianRole(requesterKey, wardKey);
-        careRelationshipValidator.validateCareRoleChange(wardKey, caregiverKey, careRole);
+        careRelationshipValidator.validateCareRoleChange(wardKey, caregiverKey);
         careRelationshipWriter.updateCareRole(wardKey, caregiverKey, careRole);
     }
 

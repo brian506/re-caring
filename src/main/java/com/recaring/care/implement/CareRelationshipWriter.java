@@ -74,12 +74,6 @@ public class CareRelationshipWriter {
         findRelationship(wardKey, caregiverKey).changeCareRole(careRole);
     }
 
-    @CacheEvict(value = "careRelationship", allEntries = true)
-    @Transactional
-    public void deleteAllByMemberKey(String memberKey) {
-        careRelationshipRepository.deleteAllByMemberKey(memberKey);
-    }
-
     private CareRelationship findRelationship(String wardKey, String caregiverKey) {
         return careRelationshipRepository
                 .findCareRelationship(wardKey, caregiverKey)

@@ -145,8 +145,9 @@ public class CareController {
             summary = "보호 대상자(Ward) 케어 관계 삭제",
             description = """
                     보호자/관계자가 자신과 특정 보호 대상자 사이의 케어 관계를 삭제합니다.
-                    주보호자가 삭제하면 그 보호 대상자에 연결된 다른 보호자·관계자의 케어 관계도 함께 해제됩니다 —
-                    주보호자가 없으면 그들을 정리할 주체가 사라지기 때문입니다. 클라이언트에서 사전 확인이 필요합니다.
+                    주보호자가 삭제해도 남은 보호자·관계자의 케어 관계는 유지되며, 주보호자가 한 명도 남지 않으면
+                    남은 보호자 중 가장 먼저 등록된 1명이 주보호자로 승계됩니다. 보호자가 없으면 관계자가 승계합니다.
+                    승계로 자신의 역할이 서버에서 바뀔 수 있으므로 클라이언트는 화면 진입 시 역할을 다시 조회해야 합니다.
                     [케어 관계가 있는 회원 전용]
                     """
     )
@@ -161,7 +162,7 @@ public class CareController {
 
     @Operation(
             summary = "보호자/관리자(Caregiver) 케어 관계 삭제",
-            description = "주보호자가 특정 보호 대상자에 연결된 보호자 또는 관계자를 케어 관계에서 삭제합니다. [PRIMARY_GUARDIAN 전용]"
+            description = "주보호자가 특정 보호 대상자에 연결된 보호자 또는 관계자를 케어 관계에서 삭제합니다. 주보호자는 삭제할 수 없습니다. [PRIMARY_GUARDIAN 전용]"
     )
     @DeleteMapping("/wards/{wardKey}/caregivers/{caregiverKey}")
     public ResponseEntity<ApiResponse<Void>> removeCaregiver(
@@ -194,9 +195,11 @@ public class CareController {
     @Operation(
             summary = "보호자/관계자(Caregiver) 관계 수정",
             description = """
-                    주보호자가 같은 보호 대상자에 연결된 다른 사람의 관계를 GUARDIAN(보호자) 또는 MANAGER(관계자)로 변경합니다.
-                    주보호자 자신의 관계는 변경할 수 없고, 다른 사람을 주보호자로 올릴 수도 없습니다.
-                    보호자는 최대 1명, 관계자는 최대 3명입니다. [PRIMARY_GUARDIAN 전용]
+                    주보호자가 같은 보호 대상자에 연결된 다른 사람의 관계를 PRIMARY_GUARDIAN(주보호자),
+                    GUARDIAN(보호자), MANAGER(관계자) 중 하나로 변경합니다. 주보호자는 여러 명일 수 있습니다.
+                    이미 주보호자인 관계는 변경할 수 없습니다 — 주보호자 승격은 되돌릴 수 없으므로 클라이언트에서 사전 확인이 필요합니다.
+                    인원 한도는 역할과 무관하게 보호 대상자당 총 5명이라 역할 변경은 한도에 영향을 주지 않습니다.
+                    [PRIMARY_GUARDIAN 전용]
                     """
     )
     @PatchMapping("/wards/{wardKey}/caregivers/{caregiverKey}/role")

@@ -7,8 +7,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-// TODO: CREATE UNIQUE INDEX ux_care_relationships_primary_guardian
-//        ON care_relationships (ward_member_key) WHERE care_role = 'PRIMARY_GUARDIAN';
 @Getter
 @Entity
 @Table(

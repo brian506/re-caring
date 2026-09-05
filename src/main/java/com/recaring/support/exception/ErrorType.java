@@ -56,7 +56,7 @@ public enum ErrorType {
     INVALID_PHONE_FORMAT(HttpStatus.BAD_REQUEST, ErrorCode.E4004, "올바른 휴대폰 번호 형식이 아닙니다.", LogLevel.WARN),
 
     // Care (E5xxx)
-    CARE_CAREGIVER_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, ErrorCode.E5000, "보호 대상자의 보호자/관리자는 최대 3명입니다.", LogLevel.WARN),
+    CARE_CAREGIVER_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, ErrorCode.E5000, "보호 대상자에 연결할 수 있는 보호자·관계자는 최대 5명입니다.", LogLevel.WARN),
     ALREADY_CARE_RELATIONSHIP(HttpStatus.BAD_REQUEST, ErrorCode.E5001, "이미 등록된 보호자/관리자입니다.", LogLevel.WARN),
     NOT_GUARDIAN_OF_WARD(HttpStatus.FORBIDDEN, ErrorCode.E5002, "해당 보호 대상자의 보호자가 아닙니다.", LogLevel.WARN),
     NOT_FOUND_CARE_REQUEST(HttpStatus.BAD_REQUEST, ErrorCode.E5003, "존재하지 않는 케어 요청입니다.", LogLevel.WARN),
@@ -72,7 +72,6 @@ public enum ErrorType {
     CARE_WARD_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, ErrorCode.E5013, "보호 대상자는 최대 5명까지 등록할 수 있습니다.", LogLevel.WARN),
     NOT_PRIMARY_GUARDIAN_ROLE_IN_CARE(HttpStatus.FORBIDDEN, ErrorCode.E5014, "해당 보호 대상자의 주보호자만 할 수 있습니다.", LogLevel.WARN),
     CANNOT_CHANGE_PRIMARY_GUARDIAN_ROLE(HttpStatus.BAD_REQUEST, ErrorCode.E5015, "주보호자의 관계는 변경할 수 없습니다.", LogLevel.WARN),
-    INVALID_TARGET_CARE_ROLE(HttpStatus.BAD_REQUEST, ErrorCode.E5016, "보호자 또는 관계자로만 변경할 수 있습니다.", LogLevel.WARN),
     CANNOT_REMOVE_PRIMARY_GUARDIAN(HttpStatus.BAD_REQUEST, ErrorCode.E5017, "주보호자는 케어 관계에서 삭제할 수 없습니다.", LogLevel.WARN),
     WARD_ALREADY_HAS_PRIMARY_GUARDIAN(HttpStatus.BAD_REQUEST, ErrorCode.E5018, "이미 주보호자가 등록된 보호 대상자입니다.", LogLevel.WARN),
 

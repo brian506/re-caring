@@ -48,7 +48,7 @@ public class CareInvitationManager {
         Member newManager = memberReader.findByPhone(new PhoneNumber(phoneNumber));
         NewCareInvitation invitation = NewCareInvitation.ofCaregiverRequest(requesterKey, Caregiver.of(newManager.getMemberKey(), newManager.getRole()), wardMemberKey, CareRole.MANAGER);
 
-        careRelationshipValidator.validateCanAddManager(invitation.requesterMemberKey(), invitation.wardMemberKey(), invitation.targetMemberKey());
+        careRelationshipValidator.validateCanAddCaregiver(invitation.requesterMemberKey(), invitation.wardMemberKey(), invitation.targetMemberKey());
         CareInvitation saved = careInvitationWriter.register(invitation);
         eventPublisher.publishEvent(new CareInvitationSentEvent(saved.getRequestKey(), saved.getTargetMemberKey(), saved.getRequesterMemberKey(), saved.targetRole()));
     }
@@ -59,7 +59,7 @@ public class CareInvitationManager {
         Member newGuardian = memberReader.findByPhone(new PhoneNumber(phoneNumber));
         NewCareInvitation invitation = NewCareInvitation.ofCaregiverRequest(requesterKey, Caregiver.of(newGuardian.getMemberKey(), newGuardian.getRole()), wardMemberKey, CareRole.GUARDIAN);
 
-        careRelationshipValidator.validateCanAddGuardian(invitation.requesterMemberKey(), invitation.wardMemberKey(), invitation.targetMemberKey());
+        careRelationshipValidator.validateCanAddCaregiver(invitation.requesterMemberKey(), invitation.wardMemberKey(), invitation.targetMemberKey());
         CareInvitation saved = careInvitationWriter.register(invitation);
         eventPublisher.publishEvent(new CareInvitationSentEvent(saved.getRequestKey(), saved.getTargetMemberKey(), saved.getRequesterMemberKey(), saved.targetRole()));
     }
