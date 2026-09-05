@@ -12,6 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DisplayName("KakaoPlaceDocument 단위 테스트")
 class KakaoPlaceDocumentTest {
 
+    private static final String PLACE_ID = "8133484";
     private static final String PLACE_NAME = "망원역 6호선";
     private static final String ROAD_ADDRESS = "서울 마포구 월드컵로 지하 77";
     private static final String JIBUN_ADDRESS = "서울 마포구 망원동 484-3";
@@ -22,7 +23,7 @@ class KakaoPlaceDocumentTest {
     @DisplayName("카카오의 y는 위도로, x는 경도로 옮긴다")
     void converts_kakao_coordinates_to_latitude_and_longitude() {
         KakaoPlaceDocument document =
-                new KakaoPlaceDocument(PLACE_NAME, ROAD_ADDRESS, JIBUN_ADDRESS, LONGITUDE, LATITUDE);
+                new KakaoPlaceDocument(PLACE_ID, PLACE_NAME, ROAD_ADDRESS, JIBUN_ADDRESS, LONGITUDE, LATITUDE);
 
         Place place = document.toPlace();
 
@@ -34,7 +35,7 @@ class KakaoPlaceDocumentTest {
     @DisplayName("카카오가 준 장소 이름을 그대로 결과 이름으로 쓴다")
     void uses_kakao_place_name_as_name() {
         KakaoPlaceDocument document =
-                new KakaoPlaceDocument(PLACE_NAME, ROAD_ADDRESS, JIBUN_ADDRESS, LONGITUDE, LATITUDE);
+                new KakaoPlaceDocument(PLACE_ID, PLACE_NAME, ROAD_ADDRESS, JIBUN_ADDRESS, LONGITUDE, LATITUDE);
 
         Place place = document.toPlace();
 
@@ -45,7 +46,7 @@ class KakaoPlaceDocumentTest {
     @DisplayName("도로명 주소가 있는 장소는 도로명 주소를 주소로 쓴다")
     void uses_road_address_when_present() {
         KakaoPlaceDocument document =
-                new KakaoPlaceDocument(PLACE_NAME, ROAD_ADDRESS, JIBUN_ADDRESS, LONGITUDE, LATITUDE);
+                new KakaoPlaceDocument(PLACE_ID, PLACE_NAME, ROAD_ADDRESS, JIBUN_ADDRESS, LONGITUDE, LATITUDE);
 
         Place place = document.toPlace();
 
@@ -57,11 +58,32 @@ class KakaoPlaceDocumentTest {
     @DisplayName("도로명 주소가 없는 장소는 지번 주소를 주소로 쓴다")
     void falls_back_to_jibun_address_without_road_address(String roadAddress) {
         KakaoPlaceDocument document =
-                new KakaoPlaceDocument(PLACE_NAME, roadAddress, JIBUN_ADDRESS, LONGITUDE, LATITUDE);
+                new KakaoPlaceDocument(PLACE_ID, PLACE_NAME, roadAddress, JIBUN_ADDRESS, LONGITUDE, LATITUDE);
 
         Place place = document.toPlace();
 
         assertThat(place.address()).isEqualTo(JIBUN_ADDRESS);
+    }
+
+    @Test
+    @DisplayName("카카오가 준 장소 id를 그대로 결과 id로 쓴다")
+    void uses_kakao_place_id_as_place_id() {
+        KakaoPlaceDocument document =
+                new KakaoPlaceDocument(PLACE_ID, PLACE_NAME, ROAD_ADDRESS, JIBUN_ADDRESS, LONGITUDE, LATITUDE);
+
+        Place place = document.toPlace();
+
+        assertThat(place.placeId()).isEqualTo(PLACE_ID);
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @DisplayName("장소 id가 없는 장소는 결과에서 제외한다")
+    void excludes_place_without_place_id(String placeId) {
+        KakaoPlaceDocument document =
+                new KakaoPlaceDocument(placeId, PLACE_NAME, ROAD_ADDRESS, JIBUN_ADDRESS, LONGITUDE, LATITUDE);
+
+        assertThat(document.isConvertible()).isFalse();
     }
 
     @ParameterizedTest
@@ -74,7 +96,7 @@ class KakaoPlaceDocumentTest {
     @DisplayName("좌표가 비어 있거나 숫자가 아닌 장소는 결과에서 제외한다")
     void excludes_place_without_parsable_coordinates(String x, String y) {
         KakaoPlaceDocument document =
-                new KakaoPlaceDocument(PLACE_NAME, ROAD_ADDRESS, JIBUN_ADDRESS, x, y);
+                new KakaoPlaceDocument(PLACE_ID, PLACE_NAME, ROAD_ADDRESS, JIBUN_ADDRESS, x, y);
 
         assertThat(document.isConvertible()).isFalse();
     }
