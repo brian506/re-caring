@@ -14,7 +14,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
+import org.springframework.jdbc.core.JdbcTemplate;
 
+import java.time.LocalDateTime;
 import java.util.stream.IntStream;
 
 @DisplayName("알림 목록 컨트롤러 HTTP 통합 테스트")
@@ -24,6 +26,8 @@ class NotificationControllerTest extends AbstractIntegrationTest {
     private MemberRepository memberRepository;
     @Autowired
     private NotificationRepository notificationRepository;
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     private Member guardian;
 
@@ -63,6 +67,29 @@ class NotificationControllerTest extends AbstractIntegrationTest {
                 .jsonPath("$.data.items[0].dataPayload.type").isEqualTo(NotificationFixture.BATTERY_LOW_EVENT_TYPE)
                 .jsonPath("$.data.hasNext").isEqualTo(true)
                 .jsonPath("$.data.nextCursor").isEqualTo(middle.getId());
+    }
+
+    @Test
+    @DisplayName("최신순 정렬은 생성 시각이 아니라 알림 식별자를 기준으로 한다")
+    void getMyNotifications_orders_by_id_not_created_at() {
+        // given — 식별자 순서와 생성 시각 순서를 서로 반대로 만든다
+        Notification first = saveNotification(guardian.getMemberKey());
+        Notification second = saveNotification(guardian.getMemberKey());
+        Notification third = saveNotification(guardian.getMemberKey());
+        overwriteCreatedAt(first, LocalDateTime.of(2026, 9, 8, 12, 0));
+        overwriteCreatedAt(second, LocalDateTime.of(2026, 9, 8, 11, 0));
+        overwriteCreatedAt(third, LocalDateTime.of(2026, 9, 8, 10, 0));
+
+        // when / then
+        client.get()
+                .uri("/api/v1/notifications?size=3")
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(guardian.getMemberKey(), guardian.getRole()))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.data.items[0].notificationKey").isEqualTo(third.getNotificationKey())
+                .jsonPath("$.data.items[1].notificationKey").isEqualTo(second.getNotificationKey())
+                .jsonPath("$.data.items[2].notificationKey").isEqualTo(first.getNotificationKey());
     }
 
     @Test
@@ -234,5 +261,12 @@ class NotificationControllerTest extends AbstractIntegrationTest {
 
     private Notification saveNotification(String recipientMemberKey) {
         return notificationRepository.saveAndFlush(NotificationFixture.batteryLowNotification(recipientMemberKey));
+    }
+
+    private void overwriteCreatedAt(Notification notification, LocalDateTime createdAt) {
+        jdbcTemplate.update(
+                "UPDATE notifications SET created_at = ? WHERE notification_id = ?",
+                createdAt, notification.getId()
+        );
     }
 }
