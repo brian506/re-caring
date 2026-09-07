@@ -53,6 +53,10 @@
 
 - **API Response에 DB PK(`id`, `Long`)를 노출하면 안 된다**
   - 외부 노출 식별자는 `memberKey`, `requestKey` 등 UUID Key 사용
+  - 예외: 커서 페이징의 `cursor` / `nextCursor` 값은 PK 허용
+    - 리소스 식별자가 아니라 정렬 위치를 가리키는 토큰이며, 조회 쿼리에 소유자 조건이 항상 함께 붙어
+      값을 조작해도 타인의 데이터에 닿지 않는다 (예: `GET /api/v1/notifications?cursor=`)
+    - 항목 자체의 식별자는 그대로 UUID Key를 쓴다. 응답 아이템에 `id` 필드를 넣지 않는다
 
 ## Testing
 

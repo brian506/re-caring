@@ -11,6 +11,7 @@ import com.recaring.notification.dataaccess.entity.FcmDeviceToken;
 import com.recaring.notification.dataaccess.entity.Notification;
 import com.recaring.notification.dataaccess.entity.NotificationSetting;
 import com.recaring.notification.vo.NotificationItem;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -132,13 +133,20 @@ public class NotificationFixture {
         return notification(recipientMemberKey, BATTERY_LOW_EVENT_TYPE, BATTERY_LOW_TITLE, BATTERY_LOW_BODY);
     }
 
-    public static NotificationItem notificationItem(String eventType, String title, String body) {
+    public static Notification notificationWithId(Long id, String recipientMemberKey) {
+        Notification notification = batteryLowNotification(recipientMemberKey);
+        ReflectionTestUtils.setField(notification, "id", id);
+        return notification;
+    }
+
+    public static NotificationItem notificationItem(Long id) {
         return new NotificationItem(
-                "notification-key-001",
-                eventType,
-                title,
-                body,
-                Map.of("type", eventType),
+                id,
+                "notification-key-" + id,
+                BATTERY_LOW_EVENT_TYPE,
+                BATTERY_LOW_TITLE,
+                BATTERY_LOW_BODY,
+                Map.of("type", BATTERY_LOW_EVENT_TYPE),
                 LocalDateTime.of(2026, 7, 5, 9, 41)
         );
     }

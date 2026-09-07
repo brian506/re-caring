@@ -1,6 +1,6 @@
 # 프로젝트 스냅샷
 
-> 마지막 업데이트: 2026-09-05. 기능 추가·수정 시 해당 섹션을 갱신한다.
+> 마지막 업데이트: 2026-09-08. 기능 추가·수정 시 해당 섹션을 갱신한다.
 
 ## 도메인별 패키지 현황
 
@@ -47,7 +47,7 @@
 | Location | GET | `/api/v1/location/settings/{wardKey}/collection-interval` | 위치 수집 주기 조회 (GUARDIAN, 옵션 30/60/180/300초 포함) |
 | Location | PATCH | `/api/v1/location/settings/{wardKey}/collection-interval` | 위치 수집 주기 수정 (GUARDIAN only) |
 | Location | GET | `/api/v1/location/settings/collection-interval/me` | 내 위치 수집 주기 조회 (WARD, Device Token 인증) |
-| Notification | GET | `/api/v1/notifications` | 내 알림함 목록 조회 (WARD, GUARDIAN — recipient 기준, 최신순, 페이징 없음) |
+| Notification | GET | `/api/v1/notifications?cursor&size` | 내 알림함 목록 조회 (WARD, GUARDIAN — recipient 기준). notification_id DESC 커서 페이징. `cursor`=직전 응답 `nextCursor`(첫 페이지는 생략), `size`=1~50(기본 10). 응답 `{ items, nextCursor, hasNext }` |
 | Notification | GET | `/api/v1/notifications/settings/{wardKey}` | 알림 설정 조회 (안심존·이상탐지·응급호출·배터리) |
 | Notification | PATCH | `/api/v1/notifications/settings/{wardKey}/safe-zone` | 안심존 진입·이탈 알림 토글 |
 | Notification | PATCH | `/api/v1/notifications/settings/{wardKey}/anomaly` | 이상탐지 알림 토글 수정 (5종 각각 on/off. **민감도 제거됨**) |
@@ -82,7 +82,7 @@
 | MembersTermsAgreement | members_terms_agreements | memberKey, agreedAt |
 | SafeZone | safe_zones | safeZoneKey(UUID), wardMemberKey, name, address, latitude, longitude, radius(SMALL/MEDIUM/LARGE/XLARGE) |
 | SafeZoneState | safe_zone_states | wardMemberKey(UNIQUE), safeZoneKeys(CSV, 현재 속한 안심존). 행 없음=최초 관측(알림 안 함), 빈 문자열=존 밖 |
-| Notification | notifications | notificationKey(UUID, UNIQUE), recipientMemberKey, eventType, title, body, dataPayload(jsonb, 리다이렉트용), createdAt. 수신자별 개별 row. 읽음 필드 없음 |
+| Notification | notifications | notificationKey(UUID, UNIQUE), recipientMemberKey, eventType, title, body, dataPayload(jsonb, 리다이렉트용), createdAt. 수신자별 개별 row. 읽음 필드 없음. 목록 조회 정렬·커서는 notification_id DESC (created_at은 fan-out 시 동시각 행이 생겨 정렬 불안정) |
 | AnomalyDetection | anomaly_detections | wardMemberKey, detectionType(5종), score, detectedAt, latitude, longitude, evidence(1000자). `(wardMemberKey, detectionType, detectedAt)` UNIQUE = 재배달 멱등 키. 알림 토글과 무관하게 항상 저장되는 탐지 사건 원본 (1건 = 1 row) |
 | NotificationSetting | notification_settings | wardMemberKey(UNIQUE), 안심존·응급호출 토글, 이상탐지 토글 5종(speed/wandering/abnormalDwelling/routeDeviation/timeAnomaly), lowBatteryEnabled, batteryThresholdPercents(CSV, 기본 '' = 선택 없음 → 알림 없음) |
 | AlertRunbook | alert_runbooks | errorSignature, commands(jsonb), resolutionContext, successCount, isValid |

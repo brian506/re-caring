@@ -5,6 +5,7 @@ import com.recaring.support.exception.AppException;
 import com.recaring.support.exception.ErrorCode;
 import com.recaring.support.exception.ErrorType;
 import com.recaring.support.response.ApiResponse;
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -51,6 +52,16 @@ public class ApiControllerAdvice {
     @ExceptionHandler({MissingServletRequestParameterException.class, MethodArgumentTypeMismatchException.class})
     public ResponseEntity<ApiResponse<@Nullable Object>> handleRequestParamException(Exception e) {
         log.warn("[요청 파라미터 : 바인딩 실패]: message={}", e.getMessage());
+        return new ResponseEntity<>(ApiResponse.error(ErrorType.INVALID_ACCESS_PATH, null), HttpStatus.BAD_REQUEST);
+    }
+
+    // @Validated가 붙은 컨트롤러의 @RequestParam/@PathVariable 제약(@Min, @Max 등) 위반은
+    // ConstraintViolationException으로 던져진다. MethodArgumentNotValidException과 별개 타입이라
+    // 핸들러가 없으면 클라이언트 입력 오류가 generic Exception 핸들러(500)로 흡수된다.
+    @NullMarked
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ApiResponse<@Nullable Object>> handleConstraintViolationException(ConstraintViolationException e) {
+        log.warn("[요청 파라미터 : 제약 위반]: message={}", e.getMessage());
         return new ResponseEntity<>(ApiResponse.error(ErrorType.INVALID_ACCESS_PATH, null), HttpStatus.BAD_REQUEST);
     }
 

@@ -36,7 +36,6 @@ public class BatteryThresholdNotificationListener {
 
         List<CaregiverInfo> caregivers = careRelationshipReader.findCaregiverInfos(memberKey);
         if (caregivers.isEmpty()) {
-            log.warn("[배터리 잔량 알림 : 수신자 없음]: memberKey={}", memberKey);
             return;
         }
         // 보호 대상자와 연관된 보호자 + 관계자 조회
@@ -54,7 +53,7 @@ public class BatteryThresholdNotificationListener {
                 managerKeys,
                 EVENT_TYPE_BATTERY_THRESHOLD,
                 TITLE,
-                memberReader.findNameByMemberKey(memberKey) + "님의 기기 배터리 잔량이 " + thresholdPercent + "%에 도달했어요.",
+                memberReader.findNameByMemberKey(memberKey) + "님의 배터리 잔량이 " + thresholdPercent + "%에 도달했어요.",
                 Map.of(
                         "type", EVENT_TYPE_BATTERY_THRESHOLD,
                         "wardKey", memberKey,

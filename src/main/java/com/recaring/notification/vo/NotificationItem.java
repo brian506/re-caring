@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.util.Map;
 
 public record NotificationItem(
+        Long id,
         String notificationKey,
         String eventType,
         String title,
@@ -15,6 +16,7 @@ public record NotificationItem(
 ) {
     public static NotificationItem from(Notification notification) {
         return new NotificationItem(
+                notification.getId(),
                 notification.getNotificationKey(),
                 notification.getEventType(),
                 notification.getTitle(),
