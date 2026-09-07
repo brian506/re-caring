@@ -60,7 +60,7 @@ class BatteryThresholdNotificationListenerTest {
                 List.of(NotificationFixture.MANAGER_KEY),
                 EVENT_TYPE,
                 "배터리 잔량 알림",
-                NotificationFixture.WARD_NAME + "님의 기기 배터리 잔량이 20%에 도달했어요.",
+                NotificationFixture.WARD_NAME + "님의 배터리 잔량이 20%에 도달했어요.",
                 Map.of(
                         "type", EVENT_TYPE,
                         "wardKey", NotificationFixture.WARD_KEY,

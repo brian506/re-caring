@@ -17,7 +17,7 @@ import org.hibernate.type.SqlTypes;
 import java.util.Map;
 import java.util.UUID;
 
-// TODO: CREATE INDEX idx_notifications_recipient_created ON notifications(recipient_member_key, created_at DESC);
+// TODO: CREATE INDEX idx_notifications_recipient_id ON notifications(recipient_member_key, notification_id DESC);
 @Getter
 @Entity
 @Table(name = "notifications")
