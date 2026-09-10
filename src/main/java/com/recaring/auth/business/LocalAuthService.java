@@ -34,9 +34,6 @@ public class LocalAuthService {
     private final PhoneVerificationWriter phoneVerificationWriter;
     private final FcmDeviceTokenService fcmDeviceTokenService;
 
-    // 인증 토큰은 조회와 동시에 소비해 1회용으로 만든다. 남겨두면 TTL 10분 동안 재사용할 수 있어,
-    // SMS 한 건 값으로 이메일만 바꿔가며 중복 여부(ALREADY_REGISTERED_EMAIL)를 무제한 조회할 수 있다.
-    // 성공 여부와 무관하게 소비되는 이유도 같다 — 열거는 실패를 반복하는 것이라 성공 시에만 지우면 막지 못한다.
     public void signUp(SignUpCommand command) {
         PhoneNumber phone = phoneVerificationWriter.consumePhoneByToken(command.smsToken());
         EncodedPassword encodedPassword = authAuthenticator.encodePassword(command.password());

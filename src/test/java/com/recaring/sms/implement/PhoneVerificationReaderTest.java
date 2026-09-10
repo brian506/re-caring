@@ -54,5 +54,4 @@ class PhoneVerificationReaderTest extends AbstractIntegrationTest {
                 .extracting(e -> ((AppException) e).getErrorType())
                 .isEqualTo(ErrorType.EXPIRED_VERIFICATION_CODE);
     }
-
 }

@@ -33,8 +33,6 @@ public class PhoneVerificationWriter {
         return token;
     }
 
-    // 조회와 삭제를 GETDEL 한 커맨드로 처리한다. GET 후 DEL로 나누면 같은 토큰을 쥔 동시 요청이
-    // 전부 GET을 통과한 뒤에야 DEL이 도달해, SMS 한 건으로 여러 번 시도할 수 있는 창이 열린다.
     public PhoneNumber consumePhoneByToken(String token) {
         String phone = redisTemplate.opsForValue().getAndDelete(TOKEN_KEY_PREFIX + token);
         if (phone == null) {
