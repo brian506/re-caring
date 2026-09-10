@@ -44,12 +44,11 @@ public enum ErrorType {
     // Member (E3xxx)
     EMAIL_IS_NULL(HttpStatus.BAD_REQUEST, ErrorCode.E3000, "이메일은 필수 입력값입니다.", LogLevel.WARN),
     INVALID_EMAIL_FORMAT(HttpStatus.BAD_REQUEST, ErrorCode.E3001, "올바른 이메일 형식이 아닙니다.", LogLevel.WARN),
-    INVALID_EMAIL(HttpStatus.BAD_REQUEST, ErrorCode.E3002, "이메일이 유효하지 않습니다.", LogLevel.WARN),
     PREMIUM_ONLY(HttpStatus.BAD_REQUEST, ErrorCode.E3003, "프리미엄 구독을 한 회원만 접근 가능합니다", LogLevel.WARN),
     BASIC_ONLY(HttpStatus.BAD_REQUEST, ErrorCode.E3004, "베이식 구독을 한 회원만 접근 가능합니다", LogLevel.WARN),
     SUBSCRIPTION_ONLY(HttpStatus.BAD_REQUEST, ErrorCode.E3005, "멤버십 결제가 필요한 기능입니다.", LogLevel.WARN),
-    ALREADY_REGISTERED_PHONE(HttpStatus.BAD_REQUEST, ErrorCode.E3006, "이미 가입된 전화번호입니다.", LogLevel.WARN),
-    ALREADY_REGISTERED_EMAIL(HttpStatus.BAD_REQUEST, ErrorCode.E3007, "이미 사용 중인 이메일입니다.", LogLevel.WARN),
+    ALREADY_REGISTERED_PHONE(HttpStatus.CONFLICT, ErrorCode.E3006, "이미 가입된 전화번호입니다.", LogLevel.WARN),
+    ALREADY_REGISTERED_EMAIL(HttpStatus.CONFLICT, ErrorCode.E3007, "이미 사용 중인 이메일입니다.", LogLevel.WARN),
 
     // SMS / Phone Verification (E4xxx)
     EXPIRED_VERIFICATION_CODE(HttpStatus.BAD_REQUEST, ErrorCode.E4000, "인증번호가 만료되었습니다.", LogLevel.WARN),

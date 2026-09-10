@@ -19,6 +19,7 @@ import com.recaring.notification.business.FcmDeviceTokenService;
 import com.recaring.security.vo.Jwt;
 import com.recaring.sms.fixture.SmsFixture;
 import com.recaring.sms.implement.PhoneVerificationReader;
+import com.recaring.sms.implement.PhoneVerificationWriter;
 import com.recaring.sms.vo.PhoneNumber;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -64,6 +65,9 @@ class LocalAuthServiceTest {
 
     @Mock
     private PhoneVerificationReader phoneVerificationReader;
+
+    @Mock
+    private PhoneVerificationWriter phoneVerificationWriter;
 
     @Mock
     private FcmDeviceTokenService fcmDeviceTokenService;

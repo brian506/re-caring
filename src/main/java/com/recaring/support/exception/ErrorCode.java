@@ -11,6 +11,7 @@ public enum ErrorCode {
     E2019, E2020, E2021,
 
     // Member (E3xxx) - 이메일, 계정
+    // E3002는 결번이다. 이메일 중복에 쓰였고 E3007로 대체됐다. 옛 클라이언트 분기와 충돌하므로 재사용하지 않는다.
     E3000, E3001, E3002, E3003, E3004, E3005, E3006, E3007,
 
     // SMS / Phone Verification (E4xxx)

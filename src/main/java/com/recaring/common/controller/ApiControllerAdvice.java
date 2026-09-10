@@ -42,11 +42,24 @@ public class ApiControllerAdvice {
     // UNIQUE/FK 제약 위반은 선검사를 통과한 동시 요청에서도 발생한다(예: 같은 전화번호로 가입 요청이 동시에 두 건).
     // 핸들러가 없으면 generic Exception 핸들러(500)로 흡수되어 클라이언트가 재시도해도 소용없는 상황을
     // 일시적 서버 오류로 오분류한다. 중복이라는 사실을 409로 알려 클라이언트가 안내 문구를 띄울 수 있게 한다.
+    //
+    // 예외 메시지 원문을 로그에 남기지 않는다. PostgreSQL은 UNIQUE 위반 시
+    // "Detail: Key (phone)=(01012345678) already exists."를 서버 에러 메시지에 담고
+    // PSQLException.getMessage()가 이를 그대로 옮기므로, 원문을 찍으면 로그가 개인정보 저장소가 된다.
+    // 제약 조건명(members_phone_key)만으로도 어느 컬럼이 충돌했는지 진단할 수 있다.
     @NullMarked
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiResponse<@Nullable Object>> handleDataIntegrityViolationException(DataIntegrityViolationException e) {
-        log.warn("[데이터 제약 : 위반]: message={}", e.getMostSpecificCause().getMessage());
+        log.warn("[데이터 제약 : 위반]: type={} | constraint={}",
+                e.getMostSpecificCause().getClass().getSimpleName(), constraintNameOf(e));
         return new ResponseEntity<>(ApiResponse.error(ErrorType.DUPLICATE_RESOURCE, null), HttpStatus.CONFLICT);
+    }
+
+    private String constraintNameOf(DataIntegrityViolationException e) {
+        if (e.getCause() instanceof org.hibernate.exception.ConstraintViolationException hibernateCause) {
+            return hibernateCause.getConstraintName();
+        }
+        return "unknown";
     }
 
     @NullMarked

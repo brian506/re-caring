@@ -21,13 +21,13 @@
 
 | 도메인 | Method | Path | 설명 |
 |--------|--------|------|------|
-| Auth | POST | `/api/v1/auth/sign-up` | 로컬 회원가입. 전화번호 중복 E3006, 이메일 중복 E3007(둘 다 400). 선검사를 통과한 동시 요청은 UNIQUE 위반 → 409(E409) |
+| Auth | POST | `/api/v1/auth/sign-up` | 로컬 회원가입. 전화번호 중복 E3006, 이메일 중복 E3007, 선검사를 통과한 동시 요청의 UNIQUE 위반 E409 — 모두 409. `verificationToken`은 1회용(성공·실패 무관하게 소비) |
 | Auth | POST | `/api/v1/auth/sign-in` | 로컬 로그인 |
 | Auth | POST | `/api/v1/auth/sign-in/{kakao\|naver}` | OAuth 로그인 (미연동 계정은 OAUTH_NOT_LINKED) |
 | Auth | POST | `/api/v1/auth/oauth/link/{kakao\|naver}` | OAuth 사후 연동 (JWT 인증, 로컬 가입 필수) |
 | Auth | POST | `/api/v1/auth/token/refresh` | 토큰 갱신 |
 | Auth | GET | `/api/v1/auth/email/mask` | 이메일 마스킹 조회 |
-| Auth | PATCH | `/api/v1/auth/password` | 비밀번호 변경 |
+| Auth | PATCH | `/api/v1/auth/password` | 비밀번호 변경. `verificationToken`은 1회용(성공·실패 무관하게 소비) |
 | Care | POST | `/api/v1/care/requests/ward` | 보호대상자 추가 요청 (GUARDIAN) |
 | Care | POST | `/api/v1/care/requests/manager` | 관리자 추가 요청 |
 | Care | POST | `/api/v1/care/requests/guardian` | 보호자 추가 요청 |
