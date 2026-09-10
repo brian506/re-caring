@@ -200,10 +200,43 @@ class AuthControllerTest extends AbstractIntegrationTest {
                 .exchange()
                 .expectStatus().isBadRequest()
                 .expectBody()
-                .jsonPath("$.error.errorCode").isEqualTo("E3002");
+                .jsonPath("$.error.errorCode").isEqualTo("E3007");
 
         assertThat(memberRepository.count()).isEqualTo(1);
         assertThat(memberRepository.findByPhone(SmsFixture.PHONE)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/auth/sign-up - 이미 가입된 전화번호면 회원이 추가되지 않는다")
+    void signUp_fail_when_phone_already_registered() {
+        prepareLocalMember(SmsFixture.PHONE, "existing@example.com", AuthFixture.RAW_PASSWORD);
+        String verificationToken = prepareVerificationToken(SmsFixture.PHONE);
+
+        client.post()
+                .uri("/api/v1/auth/sign-up")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {
+                            "verificationToken": "%s",
+                            "email": "another@example.com",
+                            "password": "%s",
+                            "name": "홍길동",
+                            "birth": "1990-01-01",
+                            "gender": "MALE",
+                            "role": "GUARDIAN",
+                            "isTermsOfServiceAgreed": true,
+                            "isLocationServiceAgreed": true,
+                            "isPrivacyPolicyAgreed": true
+                        }
+                        """.formatted(verificationToken, AuthFixture.RAW_PASSWORD))
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.error.errorCode").isEqualTo("E3006");
+
+        assertThat(memberRepository.count()).isEqualTo(1);
+        assertThat(localAuthRepository.findByEmail("another@example.com")).isEmpty();
+        assertThat(membersTermsAgreementRepository.count()).isZero();
     }
 
     @Test
