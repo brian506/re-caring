@@ -2,6 +2,9 @@ package com.recaring.member.controller;
 
 import com.recaring.auth.dataaccess.entity.LocalAuth;
 import com.recaring.auth.dataaccess.repository.LocalAuthRepository;
+import com.recaring.care.dataaccess.repository.CareRelationshipRepository;
+import com.recaring.care.dataaccess.repository.DesignatedAvatarRepository;
+import com.recaring.care.fixture.CareFixture;
 import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.dataaccess.entity.MemberRole;
 import com.recaring.member.dataaccess.repository.MemberRepository;
@@ -45,6 +48,10 @@ class MemberControllerTest extends AbstractIntegrationTest {
     @Autowired
     private MemberWithdrawalRepository memberWithdrawalRepository;
     @Autowired
+    private CareRelationshipRepository careRelationshipRepository;
+    @Autowired
+    private DesignatedAvatarRepository designatedAvatarRepository;
+    @Autowired
     private PasswordEncoder passwordEncoder;
     @Autowired
     private JwtGenerator jwtGenerator;
@@ -66,6 +73,8 @@ class MemberControllerTest extends AbstractIntegrationTest {
 
     @AfterEach
     void tearDown() {
+        designatedAvatarRepository.deleteAllInBatch();
+        careRelationshipRepository.deleteAllInBatch();
         memberWithdrawalRepository.deleteAllInBatch();
         membersTermsAgreementRepository.deleteAllInBatch();
         localAuthRepository.deleteAllInBatch();
@@ -347,6 +356,69 @@ class MemberControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @DisplayName("DELETE /me - 탈퇴하면 내가 지정했거나 남이 내게 지정한 얼굴은 모두 삭제되고 남들끼리의 지정은 남는다")
+    void withdraw_removes_designated_avatars_involving_the_member_only() {
+        Member otherGuardian = memberRepository.save(CareFixture.createGuardianMember("01077778888"));
+        careRelationshipRepository.save(
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+        careRelationshipRepository.save(
+                CareFixture.createGuardianRelationship(ward.getMemberKey(), otherGuardian.getMemberKey()));
+        designatedAvatarRepository.save(CareFixture.createDesignatedAvatar(
+                guardian.getMemberKey(), ward.getMemberKey(), ward.getMemberKey(), CareFixture.SENIOR_AVATAR_CODE));
+        designatedAvatarRepository.save(CareFixture.createDesignatedAvatar(
+                otherGuardian.getMemberKey(), ward.getMemberKey(), guardian.getMemberKey(), CareFixture.ADULT_AVATAR_CODE));
+        designatedAvatarRepository.save(CareFixture.createDesignatedAvatar(
+                otherGuardian.getMemberKey(), ward.getMemberKey(), ward.getMemberKey(), CareFixture.OTHER_SENIOR_AVATAR_CODE));
+
+        client.method(HttpMethod.DELETE)
+                .uri("/api/v1/members/me")
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(guardian))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"password": "%s"}
+                        """.formatted(PASSWORD))
+                .exchange()
+                .expectStatus().isOk();
+
+        assertThat(designatedAvatarRepository.findAll())
+                .extracting("ownerMemberKey", "targetMemberKey", "profileAvatarCode")
+                .containsExactly(tuple(otherGuardian.getMemberKey(), ward.getMemberKey(), CareFixture.OTHER_SENIOR_AVATAR_CODE));
+    }
+
+    @Test
+    @DisplayName("DELETE /me - 보호 대상자 본인이 탈퇴하면 자기 케어 범위에 남들이 지정한 얼굴도 모두 삭제되고 다른 대상자 범위는 남는다")
+    void withdraw_as_ward_removes_designations_scoped_to_own_care() {
+        Member otherGuardian = memberRepository.save(CareFixture.createGuardianMember("01077778888"));
+        Member otherWard = memberRepository.save(CareFixture.createWardMember("01066667777"));
+        careRelationshipRepository.save(
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+        careRelationshipRepository.save(
+                CareFixture.createGuardianRelationship(ward.getMemberKey(), otherGuardian.getMemberKey()));
+        careRelationshipRepository.save(
+                CareFixture.createPrimaryGuardianRelationship(otherWard.getMemberKey(), guardian.getMemberKey()));
+        designatedAvatarRepository.save(CareFixture.createDesignatedAvatar(
+                guardian.getMemberKey(), ward.getMemberKey(), otherGuardian.getMemberKey(), CareFixture.ADULT_AVATAR_CODE));
+        designatedAvatarRepository.save(CareFixture.createDesignatedAvatar(
+                otherGuardian.getMemberKey(), ward.getMemberKey(), guardian.getMemberKey(), CareFixture.ADULT_AVATAR_CODE));
+        designatedAvatarRepository.save(CareFixture.createDesignatedAvatar(
+                guardian.getMemberKey(), otherWard.getMemberKey(), otherWard.getMemberKey(), CareFixture.SENIOR_AVATAR_CODE));
+
+        client.method(HttpMethod.DELETE)
+                .uri("/api/v1/members/me")
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(ward))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"password": "%s"}
+                        """.formatted(PASSWORD))
+                .exchange()
+                .expectStatus().isOk();
+
+        assertThat(designatedAvatarRepository.findAll())
+                .extracting("ownerMemberKey", "wardMemberKey", "targetMemberKey")
+                .containsExactly(tuple(guardian.getMemberKey(), otherWard.getMemberKey(), otherWard.getMemberKey()));
+    }
+
+    @Test
     @DisplayName("DELETE /me - 비밀번호가 틀리면 400 E2017이 반환되고 회원은 남아 있다")
     void withdraw_rejects_wrong_password() {
         client.method(HttpMethod.DELETE)
@@ -381,5 +453,114 @@ class MemberControllerTest extends AbstractIntegrationTest {
                 .jsonPath("$.error.errorCode").isEqualTo("E400");
 
         assertThat(memberRepository.findByMemberKey(guardian.getMemberKey())).isPresent();
+    }
+
+    // ── 프로필 아바타 ─────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("PATCH /me - 허용된 아바타 코드를 보내면 DB에 저장되고 GET /me에 그대로 돌아온다")
+    void updateMyInfo_persists_avatar_code_and_returns_it() {
+        client.patch()
+                .uri("/api/v1/members/me")
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(guardian))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"profileAvatarCode": "%s"}
+                        """.formatted(MemberFixture.AVATAR_CODE))
+                .exchange()
+                .expectStatus().isOk();
+
+        assertThat(memberRepository.findByMemberKey(guardian.getMemberKey()).orElseThrow().getProfileAvatarCode())
+                .isEqualTo(MemberFixture.AVATAR_CODE);
+        client.get()
+                .uri("/api/v1/members/me")
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(guardian))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.data.profileAvatarCode").isEqualTo(MemberFixture.AVATAR_CODE);
+    }
+
+    @Test
+    @DisplayName("PATCH /me - 아바타 코드에 빈 문자열을 보내면 직접 고른 얼굴이 해제된다")
+    void updateMyInfo_clears_avatar_code_when_blank() {
+        patchAvatar(guardian, MemberFixture.AVATAR_CODE);
+
+        client.patch()
+                .uri("/api/v1/members/me")
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(guardian))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"profileAvatarCode": ""}
+                        """)
+                .exchange()
+                .expectStatus().isOk();
+
+        assertThat(memberRepository.findByMemberKey(guardian.getMemberKey()).orElseThrow().getProfileAvatarCode())
+                .isNull();
+    }
+
+    @Test
+    @DisplayName("PATCH /me - 아바타 코드를 생략하면 저장된 얼굴이 그대로 유지된다")
+    void updateMyInfo_keeps_avatar_code_when_omitted() {
+        patchAvatar(guardian, MemberFixture.AVATAR_CODE);
+
+        client.patch()
+                .uri("/api/v1/members/me")
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(guardian))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"name": "%s"}
+                        """.formatted(MemberFixture.UPDATED_NAME))
+                .exchange()
+                .expectStatus().isOk();
+
+        assertThat(memberRepository.findByMemberKey(guardian.getMemberKey()).orElseThrow().getProfileAvatarCode())
+                .isEqualTo(MemberFixture.AVATAR_CODE);
+    }
+
+    @Test
+    @DisplayName("PATCH /me - 허용되지 않은 아바타 코드면 400 E3008이고 저장된 얼굴은 바뀌지 않는다")
+    void updateMyInfo_rejects_unknown_avatar_code() {
+        patchAvatar(guardian, MemberFixture.AVATAR_CODE);
+
+        client.patch()
+                .uri("/api/v1/members/me")
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(guardian))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"profileAvatarCode": "%s"}
+                        """.formatted(MemberFixture.UNKNOWN_AVATAR_CODE))
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.error.errorCode").isEqualTo("E3008");
+
+        assertThat(memberRepository.findByMemberKey(guardian.getMemberKey()).orElseThrow().getProfileAvatarCode())
+                .isEqualTo(MemberFixture.AVATAR_CODE);
+    }
+
+    @Test
+    @DisplayName("GET /me - 얼굴을 고른 적이 없으면 profileAvatarCode는 null이다")
+    void getMyInfo_returns_null_avatar_code_when_never_chosen() {
+        client.get()
+                .uri("/api/v1/members/me")
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(guardian))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.data.profileAvatarCode").isEqualTo(null);
+    }
+
+    private void patchAvatar(Member member, String code) {
+        client.patch()
+                .uri("/api/v1/members/me")
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(member))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"profileAvatarCode": "%s"}
+                        """.formatted(code))
+                .exchange()
+                .expectStatus().isOk();
     }
 }

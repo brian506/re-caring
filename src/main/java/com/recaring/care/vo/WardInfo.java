@@ -9,5 +9,7 @@ public record WardInfo(
         String wardNickname,
         String wardPhone,
         Gender wardGender,
-        CareRole myRole
+        CareRole myRole,
+        String wardProfileAvatarCode,
+        String designatedProfileAvatarCode
 ) {}

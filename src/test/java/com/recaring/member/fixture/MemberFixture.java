@@ -31,6 +31,10 @@ public class MemberFixture {
     public static final String NEW_PASSWORD = "newpass2b";
     public static final String WRONG_PASSWORD = "wrongpw9z";
 
+    public static final String AVATAR_CODE = "adult_male_2";
+    public static final String OTHER_AVATAR_CODE = "adult_female_3";
+    public static final String UNKNOWN_AVATAR_CODE = "adult_male_5";
+
     public static Member createMember() {
         return createMember(PHONE, NAME, BIRTH, GENDER);
     }

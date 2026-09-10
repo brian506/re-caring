@@ -29,6 +29,7 @@ public class CareRelationshipManager {
 
     private final CareRelationshipRepository careRelationshipRepository;
     private final CareInvitationWriter careInvitationWriter;
+    private final DesignatedAvatarManager designatedAvatarManager;
 
     @CacheEvict(value = "careRelationship", allEntries = true)
     @Transactional
@@ -40,6 +41,7 @@ public class CareRelationshipManager {
                 .orElseThrow(() -> new AppException(ErrorType.NOT_FOUND_CARE_RELATIONSHIP));
 
         careRelationshipRepository.delete(leaving);
+        designatedAvatarManager.deleteAllByRelationship(wardKey, caregiverKey);
         log.info("[케어 관계 : 이탈]: wardKey={} | caregiverKey={} | careRole={}",
                 wardKey, caregiverKey, leaving.getCareRole());
 
@@ -62,6 +64,7 @@ public class CareRelationshipManager {
         // 벌크 삭제된 행은 DB에서 사라져 아래 재조회에 잡히지 않고, 영속성 컨텍스트에 남은 행은
         // 수정하지 않으므로 커밋 시 되살아나지 않는다.
         careRelationshipRepository.deleteAllByMemberKey(memberKey);
+        designatedAvatarManager.deleteAllByMemberKey(memberKey);
 
         for (String wardKey : caredWardKeys) {
             settleAfterLeave(wardKey, memberKey, careRelationshipRepository.findAllByWardMemberKey(wardKey));

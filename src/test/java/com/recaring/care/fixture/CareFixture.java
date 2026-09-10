@@ -4,6 +4,7 @@ import com.recaring.care.dataaccess.entity.CareInvitation;
 import com.recaring.care.dataaccess.entity.CareInvitationStatus;
 import com.recaring.care.dataaccess.entity.CareRelationship;
 import com.recaring.care.dataaccess.entity.CareRole;
+import com.recaring.care.dataaccess.entity.DesignatedAvatar;
 import com.recaring.care.vo.CaregiverInfo;
 import com.recaring.care.vo.CareRelationshipRegistration;
 import com.recaring.care.vo.ReceivedRequestInfo;
@@ -26,6 +27,11 @@ public class CareFixture {
     public static final String GUARDIAN_PHONE = "01011112222";
     public static final String WARD_PHONE = "01033334444";
     public static final String MANAGER_PHONE = "01055556666";
+
+    public static final String SENIOR_AVATAR_CODE = "senior_female_1";
+    public static final String OTHER_SENIOR_AVATAR_CODE = "senior_female_2";
+    public static final String ADULT_AVATAR_CODE = "adult_male_1";
+    public static final String UNKNOWN_AVATAR_CODE = "senior_female_5";
 
     public static Member createGuardianMember() {
         return Member.builder()
@@ -72,7 +78,13 @@ public class CareFixture {
     }
 
     public static CaregiverInfo createCaregiverInfo(String memberKey, CareRole careRole) {
-        return new CaregiverInfo(memberKey, "보호자", GUARDIAN_PHONE, careRole);
+        return createCaregiverInfo(memberKey, careRole, null, null);
+    }
+
+    public static CaregiverInfo createCaregiverInfo(String memberKey, CareRole careRole,
+                                                    String profileAvatarCode, String designatedProfileAvatarCode) {
+        return new CaregiverInfo(memberKey, "보호자", GUARDIAN_PHONE, careRole,
+                profileAvatarCode, designatedProfileAvatarCode);
     }
 
     public static WardInfo createWardInfo(String memberKey, CareRole careRole) {
@@ -80,7 +92,22 @@ public class CareFixture {
     }
 
     public static WardInfo createWardInfo(String memberKey, String wardNickname, CareRole careRole) {
-        return new WardInfo(memberKey, "보호대상자", wardNickname, WARD_PHONE, Gender.FEMALE, careRole);
+        return createWardInfo(memberKey, wardNickname, careRole, null, null);
+    }
+
+    public static WardInfo createWardInfo(String memberKey, String wardNickname, CareRole careRole,
+                                          String wardProfileAvatarCode, String designatedProfileAvatarCode) {
+        return new WardInfo(memberKey, "보호대상자", wardNickname, WARD_PHONE, Gender.FEMALE, careRole,
+                wardProfileAvatarCode, designatedProfileAvatarCode);
+    }
+
+    public static DesignatedAvatar createDesignatedAvatar(String ownerKey, String wardKey, String targetKey, String code) {
+        return DesignatedAvatar.builder()
+                .ownerMemberKey(ownerKey)
+                .wardMemberKey(wardKey)
+                .targetMemberKey(targetKey)
+                .profileAvatarCode(code)
+                .build();
     }
 
     public static CareRelationshipRegistration createRegistration(String wardKey, String caregiverKey, CareRole careRole) {

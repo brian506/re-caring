@@ -39,6 +39,9 @@ class CareRelationshipReaderTest {
     @Mock
     private MemberReader memberReader;
 
+    @Mock
+    private DesignatedAvatarManager designatedAvatarManager;
+
     @Test
     @DisplayName("보호 대상자 목록에는 회원 정보와 내 역할이 함께 담긴다")
     void findWardInfos_combines_member_and_care_role() {
@@ -174,4 +177,71 @@ class CareRelationshipReaderTest {
                 .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_CARE_RELATED_WARD);
     }
 
+
+    @Test
+    @DisplayName("보호 대상자 목록에는 대상자 본인이 고른 얼굴과 내가 지정한 얼굴이 함께 담긴다")
+    void findWardInfos_includes_own_and_designated_avatar_codes() {
+        // given
+        Member ward = CareFixture.createWardMember();
+        ward.changeProfileAvatarCode(CareFixture.SENIOR_AVATAR_CODE);
+        given(careRelationshipRepository.findAllByCaregiverMemberKey(CareFixture.GUARDIAN_MEMBER_KEY))
+                .willReturn(List.of(CareFixture.createPrimaryGuardianRelationship(
+                        CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY)));
+        given(memberReader.findAllByMemberKeys(List.of(CareFixture.WARD_MEMBER_KEY)))
+                .willReturn(Map.of(CareFixture.WARD_MEMBER_KEY, ward));
+        given(designatedAvatarManager.findWardAvatarCodes(CareFixture.GUARDIAN_MEMBER_KEY))
+                .willReturn(Map.of(ward.getMemberKey(), CareFixture.OTHER_SENIOR_AVATAR_CODE));
+
+        // when
+        List<WardInfo> result = careRelationshipReader.findWardInfos(CareFixture.GUARDIAN_MEMBER_KEY);
+
+        // then
+        assertThat(result).containsExactly(CareFixture.createWardInfo(
+                ward.getMemberKey(), null, CareRole.PRIMARY_GUARDIAN,
+                CareFixture.SENIOR_AVATAR_CODE, CareFixture.OTHER_SENIOR_AVATAR_CODE));
+    }
+
+    @Test
+    @DisplayName("보호자·관계자 목록에는 그 사람이 고른 얼굴과 내가 지정한 얼굴이 함께 담긴다")
+    void findCaregiverInfos_includes_own_and_designated_avatar_codes() {
+        // given
+        Member manager = CareFixture.createGuardianMember();
+        manager.changeProfileAvatarCode(CareFixture.ADULT_AVATAR_CODE);
+        given(careRelationshipRepository.findAllByWardMemberKey(CareFixture.WARD_MEMBER_KEY))
+                .willReturn(List.of(CareFixture.createManagerRelationship(
+                        CareFixture.WARD_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY)));
+        given(memberReader.findAllByMemberKeys(List.of(CareFixture.MANAGER_MEMBER_KEY)))
+                .willReturn(Map.of(CareFixture.MANAGER_MEMBER_KEY, manager));
+        given(designatedAvatarManager.findAvatarCodesInWard(CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY))
+                .willReturn(Map.of(manager.getMemberKey(), CareFixture.SENIOR_AVATAR_CODE));
+
+        // when
+        List<CaregiverInfo> result = careRelationshipReader.findCaregiverInfos(
+                CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY);
+
+        // then
+        assertThat(result).containsExactly(CareFixture.createCaregiverInfo(
+                manager.getMemberKey(), CareRole.MANAGER,
+                CareFixture.ADULT_AVATAR_CODE, CareFixture.SENIOR_AVATAR_CODE));
+    }
+
+    @Test
+    @DisplayName("보는 사람이 없는 알림 경로에서는 지정 얼굴을 조회하지 않고 비워 둔다")
+    void findCaregiverInfos_without_requester_leaves_designated_avatar_empty() {
+        // given
+        Member manager = CareFixture.createGuardianMember();
+        given(careRelationshipRepository.findAllByWardMemberKey(CareFixture.WARD_MEMBER_KEY))
+                .willReturn(List.of(CareFixture.createManagerRelationship(
+                        CareFixture.WARD_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY)));
+        given(memberReader.findAllByMemberKeys(List.of(CareFixture.MANAGER_MEMBER_KEY)))
+                .willReturn(Map.of(CareFixture.MANAGER_MEMBER_KEY, manager));
+
+        // when
+        List<CaregiverInfo> result = careRelationshipReader.findCaregiverInfos(CareFixture.WARD_MEMBER_KEY);
+
+        // then
+        assertThat(result).singleElement()
+                .satisfies(info -> assertThat(info.designatedProfileAvatarCode()).isNull());
+        then(designatedAvatarManager).shouldHaveNoInteractions();
+    }
 }

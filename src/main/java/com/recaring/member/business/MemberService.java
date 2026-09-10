@@ -13,6 +13,7 @@ import com.recaring.member.implement.MemberReader;
 import com.recaring.member.implement.MemberWriter;
 import com.recaring.member.implement.MembersTermsAgreementReader;
 import com.recaring.member.implement.MemberWithdrawalManager;
+import com.recaring.member.vo.ProfileAvatarCode;
 import com.recaring.safezone.implement.SafeZoneReader;
 import com.recaring.safezone.vo.SafeZoneInfo;
 import lombok.RequiredArgsConstructor;
@@ -54,8 +55,13 @@ public class MemberService {
     }
 
     @Transactional
-    public void updateMyInfo(String memberKey, String name, LocalDate birth, String currentPassword, String newPassword) {
+    public void updateMyInfo(String memberKey, String name, LocalDate birth, String currentPassword, String newPassword,
+                             String profileAvatarCode) {
         memberWriter.updateProfile(memberKey, name, birth);
+
+        if (profileAvatarCode != null) {
+            memberWriter.updateProfileAvatarCode(memberKey, ProfileAvatarCode.from(profileAvatarCode));
+        }
 
         if (StringUtils.hasText(newPassword)) {
             localAuthAuthenticator.verifyPassword(memberKey, new Password(currentPassword));

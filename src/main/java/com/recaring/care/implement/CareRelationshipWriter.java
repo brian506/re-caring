@@ -23,6 +23,7 @@ public class CareRelationshipWriter {
     private final CareRelationshipRepository careRelationshipRepository;
     private final MemberReader memberReader;
     private final CareRelationshipValidator relationshipValidator;
+    private final DesignatedAvatarManager designatedAvatarManager;
 
     @CacheEvict(value = "careRelationship", allEntries = true)
     @Transactional
@@ -61,6 +62,7 @@ public class CareRelationshipWriter {
     @Transactional
     public void delete(String wardKey, String caregiverKey) {
         careRelationshipRepository.delete(findRelationship(wardKey, caregiverKey));
+        designatedAvatarManager.deleteAllByRelationship(wardKey, caregiverKey);
     }
 
     @Transactional

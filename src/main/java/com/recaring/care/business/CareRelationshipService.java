@@ -5,8 +5,10 @@ import com.recaring.care.implement.CareRelationshipManager;
 import com.recaring.care.implement.CareRelationshipReader;
 import com.recaring.care.implement.CareRelationshipValidator;
 import com.recaring.care.implement.CareRelationshipWriter;
+import com.recaring.care.implement.DesignatedAvatarManager;
 import com.recaring.care.vo.CaregiverInfo;
 import com.recaring.care.vo.WardInfo;
+import com.recaring.member.vo.ProfileAvatarCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +22,7 @@ public class CareRelationshipService {
     private final CareRelationshipReader careRelationshipReader;
     private final CareRelationshipWriter careRelationshipWriter;
     private final CareRelationshipValidator careRelationshipValidator;
+    private final DesignatedAvatarManager designatedAvatarManager;
 
     public List<WardInfo> getMyWards(String memberKey) {
         return careRelationshipReader.findWardInfos(memberKey);
@@ -27,7 +30,7 @@ public class CareRelationshipService {
 
     public List<CaregiverInfo> getCaregivers(String wardKey, String requesterKey) {
         careRelationshipValidator.validateCaregiverViewAccess(requesterKey, wardKey);
-        return careRelationshipReader.findCaregiverInfos(wardKey);
+        return careRelationshipReader.findCaregiverInfos(wardKey, requesterKey);
     }
 
     public void removeWard(String guardianKey, String wardKey) {
@@ -50,6 +53,17 @@ public class CareRelationshipService {
         careRelationshipValidator.validatePrimaryGuardianRole(requesterKey, wardKey);
         careRelationshipValidator.validateCareRoleChange(wardKey, caregiverKey);
         careRelationshipWriter.updateCareRole(wardKey, caregiverKey, careRole);
+    }
+
+    public void designateWardAvatar(String caregiverKey, String wardKey, String profileAvatarCode) {
+        careRelationshipValidator.validateCaregiver(caregiverKey, wardKey);
+        designatedAvatarManager.designate(caregiverKey, wardKey, wardKey, ProfileAvatarCode.from(profileAvatarCode));
+    }
+
+    public void designateCaregiverAvatar(String requesterKey, String wardKey, String caregiverKey, String profileAvatarCode) {
+        careRelationshipValidator.validateCaregiverViewAccess(requesterKey, wardKey);
+        careRelationshipValidator.validateCaregiver(caregiverKey, wardKey);
+        designatedAvatarManager.designate(requesterKey, wardKey, caregiverKey, ProfileAvatarCode.from(profileAvatarCode));
     }
 
     // 빈 값은 별명 해제로 본다. null이면 대상자 실명이 그대로 표시된다.

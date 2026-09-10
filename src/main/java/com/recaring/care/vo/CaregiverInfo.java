@@ -6,5 +6,7 @@ public record CaregiverInfo(
         String memberKey,
         String name,
         String phone,
-        CareRole careRole
+        CareRole careRole,
+        String profileAvatarCode,
+        String designatedProfileAvatarCode
 ) {}

@@ -22,7 +22,7 @@ public class CareRelationshipReader {
 
     private final CareRelationshipRepository careRelationshipRepository;
     private final MemberReader memberReader;
-
+    private final DesignatedAvatarManager designatedAvatarManager;
 
     public List<WardInfo> findWardInfos(String caregiverKey) {
         List<CareRelationship> relationships = careRelationshipRepository.findAllByCaregiverMemberKey(caregiverKey);
@@ -32,16 +32,30 @@ public class CareRelationshipReader {
                 .toList();
 
         Map<String, Member> memberMap = memberReader.findAllByMemberKeys(wardKeys);
+        Map<String, String> designatedAvatarCodes = designatedAvatarManager.findWardAvatarCodes(caregiverKey);
 
         return relationships.stream()
                 .map(r -> {
                     Member ward = memberMap.get(r.getWardMemberKey());
-                    return new WardInfo(ward.getMemberKey(), ward.getName(), r.getWardNickname(), ward.getPhone(), ward.getGender(), r.getCareRole());
+                    return new WardInfo(ward.getMemberKey(), ward.getName(), r.getWardNickname(), ward.getPhone(),
+                            ward.getGender(), r.getCareRole(), ward.getProfileAvatarCode(),
+                            designatedAvatarCodes.get(ward.getMemberKey()));
                 })
                 .toList();
     }
 
+    /**
+     * 알림 수신자 판정 등 보는 사람이 없는 경로. 지정 아바타는 채우지 않는다.
+     */
     public List<CaregiverInfo> findCaregiverInfos(String wardKey) {
+        return findCaregiverInfos(wardKey, Map.of());
+    }
+
+    public List<CaregiverInfo> findCaregiverInfos(String wardKey, String requesterKey) {
+        return findCaregiverInfos(wardKey, designatedAvatarManager.findAvatarCodesInWard(requesterKey, wardKey));
+    }
+
+    private List<CaregiverInfo> findCaregiverInfos(String wardKey, Map<String, String> designatedAvatarCodes) {
         List<CareRelationship> relationships = careRelationshipRepository.findAllByWardMemberKey(wardKey);
 
         List<String> caregiverKeys = relationships.stream()
@@ -53,7 +67,9 @@ public class CareRelationshipReader {
         return relationships.stream()
                 .map(r -> {
                     Member caregiver = memberMap.get(r.getCaregiverMemberKey());
-                    return new CaregiverInfo(caregiver.getMemberKey(), caregiver.getName(), caregiver.getPhone(), r.getCareRole());
+                    return new CaregiverInfo(caregiver.getMemberKey(), caregiver.getName(), caregiver.getPhone(),
+                            r.getCareRole(), caregiver.getProfileAvatarCode(),
+                            designatedAvatarCodes.get(caregiver.getMemberKey()));
                 })
                 .toList();
     }

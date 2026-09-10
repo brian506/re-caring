@@ -45,6 +45,9 @@ class CareRelationshipWriterTest {
     @Mock
     private CareRelationshipValidator relationshipValidator;
 
+    @Mock
+    private DesignatedAvatarManager designatedAvatarManager;
+
     @Captor
     private ArgumentCaptor<CareRelationship> relationshipCaptor;
 
@@ -135,6 +138,23 @@ class CareRelationshipWriterTest {
         then(careRelationshipRepository).should(times(1))
                 .findCareRelationship(CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY);
         then(careRelationshipRepository).should(times(1)).delete(relationship);
+    }
+
+    @Test
+    @DisplayName("케어 관계를 삭제하면 그 관계에서 지정한 얼굴도 함께 지운다")
+    void delete_removes_designated_avatars_of_the_relationship() {
+        // given
+        given(careRelationshipRepository.findCareRelationship(
+                CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY))
+                .willReturn(Optional.of(CareFixture.createGuardianRelationship(
+                        CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY)));
+
+        // when
+        careRelationshipWriter.delete(CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY);
+
+        // then
+        then(designatedAvatarManager).should(times(1))
+                .deleteAllByRelationship(CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY);
     }
 
     @Test

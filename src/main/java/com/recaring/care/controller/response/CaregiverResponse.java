@@ -7,14 +7,18 @@ public record CaregiverResponse(
         String memberKey,
         String name,
         String phone,
-        CareRole careRole
+        CareRole careRole,
+        String profileAvatarCode,
+        String designatedProfileAvatarCode
 ) {
     public static CaregiverResponse from(CaregiverInfo info) {
         return new CaregiverResponse(
                 info.memberKey(),
                 info.name(),
                 info.phone(),
-                info.careRole()
+                info.careRole(),
+                info.profileAvatarCode(),
+                info.designatedProfileAvatarCode()
         );
     }
 }

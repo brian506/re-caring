@@ -6,6 +6,7 @@ import com.recaring.care.dataaccess.entity.CareRelationship;
 import com.recaring.care.dataaccess.entity.CareRole;
 import com.recaring.care.dataaccess.repository.CareInvitationRepository;
 import com.recaring.care.dataaccess.repository.CareRelationshipRepository;
+import com.recaring.care.dataaccess.repository.DesignatedAvatarRepository;
 import com.recaring.care.fixture.CareFixture;
 import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.dataaccess.repository.MemberRepository;
@@ -21,6 +22,7 @@ import org.springframework.http.MediaType;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.groups.Tuple.tuple;
 
 @DisplayName("CareController HTTP 통합 테스트")
 class CareControllerTest extends AbstractIntegrationTest {
@@ -28,6 +30,7 @@ class CareControllerTest extends AbstractIntegrationTest {
     @Autowired private MemberRepository memberRepository;
     @Autowired private CareInvitationRepository careInvitationRepository;
     @Autowired private CareRelationshipRepository careRelationshipRepository;
+    @Autowired private DesignatedAvatarRepository designatedAvatarRepository;
 
     private Member guardian;
     private Member ward;
@@ -40,6 +43,7 @@ class CareControllerTest extends AbstractIntegrationTest {
 
     @AfterEach
     void tearDown() {
+        designatedAvatarRepository.deleteAllInBatch();
         careRelationshipRepository.deleteAllInBatch();
         careInvitationRepository.deleteAllInBatch();
         memberRepository.deleteAllInBatch();
@@ -1021,5 +1025,328 @@ class CareControllerTest extends AbstractIntegrationTest {
         return careInvitationRepository.findByRequestKey(invitation.getRequestKey())
                 .orElseThrow(() -> new AssertionError("케어 요청이 존재하지 않는다"))
                 .getStatus();
+    }
+
+    // ── 프로필 아바타 지정 ────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("PATCH /api/v1/care/wards/{wardKey}/avatar - 지정한 얼굴은 내 대상자 목록에만 보이고 다른 보호자 목록에는 null이다")
+    void designateWardAvatar_is_visible_only_to_requester() {
+        Member otherGuardian = memberRepository.save(CareFixture.createGuardianMember("01077778888"));
+        careRelationshipRepository.save(
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+        careRelationshipRepository.save(
+                CareFixture.createGuardianRelationship(ward.getMemberKey(), otherGuardian.getMemberKey()));
+
+        client.patch()
+                .uri("/api/v1/care/wards/" + ward.getMemberKey() + "/avatar")
+                .header(HttpHeaders.AUTHORIZATION, authHeader(guardian))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"profileAvatarCode": "%s"}
+                        """.formatted(CareFixture.SENIOR_AVATAR_CODE))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.resultType").isEqualTo("SUCCESS");
+
+        client.get()
+                .uri("/api/v1/care/wards")
+                .header(HttpHeaders.AUTHORIZATION, authHeader(guardian))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.data[0].designatedProfileAvatarCode").isEqualTo(CareFixture.SENIOR_AVATAR_CODE);
+
+        client.get()
+                .uri("/api/v1/care/wards")
+                .header(HttpHeaders.AUTHORIZATION, authHeader(otherGuardian))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.data[0].designatedProfileAvatarCode").isEqualTo(null);
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/care/wards - 대상자 본인이 고른 얼굴과 내가 지정한 얼굴은 별개 필드로 함께 내려온다")
+    void getMyWards_returns_own_and_designated_avatar_separately() {
+        ward.changeProfileAvatarCode(CareFixture.SENIOR_AVATAR_CODE);
+        memberRepository.save(ward);
+        careRelationshipRepository.save(
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+        patchWardAvatar(guardian, CareFixture.OTHER_SENIOR_AVATAR_CODE);
+
+        client.get()
+                .uri("/api/v1/care/wards")
+                .header(HttpHeaders.AUTHORIZATION, authHeader(guardian))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.data[0].wardProfileAvatarCode").isEqualTo(CareFixture.SENIOR_AVATAR_CODE)
+                .jsonPath("$.data[0].designatedProfileAvatarCode").isEqualTo(CareFixture.OTHER_SENIOR_AVATAR_CODE);
+
+        assertThat(memberRepository.findByMemberKey(ward.getMemberKey()).orElseThrow().getProfileAvatarCode())
+                .isEqualTo(CareFixture.SENIOR_AVATAR_CODE);
+    }
+
+    @Test
+    @DisplayName("PATCH /api/v1/care/wards/{wardKey}/avatar - 빈 문자열을 보내면 지정 행이 삭제된다")
+    void designateWardAvatar_clears_designation_when_blank() {
+        careRelationshipRepository.save(
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+        patchWardAvatar(guardian, CareFixture.SENIOR_AVATAR_CODE);
+
+        client.patch()
+                .uri("/api/v1/care/wards/" + ward.getMemberKey() + "/avatar")
+                .header(HttpHeaders.AUTHORIZATION, authHeader(guardian))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"profileAvatarCode": ""}
+                        """)
+                .exchange()
+                .expectStatus().isOk();
+
+        assertThat(designatedAvatarRepository.findAllByOwnerMemberKey(guardian.getMemberKey())).isEmpty();
+    }
+
+    @Test
+    @DisplayName("PATCH /api/v1/care/wards/{wardKey}/avatar - 허용 코드 외 값이면 400 E3008이고 저장되지 않는다")
+    void designateWardAvatar_rejects_unknown_code() {
+        careRelationshipRepository.save(
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+
+        client.patch()
+                .uri("/api/v1/care/wards/" + ward.getMemberKey() + "/avatar")
+                .header(HttpHeaders.AUTHORIZATION, authHeader(guardian))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"profileAvatarCode": "%s"}
+                        """.formatted(CareFixture.UNKNOWN_AVATAR_CODE))
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.error.errorCode").isEqualTo("E3008");
+
+        assertThat(designatedAvatarRepository.findAll()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("PATCH /api/v1/care/wards/{wardKey}/avatar - 케어 관계가 없으면 400 E5011이고 저장되지 않는다")
+    void designateWardAvatar_fails_when_relationship_not_found() {
+        client.patch()
+                .uri("/api/v1/care/wards/" + ward.getMemberKey() + "/avatar")
+                .header(HttpHeaders.AUTHORIZATION, authHeader(guardian))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"profileAvatarCode": "%s"}
+                        """.formatted(CareFixture.SENIOR_AVATAR_CODE))
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.error.errorCode").isEqualTo("E5011");
+
+        assertThat(designatedAvatarRepository.findAll()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("PATCH /api/v1/care/wards/{wardKey}/caregivers/{caregiverKey}/avatar - 지정한 얼굴은 내 보호자 목록에만 보이고 다른 보호자 목록에는 null이다")
+    void designateCaregiverAvatar_is_visible_only_to_requester() {
+        Member otherGuardian = memberRepository.save(CareFixture.createGuardianMember("01077778888"));
+        Member manager = memberRepository.save(CareFixture.createGuardianMember(CareFixture.MANAGER_PHONE));
+        manager.changeProfileAvatarCode(CareFixture.ADULT_AVATAR_CODE);
+        memberRepository.save(manager);
+        careRelationshipRepository.save(
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+        careRelationshipRepository.save(
+                CareFixture.createGuardianRelationship(ward.getMemberKey(), otherGuardian.getMemberKey()));
+        careRelationshipRepository.save(
+                CareFixture.createManagerRelationship(ward.getMemberKey(), manager.getMemberKey()));
+
+        client.patch()
+                .uri("/api/v1/care/wards/" + ward.getMemberKey() + "/caregivers/" + manager.getMemberKey() + "/avatar")
+                .header(HttpHeaders.AUTHORIZATION, authHeader(guardian))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"profileAvatarCode": "%s"}
+                        """.formatted(CareFixture.SENIOR_AVATAR_CODE))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.resultType").isEqualTo("SUCCESS");
+
+        String managerFilter = "$.data[?(@.memberKey == '" + manager.getMemberKey() + "')]";
+        client.get()
+                .uri("/api/v1/care/wards/" + ward.getMemberKey() + "/caregivers")
+                .header(HttpHeaders.AUTHORIZATION, authHeader(guardian))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath(managerFilter + ".profileAvatarCode").isEqualTo(CareFixture.ADULT_AVATAR_CODE)
+                .jsonPath(managerFilter + ".designatedProfileAvatarCode").isEqualTo(CareFixture.SENIOR_AVATAR_CODE);
+
+        client.get()
+                .uri("/api/v1/care/wards/" + ward.getMemberKey() + "/caregivers")
+                .header(HttpHeaders.AUTHORIZATION, authHeader(otherGuardian))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath(managerFilter + ".profileAvatarCode").isEqualTo(CareFixture.ADULT_AVATAR_CODE)
+                .jsonPath(managerFilter + ".designatedProfileAvatarCode").isEqualTo(null);
+    }
+
+    @Test
+    @DisplayName("PATCH /api/v1/care/wards/{wardKey}/caregivers/{caregiverKey}/avatar - 관계자가 요청하면 403 E5002이고 저장되지 않는다")
+    void designateCaregiverAvatar_forbidden_for_manager() {
+        Member manager = memberRepository.save(CareFixture.createGuardianMember(CareFixture.MANAGER_PHONE));
+        careRelationshipRepository.save(
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+        careRelationshipRepository.save(
+                CareFixture.createManagerRelationship(ward.getMemberKey(), manager.getMemberKey()));
+
+        client.patch()
+                .uri("/api/v1/care/wards/" + ward.getMemberKey() + "/caregivers/" + guardian.getMemberKey() + "/avatar")
+                .header(HttpHeaders.AUTHORIZATION, authHeader(manager))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"profileAvatarCode": "%s"}
+                        """.formatted(CareFixture.ADULT_AVATAR_CODE))
+                .exchange()
+                .expectStatus().isForbidden()
+                .expectBody()
+                .jsonPath("$.error.errorCode").isEqualTo("E5002");
+
+        assertThat(designatedAvatarRepository.findAll()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("PATCH /api/v1/care/wards/{wardKey}/caregivers/{caregiverKey}/avatar - 대상이 케어 관계에 없으면 400 E5011이고 저장되지 않는다")
+    void designateCaregiverAvatar_fails_when_target_not_in_care() {
+        Member stranger = memberRepository.save(CareFixture.createGuardianMember(CareFixture.MANAGER_PHONE));
+        careRelationshipRepository.save(
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+
+        client.patch()
+                .uri("/api/v1/care/wards/" + ward.getMemberKey() + "/caregivers/" + stranger.getMemberKey() + "/avatar")
+                .header(HttpHeaders.AUTHORIZATION, authHeader(guardian))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"profileAvatarCode": "%s"}
+                        """.formatted(CareFixture.ADULT_AVATAR_CODE))
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.error.errorCode").isEqualTo("E5011");
+
+        assertThat(designatedAvatarRepository.findAll()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("DELETE /api/v1/care/wards/{wardKey} - 케어 관계에서 나가면 내가 그 대상자 범위에 지정한 얼굴이 모두 삭제된다")
+    void removeWard_deletes_designations_made_by_the_leaving_member() {
+        Member otherGuardian = memberRepository.save(CareFixture.createGuardianMember("01077778888"));
+        Member manager = memberRepository.save(CareFixture.createGuardianMember(CareFixture.MANAGER_PHONE));
+        careRelationshipRepository.save(
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+        careRelationshipRepository.save(
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), otherGuardian.getMemberKey()));
+        careRelationshipRepository.save(
+                CareFixture.createManagerRelationship(ward.getMemberKey(), manager.getMemberKey()));
+        patchWardAvatar(guardian, CareFixture.SENIOR_AVATAR_CODE);
+        patchCaregiverAvatar(guardian, manager, CareFixture.ADULT_AVATAR_CODE);
+        patchWardAvatar(otherGuardian, CareFixture.OTHER_SENIOR_AVATAR_CODE);
+
+        client.delete()
+                .uri("/api/v1/care/wards/" + ward.getMemberKey())
+                .header(HttpHeaders.AUTHORIZATION, authHeader(guardian))
+                .exchange()
+                .expectStatus().isOk();
+
+        assertThat(designatedAvatarRepository.findAllByOwnerMemberKey(guardian.getMemberKey())).isEmpty();
+        assertThat(designatedAvatarRepository.findAllByOwnerMemberKey(otherGuardian.getMemberKey())).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("DELETE /api/v1/care/wards/{wardKey}/caregivers/{caregiverKey} - 보호자를 내보내면 그 사람이 지정했거나 지정받은 얼굴이 삭제된다")
+    void removeCaregiver_deletes_designations_involving_the_removed_member() {
+        Member manager = memberRepository.save(CareFixture.createGuardianMember(CareFixture.MANAGER_PHONE));
+        careRelationshipRepository.save(
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+        careRelationshipRepository.save(
+                CareFixture.createManagerRelationship(ward.getMemberKey(), manager.getMemberKey()));
+        patchWardAvatar(manager, CareFixture.SENIOR_AVATAR_CODE);
+        patchCaregiverAvatar(guardian, manager, CareFixture.ADULT_AVATAR_CODE);
+        patchWardAvatar(guardian, CareFixture.OTHER_SENIOR_AVATAR_CODE);
+
+        client.delete()
+                .uri("/api/v1/care/wards/" + ward.getMemberKey() + "/caregivers/" + manager.getMemberKey())
+                .header(HttpHeaders.AUTHORIZATION, authHeader(guardian))
+                .exchange()
+                .expectStatus().isOk();
+
+        assertThat(designatedAvatarRepository.findAll())
+                .singleElement()
+                .satisfies(remaining -> {
+                    assertThat(remaining.getOwnerMemberKey()).isEqualTo(guardian.getMemberKey());
+                    assertThat(remaining.getTargetMemberKey()).isEqualTo(ward.getMemberKey());
+                });
+    }
+
+    @Test
+    @DisplayName("DELETE /api/v1/care/wards/{wardKey}/caregivers/{caregiverKey} - 한 대상자에서 내보내져도 같은 사람이 다른 대상자 범위에 둔 지정 얼굴은 유지된다")
+    void removeCaregiver_keeps_designations_scoped_to_other_wards() {
+        Member otherWard = memberRepository.save(CareFixture.createWardMember("01066667777"));
+        Member manager = memberRepository.save(CareFixture.createGuardianMember(CareFixture.MANAGER_PHONE));
+        careRelationshipRepository.save(
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+        careRelationshipRepository.save(
+                CareFixture.createManagerRelationship(ward.getMemberKey(), manager.getMemberKey()));
+        careRelationshipRepository.save(
+                CareFixture.createPrimaryGuardianRelationship(otherWard.getMemberKey(), guardian.getMemberKey()));
+        careRelationshipRepository.save(
+                CareFixture.createManagerRelationship(otherWard.getMemberKey(), manager.getMemberKey()));
+        designatedAvatarRepository.save(CareFixture.createDesignatedAvatar(
+                manager.getMemberKey(), ward.getMemberKey(), ward.getMemberKey(), CareFixture.SENIOR_AVATAR_CODE));
+        designatedAvatarRepository.save(CareFixture.createDesignatedAvatar(
+                guardian.getMemberKey(), ward.getMemberKey(), manager.getMemberKey(), CareFixture.ADULT_AVATAR_CODE));
+        designatedAvatarRepository.save(CareFixture.createDesignatedAvatar(
+                manager.getMemberKey(), otherWard.getMemberKey(), otherWard.getMemberKey(), CareFixture.OTHER_SENIOR_AVATAR_CODE));
+        designatedAvatarRepository.save(CareFixture.createDesignatedAvatar(
+                guardian.getMemberKey(), otherWard.getMemberKey(), manager.getMemberKey(), CareFixture.ADULT_AVATAR_CODE));
+
+        client.delete()
+                .uri("/api/v1/care/wards/" + ward.getMemberKey() + "/caregivers/" + manager.getMemberKey())
+                .header(HttpHeaders.AUTHORIZATION, authHeader(guardian))
+                .exchange()
+                .expectStatus().isOk();
+
+        assertThat(designatedAvatarRepository.findAll())
+                .extracting("ownerMemberKey", "wardMemberKey", "targetMemberKey")
+                .containsExactlyInAnyOrder(
+                        tuple(manager.getMemberKey(), otherWard.getMemberKey(), otherWard.getMemberKey()),
+                        tuple(guardian.getMemberKey(), otherWard.getMemberKey(), manager.getMemberKey()));
+    }
+
+    private void patchWardAvatar(Member caregiver, String code) {
+        client.patch()
+                .uri("/api/v1/care/wards/" + ward.getMemberKey() + "/avatar")
+                .header(HttpHeaders.AUTHORIZATION, authHeader(caregiver))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"profileAvatarCode": "%s"}
+                        """.formatted(code))
+                .exchange()
+                .expectStatus().isOk();
+    }
+
+    private void patchCaregiverAvatar(Member requester, Member target, String code) {
+        client.patch()
+                .uri("/api/v1/care/wards/" + ward.getMemberKey() + "/caregivers/" + target.getMemberKey() + "/avatar")
+                .header(HttpHeaders.AUTHORIZATION, authHeader(requester))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"profileAvatarCode": "%s"}
+                        """.formatted(code))
+                .exchange()
+                .expectStatus().isOk();
     }
 }

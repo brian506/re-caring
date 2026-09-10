@@ -43,6 +43,9 @@ class CareRelationshipManagerTest {
     @Mock
     private CareInvitationWriter careInvitationWriter;
 
+    @Mock
+    private DesignatedAvatarManager designatedAvatarManager;
+
     @Test
     @DisplayName("주보호자가 떠나면 남은 보호자 중 먼저 등록된 사람이 주보호자가 된다")
     void leaveCare_promotes_the_oldest_remaining_guardian() {
@@ -215,5 +218,30 @@ class CareRelationshipManagerTest {
 
         assertThat(guardian.getCareRole()).isEqualTo(CareRole.GUARDIAN);
         then(careInvitationWriter).should(never()).deleteAllByWardMemberKey(anyString());
+    }
+
+    @Test
+    @DisplayName("이탈하면 그 대상자 범위에서 그 사람이 지정했거나 지정받은 얼굴을 함께 지운다")
+    void leaveCare_removes_designated_avatars_of_the_leaving_member() {
+        given(careRelationshipRepository.findAllByWardMemberKey(WARD_KEY)).willReturn(List.of(
+                CareFixture.createRelationship(WARD_KEY, PRIMARY_KEY, CareRole.PRIMARY_GUARDIAN, 1L),
+                CareFixture.createRelationship(WARD_KEY, OLDER_GUARDIAN_KEY, CareRole.GUARDIAN, 2L)));
+
+        careRelationshipManager.leaveCare(WARD_KEY, OLDER_GUARDIAN_KEY);
+
+        then(designatedAvatarManager).should().deleteAllByRelationship(WARD_KEY, OLDER_GUARDIAN_KEY);
+    }
+
+    @Test
+    @DisplayName("탈퇴하면 그 회원이 지정했거나 지정받은 얼굴을 모두 지운다")
+    void leaveAllCare_removes_every_designated_avatar_of_the_withdrawing_member() {
+        given(careRelationshipRepository.findAllByCaregiverMemberKey(PRIMARY_KEY)).willReturn(List.of(
+                CareFixture.createRelationship(WARD_KEY, PRIMARY_KEY, CareRole.PRIMARY_GUARDIAN, 1L)));
+        given(careRelationshipRepository.findAllByWardMemberKey(WARD_KEY)).willReturn(
+                List.of(CareFixture.createRelationship(WARD_KEY, OLDER_GUARDIAN_KEY, CareRole.GUARDIAN, 2L)));
+
+        careRelationshipManager.leaveAllCare(PRIMARY_KEY);
+
+        then(designatedAvatarManager).should().deleteAllByMemberKey(PRIMARY_KEY);
     }
 }
