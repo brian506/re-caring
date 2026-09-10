@@ -14,7 +14,7 @@ import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.implement.MemberReader;
 import com.recaring.notification.business.FcmDeviceTokenService;
 import com.recaring.security.vo.Jwt;
-import com.recaring.sms.implement.PhoneVerificationReader;
+import com.recaring.sms.implement.PhoneVerificationWriter;
 import com.recaring.sms.vo.PhoneNumber;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -31,11 +31,11 @@ public class LocalAuthService {
     private final LocalAuthManager localAuthManager;
     private final LocalAuthReader localAuthReader;
     private final RefreshTokenWriter refreshTokenWriter;
-    private final PhoneVerificationReader phoneVerificationReader;
+    private final PhoneVerificationWriter phoneVerificationWriter;
     private final FcmDeviceTokenService fcmDeviceTokenService;
 
     public void signUp(SignUpCommand command) {
-        PhoneNumber phone = phoneVerificationReader.findPhoneByToken(command.smsToken());
+        PhoneNumber phone = phoneVerificationWriter.consumePhoneByToken(command.smsToken());
         EncodedPassword encodedPassword = authAuthenticator.encodePassword(command.password());
         localAuthManager.register(command.toNewLocalMember(phone, encodedPassword));
     }
@@ -51,7 +51,7 @@ public class LocalAuthService {
     }
 
     public void resetPassword(String smsToken, Password password) {
-        PhoneNumber phone = phoneVerificationReader.findPhoneByToken(smsToken);
+        PhoneNumber phone = phoneVerificationWriter.consumePhoneByToken(smsToken);
         Member member = memberReader.findByPhone(phone);
         EncodedPassword encodedPassword = authAuthenticator.encodePassword(password);
         localAuthManager.changePassword(member.getMemberKey(), encodedPassword.value());

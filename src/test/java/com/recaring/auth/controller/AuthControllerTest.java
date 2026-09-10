@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -175,6 +176,58 @@ class AuthControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @DisplayName("POST /api/v1/auth/sign-up - 인증 토큰은 1회용이라 이메일만 바꿔 다시 쓸 수 없다")
+    void signUp_consumes_verification_token() {
+        prepareLocalMember(MemberFixture.OTHER_PHONE, "taken@example.com", AuthFixture.RAW_PASSWORD);
+        String verificationToken = prepareVerificationToken(SmsFixture.PHONE);
+
+        client.post()
+                .uri("/api/v1/auth/sign-up")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {
+                            "verificationToken": "%s",
+                            "email": "taken@example.com",
+                            "password": "%s",
+                            "name": "홍길동",
+                            "birth": "1990-01-01",
+                            "gender": "MALE",
+                            "role": "GUARDIAN",
+                            "isTermsOfServiceAgreed": true,
+                            "isLocationServiceAgreed": true,
+                            "isPrivacyPolicyAgreed": true
+                        }
+                        """.formatted(verificationToken, AuthFixture.RAW_PASSWORD))
+                .exchange()
+                .expectStatus().isEqualTo(HttpStatus.CONFLICT);
+
+        client.post()
+                .uri("/api/v1/auth/sign-up")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {
+                            "verificationToken": "%s",
+                            "email": "free@example.com",
+                            "password": "%s",
+                            "name": "홍길동",
+                            "birth": "1990-01-01",
+                            "gender": "MALE",
+                            "role": "GUARDIAN",
+                            "isTermsOfServiceAgreed": true,
+                            "isLocationServiceAgreed": true,
+                            "isPrivacyPolicyAgreed": true
+                        }
+                        """.formatted(verificationToken, AuthFixture.RAW_PASSWORD))
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.error.errorCode").isEqualTo("E4002");
+
+        assertThat(memberRepository.count()).isEqualTo(1);
+        assertThat(localAuthRepository.findByEmail("free@example.com")).isEmpty();
+    }
+
+    @Test
     @DisplayName("POST /api/v1/auth/sign-up - 이미 가입된 이메일이면 회원이 추가되지 않는다")
     void signUp_fail_when_email_already_registered() {
         prepareLocalMember(MemberFixture.OTHER_PHONE, "duplicate@example.com", AuthFixture.RAW_PASSWORD);
@@ -198,7 +251,7 @@ class AuthControllerTest extends AbstractIntegrationTest {
                         }
                         """.formatted(verificationToken, AuthFixture.RAW_PASSWORD))
                 .exchange()
-                .expectStatus().isBadRequest()
+                .expectStatus().isEqualTo(HttpStatus.CONFLICT)
                 .expectBody()
                 .jsonPath("$.error.errorCode").isEqualTo("E3007");
 
@@ -230,7 +283,7 @@ class AuthControllerTest extends AbstractIntegrationTest {
                         }
                         """.formatted(verificationToken, AuthFixture.RAW_PASSWORD))
                 .exchange()
-                .expectStatus().isBadRequest()
+                .expectStatus().isEqualTo(HttpStatus.CONFLICT)
                 .expectBody()
                 .jsonPath("$.error.errorCode").isEqualTo("E3006");
 

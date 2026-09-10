@@ -1,4 +1,4 @@
 package com.recaring.sms.vo;
 
-public record VerifiedPhone(String token, boolean registered) {
+public record VerifiedPhone(PhoneNumber phone, String token, boolean registered) {
 }

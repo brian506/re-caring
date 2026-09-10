@@ -4,13 +4,18 @@ import com.recaring.sms.fixture.SmsFixture;
 import com.recaring.sms.vo.PhoneNumber;
 import com.recaring.sms.vo.SmsCode;
 import com.recaring.support.AbstractIntegrationTest;
+import com.recaring.support.exception.AppException;
+import com.recaring.support.exception.ErrorType;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
+import java.util.UUID;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DisplayName("PhoneVerificationWriter 통합 테스트")
 class PhoneVerificationWriterTest extends AbstractIntegrationTest {
@@ -70,15 +75,30 @@ class PhoneVerificationWriterTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("deleteToken() 호출 시 토큰이 Redis에서 삭제된다")
-    void deleteToken_removes_token_from_redis() {
+    @DisplayName("검증 토큰으로 전화번호를 꺼내면 토큰은 그 자리에서 사라져 두 번 쓸 수 없다")
+    void consumePhoneByToken_returns_phone_and_invalidates_token() {
         PhoneNumber phone = SmsFixture.createPhoneNumber();
         phoneVerificationWriter.add(phone, SmsFixture.createSmsCode());
         String token = phoneVerificationWriter.verify(phone);
 
-        phoneVerificationWriter.deleteToken(token);
+        PhoneNumber consumed = phoneVerificationWriter.consumePhoneByToken(token);
 
-        String stored = redisTemplate.opsForValue().get(TOKEN_KEY_PREFIX + token);
-        assertThat(stored).isNull();
+        assertThat(consumed.value()).isEqualTo(SmsFixture.PHONE);
+        assertThat(redisTemplate.opsForValue().get(TOKEN_KEY_PREFIX + token)).isNull();
+        assertThatThrownBy(() -> phoneVerificationWriter.consumePhoneByToken(token))
+                .isInstanceOf(AppException.class)
+                .extracting(e -> ((AppException) e).getErrorType())
+                .isEqualTo(ErrorType.NOT_VERIFIED_PHONE);
+    }
+
+    @Test
+    @DisplayName("만료되거나 없는 토큰을 쓰면 NOT_VERIFIED_PHONE 예외가 발생한다")
+    void consumePhoneByToken_fail_when_token_not_found() {
+        String nonExistingToken = UUID.randomUUID().toString();
+
+        assertThatThrownBy(() -> phoneVerificationWriter.consumePhoneByToken(nonExistingToken))
+                .isInstanceOf(AppException.class)
+                .extracting(e -> ((AppException) e).getErrorType())
+                .isEqualTo(ErrorType.NOT_VERIFIED_PHONE);
     }
 }

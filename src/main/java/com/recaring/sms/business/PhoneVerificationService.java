@@ -34,6 +34,6 @@ public class PhoneVerificationService {
             throw new AppException(ErrorType.INVALID_VERIFICATION_CODE);
         }
         String token = phoneVerificationWriter.verify(phone);
-        return new VerifiedPhone(token, memberReader.existsByPhone(phone));
+        return new VerifiedPhone(phone, token, memberReader.existsByPhone(phone));
     }
 }
