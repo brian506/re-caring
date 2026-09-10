@@ -3,6 +3,7 @@ package com.recaring.auth.implement.local;
 import com.recaring.auth.dataaccess.entity.LocalAuth;
 import com.recaring.auth.vo.NewLocalMember;
 import com.recaring.auth.dataaccess.repository.LocalAuthRepository;
+import com.recaring.member.implement.MemberReader;
 import com.recaring.member.implement.MemberWriter;
 import com.recaring.member.implement.MembersTermsAgreementWriter;
 import com.recaring.support.exception.AppException;
@@ -17,13 +18,17 @@ public class LocalAuthManager {
 
     private final LocalAuthReader localAuthReader;
     private final LocalAuthRepository localAuthRepository;
+    private final MemberReader memberReader;
     private final MemberWriter memberWriter;
     private final MembersTermsAgreementWriter termsAgreementWriter;
 
     @Transactional
     public void register(NewLocalMember member) {
-        if(localAuthRepository.existsByEmail(member.email().value())) {
-            throw new AppException(ErrorType.INVALID_EMAIL);
+        if (memberReader.existsByPhone(member.phone())) {
+            throw new AppException(ErrorType.ALREADY_REGISTERED_PHONE);
+        }
+        if (localAuthRepository.existsByEmail(member.email().value())) {
+            throw new AppException(ErrorType.ALREADY_REGISTERED_EMAIL);
         }
         String memberKey = memberWriter.registerLocalMember(member);
         localAuthRepository.save(LocalAuth.of(memberKey, member.email().value(), member.password().value()));

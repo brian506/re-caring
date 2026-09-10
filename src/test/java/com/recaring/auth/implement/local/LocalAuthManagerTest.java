@@ -6,6 +6,7 @@ import com.recaring.auth.fixture.AuthFixture;
 import com.recaring.auth.vo.NewLocalMember;
 import com.recaring.member.dataaccess.entity.Gender;
 import com.recaring.member.dataaccess.entity.MemberRole;
+import com.recaring.member.implement.MemberReader;
 import com.recaring.member.implement.MemberWriter;
 import com.recaring.member.implement.MembersTermsAgreementWriter;
 import com.recaring.sms.fixture.SmsFixture;
@@ -47,6 +48,9 @@ class LocalAuthManagerTest {
     private LocalAuthRepository localAuthRepository;
 
     @Mock
+    private MemberReader memberReader;
+
+    @Mock
     private MemberWriter memberWriter;
 
     @Mock
@@ -69,6 +73,7 @@ class LocalAuthManagerTest {
     void register_persists_member_auth_and_terms() {
         // Given
         NewLocalMember newMember = newLocalMember();
+        given(memberReader.existsByPhone(SmsFixture.createPhoneNumber())).willReturn(false);
         given(localAuthRepository.existsByEmail(AuthFixture.EMAIL)).willReturn(false);
         given(memberWriter.registerLocalMember(newMember)).willReturn(NEW_MEMBER_KEY);
 
@@ -88,15 +93,34 @@ class LocalAuthManagerTest {
     }
 
     @Test
-    @DisplayName("이미 가입된 이메일이면 INVALID_EMAIL 예외가 발생하고 아무것도 저장하지 않는다")
+    @DisplayName("이미 가입된 전화번호면 ALREADY_REGISTERED_PHONE 예외가 발생하고 아무것도 저장하지 않는다")
+    void register_throws_and_writes_nothing_when_phone_already_exists() {
+        // Given
+        NewLocalMember newMember = newLocalMember();
+        given(memberReader.existsByPhone(SmsFixture.createPhoneNumber())).willReturn(true);
+
+        // When / Then
+        assertThatThrownBy(() -> localAuthManager.register(newMember))
+                .isInstanceOf(AppException.class)
+                .hasFieldOrPropertyWithValue("errorType", ErrorType.ALREADY_REGISTERED_PHONE);
+
+        then(memberWriter).should(never()).registerLocalMember(any());
+        then(localAuthRepository).should(never()).save(any(LocalAuth.class));
+        then(termsAgreementWriter).should(never()).register(anyString());
+    }
+
+    @Test
+    @DisplayName("이미 가입된 이메일이면 ALREADY_REGISTERED_EMAIL 예외가 발생하고 아무것도 저장하지 않는다")
     void register_throws_and_writes_nothing_when_email_already_exists() {
         // Given
         NewLocalMember newMember = newLocalMember();
+        given(memberReader.existsByPhone(SmsFixture.createPhoneNumber())).willReturn(false);
         given(localAuthRepository.existsByEmail(AuthFixture.EMAIL)).willReturn(true);
 
+        // When / Then
         assertThatThrownBy(() -> localAuthManager.register(newMember))
                 .isInstanceOf(AppException.class)
-                .hasFieldOrPropertyWithValue("errorType", ErrorType.INVALID_EMAIL);
+                .hasFieldOrPropertyWithValue("errorType", ErrorType.ALREADY_REGISTERED_EMAIL);
 
         then(memberWriter).should(never()).registerLocalMember(any());
         then(localAuthRepository).should(never()).save(any(LocalAuth.class));

@@ -13,5 +13,7 @@ public interface MemberRepository extends JpaRepository<Member, Long>, MemberRep
 
     Optional<Member> findByPhone(String phone);
 
+    boolean existsByPhone(String phone);
+
     List<Member> findAllByMemberKeyIn(List<String> memberKeys);
 }

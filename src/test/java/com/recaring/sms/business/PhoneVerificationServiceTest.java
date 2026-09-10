@@ -1,11 +1,13 @@
 package com.recaring.sms.business;
 
+import com.recaring.member.implement.MemberReader;
 import com.recaring.sms.fixture.SmsFixture;
 import com.recaring.sms.implement.PhoneVerificationReader;
 import com.recaring.sms.implement.PhoneVerificationWriter;
 import com.recaring.sms.implement.SmsClient;
 import com.recaring.sms.vo.PhoneNumber;
 import com.recaring.sms.vo.SmsCode;
+import com.recaring.sms.vo.VerifiedPhone;
 import com.recaring.support.exception.AppException;
 import com.recaring.support.exception.ErrorType;
 import org.junit.jupiter.api.DisplayName;
@@ -39,6 +41,9 @@ class PhoneVerificationServiceTest {
     @Mock
     private SmsClient smsClient;
 
+    @Mock
+    private MemberReader memberReader;
+
     @Test
     @DisplayName("인증 코드 발송 시 코드가 저장되고 SMS가 발송된다")
     void sendCode_success() {
@@ -59,10 +64,12 @@ class PhoneVerificationServiceTest {
 
         given(phoneVerificationReader.findCode(phone)).willReturn(SmsFixture.createSmsCode());
         given(phoneVerificationWriter.verify(phone)).willReturn(expectedToken);
+        given(memberReader.existsByPhone(phone)).willReturn(false);
 
-        String result = phoneVerificationService.verifyCode(phone, code);
+        VerifiedPhone result = phoneVerificationService.verifyCode(phone, code);
 
-        assertThat(result).isEqualTo(expectedToken);
+        assertThat(result.token()).isEqualTo(expectedToken);
+        assertThat(result.registered()).isFalse();
         then(phoneVerificationWriter).should(times(1)).verify(phone);
     }
 
