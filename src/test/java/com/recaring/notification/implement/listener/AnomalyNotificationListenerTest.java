@@ -75,7 +75,7 @@ class AnomalyNotificationListenerTest {
                         "type", DetectionType.SPEED_ANOMALY.name(),
                         "wardKey", NotificationFixture.WARD_KEY,
                         "score", String.valueOf(LocationFixture.ANOMALY_SCORE),
-                        "detectedAt", LocationFixture.DETECTED_AT_TEXT,
+                        "recordedAt", LocationFixture.DETECTED_AT_TEXT,
                         "latitude", String.valueOf(LocationFixture.LATITUDE),
                         "longitude", String.valueOf(LocationFixture.LONGITUDE)
                 )

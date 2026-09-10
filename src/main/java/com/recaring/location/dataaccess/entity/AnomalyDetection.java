@@ -23,8 +23,8 @@ import java.time.LocalDateTime;
 @Table(
         name = "anomaly_detections",
         uniqueConstraints = @UniqueConstraint(
-                name = "uk_anomaly_detections_ward_type_detected",
-                columnNames = {"ward_member_key", "detection_type", "detected_at"})
+                name = "uk_anomaly_detections_ward_type_recorded",
+                columnNames = {"ward_member_key", "detection_type", "recorded_at"})
 )
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class AnomalyDetection extends BaseEntity {
@@ -45,7 +45,7 @@ public class AnomalyDetection extends BaseEntity {
     private double score;
 
     @Column(nullable = false, updatable = false)
-    private LocalDateTime detectedAt;
+    private LocalDateTime recordedAt;
 
     @Column(nullable = false)
     private double latitude;
@@ -58,11 +58,11 @@ public class AnomalyDetection extends BaseEntity {
 
     @Builder
     public AnomalyDetection(String wardMemberKey, DetectionType detectionType, double score,
-                            LocalDateTime detectedAt, double latitude, double longitude, String evidence) {
+                            LocalDateTime recordedAt, double latitude, double longitude, String evidence) {
         this.wardMemberKey = wardMemberKey;
         this.detectionType = detectionType;
         this.score = score;
-        this.detectedAt = detectedAt;
+        this.recordedAt = recordedAt;
         this.latitude = latitude;
         this.longitude = longitude;
         this.evidence = evidence;
