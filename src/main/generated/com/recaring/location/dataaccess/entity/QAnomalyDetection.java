@@ -27,8 +27,6 @@ public class QAnomalyDetection extends EntityPathBase<AnomalyDetection> {
     //inherited
     public final DateTimePath<java.time.LocalDateTime> createdAt = _super.createdAt;
 
-    public final DateTimePath<java.time.LocalDateTime> detectedAt = createDateTime("detectedAt", java.time.LocalDateTime.class);
-
     public final EnumPath<com.recaring.location.vo.DetectionType> detectionType = createEnum("detectionType", com.recaring.location.vo.DetectionType.class);
 
     public final StringPath evidence = createString("evidence");
@@ -38,6 +36,8 @@ public class QAnomalyDetection extends EntityPathBase<AnomalyDetection> {
     public final NumberPath<Double> latitude = createNumber("latitude", Double.class);
 
     public final NumberPath<Double> longitude = createNumber("longitude", Double.class);
+
+    public final DateTimePath<java.time.LocalDateTime> recordedAt = createDateTime("recordedAt", java.time.LocalDateTime.class);
 
     public final NumberPath<Double> score = createNumber("score", Double.class);
 

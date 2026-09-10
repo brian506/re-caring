@@ -123,7 +123,7 @@ public class LocationFixture {
         fields.put("ward_member_key", WARD_KEY);
         fields.put("detection_type", detectionType.name());
         fields.put("score", String.valueOf(ANOMALY_SCORE));
-        fields.put("detected_at", DETECTED_AT_TEXT);
+        fields.put("recorded_at", DETECTED_AT_TEXT);
         fields.put("latitude", String.valueOf(LATITUDE));
         fields.put("longitude", String.valueOf(LONGITUDE));
         fields.put("evidence", evidence);

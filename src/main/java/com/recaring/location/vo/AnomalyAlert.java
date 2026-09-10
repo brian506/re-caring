@@ -6,7 +6,7 @@ public record AnomalyAlert(
         String wardMemberKey,
         DetectionType detectionType,
         double score,
-        LocalDateTime detectedAt,
+        LocalDateTime recordedAt,
         double latitude,
         double longitude,
         String evidence

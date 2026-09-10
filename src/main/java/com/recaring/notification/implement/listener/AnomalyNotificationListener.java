@@ -23,7 +23,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AnomalyNotificationListener {
 
-    private static final DateTimeFormatter DETECTED_AT_FORMAT =
+    private static final DateTimeFormatter RECORDED_AT_FORMAT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private static final String NAME_PLACEHOLDER = "{name}";
@@ -66,7 +66,7 @@ public class AnomalyNotificationListener {
                         "type", eventType,
                         "wardKey", wardMemberKey,
                         "score", String.valueOf(detection.score()),
-                        "detectedAt", DETECTED_AT_FORMAT.format(detection.detectedAt()),
+                        "recordedAt", RECORDED_AT_FORMAT.format(detection.recordedAt()),
                         "latitude", String.valueOf(detection.latitude()),
                         "longitude", String.valueOf(detection.longitude())
                 )

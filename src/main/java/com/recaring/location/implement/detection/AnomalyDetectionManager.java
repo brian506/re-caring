@@ -23,7 +23,7 @@ public class AnomalyDetectionManager {
                 alert.wardMemberKey(),
                 alert.detectionType().name(),
                 alert.score(),
-                alert.detectedAt(),
+                alert.recordedAt(),
                 alert.latitude(),
                 alert.longitude(),
                 alert.evidence()

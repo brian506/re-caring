@@ -36,6 +36,10 @@ public class AnomalyDetectionConsumer implements StreamListener<String, MapRecor
             return;
         }
 
+        log.info("[이상탐지 결과 : 수신]: wardMemberKey={} | detectionType={} | recordedAt={} | score={}",
+                alert.get().wardMemberKey(), alert.get().detectionType(),
+                alert.get().recordedAt(), alert.get().score());
+
         if (recordAndAcknowledge(record, alert.get(), FIRST_ATTEMPT)) {
             return;
         }
