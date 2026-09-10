@@ -1,6 +1,6 @@
 # 프로젝트 스냅샷
 
-> 마지막 업데이트: 2026-09-08. 기능 추가·수정 시 해당 섹션을 갱신한다.
+> 마지막 업데이트: 2026-09-10. 기능 추가·수정 시 해당 섹션을 갱신한다.
 
 ## 도메인별 패키지 현황
 
@@ -21,7 +21,7 @@
 
 | 도메인 | Method | Path | 설명 |
 |--------|--------|------|------|
-| Auth | POST | `/api/v1/auth/sign-up` | 로컬 회원가입 |
+| Auth | POST | `/api/v1/auth/sign-up` | 로컬 회원가입. 전화번호 중복 E3006, 이메일 중복 E3007(둘 다 400). 선검사를 통과한 동시 요청은 UNIQUE 위반 → 409(E409) |
 | Auth | POST | `/api/v1/auth/sign-in` | 로컬 로그인 |
 | Auth | POST | `/api/v1/auth/sign-in/{kakao\|naver}` | OAuth 로그인 (미연동 계정은 OAUTH_NOT_LINKED) |
 | Auth | POST | `/api/v1/auth/oauth/link/{kakao\|naver}` | OAuth 사후 연동 (JWT 인증, 로컬 가입 필수) |
@@ -63,8 +63,8 @@
 | SafeZone | GET | `/api/v1/care/wards/{wardKey}/safe-zones/{safeZoneKey}` | 안심존 상세 조회 (GUARDIAN, MANAGER) |
 | SafeZone | PATCH | `/api/v1/care/wards/{wardKey}/safe-zones/{safeZoneKey}` | 안심존 수정 (GUARDIAN only) |
 | SafeZone | DELETE | `/api/v1/care/wards/{wardKey}/safe-zones/{safeZoneKey}` | 안심존 삭제 (GUARDIAN only) |
-| SMS | POST | `/api/v1/sms/verification/send` | SMS 인증코드 발송 |
-| SMS | POST | `/api/v1/sms/verification/verify` | SMS 인증코드 검증 |
+| SMS | POST | `/api/v1/auth/phone/send-code` | SMS 인증코드 발송 |
+| SMS | POST | `/api/v1/auth/phone/verify` | SMS 인증코드 검증. 응답 `{ verificationToken, registered }` — `registered`=해당 번호로 이미 가입된 회원 존재 여부. 가입 화면은 true일 때, 비밀번호 재설정 화면은 false일 때 진행을 막는다 |
 
 ## 엔티티 목록
 

@@ -14,6 +14,7 @@ public enum ErrorType {
     INVALID_ACCESS_PATH(HttpStatus.BAD_REQUEST, ErrorCode.E400, "요청 값이 올바르지 않습니다.", LogLevel.WARN),
     NOT_FOUND_DATA(HttpStatus.BAD_REQUEST, ErrorCode.E400, "해당 데이터를 찾을 수 없습니다.", LogLevel.WARN),
     TOO_MANY_REQUESTS(HttpStatus.TOO_MANY_REQUESTS, ErrorCode.E429, "너무 많은 요청을 보냈습니다.", LogLevel.WARN),
+    DUPLICATE_RESOURCE(HttpStatus.CONFLICT, ErrorCode.E409, "이미 등록된 정보입니다.", LogLevel.WARN),
     DEFAULT_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, ErrorCode.E500, "알 수 없는 오류가 발생했습니다. 잠시 후 다시 시도해주세요.", LogLevel.ERROR),
 
     // Auth (E2xxx)
@@ -47,6 +48,8 @@ public enum ErrorType {
     PREMIUM_ONLY(HttpStatus.BAD_REQUEST, ErrorCode.E3003, "프리미엄 구독을 한 회원만 접근 가능합니다", LogLevel.WARN),
     BASIC_ONLY(HttpStatus.BAD_REQUEST, ErrorCode.E3004, "베이식 구독을 한 회원만 접근 가능합니다", LogLevel.WARN),
     SUBSCRIPTION_ONLY(HttpStatus.BAD_REQUEST, ErrorCode.E3005, "멤버십 결제가 필요한 기능입니다.", LogLevel.WARN),
+    ALREADY_REGISTERED_PHONE(HttpStatus.BAD_REQUEST, ErrorCode.E3006, "이미 가입된 전화번호입니다.", LogLevel.WARN),
+    ALREADY_REGISTERED_EMAIL(HttpStatus.BAD_REQUEST, ErrorCode.E3007, "이미 사용 중인 이메일입니다.", LogLevel.WARN),
 
     // SMS / Phone Verification (E4xxx)
     EXPIRED_VERIFICATION_CODE(HttpStatus.BAD_REQUEST, ErrorCode.E4000, "인증번호가 만료되었습니다.", LogLevel.WARN),

@@ -9,6 +9,7 @@ import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
@@ -36,6 +37,16 @@ public class ApiControllerAdvice {
     public ResponseEntity<ApiResponse<@Nullable Object>> handleOptimisticLockException(ObjectOptimisticLockingFailureException e) {
         log.warn("[OptimisticLockException]: message={}", e.getMessage());
         return new ResponseEntity<>(ApiResponse.error(ErrorType.NOTIFICATION_SETTING_UPDATE_CONFLICT, null), HttpStatus.CONFLICT);
+    }
+
+    // UNIQUE/FK 제약 위반은 선검사를 통과한 동시 요청에서도 발생한다(예: 같은 전화번호로 가입 요청이 동시에 두 건).
+    // 핸들러가 없으면 generic Exception 핸들러(500)로 흡수되어 클라이언트가 재시도해도 소용없는 상황을
+    // 일시적 서버 오류로 오분류한다. 중복이라는 사실을 409로 알려 클라이언트가 안내 문구를 띄울 수 있게 한다.
+    @NullMarked
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiResponse<@Nullable Object>> handleDataIntegrityViolationException(DataIntegrityViolationException e) {
+        log.warn("[데이터 제약 : 위반]: message={}", e.getMostSpecificCause().getMessage());
+        return new ResponseEntity<>(ApiResponse.error(ErrorType.DUPLICATE_RESOURCE, null), HttpStatus.CONFLICT);
     }
 
     @NullMarked

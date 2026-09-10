@@ -1,4 +1,10 @@
 package com.recaring.sms.controller.response;
 
-public record VerifyCodeResponse(String verificationToken) {
+import com.recaring.sms.vo.VerifiedPhone;
+
+public record VerifyCodeResponse(String verificationToken, boolean registered) {
+
+    public static VerifyCodeResponse from(VerifiedPhone verifiedPhone) {
+        return new VerifyCodeResponse(verifiedPhone.token(), verifiedPhone.registered());
+    }
 }
