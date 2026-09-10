@@ -27,6 +27,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class DesignatedAvatar extends BaseEntity {
 
+    // TODO: CREATE INDEX idx_designated_avatars_ward ON designated_avatars(ward_member_key);
+    // TODO: CREATE INDEX idx_designated_avatars_target ON designated_avatars(target_member_key);
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "designated_avatar_id")
