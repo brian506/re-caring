@@ -18,7 +18,6 @@ import com.recaring.member.implement.MemberReader;
 import com.recaring.notification.business.FcmDeviceTokenService;
 import com.recaring.security.vo.Jwt;
 import com.recaring.sms.fixture.SmsFixture;
-import com.recaring.sms.implement.PhoneVerificationReader;
 import com.recaring.sms.implement.PhoneVerificationWriter;
 import com.recaring.sms.vo.PhoneNumber;
 import org.junit.jupiter.api.DisplayName;
@@ -64,9 +63,6 @@ class LocalAuthServiceTest {
     private RefreshTokenWriter refreshTokenWriter;
 
     @Mock
-    private PhoneVerificationReader phoneVerificationReader;
-
-    @Mock
     private PhoneVerificationWriter phoneVerificationWriter;
 
     @Mock
@@ -81,7 +77,7 @@ class LocalAuthServiceTest {
         EncodedPassword encodedPassword = AuthFixture.createEncodedPassword();
         SignUpCommand command = AuthFixture.createSignUpCommand(verificationToken);
 
-        given(phoneVerificationReader.findPhoneByToken(verificationToken)).willReturn(phone);
+        given(phoneVerificationWriter.consumePhoneByToken(verificationToken)).willReturn(phone);
         given(authAuthenticator.encodePassword(command.password())).willReturn(encodedPassword);
 
         // when
@@ -151,7 +147,7 @@ class LocalAuthServiceTest {
         EncodedPassword encodedPassword = new EncodedPassword("$2a$10$newEncoded");
         Member member = MemberFixture.createMember();
 
-        given(phoneVerificationReader.findPhoneByToken(smsToken)).willReturn(phone);
+        given(phoneVerificationWriter.consumePhoneByToken(smsToken)).willReturn(phone);
         given(memberReader.findByPhone(new PhoneNumber(SmsFixture.PHONE))).willReturn(member);
         given(authAuthenticator.encodePassword(newPassword)).willReturn(encodedPassword);
 
