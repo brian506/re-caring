@@ -14,6 +14,7 @@ import com.recaring.support.exception.ErrorType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -23,6 +24,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.*;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.times;
 
 @ExtendWith(MockitoExtension.class)
@@ -273,17 +275,18 @@ class CareRelationshipServiceTest {
     // ── designateCaregiverAvatar ───────────────────────────────────────────
 
     @Test
-    @DisplayName("보호자 얼굴 지정 - 열람 권한과 대상의 케어 관계를 검증한 뒤 요청자 범위로 저장한다")
+    @DisplayName("보호자 얼굴 지정 - 요청자의 열람 권한을 먼저 검증하고, 대상의 케어 관계를 확인한 뒤 요청자 범위로 저장한다")
     void designateCaregiverAvatar_validates_both_sides_then_designates() {
         careRelationshipService.designateCaregiverAvatar(
                 CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY,
                 CareFixture.MANAGER_MEMBER_KEY, CareFixture.ADULT_AVATAR_CODE);
 
-        then(careRelationshipValidator).should(times(1))
+        InOrder inOrder = inOrder(careRelationshipValidator, designatedAvatarManager);
+        inOrder.verify(careRelationshipValidator)
                 .validateCaregiverViewAccess(CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY);
-        then(careRelationshipValidator).should(times(1))
+        inOrder.verify(careRelationshipValidator)
                 .validateCaregiver(CareFixture.MANAGER_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY);
-        then(designatedAvatarManager).should(times(1)).designate(
+        inOrder.verify(designatedAvatarManager).designate(
                 CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY,
                 new ProfileAvatarCode(CareFixture.ADULT_AVATAR_CODE));
     }

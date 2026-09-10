@@ -386,6 +386,39 @@ class MemberControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @DisplayName("DELETE /me - 보호 대상자 본인이 탈퇴하면 자기 케어 범위에 남들이 지정한 얼굴도 모두 삭제되고 다른 대상자 범위는 남는다")
+    void withdraw_as_ward_removes_designations_scoped_to_own_care() {
+        Member otherGuardian = memberRepository.save(CareFixture.createGuardianMember("01077778888"));
+        Member otherWard = memberRepository.save(CareFixture.createWardMember("01066667777"));
+        careRelationshipRepository.save(
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+        careRelationshipRepository.save(
+                CareFixture.createGuardianRelationship(ward.getMemberKey(), otherGuardian.getMemberKey()));
+        careRelationshipRepository.save(
+                CareFixture.createPrimaryGuardianRelationship(otherWard.getMemberKey(), guardian.getMemberKey()));
+        designatedAvatarRepository.save(CareFixture.createDesignatedAvatar(
+                guardian.getMemberKey(), ward.getMemberKey(), otherGuardian.getMemberKey(), CareFixture.ADULT_AVATAR_CODE));
+        designatedAvatarRepository.save(CareFixture.createDesignatedAvatar(
+                otherGuardian.getMemberKey(), ward.getMemberKey(), guardian.getMemberKey(), CareFixture.ADULT_AVATAR_CODE));
+        designatedAvatarRepository.save(CareFixture.createDesignatedAvatar(
+                guardian.getMemberKey(), otherWard.getMemberKey(), otherWard.getMemberKey(), CareFixture.SENIOR_AVATAR_CODE));
+
+        client.method(HttpMethod.DELETE)
+                .uri("/api/v1/members/me")
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(ward))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"password": "%s"}
+                        """.formatted(PASSWORD))
+                .exchange()
+                .expectStatus().isOk();
+
+        assertThat(designatedAvatarRepository.findAll())
+                .extracting("ownerMemberKey", "wardMemberKey", "targetMemberKey")
+                .containsExactly(tuple(guardian.getMemberKey(), otherWard.getMemberKey(), otherWard.getMemberKey()));
+    }
+
+    @Test
     @DisplayName("DELETE /me - 비밀번호가 틀리면 400 E2017이 반환되고 회원은 남아 있다")
     void withdraw_rejects_wrong_password() {
         client.method(HttpMethod.DELETE)
