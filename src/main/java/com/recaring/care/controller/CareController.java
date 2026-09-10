@@ -4,6 +4,7 @@ import com.recaring.care.business.CareInvitationService;
 import com.recaring.care.business.CareRelationshipService;
 import com.recaring.care.controller.request.AddCaregiverRequest;
 import com.recaring.care.controller.request.AddWardRequest;
+import com.recaring.care.controller.request.DesignateAvatarRequest;
 import com.recaring.care.controller.request.UpdateCareRoleRequest;
 import com.recaring.care.controller.request.UpdateWardNicknameRequest;
 import com.recaring.care.controller.response.CaregiverResponse;
@@ -210,6 +211,45 @@ public class CareController {
             @Valid @RequestBody UpdateCareRoleRequest request
     ) {
         careRelationshipService.updateCaregiverRole(memberKey, wardKey, caregiverKey, request.careRole());
+        return ResponseEntity.ok(ApiResponse.success());
+    }
+    @Operation(
+            summary = "보호 대상자 프로필 아바타 지정",
+            description = """
+                    내가 보는 보호 대상자의 얼굴을 앱 번들 일러스트 16종 중 하나로 지정합니다. 나에게만 보이며,
+                    대상자 본인이 고른 얼굴(wardProfileAvatarCode)이나 다른 보호자의 화면은 바뀌지 않습니다.
+                    앱은 designatedProfileAvatarCode > wardProfileAvatarCode > 자동 배정 순으로 표시합니다.
+                    허용 코드 외 값은 400(E3008)이며, 빈 문자열이나 생략은 지정 해제입니다.
+                    [보호 대상자와 케어 관계가 있는 회원 전용]
+                    """
+    )
+    @PatchMapping("/wards/{wardKey}/avatar")
+    public ResponseEntity<ApiResponse<Void>> designateWardAvatar(
+            @AuthMember String memberKey,
+            @Parameter(description = "보호 대상자 memberKey") @PathVariable String wardKey,
+            @Valid @RequestBody DesignateAvatarRequest request
+    ) {
+        careRelationshipService.designateWardAvatar(memberKey, wardKey, request.profileAvatarCode());
+        return ResponseEntity.ok(ApiResponse.success());
+    }
+
+    @Operation(
+            summary = "보호자/관계자 프로필 아바타 지정",
+            description = """
+                    보호 대상자 화면에서 내가 보는 특정 보호자·관계자의 얼굴을 지정합니다. 나에게만 보이며,
+                    그 사람이 직접 고른 얼굴(profileAvatarCode)이나 다른 회원의 화면은 바뀌지 않습니다.
+                    허용 코드 외 값은 400(E3008)이며, 빈 문자열이나 생략은 지정 해제입니다.
+                    [보호자 목록을 볼 수 있는 회원 전용: 대상자 본인 또는 GUARDIAN 계열]
+                    """
+    )
+    @PatchMapping("/wards/{wardKey}/caregivers/{caregiverKey}/avatar")
+    public ResponseEntity<ApiResponse<Void>> designateCaregiverAvatar(
+            @AuthMember String memberKey,
+            @Parameter(description = "보호 대상자 memberKey") @PathVariable String wardKey,
+            @Parameter(description = "얼굴을 지정할 보호자/관계자 memberKey") @PathVariable String caregiverKey,
+            @Valid @RequestBody DesignateAvatarRequest request
+    ) {
+        careRelationshipService.designateCaregiverAvatar(memberKey, wardKey, caregiverKey, request.profileAvatarCode());
         return ResponseEntity.ok(ApiResponse.success());
     }
 }

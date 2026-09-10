@@ -10,7 +10,9 @@ public record WardResponse(
         String wardNickname,
         String wardPhone,
         Gender wardGender,
-        CareRole myRole
+        CareRole myRole,
+        String wardProfileAvatarCode,
+        String designatedProfileAvatarCode
 ) {
     public static WardResponse from(WardInfo info) {
         return new WardResponse(
@@ -19,7 +21,9 @@ public record WardResponse(
                 info.wardNickname(),
                 info.wardPhone(),
                 info.wardGender(),
-                info.myRole()
+                info.myRole(),
+                info.wardProfileAvatarCode(),
+                info.designatedProfileAvatarCode()
         );
     }
 }

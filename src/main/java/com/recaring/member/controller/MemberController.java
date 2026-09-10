@@ -63,9 +63,11 @@ public class MemberController {
     @Operation(
             summary = "내 정보 수정",
             description = """
-                    JWT 인증 기반으로 본인의 이름·생년월일·비밀번호를 부분 수정합니다.
-                    요청에 포함된 필드만 반영하며, null 또는 빈 값은 무시합니다.
+                    JWT 인증 기반으로 본인의 이름·생년월일·비밀번호·프로필 아바타를 부분 수정합니다.
+                    요청에 포함된 필드만 반영하며, 이름·생년월일·비밀번호는 null 또는 빈 값을 무시합니다.
                     비밀번호 변경 시 현재 비밀번호(currentPassword) 확인이 필요합니다.
+                    profileAvatarCode는 앱 번들 일러스트 16종의 코드(예: senior_female_1)만 허용하며, 그 외 값은 400(E3008)입니다.
+                    빈 문자열이면 직접 고른 얼굴을 해제하고 앱의 자동 배정으로 돌아갑니다. 생략하면 변경하지 않습니다.
                     """
     )
     @PatchMapping("/me")
@@ -73,7 +75,8 @@ public class MemberController {
             @AuthMember String memberKey,
             @Valid @RequestBody UpdateMyInfoRequest request
     ) {
-        memberService.updateMyInfo(memberKey, request.name(), request.birth(), request.currentPassword(), request.newPassword());
+        memberService.updateMyInfo(memberKey, request.name(), request.birth(), request.currentPassword(),
+                request.newPassword(), request.profileAvatarCode());
         return ResponseEntity.ok(ApiResponse.success());
     }
 

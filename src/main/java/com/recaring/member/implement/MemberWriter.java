@@ -4,6 +4,7 @@ import com.recaring.auth.vo.NewLocalMember;
 import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.dataaccess.entity.SignUpType;
 import com.recaring.member.dataaccess.repository.MemberRepository;
+import com.recaring.member.vo.ProfileAvatarCode;
 import com.recaring.support.exception.AppException;
 import com.recaring.support.exception.ErrorType;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +37,13 @@ public class MemberWriter {
         Member member = memberRepository.findByMemberKey(memberKey)
                 .orElseThrow(() -> new AppException(ErrorType.NOT_FOUND_ACCOUNT));
         member.updateProfile(name, birth);
+    }
+
+    @Transactional
+    public void updateProfileAvatarCode(String memberKey, ProfileAvatarCode code) {
+        Member member = memberRepository.findByMemberKey(memberKey)
+                .orElseThrow(() -> new AppException(ErrorType.NOT_FOUND_ACCOUNT));
+        member.changeProfileAvatarCode(code.value());
     }
 
     @Transactional

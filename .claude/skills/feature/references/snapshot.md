@@ -7,7 +7,7 @@
 | 도메인 | 주요 Service | 주요 Implement |
 |--------|-------------|---------------|
 | `auth` | LocalAuthService, OAuthService, TokenRefreshService | LocalAuthAuthenticator, TokenIssuer, RefreshTokenReader/Writer, OAuthManager |
-| `care` | CareInvitationService, CareRelationshipService | CareInvitationManager, CareInvitationReader/Writer, CareRelationshipValidator |
+| `care` | CareInvitationService, CareRelationshipService | CareInvitationManager, CareInvitationReader/Writer, CareRelationshipValidator, DesignatedAvatarManager |
 | `device` | DeviceTokenService | WardDeviceTokenManager, WardDeviceTokenReader |
 | `location` | LocationService, LocationSettingService | GpsHistoryManager, GpsLatestCacheManager/Listener, SseEmitterManager, LocationValidator, CareRelationshipCacheReader, BatteryThresholdEvaluator/BatteryDetectionListener/BatteryAlertStateManager/DetectionPublisher/DetectionListener/AnomalyDetectionConsumer/AnomalyDetectionParser/AnomalyDetectionManager(detection), SafeZoneStateManager/SafeZoneDetectionListener(safezone), LocationSettingManager |
 | `member` | MemberService | MemberReader/Writer/Validator, MembersTermsAgreementWriter, MemberWithdrawalManager |
@@ -40,6 +40,8 @@
 | Care | DELETE | `/api/v1/care/wards/{wardKey}/caregivers/{caregiverKey}` | 특정 보호자/관계자 케어 관계 삭제 (PRIMARY_GUARDIAN only) |
 | Care | PATCH | `/api/v1/care/wards/{wardKey}/nickname` | 보호 대상자 별명 수정 (케어 관계가 있는 회원 전원, 보호자별로 따로 보임. 빈 값이면 해제) |
 | Care | PATCH | `/api/v1/care/wards/{wardKey}/caregivers/{caregiverKey}/role` | 보호자/관계자 관계 수정 (PRIMARY_GUARDIAN only, 주보호자로의 승격 포함. 이미 주보호자인 관계는 변경 불가) |
+| Care | PATCH | `/api/v1/care/wards/{wardKey}/avatar` | 내가 보는 보호 대상자 아바타 지정 (케어 관계가 있는 회원 전원, 호출자에게만 보임. 빈 값이면 해제, 허용 코드 외 E3008) |
+| Care | PATCH | `/api/v1/care/wards/{wardKey}/caregivers/{caregiverKey}/avatar` | 내가 보는 보호자/관계자 아바타 지정 (대상자 본인 또는 GUARDIAN 계열, 호출자에게만 보임. 빈 값이면 해제) |
 | Device | POST | `/api/v1/device/token` | Device Token 발급 (WARD, JWT 인증) |
 | Location | POST | `/api/v1/location/gps` | GPS 좌표 전송 (WARD, Device Token 인증) |
 | Location | GET | `/api/v1/location/stream/{wardKey}` | SSE 실시간 위치 스트림 (GUARDIAN) |
@@ -47,14 +49,14 @@
 | Location | GET | `/api/v1/location/settings/{wardKey}/collection-interval` | 위치 수집 주기 조회 (GUARDIAN, 옵션 30/60/180/300초 포함) |
 | Location | PATCH | `/api/v1/location/settings/{wardKey}/collection-interval` | 위치 수집 주기 수정 (GUARDIAN only) |
 | Location | GET | `/api/v1/location/settings/collection-interval/me` | 내 위치 수집 주기 조회 (WARD, Device Token 인증) |
-| Notification | GET | `/api/v1/notifications?cursor&size` | 내 알림함 목록 조회 (WARD, GUARDIAN — recipient 기준). notification_id DESC 커서 페이징. `cursor`=직전 응답 `nextCursor`(첫 페이지는 생략), `size`=1~50(기본 10). 응답 `{ items, nextCursor, hasNext }` |
+| Notification | GET | `/api/v1/notifications?cursor&size` | 내 알림함 목록 조회 (WARD, GUARDIAN — recipient 기준). notification_id DESC 커서 페이징. `cursor`=직전 응답 `nextCursor`(첫 페이지는 생략), `size`=1~50(기본 10). 응답 `{ items, nextCursor, hasNext }`. 이상탐지 알림의 `dataPayload`는 `type/wardKey/score/recordedAt/latitude/longitude`(값 전부 문자열) — 앱은 이걸로 위치 이력 탭에 핀을 찍는다. 다른 알림 유형에는 좌표가 없다 |
 | Notification | GET | `/api/v1/notifications/settings/{wardKey}` | 알림 설정 조회 (안심존·이상탐지·응급호출·배터리) |
 | Notification | PATCH | `/api/v1/notifications/settings/{wardKey}/safe-zone` | 안심존 진입·이탈 알림 토글 |
 | Notification | PATCH | `/api/v1/notifications/settings/{wardKey}/anomaly` | 이상탐지 알림 토글 수정 (5종 각각 on/off. **민감도 제거됨**) |
 | Notification | PATCH | `/api/v1/notifications/settings/{wardKey}/emergency-call` | 응급호출 알림 토글 |
 | Notification | PATCH | `/api/v1/notifications/settings/{wardKey}/battery` | 배터리 알림 토글 + 알림 받을 잔량(%) 다중 선택 (10~100, 10 단위, 개수 제한 없음). 기본값 없음 — 빈 배열이면 알림 안 감 |
 | Member | GET | `/api/v1/members/me` | 내 정보 조회 (JWT 인증, Member+이메일+약관+안심존 통합) |
-| Member | PATCH | `/api/v1/members/me` | 내 정보 수정 (이름·생년월일·비밀번호 부분 수정, JWT 인증) |
+| Member | PATCH | `/api/v1/members/me` | 내 정보 수정 (이름·생년월일·비밀번호·profileAvatarCode 부분 수정, JWT 인증. 아바타는 빈 문자열이면 해제, 허용 코드 외 E3008) |
 | Member | POST | `/api/v1/members/phones` | 연락처 기반 가입 회원 조회 (GUARDIAN) |
 | Member | DELETE | `/api/v1/members/me` | 회원 탈퇴 |
 | Place | GET | `/api/v1/places/search?query=&latitude=&longitude=&radiusMeters=` | 장소 검색 (GUARDIAN·WARD, 카카오 로컬 키워드 검색 프록시, 최대 5건, 편향 결과가 3건 미만이거나 키워드 불일치면 전국 재검색 후 전국 결과를 앞에 두고 placeId로 병합, 결과 없음은 빈 배열 200) |
@@ -70,11 +72,12 @@
 
 | Entity | Table | 주요 필드 |
 |--------|-------|---------|
-| Member | members | memberKey(UUID), role(GUARDIAN/WARD), name, phone |
+| Member | members | memberKey(UUID), role(GUARDIAN/WARD), name, phone, profileAvatarCode(nullable, 앱 번들 일러스트 16종 코드. null이면 앱이 자동 배정) |
 | LocalAuth | local_auths | account, encodedPassword, memberKey |
 | OAuth | oauths | provider(KAKAO/NAVER), providerId, memberKey |
 | LoginHistory | login_histories | memberKey, ip, loginAt |
 | CareRelationship | care_relationships | caregiverKey, wardKey, role(PRIMARY_GUARDIAN/GUARDIAN/MANAGER), wardNickname(nullable, 보호자별 별명. null이면 대상자 실명 사용) |
+| DesignatedAvatar | designated_avatars | ownerMemberKey(지정한 사람), wardMemberKey(케어 범위), targetMemberKey(얼굴이 붙는 사람), profileAvatarCode. `(owner, ward, target)` UNIQUE. 관계 삭제·탈퇴 시 함께 hard-delete |
 | CareInvitation | care_invitation | inviterKey, receiverKey, wardKey, careRole(수락 시 부여될 역할. 대상자 추가 요청은 PRIMARY_GUARDIAN), status(PENDING/ACCEPTED/REJECTED/EXPIRED), createdAt |
 | GpsHistory | gps_histories | wardMemberKey, latitude, longitude, recordedAt(서버 수신 시각), accuracy, battery, speed(m/s, nullable), measuredAt(기기 측정 시각, nullable — null이면 시간 간격 신뢰 불가). 시각 컬럼은 모두 KST 저장 |
 | LocationSetting | location_settings | wardMemberKey(UNIQUE), collectionIntervalSeconds(30/60/180/300, 기본 30) |
@@ -83,7 +86,7 @@
 | SafeZone | safe_zones | safeZoneKey(UUID), wardMemberKey, name, address, latitude, longitude, radius(SMALL/MEDIUM/LARGE/XLARGE) |
 | SafeZoneState | safe_zone_states | wardMemberKey(UNIQUE), safeZoneKeys(CSV, 현재 속한 안심존). 행 없음=최초 관측(알림 안 함), 빈 문자열=존 밖 |
 | Notification | notifications | notificationKey(UUID, UNIQUE), recipientMemberKey, eventType, title, body, dataPayload(jsonb, 리다이렉트용), createdAt. 수신자별 개별 row. 읽음 필드 없음. 목록 조회 정렬·커서는 notification_id DESC (created_at은 fan-out 시 동시각 행이 생겨 정렬 불안정) |
-| AnomalyDetection | anomaly_detections | wardMemberKey, detectionType(5종), score, detectedAt, latitude, longitude, evidence(1000자). `(wardMemberKey, detectionType, detectedAt)` UNIQUE = 재배달 멱등 키. 알림 토글과 무관하게 항상 저장되는 탐지 사건 원본 (1건 = 1 row) |
+| AnomalyDetection | anomaly_detections | wardMemberKey, detectionType(5종), score, recordedAt, latitude, longitude, evidence(1000자). `(wardMemberKey, detectionType, recordedAt)` UNIQUE = 재배달 멱등 키. 알림 토글과 무관하게 항상 저장되는 탐지 사건 원본 (1건 = 1 row) |
 | NotificationSetting | notification_settings | wardMemberKey(UNIQUE), 안심존·응급호출 토글, 이상탐지 토글 5종(speed/wandering/abnormalDwelling/routeDeviation/timeAnomaly), lowBatteryEnabled, batteryThresholdPercents(CSV, 기본 '' = 선택 없음 → 알림 없음) |
 | AlertRunbook | alert_runbooks | errorSignature, commands(jsonb), resolutionContext, successCount, isValid |
 | AlertInvestigation | alert_investigations | fingerprint, alertName, severity, threadTs, status, fixCommands(jsonb) |
@@ -152,6 +155,13 @@ PENDING 초대가 첫 주보호자보다 먼저 만들어졌을 수 있기 때�
 그래서 별도 테이블을 만들지 않고 `ward_nickname` 컬럼을 뒀다. 관계가 삭제되면 별명도 같이 사라진다.
 알림 본문은 별명이 아니라 실명을 쓴다 — 발행 시점에 본문이 확정되는 구조라 수신자별 별명을 적용하려면
 조회가 한 번 더 들어간다.
+
+프로필 아바타는 이미지가 아니라 앱 번들 일러스트 16종의 코드 문자열(`ProfileAvatarCode` VO, 예: `senior_female_1`)만 저장한다.
+본인이 고른 얼굴은 `members.profile_avatar_code`(전역), 보호자가 대상자·관계자에게 붙인 얼굴은 `designated_avatars`(호출자 범위)로 나눈다.
+별명과 달리 별도 테이블인 이유는 "보호자가 관계자에게 붙인 얼굴"이 `(보호자, 관계자)` 쌍이라 `care_relationships` 행에 자리가 없기 때문이다.
+응답은 본인 값과 내가 지정한 값(`designatedProfileAvatarCode`)을 둘 다 내리고, 앱이 지정 > 본인 > 자동 배정 순으로 고른다.
+서버는 기본값을 채우지 않는다 — null이어야 앱이 "직접 고른 값 없음"을 구분해 자동 배정한다. 빈 문자열은 해제 신호다
+(앱 JSON 직렬화가 null 필드를 생략해 null로는 해제를 못 보낸다).
 
 ## Redis 키 구조
 
@@ -285,7 +295,7 @@ GpsSavedEvent → DetectionListener → DetectionPublisher → XADD gps-detectio
 | `ward_member_key` | 입력의 `ward_member_key` 그대로 (필드명도 동일 — `user_id` 아님) |
 | `detection_type` | 5종 — `SPEED_ANOMALY` / `WANDERING` / `ABNORMAL_DWELLING` / `ROUTE_DEVIATION` / `TIME_ANOMALY` |
 | `score` | 항상 0.5000~1.0000, 소수 4자리 |
-| `detected_at` | `yyyy-MM-dd HH:mm:ss` (KST, 오프셋 없음) |
+| `recorded_at` | 입력의 `recorded_at`을 **그대로 에코**. 엔진 자기 시계 금지. 구간을 보는 탐지(배회 등)는 판정을 트리거한 GPS point의 값 |
 | `latitude` / `longitude` | 소수 6자리 |
 | `evidence` | 보호자에게 그대로 보여줄 한국어 한 문장. 엔진이 고정 템플릿에 숫자만 채워 만든다 |
 
@@ -319,6 +329,12 @@ AnomalyDetectionConsumer(수동 ACK)
   기동해도 된다. **`BUSYGROUP`은 정상으로 취급해야 한다** — 재기동·다중 태스크마다 발생하므로 던지면
   두 번째 배포부터 기동이 막힌다. (`RedisSystemException`으로 오며 `InvalidDataAccessApiUsageException`이 아니다)
 - 컨슈머 이름은 hostname이다. 태스크마다 달라야 PEL이 섞이지 않는다.
+- **시각 필드는 양방향 모두 `recorded_at`이다.** 백엔드가 `gps-detection`에 발행한 GPS 수신 시각(KST,
+  `yyyy-MM-dd HH:mm:ss`)을 엔진이 그대로 에코해 `anomaly-alerts`로 돌려준다. 엔진 자기 시계를 쓰면 안 된다 —
+  컨테이너 TZ에 따라 값이 밀리고, 알림을 눌러 위치 이력으로 이동할 때 `GET /api/v1/location/history`의 `date`가
+  엉뚱한 날짜가 된다(이 조회는 `gps_histories.recorded_at`을 KST LocalDate로 자른다). 재발행 때마다 값이
+  달라지면 UNIQUE 멱등 키도 무력해진다. 구간을 보는 탐지(배회 등)는 **판정을 트리거한 GPS point의 값**을 보낸다.
+  파서는 오프셋·`Z`를 받지 못하므로 포맷도 에코 대상이다.
 - **중복 재배달은 `anomaly_detections`의 UNIQUE 제약으로 막는다.** ACK 전에 죽어 재배달되면 INSERT가 0을 돌려주고
   이벤트를 발행하지 않아 알림도 다시 나가지 않는다.
 - **저장과 알림은 반드시 한 트랜잭션이어야 한다.** 알림 저장이 실패했는데 탐지 저장만 커밋되면,

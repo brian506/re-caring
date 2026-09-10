@@ -9,6 +9,7 @@ public record UpdateMyInfoRequest(
         @Size(max = 20) String name,
         @Past LocalDate birth,
         String currentPassword,
-        String newPassword
+        String newPassword,
+        String profileAvatarCode
 ) {
 }

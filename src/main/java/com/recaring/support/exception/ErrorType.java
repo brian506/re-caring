@@ -49,6 +49,7 @@ public enum ErrorType {
     SUBSCRIPTION_ONLY(HttpStatus.BAD_REQUEST, ErrorCode.E3005, "멤버십 결제가 필요한 기능입니다.", LogLevel.WARN),
     ALREADY_REGISTERED_PHONE(HttpStatus.CONFLICT, ErrorCode.E3006, "이미 가입된 전화번호입니다.", LogLevel.WARN),
     ALREADY_REGISTERED_EMAIL(HttpStatus.CONFLICT, ErrorCode.E3007, "이미 사용 중인 이메일입니다.", LogLevel.WARN),
+    INVALID_PROFILE_AVATAR_CODE(HttpStatus.BAD_REQUEST, ErrorCode.E3008, "지원하지 않는 프로필 아바타 코드입니다.", LogLevel.WARN),
 
     // SMS / Phone Verification (E4xxx)
     EXPIRED_VERIFICATION_CODE(HttpStatus.BAD_REQUEST, ErrorCode.E4000, "인증번호가 만료되었습니다.", LogLevel.WARN),

@@ -49,6 +49,9 @@ public class Member extends BaseEntity {
     @Column(nullable = false)
     private SubscriptionType subscriptionType;
 
+    @Column(length = 30)
+    private String profileAvatarCode; // null이면 앱이 성별·memberKey 기준으로 자동 배정한다
+
 
     @Builder
     public Member(String phone, String name,
@@ -70,6 +73,11 @@ public class Member extends BaseEntity {
         if (birth != null) {
             this.birth = birth;
         }
+        update();
+    }
+
+    public void changeProfileAvatarCode(String profileAvatarCode) {
+        this.profileAvatarCode = profileAvatarCode;
         update();
     }
 
