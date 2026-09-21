@@ -820,12 +820,315 @@
     },
     {
       "type": "row",
-      "title": "🐳 ECS 컨테이너",
+      "title": "🚨 이상탐지 스트림",
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
         "y": 40
+      },
+      "id": 107,
+      "collapsed": false
+    },
+    {
+      "id": 28,
+      "type": "stat",
+      "title": "컨슈머 구독 상태",
+      "description": "0이면 Redis Stream 구독이 끊겨 이상탐지 알림이 전혀 발송되지 않는 상태다.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 5,
+        "x": 0,
+        "y": 41
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "중단",
+                  "color": "red",
+                  "index": 0
+                },
+                "1": {
+                  "text": "정상",
+                  "color": "green",
+                  "index": 1
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": 0
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "anomaly_stream_subscription_active{job=\"recaring\"}",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 29,
+      "type": "stat",
+      "title": "미배달 백로그 (lag)",
+      "description": "엔진이 발행했지만 컨슈머 그룹에 아직 배달되지 않은 알림 수. -1은 Redis가 lag을 제공하지 않아 측정 불가.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 5,
+        "x": 5,
+        "y": 41
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "graphMode": "area",
+        "textMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "-1": {
+                  "text": "측정 불가",
+                  "color": "text",
+                  "index": 0
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 10
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "anomaly_stream_lag{job=\"recaring\"}",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 30,
+      "type": "timeseries",
+      "title": "배달 지연 (마지막 발행 − 마지막 배달)",
+      "description": "구독이 죽으면 발행은 계속되고 배달만 멈추므로 이 값이 단조 증가한다.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 7,
+        "x": 10,
+        "y": 41
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 20
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "yellow",
+                "value": 300
+              },
+              {
+                "color": "red",
+                "value": 1800
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "anomaly_stream_delivery_delay_seconds{job=\"recaring\"}",
+          "legendFormat": "배달 지연",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "anomaly_stream_pending{job=\"recaring\"}",
+          "legendFormat": "PEL(미ACK)",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "id": 31,
+      "type": "timeseries",
+      "title": "스트림 폴링 에러",
+      "description": "연속 실패 수가 0으로 떨어지지 않으면 Redis 연결이 계속 끊겨 있는 것이다.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 7,
+        "x": 17,
+        "y": 41
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 20
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "rate(anomaly_stream_poll_errors_total{job=\"recaring\"}[5m])",
+          "legendFormat": "에러 발생률 (/s)",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "anomaly_stream_poll_consecutive_errors{job=\"recaring\"}",
+          "legendFormat": "연속 실패 수",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "🐳 ECS 컨테이너",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 49
       },
       "id": 104,
       "collapsed": false
@@ -842,7 +1145,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 41
+        "y": 50
       },
       "options": {
         "legend": {
@@ -949,7 +1252,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 41
+        "y": 50
       },
       "options": {
         "legend": {
@@ -1056,7 +1359,7 @@
         "h": 5,
         "w": 24,
         "x": 0,
-        "y": 49
+        "y": 58
       },
       "options": {
         "colorMode": "background",
@@ -1150,7 +1453,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 54
+        "y": 63
       },
       "id": 105,
       "collapsed": false
@@ -1167,7 +1470,7 @@
         "h": 8,
         "w": 16,
         "x": 0,
-        "y": 55
+        "y": 64
       },
       "options": {
         "legend": {
@@ -1233,7 +1536,7 @@
         "h": 8,
         "w": 8,
         "x": 16,
-        "y": 55
+        "y": 64
       },
       "options": {
         "colorMode": "background",
@@ -1288,7 +1591,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 63
+        "y": 72
       },
       "id": 106,
       "collapsed": false
@@ -1305,7 +1608,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 64
+        "y": 73
       },
       "options": {
         "legend": {
@@ -1391,7 +1694,7 @@
         "h": 8,
         "w": 6,
         "x": 12,
-        "y": 64
+        "y": 73
       },
       "options": {
         "legend": {
@@ -1477,7 +1780,7 @@
         "h": 8,
         "w": 6,
         "x": 18,
-        "y": 64
+        "y": 73
       },
       "options": {
         "legend": {
@@ -1558,7 +1861,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 72
+        "y": 81
       },
       "id": 103,
       "collapsed": false
@@ -1575,7 +1878,7 @@
         "h": 8,
         "w": 6,
         "x": 0,
-        "y": 73
+        "y": 82
       },
       "options": {
         "legend": {
@@ -1676,7 +1979,7 @@
         "h": 8,
         "w": 18,
         "x": 6,
-        "y": 73
+        "y": 82
       },
       "options": {
         "dedupStrategy": "none",
@@ -1716,7 +2019,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 81
+        "y": 90
       },
       "options": {
         "dedupStrategy": "none",
@@ -1756,7 +2059,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 81
+        "y": 90
       },
       "options": {
         "dedupStrategy": "none",

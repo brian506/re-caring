@@ -1,6 +1,8 @@
 package com.recaring.config.infra;
 
 import com.recaring.location.implement.detection.AnomalyDetectionConsumer;
+import com.recaring.location.implement.detection.AnomalyStreamErrorHandler;
+import com.recaring.location.implement.detection.AnomalyStreamMetrics;
 import com.recaring.location.implement.detection.AnomalyStreamProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.DisposableBean;
@@ -15,6 +17,8 @@ import org.springframework.data.redis.connection.stream.StreamOffset;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.stream.StreamMessageListenerContainer;
 import org.springframework.data.redis.stream.StreamMessageListenerContainer.StreamMessageListenerContainerOptions;
+import org.springframework.data.redis.stream.StreamMessageListenerContainer.StreamReadRequest;
+import org.springframework.data.redis.stream.Subscription;
 
 import java.time.Duration;
 
@@ -28,7 +32,9 @@ public class RedisStreamConfig {
     public StreamMessageListenerContainer<String, MapRecord<String, String, String>> anomalyStreamContainer(
             RedisConnectionFactory connectionFactory,
             StringRedisTemplate redisTemplate,
-            AnomalyDetectionConsumer anomalyDetectionConsumer
+            AnomalyDetectionConsumer anomalyDetectionConsumer,
+            AnomalyStreamErrorHandler anomalyStreamErrorHandler,
+            AnomalyStreamMetrics anomalyStreamMetrics
     ) {
         createGroupIfAbsent(redisTemplate);
 
@@ -39,14 +45,21 @@ public class RedisStreamConfig {
                                 .pollTimeout(POLL_TIMEOUT)
                                 .build());
 
-        // receive()는 수동 ACK다. 컨슈머가 알림 저장을 끝낸 뒤 직접 XACK한다.
-        container.receive(
-                Consumer.from(AnomalyStreamProperties.GROUP_NAME, AnomalyStreamProperties.CONSUMER_NAME),
-                StreamOffset.create(AnomalyStreamProperties.STREAM_KEY, ReadOffset.lastConsumed()),
-                anomalyDetectionConsumer);
+        Subscription subscription = container.register(anomalyReadRequest(anomalyStreamErrorHandler), anomalyDetectionConsumer);
+        anomalyStreamMetrics.bind(subscription);
 
         container.start();
         return container;
+    }
+
+    private StreamReadRequest<String> anomalyReadRequest(AnomalyStreamErrorHandler anomalyStreamErrorHandler) {
+        return StreamReadRequest
+                .builder(StreamOffset.create(AnomalyStreamProperties.STREAM_KEY, ReadOffset.lastConsumed()))
+                .consumer(Consumer.from(AnomalyStreamProperties.GROUP_NAME, AnomalyStreamProperties.CONSUMER_NAME))
+                .autoAcknowledge(false)
+                .cancelOnError(throwable -> false)
+                .errorHandler(anomalyStreamErrorHandler)
+                .build();
     }
 
     // 그룹은 자동 생성되지 않는다. 없으면 XREADGROUP이 NOGROUP으로 실패한다.

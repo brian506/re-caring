@@ -342,6 +342,23 @@ AnomalyDetectionConsumer(수동 ACK)
   그 경계이며, 실패 시 통째로 롤백되고 ACK도 건너뛰어 다음 재배달에서 처음부터 다시 처리된다.
 - FCM 발송은 롤백되지 않는다. 다만 `NotificationSendManager`가 DB 저장을 먼저, FCM을 나중에 하므로
   DB가 실패하면 FCM 이전에 멈춘다.
+- **구독은 폴링 에러로 취소되지 않는다.** `StreamReadRequest`의 `cancelOnError` 기본값이 "항상 true"라
+  Redis 연결이 한 번만 끊겨도 구독이 영구 취소된다(2026-09-16 DNS 타임아웃 1회로 5일간 알림 전면 중단).
+  `cancelOnError(throwable -> false)`로 폴링 루프를 유지하고, 재시도 간격과 로그 억제는
+  `AnomalyStreamErrorHandler`가 맡는다(1s→30s 지수 백오프, 첫 실패만 ERROR·이후 5분당 WARN).
+- **스트림 상태는 Prometheus로 노출한다.** `AnomalyStreamMetrics`가 30초마다 `XINFO GROUPS`를 읽어 갱신한다.
+
+| 메트릭 | 의미 |
+|--------|------|
+| `anomaly_stream_subscription_active` | 구독 생존 여부 (0이면 알림 전면 중단) |
+| `anomaly_stream_lag` | 미배달 백로그. `-1`은 Redis가 `lag`을 주지 않아 측정 불가 |
+| `anomaly_stream_pending` | PEL(배달됐으나 미ACK) 크기 |
+| `anomaly_stream_delivery_delay_seconds` | 마지막 발행 ID − 마지막 배달 ID의 시각 차. `lag` 없이도 동작 |
+| `anomaly_stream_poll_errors_total` / `anomaly_stream_poll_consecutive_errors` | 폴링 실패 누적 / 연속 실패 수 |
+
+- **컨슈머가 멈춘 뒤 재기동하면 백로그가 한 번에 배달된다.** 오프셋이 `lastConsumed`라 그룹의
+  `last-delivered-id` 이후분이 전부 나간다. 오래된 알림을 보내고 싶지 않으면 기동 전에
+  `XGROUP SETID anomaly-alerts recaring-backend $`로 오프셋을 넘긴다.
 
 ---
 
