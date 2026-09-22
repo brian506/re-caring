@@ -5,6 +5,7 @@ import com.recaring.sms.implement.PhoneVerificationReader;
 import com.recaring.sms.implement.PhoneVerificationWriter;
 import com.recaring.sms.implement.SmsClient;
 import com.recaring.sms.implement.SmsCodeGenerator;
+import com.recaring.sms.implement.SmsRateLimitValidator;
 import com.recaring.sms.vo.PhoneNumber;
 import com.recaring.sms.vo.SmsCode;
 import com.recaring.sms.vo.VerifiedPhone;
@@ -21,8 +22,10 @@ public class PhoneVerificationService {
     private final PhoneVerificationReader phoneVerificationReader;
     private final SmsClient smsClient;
     private final MemberReader memberReader;
+    private final SmsRateLimitValidator smsRateLimitValidator;
 
     public void sendCode(PhoneNumber phone) {
+        smsRateLimitValidator.validate(phone);
         SmsCode code = SmsCodeGenerator.generate();
         phoneVerificationWriter.add(phone, code);
         smsClient.sendVerificationCode(phone.value(), code.value());

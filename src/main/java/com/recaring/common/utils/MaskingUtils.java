@@ -25,4 +25,11 @@ public class MaskingUtils {
         String visibleId = localPart.substring(0, 3);
         return visibleId + "****@" + domainPart;
     }
+
+    public static String maskPhone(String phone) {
+        if (phone == null || phone.length() < 7) {
+            return "****";
+        }
+        return phone.substring(0, 3) + "****" + phone.substring(phone.length() - 4);
+    }
 }

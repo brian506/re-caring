@@ -5,6 +5,7 @@ import com.recaring.sms.fixture.SmsFixture;
 import com.recaring.sms.implement.PhoneVerificationReader;
 import com.recaring.sms.implement.PhoneVerificationWriter;
 import com.recaring.sms.implement.SmsClient;
+import com.recaring.sms.implement.SmsRateLimitValidator;
 import com.recaring.sms.vo.PhoneNumber;
 import com.recaring.sms.vo.SmsCode;
 import com.recaring.sms.vo.VerifiedPhone;
@@ -43,6 +44,9 @@ class PhoneVerificationServiceTest {
 
     @Mock
     private MemberReader memberReader;
+
+    @Mock
+    private SmsRateLimitValidator smsRateLimitValidator;
 
     @Test
     @DisplayName("인증 코드 발송 시 코드가 저장되고 SMS가 발송된다")
