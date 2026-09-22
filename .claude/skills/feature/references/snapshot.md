@@ -168,7 +168,7 @@ PENDING 초대가 첫 주보호자보다 먼저 만들어졌을 수 있기 때�
 ```
 phone:verify:{phone}           SMS 인증코드          TTL: 5분
 phone:token:{token}            인증 완료 토큰        TTL: 10분, 가입·재설정 시 GETDEL로 1회 소비
-sms:quota:{phone}              번호별 발송 횟수      TTL: 1시간 (고정 창, 한도 5)
+sms:quota:{phone}              번호별 발송 횟수      TTL: 1시간 (고정 창, 한도 5). INCR=1일 때 EXPIRE, 초과 시 TTL 없으면 재설정
 gps:latest:{memberKey}         GPS 최신 위치         TTL: 5분  { lat, lng, timestamp }
 investigation:{fingerprint}    Alert 조사 상태       TTL: 10분  { threadTs, status, startedAt, fixCommands }
 device:state:{memberKey}       기기 상태             TTL 없음   ONLINE | LOW_BATTERY | OFFLINE

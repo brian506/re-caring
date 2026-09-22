@@ -26,9 +26,14 @@ public class SmsRateLimitValidator {
 
     public void validate(PhoneNumber phone) {
         String key = QUOTA_KEY_PREFIX + phone.value();
-        redisTemplate.opsForValue().setIfAbsent(key, "0", QUOTA_WINDOW);
         Long count = redisTemplate.opsForValue().increment(key);
-        if (count == null || count <= QUOTA) {
+        if (count == null) {
+            return;
+        }
+        if (count == 1) {
+            redisTemplate.expire(key, QUOTA_WINDOW);
+        }
+        if (count <= QUOTA) {
             return;
         }
 
@@ -40,6 +45,10 @@ public class SmsRateLimitValidator {
 
     private long remainingSeconds(String key) {
         Long ttl = redisTemplate.getExpire(key, TimeUnit.SECONDS);
+        if (ttl != null && ttl == -1) {
+            redisTemplate.expire(key, QUOTA_WINDOW);
+            return QUOTA_WINDOW.toSeconds();
+        }
         return ttl == null ? 0 : Math.max(ttl, 0);
     }
 }
