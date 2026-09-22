@@ -57,6 +57,7 @@ public enum ErrorType {
     NOT_VERIFIED_PHONE(HttpStatus.BAD_REQUEST, ErrorCode.E4002, "휴대폰 인증이 완료되지 않았습니다.", LogLevel.WARN),
     SMS_SEND_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, ErrorCode.E4003, "SMS 발송에 실패했습니다.", LogLevel.ERROR),
     INVALID_PHONE_FORMAT(HttpStatus.BAD_REQUEST, ErrorCode.E4004, "올바른 휴대폰 번호 형식이 아닙니다.", LogLevel.WARN),
+    SMS_SEND_QUOTA_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, ErrorCode.E4005, "인증번호 요청 한도를 초과했습니다.", LogLevel.WARN),
 
     // Care (E5xxx)
     CARE_CAREGIVER_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, ErrorCode.E5000, "보호 대상자에 연결할 수 있는 보호자·관계자는 최대 5명입니다.", LogLevel.WARN),

@@ -27,7 +27,12 @@ public class PhoneVerificationController {
 
     private final PhoneVerificationService phoneVerificationService;
 
-    @Operation(summary = "인증 코드 발송", description = "입력한 전화번호로 6자리 SMS 인증 코드를 발송합니다.")
+    @Operation(
+            summary = "인증 코드 발송",
+            description = "입력한 전화번호로 6자리 SMS 인증 코드를 발송합니다. "
+                    + "같은 번호는 1시간에 5회까지 요청할 수 있으며, "
+                    + "초과 시 429와 함께 `error.data.seconds`에 다시 요청 가능할 때까지 남은 초를 반환합니다."
+    )
     @PostMapping("/send-code")
     public ResponseEntity<ApiResponse<Void>> sendCode(@Valid @RequestBody SendCodeRequest request) {
         phoneVerificationService.sendCode(new PhoneNumber(request.phone()));

@@ -1,6 +1,6 @@
 # 프로젝트 스냅샷
 
-> 마지막 업데이트: 2026-09-10. 기능 추가·수정 시 해당 섹션을 갱신한다.
+> 마지막 업데이트: 2026-09-22. 기능 추가·수정 시 해당 섹션을 갱신한다.
 
 ## 도메인별 패키지 현황
 
@@ -14,7 +14,7 @@
 | `notification` | NotificationService, NotificationSettingService, FcmDeviceTokenService | NotificationReader/Writer, NotificationSendManager, NotificationSettingReader/Manager/Validator, FcmDeviceTokenReader/Manager, FcmClient(Firebase/NoOp), CareInvitationNotificationListener, BatteryThresholdNotificationListener, SafeZoneNotificationListener, AnomalyNotificationListener |
 | `place` | PlaceService | KakaoPlaceSearchClient (카카오 로컬 키워드 검색 프록시, 엔티티 없음) |
 | `safezone` | SafeZoneService | SafeZoneReader, SafeZoneWriter |
-| `sms` | PhoneVerificationService | SmsClient, SmsCodeGenerator, PhoneVerificationReader/Writer |
+| `sms` | PhoneVerificationService | SmsClient, SmsCodeGenerator, PhoneVerificationReader/Writer, SmsRateLimitValidator |
 | `alert` | AlertService, AlertResolutionService | AlertInvestigationOrchestrator, AlertInvestigationAgent(Tool Use Loop), SsmContextFetcher, PrometheusContextFetcher, ErrorHistoryFetcher, RunbookService, SlackAlertNotifier, GitHubPrCreator, AlertRetryHandler |
 
 ## API 엔드포인트
@@ -65,7 +65,7 @@
 | SafeZone | GET | `/api/v1/care/wards/{wardKey}/safe-zones/{safeZoneKey}` | 안심존 상세 조회 (GUARDIAN, MANAGER) |
 | SafeZone | PATCH | `/api/v1/care/wards/{wardKey}/safe-zones/{safeZoneKey}` | 안심존 수정 (GUARDIAN only) |
 | SafeZone | DELETE | `/api/v1/care/wards/{wardKey}/safe-zones/{safeZoneKey}` | 안심존 삭제 (GUARDIAN only) |
-| SMS | POST | `/api/v1/auth/phone/send-code` | SMS 인증코드 발송 |
+| SMS | POST | `/api/v1/auth/phone/send-code` | SMS 인증코드 발송. 번호당 1시간 5회(고정 창). 초과 시 429(E4005) + `error.data.seconds`(재요청 가능까지 남은 초) |
 | SMS | POST | `/api/v1/auth/phone/verify` | SMS 인증코드 검증. 응답 `{ verificationToken, registered }` — `registered`=해당 번호로 이미 가입된 회원 존재 여부. 가입 화면은 true일 때, 비밀번호 재설정 화면은 false일 때 진행을 막는다 |
 
 ## 엔티티 목록
@@ -166,7 +166,9 @@ PENDING 초대가 첫 주보호자보다 먼저 만들어졌을 수 있기 때�
 ## Redis 키 구조
 
 ```
-sms:{phone}                    SMS 인증코드          TTL: 3분
+phone:verify:{phone}           SMS 인증코드          TTL: 5분
+phone:token:{token}            인증 완료 토큰        TTL: 10분, 가입·재설정 시 GETDEL로 1회 소비
+sms:quota:{phone}              번호별 발송 횟수      TTL: 1시간 (고정 창, 한도 5). INCR=1일 때 EXPIRE, 초과 시 TTL 없으면 재설정
 gps:latest:{memberKey}         GPS 최신 위치         TTL: 5분  { lat, lng, timestamp }
 investigation:{fingerprint}    Alert 조사 상태       TTL: 10분  { threadTs, status, startedAt, fixCommands }
 device:state:{memberKey}       기기 상태             TTL 없음   ONLINE | LOW_BATTERY | OFFLINE
