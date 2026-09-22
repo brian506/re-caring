@@ -37,18 +37,14 @@ public class AnomalyDetectionParser {
             return Optional.empty();
         }
 
-        if (!fields.containsKey("recorded_at") && fields.containsKey("detected_at")) {
-            log.warn("[이상탐지 결과 : 옛 시각 키 수신]: wardMemberKey={} | detectionType={}",
-                    wardMemberKey, detectionType.get());
-            return Optional.empty();
-        }
+        String recordedAt = fields.containsKey("recorded_at") ? fields.get("recorded_at") : fields.get("detected_at");
 
         try {
             return Optional.of(new AnomalyAlert(
                     wardMemberKey,
                     detectionType.get(),
                     Double.parseDouble(fields.get("score")),
-                    LocalDateTime.parse(fields.get("recorded_at"), RECORDED_AT_FORMAT),
+                    LocalDateTime.parse(recordedAt, RECORDED_AT_FORMAT),
                     Double.parseDouble(fields.get("latitude")),
                     Double.parseDouble(fields.get("longitude")),
                     truncate(fields.get("evidence"))
@@ -58,7 +54,7 @@ public class AnomalyDetectionParser {
             return Optional.empty();
         } catch (DateTimeParseException e) {
             log.warn("[이상탐지 결과 : 시각 형식 오류]: wardMemberKey={} | recordedAt={}",
-                    wardMemberKey, fields.get("recorded_at"));
+                    wardMemberKey, recordedAt);
             return Optional.empty();
         } catch (NullPointerException e) {
             log.warn("[이상탐지 결과 : 필수 필드 누락]: wardMemberKey={} | fields={}", wardMemberKey, fields.keySet());
