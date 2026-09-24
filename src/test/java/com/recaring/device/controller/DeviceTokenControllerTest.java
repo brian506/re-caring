@@ -1,6 +1,6 @@
 package com.recaring.device.controller;
 
-import com.recaring.auth.dataaccess.entity.LocalAuth;
+import com.recaring.auth.fixture.AuthFixture;
 import com.recaring.auth.dataaccess.repository.LocalAuthRepository;
 import com.recaring.device.dataaccess.repository.WardDeviceTokenRepository;
 import com.recaring.location.dataaccess.repository.GpsHistoryRepository;
@@ -39,12 +39,12 @@ class DeviceTokenControllerTest extends AbstractIntegrationTest {
         ward = memberRepository.save(LocationFixture.createWard());
         guardian = memberRepository.save(LocationFixture.createGuardian());
 
-        String encoded = passwordEncoder.encode("password1");
-        localAuthRepository.save(LocalAuth.of(ward.getMemberKey(), "ward@test.com", encoded));
-        localAuthRepository.save(LocalAuth.of(guardian.getMemberKey(), "guardian@test.com", encoded));
+        String encoded = passwordEncoder.encode(AuthFixture.RAW_PASSWORD);
+        localAuthRepository.save(AuthFixture.createLocalAuth(ward.getMemberKey(), AuthFixture.WARD_EMAIL, encoded));
+        localAuthRepository.save(AuthFixture.createLocalAuth(guardian.getMemberKey(), AuthFixture.GUARDIAN_EMAIL, encoded));
 
-        wardToken = extractAccessToken("ward@test.com", "password1");
-        guardianToken = extractAccessToken("guardian@test.com", "password1");
+        wardToken = extractAccessToken(AuthFixture.WARD_EMAIL, AuthFixture.RAW_PASSWORD);
+        guardianToken = extractAccessToken(AuthFixture.GUARDIAN_EMAIL, AuthFixture.RAW_PASSWORD);
     }
 
     @AfterEach
@@ -139,9 +139,7 @@ class DeviceTokenControllerTest extends AbstractIntegrationTest {
                 .uri("/api/v1/location/gps")
                 .header(HttpHeaders.AUTHORIZATION, "Device " + deviceToken)
                 .contentType(MediaType.APPLICATION_JSON)
-                .body("""
-                        {"latitude": 37.5665, "longitude": 126.9780}
-                        """)
+                .body(LocationFixture.gpsRequestBody())
                 .exchange();
     }
 

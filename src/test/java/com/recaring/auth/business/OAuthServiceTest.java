@@ -37,8 +37,8 @@ import static org.mockito.Mockito.times;
 @DisplayName("OAuthService 단위 테스트")
 class OAuthServiceTest {
 
-    private static final String KAKAO_ACCESS_TOKEN = "kakao-access-token";
-    private static final String NAVER_ACCESS_TOKEN = "naver-access-token";
+    private static final String KAKAO_ACCESS_TOKEN = AuthFixture.KAKAO_ACCESS_TOKEN;
+    private static final String NAVER_ACCESS_TOKEN = AuthFixture.NAVER_ACCESS_TOKEN;
     private static final String KAKAO_MEMBER_ID = "kakao-user-123";
     private static final String NAVER_MEMBER_ID = "naver-user-456";
     private static final String LINKED_MEMBER_KEY = "linked-member-key";
@@ -80,11 +80,7 @@ class OAuthServiceTest {
     void signIn_issues_jwt_for_linked_member() {
         // given
         OAuthUser oAuthUser = new OAuthUser(KAKAO_MEMBER_ID, OAuthProvider.KAKAO, "user@example.com", "카카오사용자");
-        OAuth oAuth = OAuth.builder()
-                .memberKey(LINKED_MEMBER_KEY)
-                .provider(OAuthProvider.KAKAO)
-                .providerMemberId(KAKAO_MEMBER_ID)
-                .build();
+        OAuth oAuth = AuthFixture.createOAuth(LINKED_MEMBER_KEY, OAuthProvider.KAKAO, KAKAO_MEMBER_ID);
         Member linkedMember = MemberFixture.createMemberWithKey(LINKED_MEMBER_KEY, MemberFixture.PHONE);
 
         given(kakaoAuthenticator.supports(OAuthProvider.KAKAO)).willReturn(true);

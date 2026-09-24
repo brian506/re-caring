@@ -1,5 +1,6 @@
 package com.recaring.auth.implement.oauth;
 
+import com.recaring.auth.fixture.AuthFixture;
 import com.recaring.auth.vo.OAuthProvider;
 import com.recaring.auth.vo.OAuthUser;
 import com.recaring.auth.vo.naver.NaverResponse;
@@ -24,7 +25,7 @@ import static org.mockito.BDDMockito.given;
 class NaverAuthenticatorTest {
 
     private static final String USER_INFO_URL = "https://openapi.naver.com/v1/nid/me";
-    private static final String ACCESS_TOKEN = "naver-access-token";
+    private static final String ACCESS_TOKEN = AuthFixture.NAVER_ACCESS_TOKEN;
     private static final String AUTHORIZATION_VALUE = "Bearer " + ACCESS_TOKEN;
 
     private static final String SUCCESS_RESULT_CODE = "00";

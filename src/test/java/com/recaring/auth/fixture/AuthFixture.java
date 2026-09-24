@@ -1,6 +1,9 @@
 package com.recaring.auth.fixture;
 
+import com.recaring.auth.vo.OAuthProvider;
+import com.recaring.auth.dataaccess.entity.OAuth;
 import com.recaring.auth.business.command.SignUpCommand;
+import com.recaring.auth.dataaccess.entity.LocalAuth;
 import com.recaring.auth.dataaccess.entity.RefreshToken;
 import com.recaring.auth.vo.EncodedPassword;
 import com.recaring.auth.vo.LocalEmail;
@@ -22,10 +25,31 @@ public class AuthFixture {
     public static final String ACCESS_TOKEN = "access-token";
     public static final String REFRESH_TOKEN = "refresh-token";
     public static final String MEMBER_KEY = "test-member-key-uuid";
-    private static final long REFRESH_EXPIRATION_MS = 1209600000L; // 14 days
+    public static final String WARD_EMAIL = "ward@test.com";
+    public static final String GUARDIAN_EMAIL = "guardian@test.com";
+    public static final String MANAGER_EMAIL = "manager@test.com";
+    public static final String KAKAO_ACCESS_TOKEN = "kakao-access-token";
+    public static final String NAVER_ACCESS_TOKEN = "naver-access-token";
+    public static final long REFRESH_EXPIRATION_MS = 1209600000L; // 14 days
 
     public static RefreshToken createRefreshToken() {
         return RefreshToken.of(MEMBER_KEY, REFRESH_TOKEN, REFRESH_EXPIRATION_MS);
+    }
+
+    public static LocalAuth createLocalAuth(String memberKey) {
+        return createLocalAuth(memberKey, EMAIL, ENCODED_PASSWORD);
+    }
+
+    public static LocalAuth createLocalAuth(String memberKey, String email, String encodedPassword) {
+        return LocalAuth.of(memberKey, email, encodedPassword);
+    }
+
+    public static OAuth createOAuth(String memberKey, OAuthProvider provider, String providerMemberId) {
+        return OAuth.builder()
+                .memberKey(memberKey)
+                .provider(provider)
+                .providerMemberId(providerMemberId)
+                .build();
     }
 
     public static LocalEmail createLocalEmail() {

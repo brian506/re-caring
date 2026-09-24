@@ -48,10 +48,7 @@ class LocationSettingManagerTest {
     @Test
     @DisplayName("저장된 설정이 있으면 위치 수집 주기를 수정한다")
     void updateCollectionInterval_updates_existing_setting() {
-        LocationSetting setting = LocationSetting.builder()
-                .wardMemberKey(LocationFixture.WARD_KEY)
-                .collectionIntervalSeconds(30)
-                .build();
+        LocationSetting setting = LocationFixture.createLocationSetting(30);
         given(locationSettingRepository.findByWardMemberKey(LocationFixture.WARD_KEY))
                 .willReturn(Optional.of(setting));
 
@@ -78,10 +75,7 @@ class LocationSettingManagerTest {
     @Test
     @DisplayName("저장된 설정이 있으면 해당 위치 수집 주기를 반환한다")
     void findCollectionInterval_returns_saved_interval() {
-        LocationSetting setting = LocationSetting.builder()
-                .wardMemberKey(LocationFixture.WARD_KEY)
-                .collectionIntervalSeconds(30)
-                .build();
+        LocationSetting setting = LocationFixture.createLocationSetting(30);
         given(locationSettingRepository.findByWardMemberKey(LocationFixture.WARD_KEY))
                 .willReturn(Optional.of(setting));
 

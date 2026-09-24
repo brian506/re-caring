@@ -36,8 +36,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DisplayName("AuthController HTTP 통합 테스트")
 class AuthControllerTest extends AbstractIntegrationTest {
 
+    private static final String FIND_EMAIL = "findme@example.com";
+
     private static final String TOKEN_KEY_PREFIX = "phone:token:";
-    private static final long REFRESH_EXPIRATION_MS = 1_209_600_000L;
+    private static final long REFRESH_EXPIRATION_MS = AuthFixture.REFRESH_EXPIRATION_MS;
     private static final long ISSUED_EARLIER_MS = 60_000L;
 
     @Autowired
@@ -82,11 +84,8 @@ class AuthControllerTest extends AbstractIntegrationTest {
 
     private Member prepareLocalMember(String phone, String email, String rawPassword) {
         Member member = memberRepository.save(MemberFixture.createMember(phone));
-        localAuthRepository.save(LocalAuth.builder()
-                .memberKey(member.getMemberKey())
-                .email(email)
-                .password(passwordEncoder.encode(rawPassword))
-                .build());
+        localAuthRepository.save(AuthFixture.createLocalAuth(
+                member.getMemberKey(), email, passwordEncoder.encode(rawPassword)));
         return member;
     }
 
@@ -496,11 +495,8 @@ class AuthControllerTest extends AbstractIntegrationTest {
     void findEmail_success() {
         Member member = memberRepository.save(MemberFixture.createMember(
                 "01099998888", "김검색", LocalDate.of(1995, 5, 5), MemberFixture.GENDER));
-        localAuthRepository.save(LocalAuth.builder()
-                .memberKey(member.getMemberKey())
-                .email("findme@example.com")
-                .password(AuthFixture.ENCODED_PASSWORD)
-                .build());
+        localAuthRepository.save(AuthFixture.createLocalAuth(
+                member.getMemberKey(), FIND_EMAIL, AuthFixture.ENCODED_PASSWORD));
 
         client.get()
                 .uri(uriBuilder -> uriBuilder

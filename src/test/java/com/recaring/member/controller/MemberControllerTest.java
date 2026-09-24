@@ -1,6 +1,6 @@
 package com.recaring.member.controller;
 
-import com.recaring.auth.dataaccess.entity.LocalAuth;
+import com.recaring.auth.fixture.AuthFixture;
 import com.recaring.auth.dataaccess.repository.LocalAuthRepository;
 import com.recaring.care.dataaccess.repository.CareRelationshipRepository;
 import com.recaring.care.dataaccess.repository.DesignatedAvatarRepository;
@@ -33,8 +33,6 @@ import static org.assertj.core.groups.Tuple.tuple;
 @DisplayName("MemberController HTTP 통합 테스트")
 class MemberControllerTest extends AbstractIntegrationTest {
 
-    private static final String GUARDIAN_EMAIL = "guardian@test.com";
-    private static final String WARD_EMAIL = "ward@test.com";
     private static final String PASSWORD = MemberFixture.CURRENT_PASSWORD;
     private static final String NAME_20_CHARS = "가나다라마바사아자차카타파하가나다라마바";
     private static final String NAME_21_CHARS = NAME_20_CHARS + "사";
@@ -65,8 +63,8 @@ class MemberControllerTest extends AbstractIntegrationTest {
         ward = memberRepository.save(MemberFixture.createWardMember(MemberFixture.OTHER_PHONE));
 
         String encoded = passwordEncoder.encode(PASSWORD);
-        localAuthRepository.save(LocalAuth.of(guardian.getMemberKey(), GUARDIAN_EMAIL, encoded));
-        localAuthRepository.save(LocalAuth.of(ward.getMemberKey(), WARD_EMAIL, encoded));
+        localAuthRepository.save(AuthFixture.createLocalAuth(guardian.getMemberKey(), AuthFixture.GUARDIAN_EMAIL, encoded));
+        localAuthRepository.save(AuthFixture.createLocalAuth(ward.getMemberKey(), AuthFixture.WARD_EMAIL, encoded));
         membersTermsAgreementRepository.save(MemberFixture.createTermsAgreement(guardian.getMemberKey()));
         membersTermsAgreementRepository.save(MemberFixture.createTermsAgreement(ward.getMemberKey()));
     }
@@ -105,7 +103,7 @@ class MemberControllerTest extends AbstractIntegrationTest {
                 .jsonPath("$.data.name").isEqualTo(MemberFixture.NAME)
                 .jsonPath("$.data.phone").isEqualTo(MemberFixture.PHONE)
                 .jsonPath("$.data.role").isEqualTo(MemberRole.GUARDIAN.name())
-                .jsonPath("$.data.email").isEqualTo(GUARDIAN_EMAIL)
+                .jsonPath("$.data.email").isEqualTo(AuthFixture.GUARDIAN_EMAIL)
                 .jsonPath("$.data.gender").isEqualTo("남")
                 .jsonPath("$.data.termsServiceAgreedAt").isNotEmpty();
     }
@@ -349,7 +347,7 @@ class MemberControllerTest extends AbstractIntegrationTest {
 
         assertThat(memberWithdrawalRepository.findAll())
                 .extracting("memberKey", "email")
-                .containsExactly(tuple(guardian.getMemberKey(), GUARDIAN_EMAIL));
+                .containsExactly(tuple(guardian.getMemberKey(), AuthFixture.GUARDIAN_EMAIL));
 
         assertThat(memberRepository.findByMemberKey(ward.getMemberKey())).isPresent();
         assertThat(localAuthRepository.findByMemberKey(ward.getMemberKey())).isPresent();
