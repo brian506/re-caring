@@ -31,8 +31,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DisplayName("알림 피드백 컨트롤러 HTTP 통합 테스트")
 class NotificationFeedbackControllerTest extends AbstractIntegrationTest {
 
-    private static final String COMMENT = "집에 계셨어요";
-
     @Autowired
     private MemberRepository memberRepository;
     @Autowired
@@ -67,7 +65,7 @@ class NotificationFeedbackControllerTest extends AbstractIntegrationTest {
 
         submit(notification.getNotificationKey(), """
                 {"accuracy": "INACCURATE", "reason": "GPS_INACCURATE", "comment": "%s"}
-                """.formatted(COMMENT))
+                """.formatted(NotificationFixture.FEEDBACK_COMMENT))
                 .expectStatus().isCreated()
                 .expectBody()
                 .jsonPath("$.resultType").isEqualTo("SUCCESS");
@@ -77,7 +75,7 @@ class NotificationFeedbackControllerTest extends AbstractIntegrationTest {
         assertThat(saved.getAnomalyDetectionId()).isEqualTo(detection.getId());
         assertThat(saved.getAccuracy()).isEqualTo(FeedbackAccuracy.INACCURATE);
         assertThat(saved.getReason()).isEqualTo(FeedbackReason.GPS_INACCURATE);
-        assertThat(saved.getComment()).isEqualTo(COMMENT);
+        assertThat(saved.getComment()).isEqualTo(NotificationFixture.FEEDBACK_COMMENT);
     }
 
     @Test

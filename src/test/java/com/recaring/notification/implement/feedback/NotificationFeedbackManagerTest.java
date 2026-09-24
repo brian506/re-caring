@@ -8,7 +8,6 @@ import com.recaring.notification.dataaccess.repository.NotificationFeedbackRepos
 import com.recaring.notification.fixture.NotificationFixture;
 import com.recaring.notification.implement.NotificationReader;
 import com.recaring.notification.vo.FeedbackTarget;
-import com.recaring.notification.vo.NotificationFeedbackAnswer;
 import com.recaring.support.exception.AppException;
 import com.recaring.support.exception.ErrorType;
 import org.junit.jupiter.api.DisplayName;
@@ -37,10 +36,9 @@ import static org.mockito.Mockito.never;
 @DisplayName("알림 피드백 Manager 단위 테스트")
 class NotificationFeedbackManagerTest {
 
-    private static final Long NOTIFICATION_ID = 30L;
+    private static final Long NOTIFICATION_ID = NotificationFixture.FEEDBACK_NOTIFICATION_ID;
     private static final String NOTIFICATION_KEY = "notification-key-30";
     private static final Long ANOMALY_DETECTION_ID = 77L;
-    private static final String COMMENT = "집에 계셨어요";
 
     @InjectMocks
     private NotificationFeedbackManager notificationFeedbackManager;
@@ -67,7 +65,7 @@ class NotificationFeedbackManagerTest {
         notificationFeedbackManager.submit(
                 NotificationFixture.GUARDIAN_KEY,
                 NOTIFICATION_KEY,
-                new NotificationFeedbackAnswer(FeedbackAccuracy.INACCURATE, FeedbackReason.GPS_INACCURATE, COMMENT));
+                NotificationFixture.inaccurateFeedbackAnswer(FeedbackReason.GPS_INACCURATE, NotificationFixture.FEEDBACK_COMMENT));
 
         ArgumentCaptor<NotificationFeedback> saved = ArgumentCaptor.forClass(NotificationFeedback.class);
         then(notificationFeedbackRepository).should().save(saved.capture());
@@ -75,7 +73,7 @@ class NotificationFeedbackManagerTest {
         assertThat(saved.getValue().getAnomalyDetectionId()).isEqualTo(ANOMALY_DETECTION_ID);
         assertThat(saved.getValue().getAccuracy()).isEqualTo(FeedbackAccuracy.INACCURATE);
         assertThat(saved.getValue().getReason()).isEqualTo(FeedbackReason.GPS_INACCURATE);
-        assertThat(saved.getValue().getComment()).isEqualTo(COMMENT);
+        assertThat(saved.getValue().getComment()).isEqualTo(NotificationFixture.FEEDBACK_COMMENT);
     }
 
     @Test
@@ -91,7 +89,7 @@ class NotificationFeedbackManagerTest {
         assertThatThrownBy(() -> notificationFeedbackManager.submit(
                 NotificationFixture.GUARDIAN_KEY,
                 NOTIFICATION_KEY,
-                new NotificationFeedbackAnswer(FeedbackAccuracy.ACCURATE, null, null)))
+                NotificationFixture.accurateFeedbackAnswer()))
                 .isInstanceOf(AppException.class)
                 .hasFieldOrPropertyWithValue("errorType", ErrorType.NOTIFICATION_FEEDBACK_DETECTION_NOT_FOUND);
 
@@ -108,7 +106,7 @@ class NotificationFeedbackManagerTest {
         assertThatThrownBy(() -> notificationFeedbackManager.submit(
                 NotificationFixture.GUARDIAN_KEY,
                 NOTIFICATION_KEY,
-                new NotificationFeedbackAnswer(FeedbackAccuracy.ACCURATE, null, null)))
+                NotificationFixture.accurateFeedbackAnswer()))
                 .isInstanceOf(AppException.class)
                 .hasFieldOrPropertyWithValue("errorType", ErrorType.NOTIFICATION_FEEDBACK_DETECTION_NOT_FOUND);
 
@@ -128,7 +126,7 @@ class NotificationFeedbackManagerTest {
         assertThatThrownBy(() -> notificationFeedbackManager.submit(
                 NotificationFixture.GUARDIAN_KEY,
                 NOTIFICATION_KEY,
-                new NotificationFeedbackAnswer(FeedbackAccuracy.ACCURATE, null, null)))
+                NotificationFixture.accurateFeedbackAnswer()))
                 .isInstanceOf(AppException.class)
                 .hasFieldOrPropertyWithValue("errorType", ErrorType.NOTIFICATION_FEEDBACK_DETECTION_NOT_FOUND);
 
@@ -148,7 +146,7 @@ class NotificationFeedbackManagerTest {
         assertThatThrownBy(() -> notificationFeedbackManager.submit(
                 NotificationFixture.GUARDIAN_KEY,
                 NOTIFICATION_KEY,
-                new NotificationFeedbackAnswer(FeedbackAccuracy.ACCURATE, null, null)))
+                NotificationFixture.accurateFeedbackAnswer()))
                 .isInstanceOf(AppException.class)
                 .hasFieldOrPropertyWithValue("errorType", ErrorType.NOTIFICATION_FEEDBACK_ALREADY_SUBMITTED);
 

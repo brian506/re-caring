@@ -20,7 +20,7 @@ import static org.mockito.BDDMockito.given;
 @DisplayName("알림 피드백 Validator 단위 테스트")
 class NotificationFeedbackValidatorTest {
 
-    private static final Long NOTIFICATION_ID = 30L;
+    private static final Long NOTIFICATION_ID = NotificationFixture.FEEDBACK_NOTIFICATION_ID;
 
     @InjectMocks
     private NotificationFeedbackValidator notificationFeedbackValidator;

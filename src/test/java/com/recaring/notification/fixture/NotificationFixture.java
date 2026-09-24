@@ -8,9 +8,12 @@ import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.dataaccess.entity.MemberRole;
 import com.recaring.member.dataaccess.entity.SignUpType;
 import com.recaring.notification.dataaccess.entity.FcmDevicePlatform;
+import com.recaring.notification.dataaccess.entity.FeedbackAccuracy;
+import com.recaring.notification.dataaccess.entity.FeedbackReason;
 import com.recaring.notification.dataaccess.entity.FcmDeviceToken;
 import com.recaring.notification.dataaccess.entity.Notification;
 import com.recaring.notification.dataaccess.entity.NotificationSetting;
+import com.recaring.notification.vo.NotificationFeedbackAnswer;
 import com.recaring.notification.vo.NotificationItem;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -36,6 +39,8 @@ public class NotificationFixture {
     public static final String ANOMALY_BODY = "김소연님이 지정된 경로에서 이탈했습니다.";
     public static final String ANOMALY_EVIDENCE = "{name} 님이 지정된 경로에서 이탈했습니다.";
     public static final LocalDateTime ANOMALY_RECORDED_AT = LocationFixture.DETECTED_AT;
+    public static final Long FEEDBACK_NOTIFICATION_ID = 30L;
+    public static final String FEEDBACK_COMMENT = "집에 계셨어요";
 
     public static Member createWard() {
         return Member.builder()
@@ -198,4 +203,11 @@ public class NotificationFixture {
         return notification;
     }
 
+    public static NotificationFeedbackAnswer accurateFeedbackAnswer() {
+        return new NotificationFeedbackAnswer(FeedbackAccuracy.ACCURATE, null, null);
+    }
+
+    public static NotificationFeedbackAnswer inaccurateFeedbackAnswer(FeedbackReason reason, String comment) {
+        return new NotificationFeedbackAnswer(FeedbackAccuracy.INACCURATE, reason, comment);
+    }
 }
