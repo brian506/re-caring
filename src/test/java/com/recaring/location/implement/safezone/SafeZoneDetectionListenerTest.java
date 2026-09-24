@@ -34,10 +34,10 @@ import static org.mockito.BDDMockito.times;
 @DisplayName("SafeZoneDetectionListener 단위 테스트")
 class SafeZoneDetectionListenerTest {
 
-    private static final String HOME_KEY = "safe-zone-home";
-    private static final String HOME_NAME = "집";
-    private static final String HOSPITAL_KEY = "safe-zone-hospital";
-    private static final String HOSPITAL_NAME = "병원";
+    private static final String HOME_KEY = LocationFixture.HOME_ZONE_KEY;
+    private static final String HOME_NAME = LocationFixture.HOME_ZONE_NAME;
+    private static final String HOSPITAL_KEY = LocationFixture.HOSPITAL_ZONE_KEY;
+    private static final String HOSPITAL_NAME = LocationFixture.HOSPITAL_ZONE_NAME;
 
     // GPS 좌표에서 충분히 멀어 어떤 반경으로도 포함되지 않는 오프셋.
     private static final double FAR_OFFSET = 1.0;

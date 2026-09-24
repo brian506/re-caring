@@ -44,11 +44,7 @@ class LocalAuthAuthenticatorTest {
     private MemberReader memberReader;
 
     private LocalAuth storedAuth() {
-        return LocalAuth.builder()
-                .memberKey(OWNER_MEMBER_KEY)
-                .email(AuthFixture.EMAIL)
-                .password(AuthFixture.ENCODED_PASSWORD)
-                .build();
+        return AuthFixture.createLocalAuth(OWNER_MEMBER_KEY);
     }
 
     @Test

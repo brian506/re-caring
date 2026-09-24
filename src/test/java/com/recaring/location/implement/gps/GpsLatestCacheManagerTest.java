@@ -40,7 +40,7 @@ class GpsLatestCacheManagerTest {
     @Test
     @DisplayName("Redis에 값이 있으면 역직렬화하여 Gps를 반환한다")
     void find_returns_gps_when_cache_exists() throws Exception {
-        String json = "{\"latitude\":37.5665,\"longitude\":126.9780,\"recordedAt\":\"2024-01-01T00:00:00\"}";
+        String json = LocationFixture.gpsCacheJson();
         Gps expected = LocationFixture.createGps();
         given(redisTemplate.opsForValue()).willReturn(valueOps);
         given(valueOps.get("gps:latest:" + LocationFixture.WARD_KEY)).willReturn(json);
@@ -78,7 +78,7 @@ class GpsLatestCacheManagerTest {
     @DisplayName("GPS 정보를 직렬화하여 Redis에 TTL 11분으로 저장한다")
     void save_serializes_and_stores_with_ttl() throws Exception {
         Gps gps = LocationFixture.createGps();
-        given(objectMapper.writeValueAsString(gps)).willReturn("{\"lat\":37.5665}");
+        given(objectMapper.writeValueAsString(gps)).willReturn("{\"lat\":%s}".formatted(LocationFixture.LATITUDE));
         given(redisTemplate.opsForValue()).willReturn(valueOps);
 
         manager.save(LocationFixture.WARD_KEY, gps);
@@ -102,7 +102,7 @@ class GpsLatestCacheManagerTest {
     @DisplayName("Redis 장애 시 예외를 전파하지 않는다")
     void save_does_not_propagate_redis_failure() throws Exception {
         Gps gps = LocationFixture.createGps();
-        given(objectMapper.writeValueAsString(gps)).willReturn("{\"lat\":37.5665}");
+        given(objectMapper.writeValueAsString(gps)).willReturn("{\"lat\":%s}".formatted(LocationFixture.LATITUDE));
         given(redisTemplate.opsForValue()).willReturn(valueOps);
         willThrow(new RedisConnectionFailureException("connection refused"))
                 .given(valueOps).set(anyString(), anyString(), anyLong(), any(TimeUnit.class));

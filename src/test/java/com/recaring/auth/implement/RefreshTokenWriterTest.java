@@ -21,7 +21,7 @@ import static org.mockito.Mockito.times;
 @DisplayName("RefreshTokenWriter 단위 테스트")
 class RefreshTokenWriterTest {
 
-    private static final long REFRESH_EXPIRATION_MS = 1209600000L;
+    private static final long REFRESH_EXPIRATION_MS = AuthFixture.REFRESH_EXPIRATION_MS;
 
     @InjectMocks
     private RefreshTokenWriter refreshTokenWriter;

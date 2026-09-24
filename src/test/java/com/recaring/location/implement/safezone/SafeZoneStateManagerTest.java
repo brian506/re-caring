@@ -26,8 +26,8 @@ import static org.mockito.BDDMockito.times;
 @DisplayName("SafeZoneStateManager 단위 테스트")
 class SafeZoneStateManagerTest {
 
-    private static final String HOME_KEY = "safe-zone-home";
-    private static final String HOSPITAL_KEY = "safe-zone-hospital";
+    private static final String HOME_KEY = LocationFixture.HOME_ZONE_KEY;
+    private static final String HOSPITAL_KEY = LocationFixture.HOSPITAL_ZONE_KEY;
 
     @InjectMocks
     private SafeZoneStateManager safeZoneStateManager;
@@ -56,10 +56,7 @@ class SafeZoneStateManagerTest {
     @Test
     @DisplayName("저장된 상태가 있으면 직전 값을 반환하고 현재 값으로 교체한다")
     void replaceAndGetPrevious_returns_previous_and_replaces() {
-        SafeZoneState stored = SafeZoneState.builder()
-                .wardMemberKey(LocationFixture.WARD_KEY)
-                .safeZoneKeys(HOME_KEY)
-                .build();
+        SafeZoneState stored = LocationFixture.createSafeZoneState(HOME_KEY);
         given(safeZoneStateRepository.findByWardMemberKey(LocationFixture.WARD_KEY))
                 .willReturn(Optional.of(stored));
 
@@ -74,10 +71,7 @@ class SafeZoneStateManagerTest {
     @Test
     @DisplayName("존 밖이었던 상태는 빈 집합으로 복원한다 — 최초 관측과 구분된다")
     void replaceAndGetPrevious_restores_outside_state_as_empty_set() {
-        SafeZoneState stored = SafeZoneState.builder()
-                .wardMemberKey(LocationFixture.WARD_KEY)
-                .safeZoneKeys("")
-                .build();
+        SafeZoneState stored = LocationFixture.createSafeZoneState("");
         given(safeZoneStateRepository.findByWardMemberKey(LocationFixture.WARD_KEY))
                 .willReturn(Optional.of(stored));
 
@@ -91,10 +85,7 @@ class SafeZoneStateManagerTest {
     @Test
     @DisplayName("여러 존에 속해 있던 상태를 모두 복원한다")
     void replaceAndGetPrevious_restores_multiple_keys() {
-        SafeZoneState stored = SafeZoneState.builder()
-                .wardMemberKey(LocationFixture.WARD_KEY)
-                .safeZoneKeys(HOME_KEY + "," + HOSPITAL_KEY)
-                .build();
+        SafeZoneState stored = LocationFixture.createSafeZoneState(HOME_KEY + "," + HOSPITAL_KEY);
         given(safeZoneStateRepository.findByWardMemberKey(LocationFixture.WARD_KEY))
                 .willReturn(Optional.of(stored));
 

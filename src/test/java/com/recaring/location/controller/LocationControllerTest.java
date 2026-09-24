@@ -1,9 +1,9 @@
 package com.recaring.location.controller;
 
-import com.recaring.auth.dataaccess.entity.LocalAuth;
+import com.recaring.auth.fixture.AuthFixture;
+import com.recaring.care.fixture.CareFixture;
+import com.recaring.device.fixture.DeviceFixture;
 import com.recaring.auth.dataaccess.repository.LocalAuthRepository;
-import com.recaring.care.dataaccess.entity.CareRelationship;
-import com.recaring.care.dataaccess.entity.CareRole;
 import com.recaring.care.dataaccess.repository.CareRelationshipRepository;
 import com.recaring.device.dataaccess.entity.WardDeviceToken;
 import com.recaring.device.dataaccess.repository.WardDeviceTokenRepository;
@@ -27,6 +27,8 @@ import java.time.LocalDate;
 @DisplayName("LocationController HTTP 통합 테스트")
 class LocationControllerTest extends AbstractIntegrationTest {
 
+    private static final double INVALID_LATITUDE = 200.0;
+
     @Autowired private MemberRepository memberRepository;
     @Autowired private LocalAuthRepository localAuthRepository;
     @Autowired private CareRelationshipRepository careRelationshipRepository;
@@ -48,23 +50,23 @@ class LocationControllerTest extends AbstractIntegrationTest {
         guardian = memberRepository.save(LocationFixture.createGuardian());
         manager = memberRepository.save(LocationFixture.createManager());
 
-        String encoded = passwordEncoder.encode("password1");
-        localAuthRepository.save(LocalAuth.of(ward.getMemberKey(), "ward@location-test.com", encoded));
-        localAuthRepository.save(LocalAuth.of(guardian.getMemberKey(), "guardian@location-test.com", encoded));
-        localAuthRepository.save(LocalAuth.of(manager.getMemberKey(), "manager@location-test.com", encoded));
+        String encoded = passwordEncoder.encode(AuthFixture.RAW_PASSWORD);
+        localAuthRepository.save(AuthFixture.createLocalAuth(ward.getMemberKey(), AuthFixture.WARD_EMAIL, encoded));
+        localAuthRepository.save(AuthFixture.createLocalAuth(guardian.getMemberKey(), AuthFixture.GUARDIAN_EMAIL, encoded));
+        localAuthRepository.save(AuthFixture.createLocalAuth(manager.getMemberKey(), AuthFixture.MANAGER_EMAIL, encoded));
 
-        guardianJwtToken = extractAccessToken("guardian@location-test.com", "password1");
-        managerJwtToken = extractAccessToken("manager@location-test.com", "password1");
-        wardJwtToken = extractAccessToken("ward@location-test.com", "password1");
+        guardianJwtToken = extractAccessToken(AuthFixture.GUARDIAN_EMAIL, AuthFixture.RAW_PASSWORD);
+        managerJwtToken = extractAccessToken(AuthFixture.MANAGER_EMAIL, AuthFixture.RAW_PASSWORD);
+        wardJwtToken = extractAccessToken(AuthFixture.WARD_EMAIL, AuthFixture.RAW_PASSWORD);
 
-        WardDeviceToken deviceToken = WardDeviceToken.builder().wardKey(ward.getMemberKey()).build();
+        WardDeviceToken deviceToken = DeviceFixture.createDeviceToken(ward.getMemberKey());
         wardDeviceTokenRepository.save(deviceToken);
         wardDeviceToken = deviceToken.getToken();
 
-        careRelationshipRepository.save(CareRelationship.of(
-                ward.getMemberKey(), guardian.getMemberKey(), CareRole.PRIMARY_GUARDIAN));
-        careRelationshipRepository.save(CareRelationship.of(
-                ward.getMemberKey(), manager.getMemberKey(), CareRole.MANAGER));
+        careRelationshipRepository.save(
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+        careRelationshipRepository.save(
+                CareFixture.createManagerRelationship(ward.getMemberKey(), manager.getMemberKey()));
     }
 
     @AfterEach
@@ -85,9 +87,7 @@ class LocationControllerTest extends AbstractIntegrationTest {
                 .uri("/api/v1/location/gps")
                 .header(HttpHeaders.AUTHORIZATION, "Device " + wardDeviceToken)
                 .contentType(MediaType.APPLICATION_JSON)
-                .body("""
-                        {"latitude": 37.5665, "longitude": 126.9780}
-                        """)
+                .body(LocationFixture.gpsRequestBody())
                 .exchange()
                 .expectStatus().isOk();
     }
@@ -98,9 +98,7 @@ class LocationControllerTest extends AbstractIntegrationTest {
         client.post()
                 .uri("/api/v1/location/gps")
                 .contentType(MediaType.APPLICATION_JSON)
-                .body("""
-                        {"latitude": 37.5665, "longitude": 126.9780}
-                        """)
+                .body(LocationFixture.gpsRequestBody())
                 .exchange()
                 .expectStatus().isUnauthorized();
     }
@@ -112,9 +110,7 @@ class LocationControllerTest extends AbstractIntegrationTest {
                 .uri("/api/v1/location/gps")
                 .header(HttpHeaders.AUTHORIZATION, "Device invalid-token-xyz")
                 .contentType(MediaType.APPLICATION_JSON)
-                .body("""
-                        {"latitude": 37.5665, "longitude": 126.9780}
-                        """)
+                .body(LocationFixture.gpsRequestBody())
                 .exchange()
                 .expectStatus().isUnauthorized();
     }
@@ -126,9 +122,7 @@ class LocationControllerTest extends AbstractIntegrationTest {
                 .uri("/api/v1/location/gps")
                 .header(HttpHeaders.AUTHORIZATION, "Device " + wardDeviceToken)
                 .contentType(MediaType.APPLICATION_JSON)
-                .body("""
-                        {"latitude": 200.0, "longitude": 126.9780}
-                        """)
+                .body(LocationFixture.gpsRequestBody(INVALID_LATITUDE, LocationFixture.LONGITUDE))
                 .exchange()
                 .expectStatus().isBadRequest();
     }

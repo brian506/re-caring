@@ -1,5 +1,6 @@
 package com.recaring.auth.implement.oauth;
 
+import com.recaring.auth.fixture.AuthFixture;
 import com.recaring.auth.vo.OAuthProvider;
 import com.recaring.auth.vo.OAuthUser;
 import com.recaring.auth.vo.kakao.KakaoAccount;
@@ -25,7 +26,7 @@ import static org.mockito.BDDMockito.given;
 class KakaoAuthenticatorTest {
 
     private static final String USER_INFO_URL = "https://kapi.kakao.com/v2/user/me";
-    private static final String ACCESS_TOKEN = "kakao-access-token";
+    private static final String ACCESS_TOKEN = AuthFixture.KAKAO_ACCESS_TOKEN;
     private static final String AUTHORIZATION_VALUE = "Bearer " + ACCESS_TOKEN;
 
     private static final Long KAKAO_ID = 4321L;

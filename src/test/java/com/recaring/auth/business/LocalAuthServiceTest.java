@@ -41,6 +41,8 @@ import static org.mockito.Mockito.times;
 @DisplayName("LocalAuthService 단위 테스트")
 class LocalAuthServiceTest {
 
+    private static final String MASKED_SOURCE_EMAIL = "hongildong@example.com";
+
     @InjectMocks
     private LocalAuthService localAuthService;
 
@@ -119,11 +121,8 @@ class LocalAuthServiceTest {
         Member member = MemberFixture.createMember();
         PhoneNumber phone = SmsFixture.createPhoneNumber();
 
-        LocalAuth localAuth = LocalAuth.builder()
-                .memberKey(member.getMemberKey())
-                .email("hongildong@example.com")
-                .password(AuthFixture.ENCODED_PASSWORD)
-                .build();
+        LocalAuth localAuth = AuthFixture.createLocalAuth(
+                member.getMemberKey(), MASKED_SOURCE_EMAIL, AuthFixture.ENCODED_PASSWORD);
 
         given(memberReader.findAccount(
                 MemberFixture.NAME, MemberFixture.BIRTH, SmsFixture.PHONE))

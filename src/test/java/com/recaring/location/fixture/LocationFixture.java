@@ -1,5 +1,7 @@
 package com.recaring.location.fixture;
 
+import com.recaring.location.dataaccess.entity.SafeZoneState;
+import com.recaring.location.dataaccess.entity.LocationSetting;
 import com.recaring.location.dataaccess.entity.AnomalyDetection;
 import com.recaring.location.event.AnomalyDetectedEvent;
 import com.recaring.location.event.BatteryThresholdAlertEvent;
@@ -12,6 +14,7 @@ import com.recaring.member.dataaccess.entity.Gender;
 import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.dataaccess.entity.MemberRole;
 import com.recaring.member.dataaccess.entity.SignUpType;
+import com.recaring.safezone.fixture.SafeZoneFixture;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -39,8 +42,12 @@ public class LocationFixture {
     public static final String DETECTED_AT_ISO_TEXT = "2026-07-27T10:20:05";
     public static final double ANOMALY_SCORE = 0.82;
     public static final String WANDERING_EVIDENCE = "{name} 님이 같은 곳을 맴돌고 계십니다.";
-    public static final String SAFE_ZONE_KEY = "safe-zone-key-001";
+    public static final String SAFE_ZONE_KEY = SafeZoneFixture.SAFE_ZONE_KEY;
     public static final String SAFE_ZONE_NAME = "안심존 1";
+    public static final String HOME_ZONE_KEY = "safe-zone-home";
+    public static final String HOME_ZONE_NAME = "집";
+    public static final String HOSPITAL_ZONE_KEY = "safe-zone-hospital";
+    public static final String HOSPITAL_ZONE_NAME = "병원";
 
     public static Gps createGps() {
         return createGps(BATTERY);
@@ -146,5 +153,32 @@ public class LocationFixture {
         fields.put("longitude", String.valueOf(LONGITUDE));
         fields.put("evidence", evidence);
         return fields;
+    }
+
+    public static String gpsRequestBody() {
+        return gpsRequestBody(LATITUDE, LONGITUDE);
+    }
+
+    public static String gpsRequestBody(double latitude, double longitude) {
+        return "{\"latitude\": %s, \"longitude\": %s}".formatted(latitude, longitude);
+    }
+
+    public static String gpsCacheJson() {
+        return "{\"latitude\":%s,\"longitude\":%s,\"recordedAt\":\"2024-01-01T00:00:00\"}"
+                .formatted(LATITUDE, LONGITUDE);
+    }
+
+    public static SafeZoneState createSafeZoneState(String safeZoneKeysCsv) {
+        return SafeZoneState.builder()
+                .wardMemberKey(WARD_KEY)
+                .safeZoneKeys(safeZoneKeysCsv)
+                .build();
+    }
+
+    public static LocationSetting createLocationSetting(int collectionIntervalSeconds) {
+        return LocationSetting.builder()
+                .wardMemberKey(WARD_KEY)
+                .collectionIntervalSeconds(collectionIntervalSeconds)
+                .build();
     }
 }

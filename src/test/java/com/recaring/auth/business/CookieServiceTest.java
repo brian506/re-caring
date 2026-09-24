@@ -1,5 +1,6 @@
 package com.recaring.auth.business;
 
+import com.recaring.auth.fixture.AuthFixture;
 import com.recaring.support.exception.AppException;
 import com.recaring.support.exception.ErrorType;
 import jakarta.servlet.http.Cookie;
@@ -16,7 +17,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @DisplayName("CookieService 단위 테스트")
 class CookieServiceTest {
 
-    private static final long REFRESH_EXPIRATION_MS = 1_209_600_000L;
+    private static final long REFRESH_EXPIRATION_MS = AuthFixture.REFRESH_EXPIRATION_MS;
     private static final long REFRESH_EXPIRATION_SECONDS = 1_209_600L;
     private static final String COOKIE_NAME = "refresh_token";
     private static final String COOKIE_PATH = "/api/v1/auth";

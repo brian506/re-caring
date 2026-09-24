@@ -1,5 +1,6 @@
 package com.recaring.security.fixture;
 
+import com.recaring.auth.fixture.AuthFixture;
 import com.recaring.member.dataaccess.entity.MemberRole;
 import com.recaring.security.jwt.JwtGenerator;
 import com.recaring.security.jwt.JwtValidator;
@@ -18,7 +19,7 @@ public class SecurityFixture {
     public static final MemberRole MEMBER_ROLE = MemberRole.GUARDIAN;
     public static final String ISSUER = "recaring";
     public static final long ACCESS_EXPIRATION = 3600000L;
-    public static final long REFRESH_EXPIRATION = 1209600000L;
+    public static final long REFRESH_EXPIRATION = AuthFixture.REFRESH_EXPIRATION_MS;
 
     /** 테스트용 SecretKey 생성 (프로덕션 JwtConfig.key()와 동일한 방식) */
     public static SecretKey createSecretKey() {

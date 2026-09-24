@@ -1,7 +1,7 @@
 package com.recaring.location.controller;
 
-import com.recaring.care.dataaccess.entity.CareRelationship;
-import com.recaring.care.dataaccess.entity.CareRole;
+import com.recaring.care.fixture.CareFixture;
+import com.recaring.device.fixture.DeviceFixture;
 import com.recaring.care.dataaccess.repository.CareRelationshipRepository;
 import com.recaring.device.dataaccess.entity.WardDeviceToken;
 import com.recaring.device.dataaccess.repository.WardDeviceTokenRepository;
@@ -49,25 +49,15 @@ class LocationSettingControllerTest extends AbstractIntegrationTest {
         coGuardian = memberRepository.save(LocationFixture.createCoGuardian());
         manager = memberRepository.save(LocationFixture.createManager());
 
-        careRelationshipRepository.save(CareRelationship.of(
-                ward.getMemberKey(),
-                guardian.getMemberKey(),
-                CareRole.PRIMARY_GUARDIAN
-        ));
-        careRelationshipRepository.save(CareRelationship.of(
-                ward.getMemberKey(),
-                coGuardian.getMemberKey(),
-                CareRole.GUARDIAN
-        ));
-        careRelationshipRepository.save(CareRelationship.of(
-                ward.getMemberKey(),
-                manager.getMemberKey(),
-                CareRole.MANAGER
-        ));
+        careRelationshipRepository.save(
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+        careRelationshipRepository.save(
+                CareFixture.createGuardianRelationship(ward.getMemberKey(), coGuardian.getMemberKey()));
+        careRelationshipRepository.save(
+                CareFixture.createManagerRelationship(ward.getMemberKey(), manager.getMemberKey()));
 
-        WardDeviceToken deviceToken = wardDeviceTokenRepository.save(WardDeviceToken.builder()
-                .wardKey(ward.getMemberKey())
-                .build());
+        WardDeviceToken deviceToken = wardDeviceTokenRepository.save(
+                DeviceFixture.createDeviceToken(ward.getMemberKey()));
         wardDeviceToken = deviceToken.getToken();
     }
 

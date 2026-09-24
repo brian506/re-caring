@@ -131,11 +131,7 @@ class LocalAuthManagerTest {
     @DisplayName("비밀번호를 변경하면 해당 회원의 인증정보에 새 비밀번호가 반영된다")
     void changePassword_replaces_stored_password() {
         // Given
-        LocalAuth existingAuth = LocalAuth.builder()
-                .memberKey(AuthFixture.MEMBER_KEY)
-                .email(AuthFixture.EMAIL)
-                .password(AuthFixture.ENCODED_PASSWORD)
-                .build();
+        LocalAuth existingAuth = AuthFixture.createLocalAuth(AuthFixture.MEMBER_KEY);
         given(localAuthReader.findByMemberKey(AuthFixture.MEMBER_KEY)).willReturn(existingAuth);
 
         // When

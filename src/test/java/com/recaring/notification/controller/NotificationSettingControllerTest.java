@@ -1,7 +1,6 @@
 package com.recaring.notification.controller;
 
-import com.recaring.care.dataaccess.entity.CareRelationship;
-import com.recaring.care.dataaccess.entity.CareRole;
+import com.recaring.care.fixture.CareFixture;
 import com.recaring.care.dataaccess.repository.CareRelationshipRepository;
 import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.dataaccess.repository.MemberRepository;
@@ -46,16 +45,10 @@ class NotificationSettingControllerTest extends AbstractIntegrationTest {
         manager = memberRepository.save(NotificationFixture.createManager());
         otherGuardian = memberRepository.save(NotificationFixture.createOtherGuardian());
 
-        careRelationshipRepository.save(CareRelationship.of(
-                ward.getMemberKey(),
-                guardian.getMemberKey(),
-                CareRole.PRIMARY_GUARDIAN
-        ));
-        careRelationshipRepository.save(CareRelationship.of(
-                ward.getMemberKey(),
-                manager.getMemberKey(),
-                CareRole.MANAGER
-        ));
+        careRelationshipRepository.save(
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+        careRelationshipRepository.save(
+                CareFixture.createManagerRelationship(ward.getMemberKey(), manager.getMemberKey()));
     }
 
     @AfterEach

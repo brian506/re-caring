@@ -1,5 +1,6 @@
 package com.recaring.place.vo.kakao;
 
+import com.recaring.place.fixture.PlaceFixture;
 import com.recaring.place.vo.Place;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -12,9 +13,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DisplayName("KakaoPlaceDocument 단위 테스트")
 class KakaoPlaceDocumentTest {
 
-    private static final String PLACE_ID = "8133484";
-    private static final String PLACE_NAME = "망원역 6호선";
-    private static final String ROAD_ADDRESS = "서울 마포구 월드컵로 지하 77";
+    private static final String PLACE_ID = PlaceFixture.MANGWON_STATION.placeId();
+    private static final String PLACE_NAME = PlaceFixture.MANGWON_STATION.name();
+    private static final String ROAD_ADDRESS = PlaceFixture.MANGWON_STATION.address();
     private static final String JIBUN_ADDRESS = "서울 마포구 망원동 484-3";
     private static final String LONGITUDE = "126.910094329982";
     private static final String LATITUDE = "37.5560826563712";

@@ -148,7 +148,7 @@ class MemberWithdrawalManagerTest {
 
     private void givenWithdrawableMember() {
         Member member = MemberFixture.createWardMember(MemberFixture.PHONE);
-        LocalAuth localAuth = LocalAuth.of(MEMBER_KEY, AuthFixture.EMAIL, AuthFixture.ENCODED_PASSWORD);
+        LocalAuth localAuth = AuthFixture.createLocalAuth(MEMBER_KEY);
         given(memberReader.findByMemberKey(MEMBER_KEY)).willReturn(member);
         given(localAuthReader.findByMemberKey(MEMBER_KEY)).willReturn(localAuth);
     }
