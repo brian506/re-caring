@@ -99,6 +99,12 @@
 - **동일 도메인에 기존 Fixture 클래스가 있는데 새 파일을 만들면 안 된다**
   - 반드시 기존 `*Fixture` 클래스에 메서드를 추가
 
+- **테스트 데이터를 Fixture 밖에서 조립하면 안 된다**
+  - 테스트 클래스 안에서 엔티티·VO를 `builder()`/`new`로 직접 만들지 않는다 — `{domain}/fixture/{Domain}Fixture.java`의 static 팩토리를 호출한다
+  - 엔티티 팩토리는 **그 엔티티를 소유한 도메인의 Fixture**에 둔다 (notification 테스트가 `AnomalyDetection`이 필요하면 `LocationFixture.createAnomalyDetection()`)
+  - 다른 Fixture에 이미 있는 값을 하드코딩으로 다시 적지 않는다 — 상수를 참조해 단일 출처를 유지한다 (`ANOMALY_RECORDED_AT = LocationFixture.DETECTED_AT`)
+  - Fixture가 없는 도메인이면 `{domain}/fixture/{Domain}Fixture.java`를 새로 만든다
+
 - **테스트를 통과시키기 위해 `src/main/` 코드를 수정하면 안 된다**
   - 구현 버그라면 `/feature` 스킬로 수정
 

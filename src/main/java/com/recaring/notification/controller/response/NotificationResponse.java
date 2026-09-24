@@ -12,7 +12,9 @@ public record NotificationResponse(
         String title,
         String body,
         Map<String, String> dataPayload,
-        Instant createdAt
+        Instant createdAt,
+        boolean feedbackEligible,
+        boolean feedbackSubmitted
 ) {
     public static NotificationResponse from(NotificationItem item) {
         return new NotificationResponse(
@@ -21,7 +23,9 @@ public record NotificationResponse(
                 item.title(),
                 item.body(),
                 item.dataPayload(),
-                item.createdAt().atZone(ZoneId.systemDefault()).toInstant()
+                item.createdAt().atZone(ZoneId.systemDefault()).toInstant(),
+                item.feedbackEligible(),
+                item.feedbackSubmitted()
         );
     }
 }

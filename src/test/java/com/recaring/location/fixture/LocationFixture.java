@@ -1,5 +1,6 @@
 package com.recaring.location.fixture;
 
+import com.recaring.location.dataaccess.entity.AnomalyDetection;
 import com.recaring.location.event.AnomalyDetectedEvent;
 import com.recaring.location.event.BatteryThresholdAlertEvent;
 import com.recaring.location.event.SafeZoneEnteredEvent;
@@ -112,6 +113,18 @@ public class LocationFixture {
     public static AnomalyAlert createAnomalyAlert(DetectionType detectionType, String evidence) {
         return new AnomalyAlert(
                 WARD_KEY, detectionType, ANOMALY_SCORE, DETECTED_AT, LATITUDE, LONGITUDE, evidence);
+    }
+
+    public static AnomalyDetection createAnomalyDetection(DetectionType detectionType, String evidence) {
+        return AnomalyDetection.builder()
+                .wardMemberKey(WARD_KEY)
+                .detectionType(detectionType)
+                .score(ANOMALY_SCORE)
+                .recordedAt(DETECTED_AT)
+                .latitude(LATITUDE)
+                .longitude(LONGITUDE)
+                .evidence(evidence)
+                .build();
     }
 
     public static AnomalyDetectedEvent createAnomalyDetectedEvent(DetectionType detectionType, String evidence) {

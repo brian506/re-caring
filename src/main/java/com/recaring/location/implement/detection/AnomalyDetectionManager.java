@@ -3,11 +3,15 @@ package com.recaring.location.implement.detection;
 import com.recaring.location.dataaccess.repository.AnomalyDetectionRepository;
 import com.recaring.location.event.AnomalyDetectedEvent;
 import com.recaring.location.vo.AnomalyAlert;
+import com.recaring.location.vo.DetectionType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Slf4j
 @Component
@@ -34,6 +38,10 @@ public class AnomalyDetectionManager {
         }
 
         eventPublisher.publishEvent(new AnomalyDetectedEvent(alert));
+    }
+
+    public Optional<Long> findDetectionId(String wardMemberKey, DetectionType detectionType, LocalDateTime recordedAt) {
+        return anomalyDetectionRepository.findIdByDetectionKeys(wardMemberKey, detectionType, recordedAt);
     }
 
     public void deleteByWardMemberKey(String wardMemberKey) {

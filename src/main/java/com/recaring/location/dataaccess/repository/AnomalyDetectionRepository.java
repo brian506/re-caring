@@ -6,7 +6,10 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.recaring.location.vo.DetectionType;
+
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 public interface AnomalyDetectionRepository extends JpaRepository<AnomalyDetection, Long> {
 
@@ -35,6 +38,18 @@ public interface AnomalyDetectionRepository extends JpaRepository<AnomalyDetecti
             @Param("latitude") double latitude,
             @Param("longitude") double longitude,
             @Param("evidence") String evidence
+    );
+
+    @Query("""
+            select a.id from AnomalyDetection a
+            where a.wardMemberKey = :wardMemberKey
+              and a.detectionType = :detectionType
+              and a.recordedAt = :recordedAt
+            """)
+    Optional<Long> findIdByDetectionKeys(
+            @Param("wardMemberKey") String wardMemberKey,
+            @Param("detectionType") DetectionType detectionType,
+            @Param("recordedAt") LocalDateTime recordedAt
     );
 
     void deleteByWardMemberKey(String wardMemberKey);

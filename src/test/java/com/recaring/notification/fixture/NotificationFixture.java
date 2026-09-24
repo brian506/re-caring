@@ -2,6 +2,7 @@ package com.recaring.notification.fixture;
 
 import com.recaring.care.dataaccess.entity.CarePartyRole;
 import com.recaring.location.fixture.LocationFixture;
+import com.recaring.location.vo.DetectionType;
 import com.recaring.member.dataaccess.entity.Gender;
 import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.dataaccess.entity.MemberRole;
@@ -29,6 +30,12 @@ public class NotificationFixture {
     public static final String BATTERY_LOW_EVENT_TYPE = "BATTERY_LOW";
     public static final String BATTERY_LOW_TITLE = "배터리 부족";
     public static final String BATTERY_LOW_BODY = "배터리가 부족합니다. 잔량은 40% 입니다.";
+    public static final DetectionType ANOMALY_TYPE = DetectionType.ROUTE_DEVIATION;
+    public static final String ANOMALY_EVENT_TYPE = ANOMALY_TYPE.name();
+    public static final String ANOMALY_TITLE = "낯선 장소 알림";
+    public static final String ANOMALY_BODY = "김소연님이 지정된 경로에서 이탈했습니다.";
+    public static final String ANOMALY_EVIDENCE = "{name} 님이 지정된 경로에서 이탈했습니다.";
+    public static final LocalDateTime ANOMALY_RECORDED_AT = LocationFixture.DETECTED_AT;
 
     public static Member createWard() {
         return Member.builder()
@@ -147,8 +154,48 @@ public class NotificationFixture {
                 BATTERY_LOW_TITLE,
                 BATTERY_LOW_BODY,
                 Map.of("type", BATTERY_LOW_EVENT_TYPE),
-                LocalDateTime.of(2026, 7, 5, 9, 41)
+                LocalDateTime.of(2026, 7, 5, 9, 41),
+                false,
+                false
         );
+    }
+
+    public static Map<String, String> anomalyDataPayload() {
+        return Map.of(
+                "type", ANOMALY_EVENT_TYPE,
+                "wardKey", WARD_KEY,
+                "score", String.valueOf(LocationFixture.ANOMALY_SCORE),
+                "recordedAt", LocationFixture.DETECTED_AT_TEXT,
+                "latitude", String.valueOf(LocationFixture.LATITUDE),
+                "longitude", String.valueOf(LocationFixture.LONGITUDE)
+        );
+    }
+
+    public static Notification anomalyNotification(String recipientMemberKey) {
+        return anomalyNotification(recipientMemberKey, anomalyDataPayload());
+    }
+
+    public static Notification anomalyNotification(String recipientMemberKey, Map<String, String> dataPayload) {
+        return Notification.builder()
+                .recipientMemberKey(recipientMemberKey)
+                .eventType(ANOMALY_EVENT_TYPE)
+                .title(ANOMALY_TITLE)
+                .body(ANOMALY_BODY)
+                .dataPayload(dataPayload)
+                .build();
+    }
+
+    public static Notification anomalyNotificationWithId(Long id, String recipientMemberKey) {
+        return withId(id, anomalyNotification(recipientMemberKey));
+    }
+
+    public static Notification anomalyNotificationWithId(Long id, String recipientMemberKey, Map<String, String> dataPayload) {
+        return withId(id, anomalyNotification(recipientMemberKey, dataPayload));
+    }
+
+    private static Notification withId(Long id, Notification notification) {
+        ReflectionTestUtils.setField(notification, "id", id);
+        return notification;
     }
 
 }

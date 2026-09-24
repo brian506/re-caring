@@ -152,6 +152,48 @@ verify(historyManager, after(500).never()).findLatest(key);
 
 ---
 
+## 11. 테스트 데이터를 Fixture 밖에서 조립하지 않는다
+
+테스트 데이터는 도메인마다 하나인 `{domain}/fixture/{Domain}Fixture.java`에 상수와
+static 팩토리로 모으고, 테스트 클래스는 **호출만** 한다. 세 형태를 본다.
+
+**(a) 테스트 파일 안에서 엔티티·VO를 직접 조립**
+
+```java
+// 나쁨 — 같은 조립이 파일마다 복붙되고, 엔티티 생성자가 바뀌면 전부 깨진다
+private Notification anomalyNotification() {
+    return Notification.builder().recipientMemberKey(...).eventType(...).build();
+}
+
+// 좋음
+NotificationFixture.anomalyNotification(guardian.getMemberKey());
+```
+
+**(b) 타 도메인의 엔티티를 자기 도메인 Fixture에서 만든다**
+
+엔티티 팩토리는 **그 엔티티를 소유한 도메인의 Fixture**에 둔다.
+notification 테스트가 `AnomalyDetection`(location 엔티티)이 필요하면
+`NotificationFixture`에 만들지 말고 `LocationFixture.createAnomalyDetection()`을 호출한다.
+
+**(c) 다른 Fixture에 있는 값을 하드코딩으로 다시 적는다**
+
+```java
+// 나쁨 — LocationFixture.LATITUDE와 값이 같지만 별개 상수라 한쪽만 바뀌면 조용히 어긋난다
+public static final double ANOMALY_LATITUDE = 37.566500;
+
+// 좋음 — 단일 출처를 가리킨다 (NotificationFixture.WARD_KEY가 쓰는 방식)
+public static final LocalDateTime ANOMALY_RECORDED_AT = LocationFixture.DETECTED_AT;
+```
+
+(c)가 특히 위험한 이유: 역조회·조인처럼 **두 도메인의 값이 일치해야 성립하는 흐름**에서
+한쪽 상수만 바뀌면 테스트는 초록불인데 무엇을 검증하는지 의미가 사라진다.
+
+> 동일 도메인에 Fixture가 이미 있으면 **새 파일을 만들지 말고 메서드를 추가**한다.
+> Fixture가 없는 도메인이면 `{domain}/fixture/{Domain}Fixture.java`를 새로 만든다.
+> Fixture는 상수와 팩토리 메서드까지만 — 상속으로 엮거나 셋업을 추상화하지 않는다.
+
+---
+
 ## 실행 관련
 
 - `./gradlew test` 는 `excludeTags 'integration'` 이라 **통합 테스트를 실행하지 않는다**
