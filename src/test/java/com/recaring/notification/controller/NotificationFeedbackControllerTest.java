@@ -3,6 +3,7 @@ package com.recaring.notification.controller;
 import com.recaring.location.dataaccess.entity.AnomalyDetection;
 import com.recaring.location.dataaccess.repository.AnomalyDetectionRepository;
 import com.recaring.location.fixture.LocationFixture;
+import com.recaring.location.vo.DetectionType;
 import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.dataaccess.repository.MemberRepository;
 import com.recaring.notification.dataaccess.entity.FeedbackAccuracy;
@@ -76,6 +77,29 @@ class NotificationFeedbackControllerTest extends AbstractIntegrationTest {
         assertThat(saved.getAccuracy()).isEqualTo(FeedbackAccuracy.INACCURATE);
         assertThat(saved.getReason()).isEqualTo(FeedbackReason.GPS_INACCURATE);
         assertThat(saved.getComment()).isEqualTo(NotificationFixture.FEEDBACK_COMMENT);
+    }
+
+    @Test
+    @DisplayName("같은 대상자의 다른 탐지가 있어도 시각과 유형이 모두 일치하는 탐지에만 연결한다")
+    void submitFeedback_links_only_to_exactly_matching_detection() {
+        AnomalyDetection sameTypeOtherTime = anomalyDetectionRepository.saveAndFlush(
+                LocationFixture.createAnomalyDetection(
+                        NotificationFixture.ANOMALY_TYPE,
+                        NotificationFixture.ANOMALY_EVIDENCE,
+                        LocationFixture.DETECTED_AT.plusMinutes(1)));
+        AnomalyDetection sameTimeOtherType = anomalyDetectionRepository.saveAndFlush(
+                LocationFixture.createAnomalyDetection(
+                        DetectionType.WANDERING, LocationFixture.WANDERING_EVIDENCE));
+        Notification notification = saveAnomalyNotification(guardian.getMemberKey());
+
+        submit(notification.getNotificationKey(), """
+                {"accuracy": "ACCURATE"}
+                """)
+                .expectStatus().isCreated();
+
+        assertThat(onlyFeedback().getAnomalyDetectionId())
+                .isEqualTo(detection.getId())
+                .isNotIn(sameTypeOtherTime.getId(), sameTimeOtherType.getId());
     }
 
     @Test

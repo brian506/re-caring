@@ -116,11 +116,16 @@ public class LocationFixture {
     }
 
     public static AnomalyDetection createAnomalyDetection(DetectionType detectionType, String evidence) {
+        return createAnomalyDetection(detectionType, evidence, DETECTED_AT);
+    }
+
+    public static AnomalyDetection createAnomalyDetection(
+            DetectionType detectionType, String evidence, LocalDateTime recordedAt) {
         return AnomalyDetection.builder()
                 .wardMemberKey(WARD_KEY)
                 .detectionType(detectionType)
                 .score(ANOMALY_SCORE)
-                .recordedAt(DETECTED_AT)
+                .recordedAt(recordedAt)
                 .latitude(LATITUDE)
                 .longitude(LONGITUDE)
                 .evidence(evidence)
