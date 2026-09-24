@@ -1,6 +1,6 @@
 # 프로젝트 스냅샷
 
-> 마지막 업데이트: 2026-09-22. 기능 추가·수정 시 해당 섹션을 갱신한다.
+> 마지막 업데이트: 2026-09-24. 기능 추가·수정 시 해당 섹션을 갱신한다.
 
 ## 도메인별 패키지 현황
 
@@ -11,7 +11,7 @@
 | `device` | DeviceTokenService | WardDeviceTokenManager, WardDeviceTokenReader |
 | `location` | LocationService, LocationSettingService | GpsHistoryManager, GpsLatestCacheManager/Listener, SseEmitterManager, LocationValidator, CareRelationshipCacheReader, BatteryThresholdEvaluator/BatteryDetectionListener/BatteryAlertStateManager/DetectionPublisher/DetectionListener/AnomalyDetectionConsumer/AnomalyDetectionParser/AnomalyDetectionManager(detection), SafeZoneStateManager/SafeZoneDetectionListener(safezone), LocationSettingManager |
 | `member` | MemberService | MemberReader/Writer/Validator, MembersTermsAgreementWriter, MemberWithdrawalManager |
-| `notification` | NotificationService, NotificationSettingService, FcmDeviceTokenService | NotificationReader/Writer, NotificationSendManager, NotificationSettingReader/Manager/Validator, FcmDeviceTokenReader/Manager, FcmClient(Firebase/NoOp), CareInvitationNotificationListener, BatteryThresholdNotificationListener, SafeZoneNotificationListener, AnomalyNotificationListener |
+| `notification` | NotificationService, NotificationSettingService, FcmDeviceTokenService | NotificationReader/Writer, NotificationSendManager, NotificationFeedbackManager/Validator(feedback), NotificationSettingReader/Manager/Validator, FcmDeviceTokenReader/Manager, FcmClient(Firebase/NoOp), CareInvitationNotificationListener, BatteryThresholdNotificationListener, SafeZoneNotificationListener, AnomalyNotificationListener |
 | `place` | PlaceService | KakaoPlaceSearchClient (카카오 로컬 키워드 검색 프록시, 엔티티 없음) |
 | `safezone` | SafeZoneService | SafeZoneReader, SafeZoneWriter |
 | `sms` | PhoneVerificationService | SmsClient, SmsCodeGenerator, PhoneVerificationReader/Writer, SmsRateLimitValidator |
@@ -49,7 +49,8 @@
 | Location | GET | `/api/v1/location/settings/{wardKey}/collection-interval` | 위치 수집 주기 조회 (GUARDIAN, 옵션 30/60/180/300초 포함) |
 | Location | PATCH | `/api/v1/location/settings/{wardKey}/collection-interval` | 위치 수집 주기 수정 (GUARDIAN only) |
 | Location | GET | `/api/v1/location/settings/collection-interval/me` | 내 위치 수집 주기 조회 (WARD, Device Token 인증) |
-| Notification | GET | `/api/v1/notifications?cursor&size` | 내 알림함 목록 조회 (WARD, GUARDIAN — recipient 기준). notification_id DESC 커서 페이징. `cursor`=직전 응답 `nextCursor`(첫 페이지는 생략), `size`=1~50(기본 10). 응답 `{ items, nextCursor, hasNext }`. 이상탐지 알림의 `dataPayload`는 `type/wardKey/score/recordedAt/latitude/longitude`(값 전부 문자열) — 앱은 이걸로 위치 이력 탭에 핀을 찍는다. 다른 알림 유형에는 좌표가 없다 |
+| Notification | GET | `/api/v1/notifications?cursor&size` | 내 알림함 목록 조회 (WARD, GUARDIAN — recipient 기준). notification_id DESC 커서 페이징. `cursor`=직전 응답 `nextCursor`(첫 페이지는 생략), `size`=1~50(기본 10). 응답 `{ items, nextCursor, hasNext }`. 이상탐지 알림의 `dataPayload`는 `type/wardKey/score/recordedAt/latitude/longitude`(값 전부 문자열) — 앱은 이걸로 위치 이력 탭에 핀을 찍는다. 다른 알림 유형에는 좌표가 없다. 각 item에 `feedbackEligible`(이상탐지 5종이면 true)·`feedbackSubmitted`가 붙는다 — 평가 UI는 `eligible && !submitted`일 때만 노출 |
+| Notification | POST | `/api/v1/notifications/{notificationKey}/feedback` | 이상탐지 알림 정확도 피드백 제출 (WARD, GUARDIAN — 수신자 본인만). `{ accuracy: ACCURATE\|INACCURATE\|UNSURE, reason?, comment? }`. `reason`(USUAL_ROUTINE/BRIEF_STOPOVER/GPS_INACCURATE/OTHER)은 `INACCURATE`일 때만 필수이자 허용, `comment`는 선택·최대 100자. 알림 1건당 1회(E9007). 대상 아님 E9006, 타인 알림 E9005, 없음 E9004, 연결된 탐지 기록 소실 E9009 |
 | Notification | GET | `/api/v1/notifications/settings/{wardKey}` | 알림 설정 조회 (안심존·이상탐지·응급호출·배터리) |
 | Notification | PATCH | `/api/v1/notifications/settings/{wardKey}/safe-zone` | 안심존 진입·이탈 알림 토글 |
 | Notification | PATCH | `/api/v1/notifications/settings/{wardKey}/anomaly` | 이상탐지 알림 토글 수정 (5종 각각 on/off. **민감도 제거됨**) |
@@ -87,6 +88,7 @@
 | SafeZoneState | safe_zone_states | wardMemberKey(UNIQUE), safeZoneKeys(CSV, 현재 속한 안심존). 행 없음=최초 관측(알림 안 함), 빈 문자열=존 밖 |
 | Notification | notifications | notificationKey(UUID, UNIQUE), recipientMemberKey, eventType, title, body, dataPayload(jsonb, 리다이렉트용), createdAt. 수신자별 개별 row. 읽음 필드 없음. 목록 조회 정렬·커서는 notification_id DESC (created_at은 fan-out 시 동시각 행이 생겨 정렬 불안정) |
 | AnomalyDetection | anomaly_detections | wardMemberKey, detectionType(5종), score, recordedAt, latitude, longitude, evidence(1000자). `(wardMemberKey, detectionType, recordedAt)` UNIQUE = 재배달 멱등 키. 알림 토글과 무관하게 항상 저장되는 탐지 사건 원본 (1건 = 1 row) |
+| NotificationFeedback | notification_feedbacks | notificationId(UNIQUE — 1알림 1회), anomalyDetectionId(NOT NULL), accuracy(ACCURATE/INACCURATE/UNSURE), reason(nullable, INACCURATE 전용), comment(100자, nullable). FK 제약은 걸지 않는다(이 프로젝트는 JPA 연관관계를 쓰지 않음). `anomalyDetectionId`는 제출 시 `dataPayload`의 wardKey+type+recordedAt으로 `anomaly_detections`를 역조회해 채우며, **찾지 못하면 저장하지 않고 E9009로 거부한다** — 탐지 행과 조인되지 않는 라벨은 학습에 쓸 수 없고, 키 불일치 버그가 로그가 아니라 에러율로 드러나야 한다 |
 | NotificationSetting | notification_settings | wardMemberKey(UNIQUE), 안심존·응급호출 토글, 이상탐지 토글 5종(speed/wandering/abnormalDwelling/routeDeviation/timeAnomaly), lowBatteryEnabled, batteryThresholdPercents(CSV, 기본 '' = 선택 없음 → 알림 없음) |
 | AlertRunbook | alert_runbooks | errorSignature, commands(jsonb), resolutionContext, successCount, isValid |
 | AlertInvestigation | alert_investigations | fingerprint, alertName, severity, threadTs, status, fixCommands(jsonb) |
@@ -383,3 +385,4 @@ AnomalyDetectionConsumer(수동 ACK)
 | 11 | 편향 폴백이 카카오 호출을 2배로 만든다 | `PlaceService` | 카카오의 `x/y/radius`는 우선순위가 아니라 필터라, 편향 반경 밖 장소는 검색이 안 되거나 엉뚱한 결과가 1~2건 섞여 온다(`해운대역` + 서울 편향 → '해운대연탄생갈비 부평갈산역점'). 그래서 "결과 0건"이 아니라 "검색어 토큰이 결과 이름에 하나도 안 걸림"을 폴백 조건으로 쓴다. 대신 편향 밖 검색마다 호출 2회 + 지연 최대 2배(읽기 타임아웃 3초 × 2). 이름 기반 휴리스틱이라 주소 문자열 검색(`서울 마포구 …`)은 항상 폴백을 탄다 |
 | 12 | 해석 불가 알림의 무음 폐기 | `AnomalyDetectionConsumer` | 파싱 실패 메시지를 WARN 한 줄만 남기고 ACK한다. 데드레터도 지표도 없어 계약이 어긋나도 스트림·PEL은 정상으로 보인다. 실제로 `detected_at` 포맷 불일치로 알림 8건이 전량 유실된 뒤에야 DB 0행으로 발견됐다(#208). 개선안: 폐기 전용 스트림 적재 또는 폐기 건수 메트릭 노출 |
 | 13 | 컨슈머 그룹에 죽은 컨슈머 누적 | `AnomalyStreamProperties` | 컨슈머 이름이 호스트명이라 배포마다 새 이름이 등록되고 옛 항목은 남는다(dev 기준 7개). 각 컨슈머의 PEL이 비어 있어 유실은 없지만 `XINFO CONSUMERS` 판독이 어려워진다. 개선안: 기동 시 idle이 충분히 큰 컨슈머 `XGROUP DELCONSUMER` |
+| 14 | 탈퇴한 대상자의 알림에 평가 UI가 보인다 | `NotificationReader` | 목록의 `feedbackEligible`은 `eventType`만 본다. 대상자가 탈퇴하면 `anomaly_detections`는 지워지는데 `notifications`는 남아(#149) 평가 UI는 뜨고 제출하면 E9009로 거부된다. 해소하려면 목록 쿼리에서도 탐지 행 존재를 확인해야 하는데 페이지당 조회가 하나 더 는다. #149(탈퇴 시 notifications 미삭제)를 해결하면 함께 사라진다 |

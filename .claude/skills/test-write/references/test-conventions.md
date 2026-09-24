@@ -129,6 +129,21 @@ public class XxxFixture {
 - `src/test/java/com/recaring/{domain}/fixture/` 패키지에 위치
 - 상수는 `public static final`
 - 팩토리 메서드는 `public static`
+- **테스트 클래스는 Fixture를 호출만 한다.** 테스트 파일 안에서 엔티티·VO를 `builder()`/`new`로 조립하지 않는다
+- **엔티티 팩토리는 그 엔티티를 소유한 도메인의 Fixture에 둔다.** notification 테스트가 `AnomalyDetection`(location 엔티티)이 필요하면
+  `NotificationFixture`에 만들지 말고 `LocationFixture.createAnomalyDetection()`을 호출한다
+- **다른 Fixture의 값을 하드코딩으로 복제하지 않는다.** 상수를 참조해 단일 출처를 유지한다
+
+```java
+// 나쁨 — LocationFixture.DETECTED_AT과 값이 같지만 별개 상수다. 한쪽만 바뀌면 조용히 어긋난다
+public static final String ANOMALY_RECORDED_AT_TEXT = "2026-09-24 14:26:03";
+
+// 좋음 — NotificationFixture.WARD_KEY가 쓰는 방식
+public static final LocalDateTime ANOMALY_RECORDED_AT = LocationFixture.DETECTED_AT;
+```
+
+역조회·조인처럼 **두 도메인의 값이 일치해야 성립하는 흐름**에서 특히 중요하다.
+한쪽 상수만 바뀌면 테스트는 통과하는데 무엇을 검증하는지 의미가 사라진다.
 
 ## 통합 테스트 (필요한 경우만)
 

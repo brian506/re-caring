@@ -1,6 +1,7 @@
 package com.recaring.notification.implement;
 
 import com.recaring.notification.dataaccess.entity.Notification;
+import com.recaring.notification.dataaccess.repository.NotificationFeedbackRepository;
 import com.recaring.notification.dataaccess.repository.NotificationRepository;
 import com.recaring.notification.fixture.NotificationFixture;
 import com.recaring.notification.vo.NotificationItem;
@@ -15,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.BDDMockito.given;
 
 @ExtendWith(MockitoExtension.class)
@@ -28,6 +30,8 @@ class NotificationReaderTest {
 
     @Mock
     private NotificationRepository notificationRepository;
+    @Mock
+    private NotificationFeedbackRepository notificationFeedbackRepository;
 
     @Test
     @DisplayName("수신자 기준 조회 결과를 id가 포함된 NotificationItem VO로 변환해 반환한다")
@@ -76,5 +80,39 @@ class NotificationReaderTest {
         assertThat(slice.items()).isEmpty();
         assertThat(slice.hasNext()).isFalse();
         assertThat(slice.nextCursor()).isNull();
+    }
+
+    @Test
+    @DisplayName("이미 평가한 알림만 제출 완료로 표시한다")
+    void findByRecipient_marks_only_notifications_with_submitted_feedback() {
+        given(notificationRepository.findSliceByRecipient(NotificationFixture.GUARDIAN_KEY, null, SIZE))
+                .willReturn(List.of(
+                        NotificationFixture.anomalyNotificationWithId(30L, NotificationFixture.GUARDIAN_KEY),
+                        NotificationFixture.anomalyNotificationWithId(20L, NotificationFixture.GUARDIAN_KEY)
+                ));
+        given(notificationFeedbackRepository.findNotificationIdsIn(List.of(30L, 20L)))
+                .willReturn(List.of(30L));
+
+        NotificationSlice slice = notificationReader.findByRecipient(NotificationFixture.GUARDIAN_KEY, null, SIZE);
+
+        assertThat(slice.items())
+                .extracting(NotificationItem::id, NotificationItem::feedbackSubmitted)
+                .containsExactly(tuple(30L, true), tuple(20L, false));
+    }
+
+    @Test
+    @DisplayName("이상탐지 알림만 평가 대상으로 표시한다")
+    void findByRecipient_marks_only_anomaly_notifications_as_eligible() {
+        given(notificationRepository.findSliceByRecipient(NotificationFixture.GUARDIAN_KEY, null, SIZE))
+                .willReturn(List.of(
+                        NotificationFixture.anomalyNotificationWithId(30L, NotificationFixture.GUARDIAN_KEY),
+                        NotificationFixture.notificationWithId(20L, NotificationFixture.GUARDIAN_KEY)
+                ));
+
+        NotificationSlice slice = notificationReader.findByRecipient(NotificationFixture.GUARDIAN_KEY, null, SIZE);
+
+        assertThat(slice.items())
+                .extracting(NotificationItem::id, NotificationItem::feedbackEligible)
+                .containsExactly(tuple(30L, true), tuple(20L, false));
     }
 }

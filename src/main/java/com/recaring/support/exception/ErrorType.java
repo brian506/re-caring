@@ -96,6 +96,12 @@ public enum ErrorType {
     INVALID_BATTERY_THRESHOLD(HttpStatus.BAD_REQUEST, ErrorCode.E9001, "Unsupported battery threshold.", LogLevel.WARN),
     NOTIFICATION_SETTING_UPDATE_CONFLICT(HttpStatus.CONFLICT, ErrorCode.E9002, "Notification setting was updated by another request. Please retry.", LogLevel.WARN),
     INVALID_FCM_DEVICE_TOKEN(HttpStatus.BAD_REQUEST, ErrorCode.E9003, "Invalid FCM device token.", LogLevel.WARN),
+    NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, ErrorCode.E9004, "Notification not found.", LogLevel.WARN),
+    NOTIFICATION_ACCESS_DENIED(HttpStatus.FORBIDDEN, ErrorCode.E9005, "Not the recipient of this notification.", LogLevel.WARN),
+    NOTIFICATION_FEEDBACK_NOT_ELIGIBLE(HttpStatus.BAD_REQUEST, ErrorCode.E9006, "This notification does not accept feedback.", LogLevel.WARN),
+    NOTIFICATION_FEEDBACK_ALREADY_SUBMITTED(HttpStatus.CONFLICT, ErrorCode.E9007, "Feedback has already been submitted for this notification.", LogLevel.WARN),
+    INVALID_NOTIFICATION_FEEDBACK(HttpStatus.BAD_REQUEST, ErrorCode.E9008, "Reason is required only when the answer is INACCURATE.", LogLevel.WARN),
+    NOTIFICATION_FEEDBACK_DETECTION_NOT_FOUND(HttpStatus.NOT_FOUND, ErrorCode.E9009, "The detection record for this notification no longer exists.", LogLevel.WARN),
 
     // Place (E10xxx)
     INVALID_PLACE_QUERY(HttpStatus.BAD_REQUEST, ErrorCode.E10000, "검색어를 입력해주세요.", LogLevel.WARN),
