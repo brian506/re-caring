@@ -82,7 +82,7 @@ public class SafeZoneDetectionListener {
             SafeZoneInfo zone = zonesByKey.get(enteredKey);
             log.info("[안심존 : 진입]: wardMemberKey={} | safeZoneKey={}", wardMemberKey, enteredKey);
             eventPublisher.publishEvent(new SafeZoneEnteredEvent(
-                    wardMemberKey, enteredKey, zone.name(), gps.occurredAt()));
+                    wardMemberKey, enteredKey, zone.name(), gps.latitude(), gps.longitude(), gps.occurredAt()));
         }
 
         // 안심존 이탈 알림
@@ -94,7 +94,7 @@ public class SafeZoneDetectionListener {
             }
             log.info("[안심존 : 이탈]: wardMemberKey={} | safeZoneKey={}", wardMemberKey, exitedKey);
             eventPublisher.publishEvent(new SafeZoneExitedEvent(
-                    wardMemberKey, exitedKey, zone.name(), gps.occurredAt()));
+                    wardMemberKey, exitedKey, zone.name(), gps.latitude(), gps.longitude(), gps.occurredAt()));
         }
     }
 

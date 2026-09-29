@@ -58,10 +58,11 @@ public class NotificationController {
     @Operation(
             summary = "알림 정확도 피드백 제출",
             description = """
-                    이상탐지 알림(SPEED_ANOMALY, WANDERING, ABNORMAL_DWELLING, ROUTE_DEVIATION, TIME_ANOMALY)에 대해
-                    알림이 정확했는지 응답합니다. 목록 응답의 feedbackEligible이 true인 알림만 제출할 수 있으며,
-                    알림 1건당 1회만 제출됩니다.
+                    이상탐지 알림(SPEED_ANOMALY, WANDERING, ABNORMAL_DWELLING, ROUTE_DEVIATION, TIME_ANOMALY)과
+                    안심존 알림(SAFE_ZONE_ENTERED, SAFE_ZONE_EXITED)에 대해 알림이 정확했는지 응답합니다.
+                    목록 응답의 feedbackEligible이 true인 알림만 제출할 수 있으며, 알림 1건당 1회만 제출됩니다.
                     reason은 accuracy가 INACCURATE일 때만 필수이며, 그 외 응답에 담아 보내면 거부됩니다.
+                    안심존 알림의 reason은 GPS_INACCURATE, OTHER만 허용됩니다.
                     """
     )
     @PostMapping("/{notificationKey}/feedback")

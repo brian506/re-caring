@@ -8,12 +8,15 @@ import com.recaring.location.event.SafeZoneExitedEvent;
 import com.recaring.member.implement.MemberReader;
 import com.recaring.notification.implement.NotificationSendManager;
 import com.recaring.notification.implement.setting.NotificationSettingReader;
+import com.recaring.notification.vo.SafeZoneAlertType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
@@ -22,10 +25,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class SafeZoneNotificationListener {
 
-    private static final String EVENT_TYPE_ENTERED = "SAFE_ZONE_ENTERED";
-    private static final String EVENT_TYPE_EXITED = "SAFE_ZONE_EXITED";
-    private static final String TITLE_ENTERED = "안심존 진입 알림";
-    private static final String TITLE_EXITED = "안심존 이탈 알림";
+    private static final DateTimeFormatter RECORDED_AT_FORMAT =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private final CareRelationshipReader careRelationshipReader;
     private final NotificationSettingReader notificationSettingReader;
@@ -40,8 +41,8 @@ public class SafeZoneNotificationListener {
             log.info("[안심존 진입 알림 : 설정 꺼짐 스킵]: wardMemberKey={}", wardMemberKey);
             return;
         }
-        send(wardMemberKey, event.safeZoneKey(), EVENT_TYPE_ENTERED, TITLE_ENTERED,
-                event.safeZoneName() + "에 도착했어요.");
+        send(wardMemberKey, event.safeZoneKey(), SafeZoneAlertType.SAFE_ZONE_ENTERED,
+                event.safeZoneName() + "에 도착했어요.", event.latitude(), event.longitude(), event.detectedAt());
     }
 
     @Async("broadcastExecutor")
@@ -52,12 +53,20 @@ public class SafeZoneNotificationListener {
             log.info("[안심존 이탈 알림 : 설정 꺼짐 스킵]: wardMemberKey={}", wardMemberKey);
             return;
         }
-        send(wardMemberKey, event.safeZoneKey(), EVENT_TYPE_EXITED, TITLE_EXITED,
-                event.safeZoneName() + "에서 벗어났어요.");
+        send(wardMemberKey, event.safeZoneKey(), SafeZoneAlertType.SAFE_ZONE_EXITED,
+                event.safeZoneName() + "에서 벗어났어요.", event.latitude(), event.longitude(), event.detectedAt());
     }
 
     // 보호자는 여러 대상자의 알림을 한 화면에서 본다. 누구에 대한 알림인지 본문 첫머리로 구분한다.
-    private void send(String wardMemberKey, String safeZoneKey, String eventType, String title, String bodySuffix) {
+    private void send(
+            String wardMemberKey,
+            String safeZoneKey,
+            SafeZoneAlertType alertType,
+            String bodySuffix,
+            double latitude,
+            double longitude,
+            LocalDateTime detectedAt
+    ) {
         List<CaregiverInfo> caregivers = careRelationshipReader.findCaregiverInfos(wardMemberKey);
         if (caregivers.isEmpty()) {
             log.warn("[안심존 알림 : 수신자 없음]: wardMemberKey={}", wardMemberKey);
@@ -75,16 +84,20 @@ public class SafeZoneNotificationListener {
                 .map(CaregiverInfo::memberKey)
                 .toList();
 
+        String eventType = alertType.name();
         notificationSendManager.sendToCareParties(
                 guardianKeys,
                 managerKeys,
                 eventType,
-                title,
+                alertType.notificationTitle(),
                 body,
                 Map.of(
                         "type", eventType,
                         "wardKey", wardMemberKey,
-                        "safeZoneKey", safeZoneKey
+                        "safeZoneKey", safeZoneKey,
+                        "recordedAt", RECORDED_AT_FORMAT.format(detectedAt),
+                        "latitude", String.valueOf(latitude),
+                        "longitude", String.valueOf(longitude)
                 )
         );
     }

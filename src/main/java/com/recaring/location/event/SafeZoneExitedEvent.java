@@ -6,6 +6,8 @@ public record SafeZoneExitedEvent(
         String wardMemberKey,
         String safeZoneKey,
         String safeZoneName,
+        double latitude,
+        double longitude,
         LocalDateTime detectedAt
 ) {
 }

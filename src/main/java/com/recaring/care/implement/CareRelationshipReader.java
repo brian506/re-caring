@@ -47,6 +47,10 @@ public class CareRelationshipReader {
     /**
      * 알림 수신자 판정 등 보는 사람이 없는 경로. 지정 아바타는 채우지 않는다.
      */
+    public List<String> findAllWardMemberKeys() {
+        return careRelationshipRepository.findAllWardMemberKeys();
+    }
+
     public List<CaregiverInfo> findCaregiverInfos(String wardKey) {
         return findCaregiverInfos(wardKey, Map.of());
     }
