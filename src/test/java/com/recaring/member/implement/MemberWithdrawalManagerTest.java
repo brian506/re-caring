@@ -1,12 +1,10 @@
 package com.recaring.member.implement;
 
-import com.recaring.auth.dataaccess.entity.LocalAuth;
 import com.recaring.auth.dataaccess.repository.LocalAuthRepository;
 import com.recaring.auth.dataaccess.repository.OAuthRepository;
 import com.recaring.auth.fixture.AuthFixture;
 import com.recaring.auth.implement.RefreshTokenWriter;
 import com.recaring.auth.implement.local.LocalAuthAuthenticator;
-import com.recaring.auth.implement.local.LocalAuthReader;
 import com.recaring.auth.vo.Password;
 import com.recaring.care.implement.CareInvitationWriter;
 import com.recaring.care.implement.CareRelationshipManager;
@@ -55,7 +53,6 @@ class MemberWithdrawalManagerTest {
 
     @Mock private MemberReader memberReader;
     @Mock private MemberWriter memberWriter;
-    @Mock private LocalAuthReader localAuthReader;
     @Mock private LocalAuthAuthenticator localAuthAuthenticator;
     @Mock private MemberWithdrawalRepository memberWithdrawalRepository;
 
@@ -111,7 +108,7 @@ class MemberWithdrawalManagerTest {
     }
 
     @Test
-    @DisplayName("탈퇴 이력에는 삭제되기 전 회원의 memberKey·이메일·역할이 그대로 남는다")
+    @DisplayName("탈퇴 이력에는 삭제되기 전 회원의 memberKey·역할이 그대로 남는다")
     void withdraw_records_identity_of_the_deleted_member() {
         // Given
         givenWithdrawableMember();
@@ -123,7 +120,6 @@ class MemberWithdrawalManagerTest {
         then(memberWithdrawalRepository).should().save(withdrawalCaptor.capture());
         MemberWithdrawal withdrawal = withdrawalCaptor.getValue();
         assertThat(withdrawal.getMemberKey()).isEqualTo(MEMBER_KEY);
-        assertThat(withdrawal.getEmail()).isEqualTo(AuthFixture.EMAIL);
         assertThat(withdrawal.getRole()).isEqualTo(MemberRole.WARD);
     }
 
@@ -148,8 +144,6 @@ class MemberWithdrawalManagerTest {
 
     private void givenWithdrawableMember() {
         Member member = MemberFixture.createWardMember(MemberFixture.PHONE);
-        LocalAuth localAuth = AuthFixture.createLocalAuth(MEMBER_KEY);
         given(memberReader.findByMemberKey(MEMBER_KEY)).willReturn(member);
-        given(localAuthReader.findByMemberKey(MEMBER_KEY)).willReturn(localAuth);
     }
 }

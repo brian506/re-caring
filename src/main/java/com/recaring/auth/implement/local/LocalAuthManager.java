@@ -27,11 +27,8 @@ public class LocalAuthManager {
         if (memberReader.existsByPhone(member.phone())) {
             throw new AppException(ErrorType.ALREADY_REGISTERED_PHONE);
         }
-        if (localAuthRepository.existsByEmail(member.email().value())) {
-            throw new AppException(ErrorType.ALREADY_REGISTERED_EMAIL);
-        }
         String memberKey = memberWriter.registerLocalMember(member);
-        localAuthRepository.save(LocalAuth.of(memberKey, member.email().value(), member.password().value()));
+        localAuthRepository.save(LocalAuth.of(memberKey, member.password().value()));
         termsAgreementWriter.register(memberKey);
     }
 

@@ -26,7 +26,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.time.LocalDate;
 import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -35,8 +34,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("AuthController HTTP 통합 테스트")
 class AuthControllerTest extends AbstractIntegrationTest {
-
-    private static final String FIND_EMAIL = "findme@example.com";
 
     private static final String TOKEN_KEY_PREFIX = "phone:token:";
     private static final long REFRESH_EXPIRATION_MS = AuthFixture.REFRESH_EXPIRATION_MS;
@@ -82,10 +79,10 @@ class AuthControllerTest extends AbstractIntegrationTest {
         return token;
     }
 
-    private Member prepareLocalMember(String phone, String email, String rawPassword) {
+    private Member prepareLocalMember(String phone, String rawPassword) {
         Member member = memberRepository.save(MemberFixture.createMember(phone));
         localAuthRepository.save(AuthFixture.createLocalAuth(
-                member.getMemberKey(), email, passwordEncoder.encode(rawPassword)));
+                member.getMemberKey(), passwordEncoder.encode(rawPassword)));
         return member;
     }
 
@@ -116,7 +113,6 @@ class AuthControllerTest extends AbstractIntegrationTest {
                 .body("""
                         {
                             "verificationToken": "%s",
-                            "email": "newuser@example.com",
                             "password": "%s",
                             "name": "%s",
                             "birth": "1990-01-01",
@@ -135,8 +131,7 @@ class AuthControllerTest extends AbstractIntegrationTest {
         Member saved = memberRepository.findByPhone(SmsFixture.PHONE).orElseThrow();
         assertThat(saved.getName()).isEqualTo(MemberFixture.NAME);
 
-        LocalAuth localAuth = localAuthRepository.findByEmail("newuser@example.com").orElseThrow();
-        assertThat(localAuth.getMemberKey()).isEqualTo(saved.getMemberKey());
+        LocalAuth localAuth = localAuthRepository.findByMemberKey(saved.getMemberKey()).orElseThrow();
         assertThat(localAuth.getPassword()).isNotEqualTo(AuthFixture.RAW_PASSWORD);
         assertThat(passwordEncoder.matches(AuthFixture.RAW_PASSWORD, localAuth.getPassword())).isTrue();
 
@@ -154,7 +149,6 @@ class AuthControllerTest extends AbstractIntegrationTest {
                 .body("""
                         {
                             "verificationToken": "%s",
-                            "email": "fail@example.com",
                             "password": "%s",
                             "name": "홍길동",
                             "birth": "1990-01-01",
@@ -170,14 +164,14 @@ class AuthControllerTest extends AbstractIntegrationTest {
                 .expectBody()
                 .jsonPath("$.error.errorCode").isEqualTo("E4002");
 
-        assertThat(localAuthRepository.findByEmail("fail@example.com")).isEmpty();
+        assertThat(localAuthRepository.count()).isZero();
         assertThat(memberRepository.count()).isZero();
     }
 
     @Test
-    @DisplayName("POST /api/v1/auth/sign-up - 인증 토큰은 1회용이라 이메일만 바꿔 다시 쓸 수 없다")
+    @DisplayName("POST /api/v1/auth/sign-up - 인증 토큰은 1회용이라 가입이 실패한 뒤 같은 토큰으로 다시 시도할 수 없다")
     void signUp_consumes_verification_token() {
-        prepareLocalMember(MemberFixture.OTHER_PHONE, "taken@example.com", AuthFixture.RAW_PASSWORD);
+        prepareLocalMember(SmsFixture.PHONE, AuthFixture.RAW_PASSWORD);
         String verificationToken = prepareVerificationToken(SmsFixture.PHONE);
 
         client.post()
@@ -186,7 +180,6 @@ class AuthControllerTest extends AbstractIntegrationTest {
                 .body("""
                         {
                             "verificationToken": "%s",
-                            "email": "taken@example.com",
                             "password": "%s",
                             "name": "홍길동",
                             "birth": "1990-01-01",
@@ -206,7 +199,6 @@ class AuthControllerTest extends AbstractIntegrationTest {
                 .body("""
                         {
                             "verificationToken": "%s",
-                            "email": "free@example.com",
                             "password": "%s",
                             "name": "홍길동",
                             "birth": "1990-01-01",
@@ -223,45 +215,13 @@ class AuthControllerTest extends AbstractIntegrationTest {
                 .jsonPath("$.error.errorCode").isEqualTo("E4002");
 
         assertThat(memberRepository.count()).isEqualTo(1);
-        assertThat(localAuthRepository.findByEmail("free@example.com")).isEmpty();
-    }
-
-    @Test
-    @DisplayName("POST /api/v1/auth/sign-up - 이미 가입된 이메일이면 회원이 추가되지 않는다")
-    void signUp_fail_when_email_already_registered() {
-        prepareLocalMember(MemberFixture.OTHER_PHONE, "duplicate@example.com", AuthFixture.RAW_PASSWORD);
-        String verificationToken = prepareVerificationToken(SmsFixture.PHONE);
-
-        client.post()
-                .uri("/api/v1/auth/sign-up")
-                .contentType(MediaType.APPLICATION_JSON)
-                .body("""
-                        {
-                            "verificationToken": "%s",
-                            "email": "duplicate@example.com",
-                            "password": "%s",
-                            "name": "홍길동",
-                            "birth": "1990-01-01",
-                            "gender": "MALE",
-                            "role": "GUARDIAN",
-                            "isTermsOfServiceAgreed": true,
-                            "isLocationServiceAgreed": true,
-                            "isPrivacyPolicyAgreed": true
-                        }
-                        """.formatted(verificationToken, AuthFixture.RAW_PASSWORD))
-                .exchange()
-                .expectStatus().isEqualTo(HttpStatus.CONFLICT)
-                .expectBody()
-                .jsonPath("$.error.errorCode").isEqualTo("E3007");
-
-        assertThat(memberRepository.count()).isEqualTo(1);
-        assertThat(memberRepository.findByPhone(SmsFixture.PHONE)).isEmpty();
+        assertThat(localAuthRepository.count()).isEqualTo(1);
     }
 
     @Test
     @DisplayName("POST /api/v1/auth/sign-up - 이미 가입된 전화번호면 회원이 추가되지 않는다")
     void signUp_fail_when_phone_already_registered() {
-        prepareLocalMember(SmsFixture.PHONE, "existing@example.com", AuthFixture.RAW_PASSWORD);
+        prepareLocalMember(SmsFixture.PHONE, AuthFixture.RAW_PASSWORD);
         String verificationToken = prepareVerificationToken(SmsFixture.PHONE);
 
         client.post()
@@ -270,7 +230,6 @@ class AuthControllerTest extends AbstractIntegrationTest {
                 .body("""
                         {
                             "verificationToken": "%s",
-                            "email": "another@example.com",
                             "password": "%s",
                             "name": "홍길동",
                             "birth": "1990-01-01",
@@ -287,24 +246,24 @@ class AuthControllerTest extends AbstractIntegrationTest {
                 .jsonPath("$.error.errorCode").isEqualTo("E3006");
 
         assertThat(memberRepository.count()).isEqualTo(1);
-        assertThat(localAuthRepository.findByEmail("another@example.com")).isEmpty();
+        assertThat(localAuthRepository.count()).isEqualTo(1);
         assertThat(membersTermsAgreementRepository.count()).isZero();
     }
 
     @Test
     @DisplayName("POST /api/v1/auth/sign-in/local - 로그인에 성공하면 Access Token은 바디로, Refresh Token은 쿠키와 DB에 남는다")
     void signIn_success() {
-        Member member = prepareLocalMember(SmsFixture.PHONE, "login@example.com", AuthFixture.RAW_PASSWORD);
+        Member member = prepareLocalMember(SmsFixture.PHONE, AuthFixture.RAW_PASSWORD);
 
         client.post()
                 .uri("/api/v1/auth/sign-in/local")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body("""
                         {
-                            "email": "login@example.com",
+                            "phone": "%s",
                             "password": "%s"
                         }
-                        """.formatted(AuthFixture.RAW_PASSWORD))
+                        """.formatted(SmsFixture.PHONE, AuthFixture.RAW_PASSWORD))
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
@@ -319,17 +278,17 @@ class AuthControllerTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("POST /api/v1/auth/sign-in/local - 비밀번호가 틀리면 토큰을 발급하지 않는다")
     void signIn_fail_with_wrong_password() {
-        prepareLocalMember(MemberFixture.OTHER_PHONE, "user@example.com", AuthFixture.RAW_PASSWORD);
+        prepareLocalMember(MemberFixture.OTHER_PHONE, AuthFixture.RAW_PASSWORD);
 
         client.post()
                 .uri("/api/v1/auth/sign-in/local")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body("""
                         {
-                            "email": "user@example.com",
+                            "phone": "%s",
                             "password": "wrongPass1"
                         }
-                        """)
+                        """.formatted(MemberFixture.OTHER_PHONE))
                 .exchange()
                 .expectStatus().isBadRequest()
                 .expectBody()
@@ -339,9 +298,31 @@ class AuthControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @DisplayName("POST /api/v1/auth/sign-in/local - 가입되지 않은 전화번호면 NOT_FOUND_ACCOUNT로 거절하고 토큰을 발급하지 않는다")
+    void signIn_fail_with_unregistered_phone() {
+        prepareLocalMember(SmsFixture.PHONE, AuthFixture.RAW_PASSWORD);
+
+        client.post()
+                .uri("/api/v1/auth/sign-in/local")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {
+                            "phone": "%s",
+                            "password": "%s"
+                        }
+                        """.formatted(MemberFixture.UNREGISTERED_PHONE, AuthFixture.RAW_PASSWORD))
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.error.errorCode").isEqualTo("E2016");
+
+        assertThat(refreshTokenRepository.count()).isZero();
+    }
+
+    @Test
     @DisplayName("POST /api/v1/auth/refresh - 저장된 리프레시 토큰으로 갱신하면 기존 토큰이 폐기되고 새 토큰이 저장된다")
     void refresh_success() {
-        Member member = prepareLocalMember(SmsFixture.PHONE, "refresh@example.com", AuthFixture.RAW_PASSWORD);
+        Member member = prepareLocalMember(SmsFixture.PHONE, AuthFixture.RAW_PASSWORD);
         String oldRefreshToken = prepareStoredRefreshToken(member);
 
         client.post()
@@ -361,7 +342,7 @@ class AuthControllerTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("POST /api/v1/auth/refresh - DB에 없는 리프레시 토큰이면 갱신되지 않는다")
     void refresh_fail_when_token_not_stored() {
-        Member member = prepareLocalMember(SmsFixture.PHONE, "refresh@example.com", AuthFixture.RAW_PASSWORD);
+        Member member = prepareLocalMember(SmsFixture.PHONE, AuthFixture.RAW_PASSWORD);
         String unknownToken = jwtGenerator.generateJwt(
                 new TokenPayload(member.getMemberKey(), member.getRole(), new Date())
         ).refreshToken();
@@ -391,7 +372,7 @@ class AuthControllerTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("POST /api/v1/auth/sign-out - 로그아웃하면 저장된 리프레시 토큰이 삭제된다")
     void signOut_success() {
-        Member member = prepareLocalMember(SmsFixture.PHONE, "signout@example.com", AuthFixture.RAW_PASSWORD);
+        Member member = prepareLocalMember(SmsFixture.PHONE, AuthFixture.RAW_PASSWORD);
         String refreshToken = prepareStoredRefreshToken(member);
 
         client.post()
@@ -408,7 +389,7 @@ class AuthControllerTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("POST /api/v1/auth/sign-out - fcmToken을 함께 보내면 해당 기기의 FCM 토큰도 삭제된다")
     void signOut_deletes_fcmToken_when_provided() {
-        Member member = prepareLocalMember(SmsFixture.PHONE, "signout@example.com", AuthFixture.RAW_PASSWORD);
+        Member member = prepareLocalMember(SmsFixture.PHONE, AuthFixture.RAW_PASSWORD);
         String refreshToken = prepareStoredRefreshToken(member);
         fcmDeviceTokenRepository.save(
                 NotificationFixture.guardianFcmDeviceToken(NotificationFixture.GUARDIAN_FCM_TOKEN));
@@ -445,7 +426,7 @@ class AuthControllerTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("POST /api/v1/auth/password - 인증된 전화번호의 계정 비밀번호가 새 값으로 교체된다")
     void resetPassword_success() {
-        Member member = prepareLocalMember(SmsFixture.PHONE, "reset@example.com", AuthFixture.RAW_PASSWORD);
+        Member member = prepareLocalMember(SmsFixture.PHONE, AuthFixture.RAW_PASSWORD);
         String smsToken = prepareVerificationToken(SmsFixture.PHONE);
 
         client.post()
@@ -470,7 +451,7 @@ class AuthControllerTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("POST /api/v1/auth/password - 인증되지 않은 smsToken이면 비밀번호가 그대로 유지된다")
     void resetPassword_fail_when_token_not_verified() {
-        Member member = prepareLocalMember(SmsFixture.PHONE, "reset@example.com", AuthFixture.RAW_PASSWORD);
+        Member member = prepareLocalMember(SmsFixture.PHONE, AuthFixture.RAW_PASSWORD);
 
         client.post()
                 .uri("/api/v1/auth/password")
@@ -488,27 +469,5 @@ class AuthControllerTest extends AbstractIntegrationTest {
 
         LocalAuth unchanged = localAuthRepository.findByMemberKey(member.getMemberKey()).orElseThrow();
         assertThat(passwordEncoder.matches(AuthFixture.RAW_PASSWORD, unchanged.getPassword())).isTrue();
-    }
-
-    @Test
-    @DisplayName("GET /api/v1/auth/email - 이름/생년월일/전화번호로 마스킹된 이메일을 조회한다")
-    void findEmail_success() {
-        Member member = memberRepository.save(MemberFixture.createMember(
-                "01099998888", "김검색", LocalDate.of(1995, 5, 5), MemberFixture.GENDER));
-        localAuthRepository.save(AuthFixture.createLocalAuth(
-                member.getMemberKey(), FIND_EMAIL, AuthFixture.ENCODED_PASSWORD));
-
-        client.get()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/api/v1/auth/email")
-                        .queryParam("name", "김검색")
-                        .queryParam("birth", "1995-05-05")
-                        .queryParam("phone", "01099998888")
-                        .build())
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$.resultType").isEqualTo("SUCCESS")
-                .jsonPath("$.data.email").isEqualTo("fin****@example.com");
     }
 }

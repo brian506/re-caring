@@ -8,9 +8,5 @@ import java.util.Optional;
 
 public interface LocalAuthRepository extends JpaRepository<LocalAuth, Long>, LocalAuthRepositoryCustom {
 
-    Optional<LocalAuth> findByEmail(String email);
-
     Optional<LocalAuth> findByMemberKey(String memberKey);
-
-    boolean existsByEmail(String email);
 }

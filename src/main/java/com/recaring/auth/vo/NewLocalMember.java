@@ -8,5 +8,5 @@ import lombok.Builder;
 import java.time.LocalDate;
 
 @Builder
-public record NewLocalMember(LocalEmail email, EncodedPassword password, PhoneNumber phone, String name, LocalDate birth, Gender gender, MemberRole role) {
+public record NewLocalMember(EncodedPassword password, PhoneNumber phone, String name, LocalDate birth, Gender gender, MemberRole role) {
 }

@@ -40,11 +40,11 @@ class DeviceTokenControllerTest extends AbstractIntegrationTest {
         guardian = memberRepository.save(LocationFixture.createGuardian());
 
         String encoded = passwordEncoder.encode(AuthFixture.RAW_PASSWORD);
-        localAuthRepository.save(AuthFixture.createLocalAuth(ward.getMemberKey(), AuthFixture.WARD_EMAIL, encoded));
-        localAuthRepository.save(AuthFixture.createLocalAuth(guardian.getMemberKey(), AuthFixture.GUARDIAN_EMAIL, encoded));
+        localAuthRepository.save(AuthFixture.createLocalAuth(ward.getMemberKey(), encoded));
+        localAuthRepository.save(AuthFixture.createLocalAuth(guardian.getMemberKey(), encoded));
 
-        wardToken = extractAccessToken(AuthFixture.WARD_EMAIL, AuthFixture.RAW_PASSWORD);
-        guardianToken = extractAccessToken(AuthFixture.GUARDIAN_EMAIL, AuthFixture.RAW_PASSWORD);
+        wardToken = extractAccessToken(ward.getPhone(), AuthFixture.RAW_PASSWORD);
+        guardianToken = extractAccessToken(guardian.getPhone(), AuthFixture.RAW_PASSWORD);
     }
 
     @AfterEach
@@ -149,13 +149,13 @@ class DeviceTokenControllerTest extends AbstractIntegrationTest {
                 .getToken();
     }
 
-    private String extractAccessToken(String email, String password) {
+    private String extractAccessToken(String phone, String password) {
         byte[] body = client.post()
                 .uri("/api/v1/auth/sign-in/local")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body("""
-                        {"email": "%s", "password": "%s"}
-                        """.formatted(email, password))
+                        {"phone": "%s", "password": "%s"}
+                        """.formatted(phone, password))
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()

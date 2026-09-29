@@ -1,7 +1,6 @@
 package com.recaring.auth.business.command;
 
 import com.recaring.auth.vo.EncodedPassword;
-import com.recaring.auth.vo.LocalEmail;
 import com.recaring.auth.vo.NewLocalMember;
 import com.recaring.auth.vo.Password;
 import com.recaring.member.dataaccess.entity.Gender;
@@ -12,7 +11,6 @@ import java.time.LocalDate;
 
 public record SignUpCommand(
         String smsToken,
-        LocalEmail email,
         Password password,
         String name,
         LocalDate birth,
@@ -21,7 +19,6 @@ public record SignUpCommand(
 ) {
     public NewLocalMember toNewLocalMember(PhoneNumber phone, EncodedPassword encodedPassword) {
         return NewLocalMember.builder()
-                .email(email)
                 .password(encodedPassword)
                 .phone(phone)
                 .name(name)

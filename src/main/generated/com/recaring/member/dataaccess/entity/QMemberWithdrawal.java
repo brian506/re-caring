@@ -22,8 +22,6 @@ public class QMemberWithdrawal extends EntityPathBase<MemberWithdrawal> {
 
     public static final QMemberWithdrawal memberWithdrawal = new QMemberWithdrawal("memberWithdrawal");
 
-    public final StringPath email = createString("email");
-
     public final NumberPath<Long> id = createNumber("id", Long.class);
 
     public final StringPath memberKey = createString("memberKey");

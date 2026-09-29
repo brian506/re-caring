@@ -12,7 +12,6 @@ public record NaverUser(
         return new OAuthUser(
                 response.id(),
                 OAuthProvider.NAVER,
-                response.email(),
                 response.name()
         );
     }

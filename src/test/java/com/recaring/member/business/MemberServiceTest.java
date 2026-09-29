@@ -7,6 +7,7 @@ import com.recaring.auth.vo.Password;
 import com.recaring.member.fixture.MemberFixture;
 import com.recaring.member.implement.MemberWriter;
 import com.recaring.member.vo.ProfileAvatarCode;
+import com.recaring.sms.implement.PhoneVerificationWriter;
 import com.recaring.support.exception.AppException;
 import com.recaring.support.exception.ErrorType;
 import org.junit.jupiter.api.DisplayName;
@@ -35,6 +36,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 class MemberServiceTest {
 
     private static final String MEMBER_KEY = MemberFixture.MEMBER_KEY;
+    private static final String SMS_TOKEN = "sms-verification-token";
 
     @InjectMocks
     private MemberService memberService;
@@ -42,6 +44,7 @@ class MemberServiceTest {
     @Mock private MemberWriter memberWriter;
     @Mock private LocalAuthAuthenticator localAuthAuthenticator;
     @Mock private LocalAuthManager localAuthManager;
+    @Mock private PhoneVerificationWriter phoneVerificationWriter;
 
     @Test
     @DisplayName("비밀번호 변경은 현재 비밀번호를 확인한 뒤에야 새 비밀번호의 해시로 교체한다")
@@ -150,5 +153,22 @@ class MemberServiceTest {
                 .isInstanceOf(AppException.class)
                 .hasFieldOrPropertyWithValue("errorType", ErrorType.INVALID_PROFILE_AVATAR_CODE);
         then(memberWriter).should(never()).updateProfileAvatarCode(anyString(), any());
+    }
+
+    @Test
+    @DisplayName("전화번호 변경 시 현재 비밀번호가 틀리면 SMS 토큰을 소비하지 않고 번호도 바꾸지 않는다")
+    void changePhone_keeps_token_and_phone_when_password_mismatches() {
+        // Given
+        willThrow(new AppException(ErrorType.INVALID_PASSWORD))
+                .given(localAuthAuthenticator).verifyPassword(MEMBER_KEY, new Password(MemberFixture.WRONG_PASSWORD));
+
+        // When / Then
+        assertThatThrownBy(() -> memberService.changePhone(
+                MEMBER_KEY, SMS_TOKEN, new Password(MemberFixture.WRONG_PASSWORD)))
+                .isInstanceOf(AppException.class)
+                .hasFieldOrPropertyWithValue("errorType", ErrorType.INVALID_PASSWORD);
+
+        then(phoneVerificationWriter).should(never()).consumePhoneByToken(anyString());
+        then(memberWriter).should(never()).changePhone(anyString(), any());
     }
 }

@@ -6,7 +6,6 @@ import com.recaring.auth.business.command.SignUpCommand;
 import com.recaring.auth.dataaccess.entity.LocalAuth;
 import com.recaring.auth.dataaccess.entity.RefreshToken;
 import com.recaring.auth.vo.EncodedPassword;
-import com.recaring.auth.vo.LocalEmail;
 import com.recaring.auth.vo.NewLocalMember;
 import com.recaring.auth.vo.Password;
 import com.recaring.member.dataaccess.entity.Gender;
@@ -19,15 +18,11 @@ import java.time.LocalDate;
 
 public class AuthFixture {
 
-    public static final String EMAIL = "test@example.com";
     public static final String RAW_PASSWORD = "password1";
     public static final String ENCODED_PASSWORD = "$2a$10$encoded";
     public static final String ACCESS_TOKEN = "access-token";
     public static final String REFRESH_TOKEN = "refresh-token";
     public static final String MEMBER_KEY = "test-member-key-uuid";
-    public static final String WARD_EMAIL = "ward@test.com";
-    public static final String GUARDIAN_EMAIL = "guardian@test.com";
-    public static final String MANAGER_EMAIL = "manager@test.com";
     public static final String KAKAO_ACCESS_TOKEN = "kakao-access-token";
     public static final String NAVER_ACCESS_TOKEN = "naver-access-token";
     public static final long REFRESH_EXPIRATION_MS = 1209600000L; // 14 days
@@ -37,11 +32,11 @@ public class AuthFixture {
     }
 
     public static LocalAuth createLocalAuth(String memberKey) {
-        return createLocalAuth(memberKey, EMAIL, ENCODED_PASSWORD);
+        return createLocalAuth(memberKey, ENCODED_PASSWORD);
     }
 
-    public static LocalAuth createLocalAuth(String memberKey, String email, String encodedPassword) {
-        return LocalAuth.of(memberKey, email, encodedPassword);
+    public static LocalAuth createLocalAuth(String memberKey, String encodedPassword) {
+        return LocalAuth.of(memberKey, encodedPassword);
     }
 
     public static OAuth createOAuth(String memberKey, OAuthProvider provider, String providerMemberId) {
@@ -50,10 +45,6 @@ public class AuthFixture {
                 .provider(provider)
                 .providerMemberId(providerMemberId)
                 .build();
-    }
-
-    public static LocalEmail createLocalEmail() {
-        return new LocalEmail(EMAIL);
     }
 
     public static Password createPassword() {
@@ -67,7 +58,6 @@ public class AuthFixture {
     public static SignUpCommand createSignUpCommand(String verificationToken) {
         return new SignUpCommand(
                 verificationToken,
-                createLocalEmail(),
                 createPassword(),
                 "홍길동",
                 LocalDate.of(1990, 1, 1),
@@ -78,7 +68,6 @@ public class AuthFixture {
 
     public static NewLocalMember createNewLocalMember() {
         return NewLocalMember.builder()
-                .email(createLocalEmail())
                 .password(createEncodedPassword())
                 .phone(new PhoneNumber(MemberFixture.PHONE))
                 .name(MemberFixture.NAME)
