@@ -30,7 +30,6 @@ class NaverAuthenticatorTest {
 
     private static final String SUCCESS_RESULT_CODE = "00";
     private static final String NAVER_ID = "naver-user-9876";
-    private static final String NAVER_EMAIL = "naver-user@example.com";
     private static final String NAVER_NAME = "네이버이름";
 
     @Mock
@@ -60,13 +59,13 @@ class NaverAuthenticatorTest {
     }
 
     @Test
-    @DisplayName("네이버가 내려준 response 안의 id·이메일·이름이 OAuthUser로 매핑된다")
+    @DisplayName("네이버가 내려준 response 안의 id·이름이 OAuthUser로 매핑된다")
     void authenticate_maps_naver_response_to_oauth_user() {
         // given
         givenNaverResponds(new NaverUser(
                 SUCCESS_RESULT_CODE,
                 "success",
-                new NaverResponse(NAVER_ID, NAVER_EMAIL, NAVER_NAME)
+                new NaverResponse(NAVER_ID, NAVER_NAME)
         ));
 
         // when
@@ -75,7 +74,6 @@ class NaverAuthenticatorTest {
         // then
         assertThat(result.providerMemberId()).isEqualTo(NAVER_ID);
         assertThat(result.provider()).isEqualTo(OAuthProvider.NAVER);
-        assertThat(result.email()).isEqualTo(NAVER_EMAIL);
         assertThat(result.name()).isEqualTo(NAVER_NAME);
     }
 

@@ -58,7 +58,6 @@ class LocalAuthManagerTest {
 
     private NewLocalMember newLocalMember() {
         return NewLocalMember.builder()
-                .email(AuthFixture.createLocalEmail())
                 .password(AuthFixture.createEncodedPassword())
                 .phone(SmsFixture.createPhoneNumber())
                 .name("홍길동")
@@ -69,12 +68,11 @@ class LocalAuthManagerTest {
     }
 
     @Test
-    @DisplayName("가입되지 않은 이메일이면 회원·인증정보·약관동의가 모두 등록된다")
+    @DisplayName("가입되지 않은 전화번호면 회원·인증정보·약관동의가 모두 등록된다")
     void register_persists_member_auth_and_terms() {
         // Given
         NewLocalMember newMember = newLocalMember();
         given(memberReader.existsByPhone(SmsFixture.createPhoneNumber())).willReturn(false);
-        given(localAuthRepository.existsByEmail(AuthFixture.EMAIL)).willReturn(false);
         given(memberWriter.registerLocalMember(newMember)).willReturn(NEW_MEMBER_KEY);
 
         // When
@@ -86,7 +84,6 @@ class LocalAuthManagerTest {
         LocalAuth saved = captor.getValue();
 
         assertThat(saved.getMemberKey()).isEqualTo(NEW_MEMBER_KEY);
-        assertThat(saved.getEmail()).isEqualTo(AuthFixture.EMAIL);
         assertThat(saved.getPassword()).isEqualTo(AuthFixture.ENCODED_PASSWORD);
 
         then(termsAgreementWriter).should(times(1)).register(NEW_MEMBER_KEY);
@@ -110,24 +107,6 @@ class LocalAuthManagerTest {
     }
 
     @Test
-    @DisplayName("이미 가입된 이메일이면 ALREADY_REGISTERED_EMAIL 예외가 발생하고 아무것도 저장하지 않는다")
-    void register_throws_and_writes_nothing_when_email_already_exists() {
-        // Given
-        NewLocalMember newMember = newLocalMember();
-        given(memberReader.existsByPhone(SmsFixture.createPhoneNumber())).willReturn(false);
-        given(localAuthRepository.existsByEmail(AuthFixture.EMAIL)).willReturn(true);
-
-        // When / Then
-        assertThatThrownBy(() -> localAuthManager.register(newMember))
-                .isInstanceOf(AppException.class)
-                .hasFieldOrPropertyWithValue("errorType", ErrorType.ALREADY_REGISTERED_EMAIL);
-
-        then(memberWriter).should(never()).registerLocalMember(any());
-        then(localAuthRepository).should(never()).save(any(LocalAuth.class));
-        then(termsAgreementWriter).should(never()).register(anyString());
-    }
-
-    @Test
     @DisplayName("비밀번호를 변경하면 해당 회원의 인증정보에 새 비밀번호가 반영된다")
     void changePassword_replaces_stored_password() {
         // Given
@@ -138,7 +117,6 @@ class LocalAuthManagerTest {
         localAuthManager.changePassword(AuthFixture.MEMBER_KEY, NEW_ENCODED_PASSWORD);
 
         assertThat(existingAuth.getPassword()).isEqualTo(NEW_ENCODED_PASSWORD);
-        assertThat(existingAuth.getEmail()).isEqualTo(AuthFixture.EMAIL);
         assertThat(existingAuth.getMemberKey()).isEqualTo(AuthFixture.MEMBER_KEY);
     }
 }

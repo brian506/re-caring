@@ -4,16 +4,13 @@ import com.recaring.auth.business.CookieService;
 import com.recaring.auth.business.LocalAuthService;
 import com.recaring.auth.business.OAuthService;
 import com.recaring.auth.business.TokenRefreshService;
-import com.recaring.auth.controller.request.EmailRequest;
 import com.recaring.auth.controller.request.NewPasswordRequest;
 import com.recaring.auth.controller.request.OauthLinkRequest;
 import com.recaring.auth.controller.request.OauthSignInRequest;
 import com.recaring.auth.controller.request.SignInRequest;
 import com.recaring.auth.controller.request.SignOutRequest;
 import com.recaring.auth.controller.request.SignUpRequest;
-import com.recaring.auth.controller.response.MaskEmailResponse;
 import com.recaring.auth.controller.response.SignInResponse;
-import com.recaring.auth.vo.LocalEmail;
 import com.recaring.auth.vo.OAuthProvider;
 import com.recaring.auth.vo.Password;
 import com.recaring.security.vo.AuthMember;
@@ -49,20 +46,20 @@ public class AuthController {
     private final CookieService cookieService;
     private final TokenRefreshService refreshService;
 
-    @Operation(summary = "로컬 회원가입", description = "이메일/비밀번호로 회원가입합니다. SMS 인증 토큰이 필요합니다.")
+    @Operation(summary = "로컬 회원가입", description = "전화번호/비밀번호로 회원가입합니다. SMS 인증 토큰이 필요하며, 인증된 전화번호가 로그인 ID가 됩니다.")
     @PostMapping("/sign-up")
     public ResponseEntity<ApiResponse<Void>> signUp(@Valid @RequestBody SignUpRequest request) {
         localAuthService.signUp(request.toCommand());
         return ResponseEntity.ok(ApiResponse.success());
     }
 
-    @Operation(summary = "로컬 로그인", description = "이메일/비밀번호로 로그인합니다. Access Token은 응답 바디, Refresh Token은 HttpOnly Cookie로 발급됩니다.")
+    @Operation(summary = "로컬 로그인", description = "전화번호/비밀번호로 로그인합니다. Access Token은 응답 바디, Refresh Token은 HttpOnly Cookie로 발급됩니다.")
     @PostMapping("/sign-in/local")
     public ResponseEntity<ApiResponse<SignInResponse>> signInByLocal(
             @Valid @RequestBody SignInRequest request,
             HttpServletResponse response
     ) {
-        Jwt jwt = localAuthService.signIn(new LocalEmail(request.email()), new Password(request.password()));
+        Jwt jwt = localAuthService.signIn(new PhoneNumber(request.phone()), new Password(request.password()));
         response.addHeader(HttpHeaders.SET_COOKIE, cookieService.create(jwt.refreshToken()).toString());
         return ResponseEntity.ok(ApiResponse.success(new SignInResponse(jwt.accessToken())));
     }
@@ -119,15 +116,6 @@ public class AuthController {
     ) {
         oAuthService.link(memberKey, OAuthProvider.NAVER, request.accessToken());
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success());
-    }
-
-    @Operation(summary = "이메일 찾기", description = "이름, 생년월일, 전화번호로 가입된 이메일을 마스킹하여 반환합니다.")
-    @GetMapping("/email")
-    public ResponseEntity<ApiResponse<MaskEmailResponse>> findEmail(
-            @Valid @ModelAttribute EmailRequest request
-    ) {
-        String maskEmail = localAuthService.findEmail(request.name(), request.birth(), new PhoneNumber(request.phone()));
-        return ResponseEntity.ok(ApiResponse.success(new MaskEmailResponse(maskEmail)));
     }
 
     @Operation(summary = "비밀번호 재설정", description = "SMS 인증 후 발급받은 smsToken으로 새 비밀번호를 설정합니다.")

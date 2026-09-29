@@ -5,14 +5,17 @@ import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.dataaccess.entity.SignUpType;
 import com.recaring.member.dataaccess.repository.MemberRepository;
 import com.recaring.member.vo.ProfileAvatarCode;
+import com.recaring.sms.vo.PhoneNumber;
 import com.recaring.support.exception.AppException;
 import com.recaring.support.exception.ErrorType;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class MemberWriter {
@@ -44,6 +47,17 @@ public class MemberWriter {
         Member member = memberRepository.findByMemberKey(memberKey)
                 .orElseThrow(() -> new AppException(ErrorType.NOT_FOUND_ACCOUNT));
         member.changeProfileAvatarCode(code.value());
+    }
+
+    @Transactional
+    public void changePhone(String memberKey, PhoneNumber newPhone) {
+        if (memberRepository.existsByPhone(newPhone.value())) {
+            throw new AppException(ErrorType.ALREADY_REGISTERED_PHONE);
+        }
+        Member member = memberRepository.findByMemberKey(memberKey)
+                .orElseThrow(() -> new AppException(ErrorType.NOT_FOUND_ACCOUNT));
+        member.changePhone(newPhone.value());
+        log.info("[회원 정보 : 전화번호 변경 완료]: memberKey={}", memberKey);
     }
 
     @Transactional

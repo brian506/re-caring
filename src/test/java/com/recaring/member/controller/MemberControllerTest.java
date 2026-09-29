@@ -19,13 +19,17 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
 import java.util.Date;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.groups.Tuple.tuple;
@@ -36,6 +40,7 @@ class MemberControllerTest extends AbstractIntegrationTest {
     private static final String PASSWORD = MemberFixture.CURRENT_PASSWORD;
     private static final String NAME_20_CHARS = "가나다라마바사아자차카타파하가나다라마바";
     private static final String NAME_21_CHARS = NAME_20_CHARS + "사";
+    private static final String TOKEN_KEY_PREFIX = "phone:token:";
 
     @Autowired
     private MemberRepository memberRepository;
@@ -53,6 +58,8 @@ class MemberControllerTest extends AbstractIntegrationTest {
     private PasswordEncoder passwordEncoder;
     @Autowired
     private JwtGenerator jwtGenerator;
+    @Autowired
+    private StringRedisTemplate redisTemplate;
 
     private Member guardian;
     private Member ward;
@@ -63,8 +70,8 @@ class MemberControllerTest extends AbstractIntegrationTest {
         ward = memberRepository.save(MemberFixture.createWardMember(MemberFixture.OTHER_PHONE));
 
         String encoded = passwordEncoder.encode(PASSWORD);
-        localAuthRepository.save(AuthFixture.createLocalAuth(guardian.getMemberKey(), AuthFixture.GUARDIAN_EMAIL, encoded));
-        localAuthRepository.save(AuthFixture.createLocalAuth(ward.getMemberKey(), AuthFixture.WARD_EMAIL, encoded));
+        localAuthRepository.save(AuthFixture.createLocalAuth(guardian.getMemberKey(), encoded));
+        localAuthRepository.save(AuthFixture.createLocalAuth(ward.getMemberKey(), encoded));
         membersTermsAgreementRepository.save(MemberFixture.createTermsAgreement(guardian.getMemberKey()));
         membersTermsAgreementRepository.save(MemberFixture.createTermsAgreement(ward.getMemberKey()));
     }
@@ -77,6 +84,7 @@ class MemberControllerTest extends AbstractIntegrationTest {
         membersTermsAgreementRepository.deleteAllInBatch();
         localAuthRepository.deleteAllInBatch();
         memberRepository.deleteAllInBatch();
+        redisTemplate.getConnectionFactory().getConnection().serverCommands().flushAll();
     }
 
     private String bearerToken(Member member) {
@@ -85,13 +93,23 @@ class MemberControllerTest extends AbstractIntegrationTest {
         ).accessToken();
     }
 
+    private String prepareVerificationToken(String phone) {
+        String token = UUID.randomUUID().toString();
+        redisTemplate.opsForValue().set(TOKEN_KEY_PREFIX + token, phone, 10, TimeUnit.MINUTES);
+        return token;
+    }
+
+    private String storedPhone(Member member) {
+        return memberRepository.findByMemberKey(member.getMemberKey()).orElseThrow().getPhone();
+    }
+
     private String storedPassword(Member member) {
         return localAuthRepository.findByMemberKey(member.getMemberKey()).orElseThrow().getPassword();
     }
 
     @Test
-    @DisplayName("GET /me - 로그인한 회원 본인의 정보·이메일·약관 동의 시각이 반환된다")
-    void getMyInfo_returns_own_profile_email_and_terms() {
+    @DisplayName("GET /me - 로그인한 회원 본인의 정보·약관 동의 시각이 반환되고 이메일은 내려가지 않는다")
+    void getMyInfo_returns_own_profile_and_terms_without_email() {
         client.get()
                 .uri("/api/v1/members/me")
                 .header(HttpHeaders.AUTHORIZATION, bearerToken(guardian))
@@ -103,7 +121,7 @@ class MemberControllerTest extends AbstractIntegrationTest {
                 .jsonPath("$.data.name").isEqualTo(MemberFixture.NAME)
                 .jsonPath("$.data.phone").isEqualTo(MemberFixture.PHONE)
                 .jsonPath("$.data.role").isEqualTo(MemberRole.GUARDIAN.name())
-                .jsonPath("$.data.email").isEqualTo(AuthFixture.GUARDIAN_EMAIL)
+                .jsonPath("$.data.email").doesNotExist()
                 .jsonPath("$.data.gender").isEqualTo("남")
                 .jsonPath("$.data.termsServiceAgreedAt").isNotEmpty();
     }
@@ -327,6 +345,110 @@ class MemberControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @DisplayName("PATCH /me/phone - 새 번호 SMS 토큰과 현재 비밀번호가 맞으면 번호가 바뀌고 토큰은 소비된다")
+    void changePhone_replaces_phone_and_consumes_token() {
+        String token = prepareVerificationToken(MemberFixture.UNREGISTERED_PHONE);
+
+        client.patch()
+                .uri("/api/v1/members/me/phone")
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(guardian))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"smsToken": "%s", "password": "%s"}
+                        """.formatted(token, PASSWORD))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.resultType").isEqualTo("SUCCESS");
+
+        assertThat(storedPhone(guardian)).isEqualTo(MemberFixture.UNREGISTERED_PHONE);
+        assertThat(redisTemplate.hasKey(TOKEN_KEY_PREFIX + token)).isFalse();
+    }
+
+    @Test
+    @DisplayName("PATCH /me/phone - 새 번호가 다른 회원의 번호면 409(E3006)이고 두 회원의 번호가 모두 그대로다")
+    void changePhone_rejects_number_of_another_member() {
+        String token = prepareVerificationToken(MemberFixture.OTHER_PHONE);
+
+        client.patch()
+                .uri("/api/v1/members/me/phone")
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(guardian))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"smsToken": "%s", "password": "%s"}
+                        """.formatted(token, PASSWORD))
+                .exchange()
+                .expectStatus().isEqualTo(HttpStatus.CONFLICT)
+                .expectBody()
+                .jsonPath("$.error.errorCode").isEqualTo("E3006");
+
+        assertThat(storedPhone(guardian)).isEqualTo(MemberFixture.PHONE);
+        assertThat(storedPhone(ward)).isEqualTo(MemberFixture.OTHER_PHONE);
+    }
+
+    @Test
+    @DisplayName("PATCH /me/phone - 자기 현재 번호로 바꾸려 하면 이미 가입된 번호로 보고 409(E3006)를 반환한다")
+    void changePhone_rejects_own_current_number() {
+        String token = prepareVerificationToken(MemberFixture.PHONE);
+
+        client.patch()
+                .uri("/api/v1/members/me/phone")
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(guardian))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"smsToken": "%s", "password": "%s"}
+                        """.formatted(token, PASSWORD))
+                .exchange()
+                .expectStatus().isEqualTo(HttpStatus.CONFLICT)
+                .expectBody()
+                .jsonPath("$.error.errorCode").isEqualTo("E3006");
+
+        assertThat(storedPhone(guardian)).isEqualTo(MemberFixture.PHONE);
+    }
+
+    @Test
+    @DisplayName("PATCH /me/phone - 현재 비밀번호가 틀리면 E2017이고 번호는 그대로이며 SMS 토큰은 다시 쓸 수 있게 남는다")
+    void changePhone_rejects_wrong_password_and_keeps_token() {
+        String token = prepareVerificationToken(MemberFixture.UNREGISTERED_PHONE);
+
+        client.patch()
+                .uri("/api/v1/members/me/phone")
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(guardian))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"smsToken": "%s", "password": "%s"}
+                        """.formatted(token, MemberFixture.WRONG_PASSWORD))
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.error.errorCode").isEqualTo("E2017");
+
+        assertThat(storedPhone(guardian)).isEqualTo(MemberFixture.PHONE);
+        assertThat(redisTemplate.opsForValue().get(TOKEN_KEY_PREFIX + token))
+                .isEqualTo(MemberFixture.UNREGISTERED_PHONE);
+    }
+
+    @Test
+    @DisplayName("PATCH /me/phone - 발급된 적 없는 SMS 토큰이면 E4002이고 번호는 그대로다")
+    void changePhone_rejects_unverified_token() {
+        String unknownToken = UUID.randomUUID().toString();
+
+        client.patch()
+                .uri("/api/v1/members/me/phone")
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(guardian))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"smsToken": "%s", "password": "%s"}
+                        """.formatted(unknownToken, PASSWORD))
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.error.errorCode").isEqualTo("E4002");
+
+        assertThat(storedPhone(guardian)).isEqualTo(MemberFixture.PHONE);
+    }
+
+    @Test
     @DisplayName("DELETE /me - 비밀번호가 맞으면 회원·인증·약관이 삭제되고 탈퇴 이력이 남으며 다른 회원은 유지된다")
     void withdraw_removes_own_data_and_keeps_others() {
         client.method(HttpMethod.DELETE)
@@ -346,8 +468,8 @@ class MemberControllerTest extends AbstractIntegrationTest {
         assertThat(membersTermsAgreementRepository.findByMemberKey(guardian.getMemberKey())).isEmpty();
 
         assertThat(memberWithdrawalRepository.findAll())
-                .extracting("memberKey", "email")
-                .containsExactly(tuple(guardian.getMemberKey(), AuthFixture.GUARDIAN_EMAIL));
+                .extracting("memberKey", "role")
+                .containsExactly(tuple(guardian.getMemberKey(), MemberRole.GUARDIAN));
 
         assertThat(memberRepository.findByMemberKey(ward.getMemberKey())).isPresent();
         assertThat(localAuthRepository.findByMemberKey(ward.getMemberKey())).isPresent();

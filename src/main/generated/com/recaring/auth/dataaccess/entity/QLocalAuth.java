@@ -27,8 +27,6 @@ public class QLocalAuth extends EntityPathBase<LocalAuth> {
     //inherited
     public final DateTimePath<java.time.LocalDateTime> createdAt = _super.createdAt;
 
-    public final StringPath email = createString("email");
-
     public final NumberPath<Long> id = createNumber("id", Long.class);
 
     public final StringPath memberKey = createString("memberKey");

@@ -1,22 +1,17 @@
 package com.recaring.auth.business;
 
 import com.recaring.auth.business.command.SignUpCommand;
-import com.recaring.auth.dataaccess.entity.LocalAuth;
 import com.recaring.auth.fixture.AuthFixture;
 import com.recaring.auth.implement.RefreshTokenWriter;
-import com.recaring.auth.implement.TokenIssuer;
 import com.recaring.auth.implement.local.LocalAuthAuthenticator;
 import com.recaring.auth.implement.local.LocalAuthManager;
-import com.recaring.auth.implement.local.LocalAuthReader;
 import com.recaring.auth.vo.EncodedPassword;
-import com.recaring.auth.vo.LocalEmail;
 import com.recaring.auth.vo.NewLocalMember;
 import com.recaring.auth.vo.Password;
 import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.fixture.MemberFixture;
 import com.recaring.member.implement.MemberReader;
 import com.recaring.notification.business.FcmDeviceTokenService;
-import com.recaring.security.vo.Jwt;
 import com.recaring.sms.fixture.SmsFixture;
 import com.recaring.sms.implement.PhoneVerificationWriter;
 import com.recaring.sms.vo.PhoneNumber;
@@ -41,13 +36,8 @@ import static org.mockito.Mockito.times;
 @DisplayName("LocalAuthService 단위 테스트")
 class LocalAuthServiceTest {
 
-    private static final String MASKED_SOURCE_EMAIL = "hongildong@example.com";
-
     @InjectMocks
     private LocalAuthService localAuthService;
-
-    @Mock
-    private TokenIssuer tokenIssuer;
 
     @Mock
     private LocalAuthAuthenticator authAuthenticator;
@@ -57,9 +47,6 @@ class LocalAuthServiceTest {
 
     @Mock
     private LocalAuthManager localAuthManager;
-
-    @Mock
-    private LocalAuthReader localAuthReader;
 
     @Mock
     private RefreshTokenWriter refreshTokenWriter;
@@ -91,49 +78,6 @@ class LocalAuthServiceTest {
         NewLocalMember registered = captor.getValue();
         assertThat(registered.phone()).isEqualTo(phone);
         assertThat(registered.password()).isEqualTo(encodedPassword);
-        assertThat(registered.email()).isEqualTo(command.email());
-    }
-
-    @Test
-    @DisplayName("로그인 시 TokenIssuer를 통해 JWT가 발급된다")
-    void signIn_success() {
-        // given
-        Member member = MemberFixture.createMember();
-        LocalEmail email = AuthFixture.createLocalEmail();
-        Password password = AuthFixture.createPassword();
-        Jwt expectedJwt = AuthFixture.createJwt();
-
-        given(authAuthenticator.authenticate(email, password)).willReturn(member);
-        given(tokenIssuer.issue(member)).willReturn(expectedJwt);
-
-        // when
-        Jwt result = localAuthService.signIn(email, password);
-
-        // then
-        assertThat(result.accessToken()).isEqualTo(AuthFixture.ACCESS_TOKEN);
-        assertThat(result.refreshToken()).isEqualTo(AuthFixture.REFRESH_TOKEN);
-    }
-
-    @Test
-    @DisplayName("이메일 찾기 시 마스킹된 이메일이 반환된다")
-    void findEmail_success() {
-        // given
-        Member member = MemberFixture.createMember();
-        PhoneNumber phone = SmsFixture.createPhoneNumber();
-
-        LocalAuth localAuth = AuthFixture.createLocalAuth(
-                member.getMemberKey(), MASKED_SOURCE_EMAIL, AuthFixture.ENCODED_PASSWORD);
-
-        given(memberReader.findAccount(
-                MemberFixture.NAME, MemberFixture.BIRTH, SmsFixture.PHONE))
-                .willReturn(member);
-        given(localAuthReader.findByMemberKey(member.getMemberKey())).willReturn(localAuth);
-
-        // when
-        String maskedEmail = localAuthService.findEmail(MemberFixture.NAME, MemberFixture.BIRTH, phone);
-
-        //then
-        assertThat(maskedEmail).isEqualTo("hon****@example.com");
     }
 
     @Test

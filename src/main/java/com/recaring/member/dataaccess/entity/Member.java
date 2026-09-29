@@ -81,4 +81,9 @@ public class Member extends BaseEntity {
         update();
     }
 
+    public void changePhone(String phone) {
+        this.phone = phone;
+        update();
+    }
+
 }

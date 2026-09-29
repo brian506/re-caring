@@ -4,7 +4,6 @@ import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.support.repository.QuerydslRepositorySupport;
 import jakarta.persistence.LockModeType;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,18 +13,6 @@ public class MemberRepositoryCustomImpl extends QuerydslRepositorySupport implem
 
     protected MemberRepositoryCustomImpl() {
         super(Member.class);
-    }
-
-    @Override
-    public Optional<Member> findAccount(String name, LocalDate birth, String phone) {
-        return Optional.ofNullable(
-                selectFrom(member)
-                .where(
-                        member.name.eq(name),
-                        member.birth.eq(birth),
-                        member.phone.eq(phone)
-                ).fetchOne()
-        );
     }
 
     @Override

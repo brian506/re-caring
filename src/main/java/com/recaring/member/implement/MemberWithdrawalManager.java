@@ -4,7 +4,6 @@ import com.recaring.auth.dataaccess.repository.LocalAuthRepository;
 import com.recaring.auth.dataaccess.repository.OAuthRepository;
 import com.recaring.auth.implement.RefreshTokenWriter;
 import com.recaring.auth.implement.local.LocalAuthAuthenticator;
-import com.recaring.auth.implement.local.LocalAuthReader;
 import com.recaring.auth.vo.Password;
 import com.recaring.care.implement.CareInvitationWriter;
 import com.recaring.care.implement.CareRelationshipManager;
@@ -33,7 +32,6 @@ public class MemberWithdrawalManager {
 
     private final MemberReader memberReader;
     private final MemberWriter memberWriter;
-    private final LocalAuthReader localAuthReader;
     private final LocalAuthAuthenticator localAuthAuthenticator;
     private final MemberWithdrawalRepository memberWithdrawalRepository;
 
@@ -62,9 +60,8 @@ public class MemberWithdrawalManager {
         localAuthAuthenticator.verifyPassword(memberKey, password);
 
         Member member = memberReader.findByMemberKey(memberKey);
-        String email = localAuthReader.findByMemberKey(memberKey).getEmail();
 
-        memberWithdrawalRepository.save(MemberWithdrawal.of(memberKey, email, member.getRole()));
+        memberWithdrawalRepository.save(MemberWithdrawal.of(memberKey, member.getRole()));
 
         refreshTokenWriter.deleteByMemberKey(memberKey);
         localAuthRepository.deleteByMemberKey(memberKey);

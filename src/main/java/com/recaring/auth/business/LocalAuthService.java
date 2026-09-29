@@ -1,15 +1,12 @@
 package com.recaring.auth.business;
 
 import com.recaring.auth.business.command.SignUpCommand;
-import com.recaring.auth.vo.LocalEmail;
 import com.recaring.auth.implement.local.LocalAuthAuthenticator;
 import com.recaring.auth.implement.local.LocalAuthManager;
-import com.recaring.auth.implement.local.LocalAuthReader;
 import com.recaring.auth.implement.RefreshTokenWriter;
 import com.recaring.auth.implement.TokenIssuer;
 import com.recaring.auth.vo.EncodedPassword;
 import com.recaring.auth.vo.Password;
-import com.recaring.common.utils.MaskingUtils;
 import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.implement.MemberReader;
 import com.recaring.notification.business.FcmDeviceTokenService;
@@ -19,8 +16,6 @@ import com.recaring.sms.vo.PhoneNumber;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-
 @Service
 @RequiredArgsConstructor
 public class LocalAuthService {
@@ -29,7 +24,6 @@ public class LocalAuthService {
     private final LocalAuthAuthenticator authAuthenticator;
     private final MemberReader memberReader;
     private final LocalAuthManager localAuthManager;
-    private final LocalAuthReader localAuthReader;
     private final RefreshTokenWriter refreshTokenWriter;
     private final PhoneVerificationWriter phoneVerificationWriter;
     private final FcmDeviceTokenService fcmDeviceTokenService;
@@ -40,14 +34,9 @@ public class LocalAuthService {
         localAuthManager.register(command.toNewLocalMember(phone, encodedPassword));
     }
 
-    public Jwt signIn(LocalEmail email, Password password) {
-        Member member = authAuthenticator.authenticate(email, password);
+    public Jwt signIn(PhoneNumber phone, Password password) {
+        Member member = authAuthenticator.authenticate(phone, password);
         return tokenIssuer.issue(member);
-    }
-
-    public String findEmail(String name, LocalDate birth, PhoneNumber phone) {
-        Member member = memberReader.findAccount(name, birth, phone.value());
-        return MaskingUtils.maskEmail(localAuthReader.findByMemberKey(member.getMemberKey()).getEmail());
     }
 
     public void resetPassword(String smsToken, Password password) {

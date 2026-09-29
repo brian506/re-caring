@@ -12,7 +12,6 @@ public record KakaoUser(
         return new OAuthUser(
                 String.valueOf(id),
                 OAuthProvider.KAKAO,
-                kakaoAccount != null ? kakaoAccount.email() : null,
                 kakaoAccount != null && kakaoAccount.profile() != null
                         ? kakaoAccount.profile().nickname()
                         : null

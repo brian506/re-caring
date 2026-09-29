@@ -8,9 +8,9 @@ import com.recaring.support.exception.ErrorType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Component
@@ -33,13 +33,12 @@ public class MemberReader {
                 .orElseThrow(() -> new AppException(ErrorType.NOT_FOUND_ACCOUNT));
     }
 
-    public boolean existsByPhone(PhoneNumber phoneNumber) {
-        return memberRepository.existsByPhone(phoneNumber.value());
+    public Optional<Member> findOptionalByPhone(PhoneNumber phoneNumber) {
+        return memberRepository.findByPhone(phoneNumber.value());
     }
 
-    public Member findAccount(String name, LocalDate birth, String phone) {
-        return memberRepository.findAccount(name, birth, phone)
-                .orElseThrow(() -> new AppException(ErrorType.NOT_FOUND_ACCOUNT));
+    public boolean existsByPhone(PhoneNumber phoneNumber) {
+        return memberRepository.existsByPhone(phoneNumber.value());
     }
 
     public List<Member> findByPhones(List<String> phones) {

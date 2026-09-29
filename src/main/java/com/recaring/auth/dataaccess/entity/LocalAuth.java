@@ -20,23 +20,18 @@ public class LocalAuth extends BaseEntity {
     @Column(nullable = false, unique = true)
     private String memberKey;
 
-    @Column(nullable = false, unique = true, length = 100)
-    private String email;
-
     @Column(nullable = false)
     private String password;
 
     @Builder
-    public LocalAuth(String memberKey, String email, String password) {
+    public LocalAuth(String memberKey, String password) {
         this.memberKey = memberKey;
-        this.email = email;
         this.password = password;
     }
 
-    public static LocalAuth of(String memberKey, String email, String password) {
+    public static LocalAuth of(String memberKey, String password) {
         return LocalAuth.builder()
                 .memberKey(memberKey)
-                .email(email)
                 .password(password)
                 .build();
     }

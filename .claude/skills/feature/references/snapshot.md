@@ -21,12 +21,11 @@
 
 | 도메인 | Method | Path | 설명 |
 |--------|--------|------|------|
-| Auth | POST | `/api/v1/auth/sign-up` | 로컬 회원가입. 전화번호 중복 E3006, 이메일 중복 E3007, 선검사를 통과한 동시 요청의 UNIQUE 위반 E409 — 모두 409. `verificationToken`은 1회용(성공·실패 무관하게 소비) |
-| Auth | POST | `/api/v1/auth/sign-in` | 로컬 로그인 |
+| Auth | POST | `/api/v1/auth/sign-up` | 로컬 회원가입. 이메일 없음 — SMS 인증된 전화번호가 로그인 ID. 전화번호 중복 E3006, 선검사를 통과한 동시 요청의 UNIQUE 위반 E409 — 모두 409. `verificationToken`은 1회용(성공·실패 무관하게 소비) |
+| Auth | POST | `/api/v1/auth/sign-in/local` | 로컬 로그인. Request `{ phone, password }` (이메일 로그인 제거). 미가입 번호·비밀번호 불일치 모두 E2022(400) 하나로 응답해 가입 여부를 숨기고, 미가입 번호도 더미 해시로 비교 1회를 수행해 응답 시간을 맞춘다 |
 | Auth | POST | `/api/v1/auth/sign-in/{kakao\|naver}` | OAuth 로그인 (미연동 계정은 OAUTH_NOT_LINKED) |
 | Auth | POST | `/api/v1/auth/oauth/link/{kakao\|naver}` | OAuth 사후 연동 (JWT 인증, 로컬 가입 필수) |
 | Auth | POST | `/api/v1/auth/token/refresh` | 토큰 갱신 |
-| Auth | GET | `/api/v1/auth/email/mask` | 이메일 마스킹 조회 |
 | Auth | PATCH | `/api/v1/auth/password` | 비밀번호 변경. `verificationToken`은 1회용(성공·실패 무관하게 소비) |
 | Care | POST | `/api/v1/care/requests/ward` | 보호대상자 추가 요청 (GUARDIAN) |
 | Care | POST | `/api/v1/care/requests/manager` | 관리자 추가 요청 |
@@ -56,9 +55,10 @@
 | Notification | PATCH | `/api/v1/notifications/settings/{wardKey}/anomaly` | 이상탐지 알림 토글 수정 (5종 각각 on/off. **민감도 제거됨**) |
 | Notification | PATCH | `/api/v1/notifications/settings/{wardKey}/emergency-call` | 응급호출 알림 토글 |
 | Notification | PATCH | `/api/v1/notifications/settings/{wardKey}/battery` | 배터리 알림 토글 + 알림 받을 잔량(%) 다중 선택 (10~100, 10 단위, 개수 제한 없음). 기본값 없음 — 빈 배열이면 알림 안 감 |
-| Member | GET | `/api/v1/members/me` | 내 정보 조회 (JWT 인증, Member+이메일+약관+안심존 통합) |
+| Member | GET | `/api/v1/members/me` | 내 정보 조회 (JWT 인증, Member+약관+안심존 통합) |
 | Member | PATCH | `/api/v1/members/me` | 내 정보 수정 (이름·생년월일·비밀번호·profileAvatarCode 부분 수정, JWT 인증. 아바타는 빈 문자열이면 해제, 허용 코드 외 E3008) |
 | Member | POST | `/api/v1/members/phones` | 연락처 기반 가입 회원 조회 (GUARDIAN) |
+| Member | PATCH | `/api/v1/members/me/phone` | 전화번호(로그인 ID) 변경. Request `{ smsToken, password }` — 새 번호 SMS 인증 토큰 + 현재 비밀번호. 비밀번호 불일치 시 토큰 미소비. 새 번호 중복 E3006(409) |
 | Member | DELETE | `/api/v1/members/me` | 회원 탈퇴 |
 | Place | GET | `/api/v1/places/search?query=&latitude=&longitude=&radiusMeters=` | 장소 검색 (GUARDIAN·WARD, 카카오 로컬 키워드 검색 프록시, 최대 5건, 편향 결과가 3건 미만이거나 키워드 불일치면 전국 재검색 후 전국 결과를 앞에 두고 placeId로 병합, 결과 없음은 빈 배열 200) |
 | SafeZone | POST | `/api/v1/care/wards/{wardKey}/safe-zones` | 안심존 추가 (GUARDIAN only) |
@@ -74,7 +74,7 @@
 | Entity | Table | 주요 필드 |
 |--------|-------|---------|
 | Member | members | memberKey(UUID), role(GUARDIAN/WARD), name, phone, profileAvatarCode(nullable, 앱 번들 일러스트 16종 코드. null이면 앱이 자동 배정) |
-| LocalAuth | local_auths | account, encodedPassword, memberKey |
+| LocalAuth | local_auth | memberKey, password (로그인 ID는 `members.phone`) |
 | OAuth | oauths | provider(KAKAO/NAVER), providerId, memberKey |
 | LoginHistory | login_histories | memberKey, ip, loginAt |
 | CareRelationship | care_relationships | caregiverKey, wardKey, role(PRIMARY_GUARDIAN/GUARDIAN/MANAGER), wardNickname(nullable, 보호자별 별명. null이면 대상자 실명 사용) |
@@ -392,3 +392,4 @@ AnomalyDetectionConsumer(수동 ACK)
 | 12 | 해석 불가 알림의 무음 폐기 | `AnomalyDetectionConsumer` | 파싱 실패 메시지를 WARN 한 줄만 남기고 ACK한다. 데드레터도 지표도 없어 계약이 어긋나도 스트림·PEL은 정상으로 보인다. 실제로 `detected_at` 포맷 불일치로 알림 8건이 전량 유실된 뒤에야 DB 0행으로 발견됐다(#208). 개선안: 폐기 전용 스트림 적재 또는 폐기 건수 메트릭 노출 |
 | 13 | 컨슈머 그룹에 죽은 컨슈머 누적 | `AnomalyStreamProperties` | 컨슈머 이름이 호스트명이라 배포마다 새 이름이 등록되고 옛 항목은 남는다(dev 기준 7개). 각 컨슈머의 PEL이 비어 있어 유실은 없지만 `XINFO CONSUMERS` 판독이 어려워진다. 개선안: 기동 시 idle이 충분히 큰 컨슈머 `XGROUP DELCONSUMER` |
 | 14 | 탈퇴한 대상자의 알림에 평가 UI가 보인다 | `NotificationReader` | 목록의 `feedbackEligible`은 `eventType`만 본다. 대상자가 탈퇴하면 `anomaly_detections`는 지워지는데 `notifications`는 남아(#149) 평가 UI는 뜨고 제출하면 E9009로 거부된다. 해소하려면 목록 쿼리에서도 탐지 행 존재를 확인해야 하는데 페이지당 조회가 하나 더 는다. #149(탈퇴 시 notifications 미삭제)를 해결하면 함께 사라진다 |
+| 15 | 번호 재할당 계정 탈취 | `LocalAuthService.resetPassword` | 로그인 ID·비밀번호 재설정이 모두 전화번호 기반이라, 해지 후 재할당된 번호의 새 주인이 SMS 재설정으로 이전 계정에 접근 가능. 새 주인은 가입도 E3006으로 막힘. 장기 미접속 계정 정리나 추가 본인확인 필요 |

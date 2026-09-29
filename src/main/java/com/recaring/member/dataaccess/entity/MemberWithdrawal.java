@@ -29,9 +29,6 @@ public class MemberWithdrawal {
     @Column(name = "member_key", nullable = false)
     private String memberKey;
 
-    @Column(name = "email", nullable = false)
-    private String email;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)
     private MemberRole role;
@@ -39,14 +36,13 @@ public class MemberWithdrawal {
     @Column(name = "withdrawn_at", nullable = false)
     private LocalDateTime withdrawnAt;
 
-    private MemberWithdrawal(String memberKey, String email, MemberRole role) {
+    private MemberWithdrawal(String memberKey, MemberRole role) {
         this.memberKey = memberKey;
-        this.email = email;
         this.role = role;
         this.withdrawnAt = LocalDateTime.now();
     }
 
-    public static MemberWithdrawal of(String memberKey, String email, MemberRole role) {
-        return new MemberWithdrawal(memberKey, email, role);
+    public static MemberWithdrawal of(String memberKey, MemberRole role) {
+        return new MemberWithdrawal(memberKey, role);
     }
 }

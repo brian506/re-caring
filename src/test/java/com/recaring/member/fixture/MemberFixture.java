@@ -26,7 +26,6 @@ public class MemberFixture {
     public static final String UPDATED_NAME = "김철수";
     public static final LocalDate UPDATED_BIRTH = LocalDate.of(1995, 5, 5);
 
-    public static final String EMAIL = "member@example.com";
     public static final String CURRENT_PASSWORD = "current1a";
     public static final String NEW_PASSWORD = "newpass2b";
     public static final String WRONG_PASSWORD = "wrongpw9z";

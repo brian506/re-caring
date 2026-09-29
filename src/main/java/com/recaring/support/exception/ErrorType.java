@@ -31,7 +31,6 @@ public enum ErrorType {
     INVALID_ACCOUNT_LENGTH(HttpStatus.BAD_REQUEST, ErrorCode.E2010, "계정 길이는 6~12자리여야 합니다.", LogLevel.WARN),
     PASSWORD_IS_NULL(HttpStatus.BAD_REQUEST, ErrorCode.E2011, "비밀번호는 null일 수 없습니다.", LogLevel.WARN),
     INVALID_PASSWORD_LENGTH(HttpStatus.BAD_REQUEST, ErrorCode.E2012, "비밀번호 길이는 8~20자리여야 합니다.", LogLevel.WARN),
-    NOT_VERIFIED_EMAIL(HttpStatus.BAD_REQUEST, ErrorCode.E2013, "이메일이 인증되지 않았습니다.", LogLevel.WARN),
     INVALID_ACCOUNT_FORMAT(HttpStatus.BAD_REQUEST, ErrorCode.E2014, "계정은 영문 또는 숫자를 포함해야 합니다.", LogLevel.WARN),
     INVALID_PASSWORD_FORMAT(HttpStatus.BAD_REQUEST, ErrorCode.E2015, "비밀번호는 영문과 숫자를 포함해야 합니다.", LogLevel.WARN),
     NOT_FOUND_ACCOUNT(HttpStatus.BAD_REQUEST, ErrorCode.E2016, "존재하지 않는 계정 정보입니다.", LogLevel.WARN),
@@ -40,15 +39,13 @@ public enum ErrorType {
     OAUTH_ALREADY_LINKED(HttpStatus.CONFLICT, ErrorCode.E2019, "이미 연동된 소셜 계정입니다.", LogLevel.WARN),
     OAUTH_NOT_LINKED(HttpStatus.BAD_REQUEST, ErrorCode.E2020, "연동되지 않은 소셜 계정입니다. 로컬 회원가입 후 연동해 주세요.", LogLevel.WARN),
     REFRESH_TOKEN_NOT_FOUND(HttpStatus.BAD_REQUEST, ErrorCode.E2021, "리프레시 토큰을 찾을 수 없습니다.", LogLevel.WARN),
+    INVALID_CREDENTIALS(HttpStatus.BAD_REQUEST, ErrorCode.E2022, "전화번호 또는 비밀번호가 올바르지 않습니다.", LogLevel.INFO),
 
     // Member (E3xxx)
-    EMAIL_IS_NULL(HttpStatus.BAD_REQUEST, ErrorCode.E3000, "이메일은 필수 입력값입니다.", LogLevel.WARN),
-    INVALID_EMAIL_FORMAT(HttpStatus.BAD_REQUEST, ErrorCode.E3001, "올바른 이메일 형식이 아닙니다.", LogLevel.WARN),
     PREMIUM_ONLY(HttpStatus.BAD_REQUEST, ErrorCode.E3003, "프리미엄 구독을 한 회원만 접근 가능합니다", LogLevel.WARN),
     BASIC_ONLY(HttpStatus.BAD_REQUEST, ErrorCode.E3004, "베이식 구독을 한 회원만 접근 가능합니다", LogLevel.WARN),
     SUBSCRIPTION_ONLY(HttpStatus.BAD_REQUEST, ErrorCode.E3005, "멤버십 결제가 필요한 기능입니다.", LogLevel.WARN),
     ALREADY_REGISTERED_PHONE(HttpStatus.CONFLICT, ErrorCode.E3006, "이미 가입된 전화번호입니다.", LogLevel.WARN),
-    ALREADY_REGISTERED_EMAIL(HttpStatus.CONFLICT, ErrorCode.E3007, "이미 사용 중인 이메일입니다.", LogLevel.WARN),
     INVALID_PROFILE_AVATAR_CODE(HttpStatus.BAD_REQUEST, ErrorCode.E3008, "지원하지 않는 프로필 아바타 코드입니다.", LogLevel.WARN),
 
     // SMS / Phone Verification (E4xxx)

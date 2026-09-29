@@ -7,6 +7,8 @@ import com.recaring.support.exception.ErrorType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
+
 @Component
 @RequiredArgsConstructor
 public class LocalAuthReader {
@@ -18,12 +20,7 @@ public class LocalAuthReader {
                 .orElseThrow(() -> new AppException(ErrorType.NOT_FOUND_ACCOUNT));
     }
 
-    public LocalAuth findByEmail(String email) {
-        return authRepository.findByEmail(email)
-                .orElseThrow(() -> new AppException(ErrorType.NOT_FOUND_ACCOUNT));
-    }
-
-    public String findEmailByMemberKey(String memberKey) {
-        return findByMemberKey(memberKey).getEmail();
+    public Optional<LocalAuth> findOptionalByMemberKey(String memberKey) {
+        return authRepository.findByMemberKey(memberKey);
     }
 }

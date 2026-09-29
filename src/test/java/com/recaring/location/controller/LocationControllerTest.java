@@ -51,13 +51,13 @@ class LocationControllerTest extends AbstractIntegrationTest {
         manager = memberRepository.save(LocationFixture.createManager());
 
         String encoded = passwordEncoder.encode(AuthFixture.RAW_PASSWORD);
-        localAuthRepository.save(AuthFixture.createLocalAuth(ward.getMemberKey(), AuthFixture.WARD_EMAIL, encoded));
-        localAuthRepository.save(AuthFixture.createLocalAuth(guardian.getMemberKey(), AuthFixture.GUARDIAN_EMAIL, encoded));
-        localAuthRepository.save(AuthFixture.createLocalAuth(manager.getMemberKey(), AuthFixture.MANAGER_EMAIL, encoded));
+        localAuthRepository.save(AuthFixture.createLocalAuth(ward.getMemberKey(), encoded));
+        localAuthRepository.save(AuthFixture.createLocalAuth(guardian.getMemberKey(), encoded));
+        localAuthRepository.save(AuthFixture.createLocalAuth(manager.getMemberKey(), encoded));
 
-        guardianJwtToken = extractAccessToken(AuthFixture.GUARDIAN_EMAIL, AuthFixture.RAW_PASSWORD);
-        managerJwtToken = extractAccessToken(AuthFixture.MANAGER_EMAIL, AuthFixture.RAW_PASSWORD);
-        wardJwtToken = extractAccessToken(AuthFixture.WARD_EMAIL, AuthFixture.RAW_PASSWORD);
+        guardianJwtToken = extractAccessToken(guardian.getPhone(), AuthFixture.RAW_PASSWORD);
+        managerJwtToken = extractAccessToken(manager.getPhone(), AuthFixture.RAW_PASSWORD);
+        wardJwtToken = extractAccessToken(ward.getPhone(), AuthFixture.RAW_PASSWORD);
 
         WardDeviceToken deviceToken = DeviceFixture.createDeviceToken(ward.getMemberKey());
         wardDeviceTokenRepository.save(deviceToken);
@@ -219,13 +219,13 @@ class LocationControllerTest extends AbstractIntegrationTest {
                 .exchange();
     }
 
-    private String extractAccessToken(String email, String password) {
+    private String extractAccessToken(String phone, String password) {
         byte[] body = client.post()
                 .uri("/api/v1/auth/sign-in/local")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body("""
-                        {"email": "%s", "password": "%s"}
-                        """.formatted(email, password))
+                        {"phone": "%s", "password": "%s"}
+                        """.formatted(phone, password))
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()

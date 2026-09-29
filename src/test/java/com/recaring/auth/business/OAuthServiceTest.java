@@ -79,7 +79,7 @@ class OAuthServiceTest {
     @DisplayName("연동된 소셜 계정으로 로그인하면 연동된 회원의 JWT가 발급된다")
     void signIn_issues_jwt_for_linked_member() {
         // given
-        OAuthUser oAuthUser = new OAuthUser(KAKAO_MEMBER_ID, OAuthProvider.KAKAO, "user@example.com", "카카오사용자");
+        OAuthUser oAuthUser = new OAuthUser(KAKAO_MEMBER_ID, OAuthProvider.KAKAO, "카카오사용자");
         OAuth oAuth = AuthFixture.createOAuth(LINKED_MEMBER_KEY, OAuthProvider.KAKAO, KAKAO_MEMBER_ID);
         Member linkedMember = MemberFixture.createMemberWithKey(LINKED_MEMBER_KEY, MemberFixture.PHONE);
 
@@ -102,7 +102,7 @@ class OAuthServiceTest {
     @DisplayName("연동되지 않은 소셜 계정으로 로그인하면 OAUTH_NOT_LINKED 예외가 발생한다")
     void signIn_fails_when_not_linked() {
         // given
-        OAuthUser oAuthUser = new OAuthUser(NAVER_MEMBER_ID, OAuthProvider.NAVER, "newuser@example.com", "네이버사용자");
+        OAuthUser oAuthUser = new OAuthUser(NAVER_MEMBER_ID, OAuthProvider.NAVER, "네이버사용자");
 
         given(naverAuthenticator.supports(OAuthProvider.NAVER)).willReturn(true);
         given(naverAuthenticator.authenticate(NAVER_ACCESS_TOKEN)).willReturn(oAuthUser);
@@ -137,7 +137,7 @@ class OAuthServiceTest {
     @DisplayName("소셜 연동 시 로그인한 회원과 인증된 소셜 식별자가 함께 전달된다")
     void link_success() {
         // given
-        OAuthUser oAuthUser = new OAuthUser(KAKAO_MEMBER_ID, OAuthProvider.KAKAO, "user@example.com", "카카오사용자");
+        OAuthUser oAuthUser = new OAuthUser(KAKAO_MEMBER_ID, OAuthProvider.KAKAO, "카카오사용자");
 
         given(kakaoAuthenticator.supports(OAuthProvider.KAKAO)).willReturn(true);
         given(kakaoAuthenticator.authenticate(KAKAO_ACCESS_TOKEN)).willReturn(oAuthUser);

@@ -21,13 +21,12 @@ public record MyInfoResponse(
         MemberRole role,
         SubscriptionType subscriptionType,
         SignUpType signUpType,
-        String email,
         LocalDateTime termsServiceAgreedAt,
         LocalDateTime termsPrivacyAgreedAt,
         LocalDateTime termsLocationAgreedAt,
         List<SafeZoneInfo> safeZones
 ) {
-    public static MyInfoResponse of(Member member, String email, MembersTermsAgreement termsAgreement,
+    public static MyInfoResponse of(Member member, MembersTermsAgreement termsAgreement,
                                     List<SafeZoneInfo> safeZones) {
         return new MyInfoResponse(
                 member.getMemberKey(),
@@ -39,7 +38,6 @@ public record MyInfoResponse(
                 member.getRole(),
                 member.getSubscriptionType(),
                 member.getSignUpType(),
-                email,
                 termsAgreement.getTermsServiceAgreedAt(),
                 termsAgreement.getTermsPrivacyAgreedAt(),
                 termsAgreement.getTermsLocationAgreedAt(),

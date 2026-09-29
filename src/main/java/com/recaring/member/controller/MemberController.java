@@ -2,6 +2,7 @@ package com.recaring.member.controller;
 
 import com.recaring.auth.vo.Password;
 import com.recaring.member.business.MemberService;
+import com.recaring.member.controller.request.ChangePhoneRequest;
 import com.recaring.member.controller.request.SearchByPhonesRequest;
 import com.recaring.member.controller.request.UpdateMyInfoRequest;
 import com.recaring.member.controller.request.WithdrawRequest;
@@ -51,7 +52,7 @@ public class MemberController {
             summary = "내 정보 조회",
             description = """
                     JWT 인증 기반으로 본인의 회원 정보를 조회합니다.
-                    회원 기본 정보, 이메일, 약관 동의 시각을 반환합니다.
+                    회원 기본 정보, 약관 동의 시각을 반환합니다.
                     """
     )
     @GetMapping("/me")
@@ -77,6 +78,23 @@ public class MemberController {
     ) {
         memberService.updateMyInfo(memberKey, request.name(), request.birth(), request.currentPassword(),
                 request.newPassword(), request.profileAvatarCode());
+        return ResponseEntity.ok(ApiResponse.success());
+    }
+
+    @Operation(
+            summary = "전화번호 변경",
+            description = """
+                    새 전화번호로 SMS 인증을 마친 뒤 받은 smsToken과 현재 비밀번호로 로그인 전화번호를 변경합니다.
+                    smsToken은 1회용이며, 비밀번호가 틀리면 소비되지 않습니다.
+                    새 번호가 이미 가입된 번호면 409(E3006)입니다. 인증 단계의 registered=true면 앱에서 먼저 막아 주세요.
+                    """
+    )
+    @PatchMapping("/me/phone")
+    public ResponseEntity<ApiResponse<Void>> changePhone(
+            @AuthMember String memberKey,
+            @Valid @RequestBody ChangePhoneRequest request
+    ) {
+        memberService.changePhone(memberKey, request.smsToken(), new Password(request.password()));
         return ResponseEntity.ok(ApiResponse.success());
     }
 

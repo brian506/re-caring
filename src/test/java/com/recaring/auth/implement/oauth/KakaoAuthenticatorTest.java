@@ -30,7 +30,6 @@ class KakaoAuthenticatorTest {
     private static final String AUTHORIZATION_VALUE = "Bearer " + ACCESS_TOKEN;
 
     private static final Long KAKAO_ID = 4321L;
-    private static final String KAKAO_EMAIL = "kakao-user@example.com";
     private static final String KAKAO_NICKNAME = "카카오닉네임";
 
     @Mock
@@ -60,12 +59,12 @@ class KakaoAuthenticatorTest {
     }
 
     @Test
-    @DisplayName("카카오가 내려준 id·이메일·닉네임이 OAuthUser로 매핑된다")
+    @DisplayName("카카오가 내려준 id·닉네임이 OAuthUser로 매핑된다")
     void authenticate_maps_kakao_response_to_oauth_user() {
         // given
         givenKakaoResponds(new KakaoUser(
                 KAKAO_ID,
-                new KakaoAccount(KAKAO_EMAIL, new KakaoProfile(KAKAO_NICKNAME))
+                new KakaoAccount(new KakaoProfile(KAKAO_NICKNAME))
         ));
 
         // when
@@ -74,12 +73,11 @@ class KakaoAuthenticatorTest {
         // then
         assertThat(result.providerMemberId()).isEqualTo("4321");
         assertThat(result.provider()).isEqualTo(OAuthProvider.KAKAO);
-        assertThat(result.email()).isEqualTo(KAKAO_EMAIL);
         assertThat(result.name()).isEqualTo(KAKAO_NICKNAME);
     }
 
     @Test
-    @DisplayName("카카오 계정 동의 항목이 비어 있으면 이메일과 이름 없이 매핑된다")
+    @DisplayName("카카오 계정 동의 항목이 비어 있으면 이름 없이 매핑된다")
     void authenticate_maps_without_account_information() {
         givenKakaoResponds(new KakaoUser(KAKAO_ID, null));
 
@@ -88,21 +86,20 @@ class KakaoAuthenticatorTest {
 
         // then
         assertThat(result.providerMemberId()).isEqualTo("4321");
-        assertThat(result.email()).isNull();
         assertThat(result.name()).isNull();
     }
 
     @Test
-    @DisplayName("카카오 프로필만 비어 있으면 이메일은 유지하고 이름만 비운다")
+    @DisplayName("카카오 프로필만 비어 있으면 이름 없이 매핑된다")
     void authenticate_maps_without_profile() {
         // given
-        givenKakaoResponds(new KakaoUser(KAKAO_ID, new KakaoAccount(KAKAO_EMAIL, null)));
+        givenKakaoResponds(new KakaoUser(KAKAO_ID, new KakaoAccount(null)));
 
         // when
         OAuthUser result = kakaoAuthenticator.authenticate(ACCESS_TOKEN);
 
         // then
-        assertThat(result.email()).isEqualTo(KAKAO_EMAIL);
+        assertThat(result.providerMemberId()).isEqualTo("4321");
         assertThat(result.name()).isNull();
     }
 
