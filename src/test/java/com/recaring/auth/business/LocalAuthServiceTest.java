@@ -3,7 +3,6 @@ package com.recaring.auth.business;
 import com.recaring.auth.business.command.SignUpCommand;
 import com.recaring.auth.fixture.AuthFixture;
 import com.recaring.auth.implement.RefreshTokenWriter;
-import com.recaring.auth.implement.TokenIssuer;
 import com.recaring.auth.implement.local.LocalAuthAuthenticator;
 import com.recaring.auth.implement.local.LocalAuthManager;
 import com.recaring.auth.vo.EncodedPassword;
@@ -13,7 +12,6 @@ import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.fixture.MemberFixture;
 import com.recaring.member.implement.MemberReader;
 import com.recaring.notification.business.FcmDeviceTokenService;
-import com.recaring.security.vo.Jwt;
 import com.recaring.sms.fixture.SmsFixture;
 import com.recaring.sms.implement.PhoneVerificationWriter;
 import com.recaring.sms.vo.PhoneNumber;
@@ -40,9 +38,6 @@ class LocalAuthServiceTest {
 
     @InjectMocks
     private LocalAuthService localAuthService;
-
-    @Mock
-    private TokenIssuer tokenIssuer;
 
     @Mock
     private LocalAuthAuthenticator authAuthenticator;
@@ -83,26 +78,6 @@ class LocalAuthServiceTest {
         NewLocalMember registered = captor.getValue();
         assertThat(registered.phone()).isEqualTo(phone);
         assertThat(registered.password()).isEqualTo(encodedPassword);
-    }
-
-    @Test
-    @DisplayName("로그인 시 TokenIssuer를 통해 JWT가 발급된다")
-    void signIn_success() {
-        // given
-        Member member = MemberFixture.createMember();
-        PhoneNumber phone = SmsFixture.createPhoneNumber();
-        Password password = AuthFixture.createPassword();
-        Jwt expectedJwt = AuthFixture.createJwt();
-
-        given(authAuthenticator.authenticate(phone, password)).willReturn(member);
-        given(tokenIssuer.issue(member)).willReturn(expectedJwt);
-
-        // when
-        Jwt result = localAuthService.signIn(phone, password);
-
-        // then
-        assertThat(result.accessToken()).isEqualTo(AuthFixture.ACCESS_TOKEN);
-        assertThat(result.refreshToken()).isEqualTo(AuthFixture.REFRESH_TOKEN);
     }
 
     @Test

@@ -429,7 +429,7 @@ class MemberControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("PATCH /me/phone - 발급되지 않았거나 이미 쓴 SMS 토큰이면 E4002이고 번호는 그대로다")
+    @DisplayName("PATCH /me/phone - 발급된 적 없는 SMS 토큰이면 E4002이고 번호는 그대로다")
     void changePhone_rejects_unverified_token() {
         String unknownToken = UUID.randomUUID().toString();
 
