@@ -22,7 +22,7 @@
 | 도메인 | Method | Path | 설명 |
 |--------|--------|------|------|
 | Auth | POST | `/api/v1/auth/sign-up` | 로컬 회원가입. 이메일 없음 — SMS 인증된 전화번호가 로그인 ID. 전화번호 중복 E3006, 선검사를 통과한 동시 요청의 UNIQUE 위반 E409 — 모두 409. `verificationToken`은 1회용(성공·실패 무관하게 소비) |
-| Auth | POST | `/api/v1/auth/sign-in/local` | 로컬 로그인. Request `{ phone, password }` (이메일 로그인 제거) |
+| Auth | POST | `/api/v1/auth/sign-in/local` | 로컬 로그인. Request `{ phone, password }` (이메일 로그인 제거). 미가입 번호·비밀번호 불일치 모두 E2022(400) 하나로 응답해 가입 여부를 숨기고, 미가입 번호도 더미 해시로 비교 1회를 수행해 응답 시간을 맞춘다 |
 | Auth | POST | `/api/v1/auth/sign-in/{kakao\|naver}` | OAuth 로그인 (미연동 계정은 OAUTH_NOT_LINKED) |
 | Auth | POST | `/api/v1/auth/oauth/link/{kakao\|naver}` | OAuth 사후 연동 (JWT 인증, 로컬 가입 필수) |
 | Auth | POST | `/api/v1/auth/token/refresh` | 토큰 갱신 |

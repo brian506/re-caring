@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Component
@@ -30,6 +31,10 @@ public class MemberReader {
     public Member findByPhone(PhoneNumber phoneNumber) {
         return memberRepository.findByPhone(phoneNumber.value())
                 .orElseThrow(() -> new AppException(ErrorType.NOT_FOUND_ACCOUNT));
+    }
+
+    public Optional<Member> findOptionalByPhone(PhoneNumber phoneNumber) {
+        return memberRepository.findByPhone(phoneNumber.value());
     }
 
     public boolean existsByPhone(PhoneNumber phoneNumber) {

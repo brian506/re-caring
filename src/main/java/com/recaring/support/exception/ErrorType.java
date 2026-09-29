@@ -39,6 +39,7 @@ public enum ErrorType {
     OAUTH_ALREADY_LINKED(HttpStatus.CONFLICT, ErrorCode.E2019, "이미 연동된 소셜 계정입니다.", LogLevel.WARN),
     OAUTH_NOT_LINKED(HttpStatus.BAD_REQUEST, ErrorCode.E2020, "연동되지 않은 소셜 계정입니다. 로컬 회원가입 후 연동해 주세요.", LogLevel.WARN),
     REFRESH_TOKEN_NOT_FOUND(HttpStatus.BAD_REQUEST, ErrorCode.E2021, "리프레시 토큰을 찾을 수 없습니다.", LogLevel.WARN),
+    INVALID_CREDENTIALS(HttpStatus.BAD_REQUEST, ErrorCode.E2022, "전화번호 또는 비밀번호가 올바르지 않습니다.", LogLevel.INFO),
 
     // Member (E3xxx)
     PREMIUM_ONLY(HttpStatus.BAD_REQUEST, ErrorCode.E3003, "프리미엄 구독을 한 회원만 접근 가능합니다", LogLevel.WARN),
