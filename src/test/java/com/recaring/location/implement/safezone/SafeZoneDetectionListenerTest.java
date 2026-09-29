@@ -42,6 +42,9 @@ class SafeZoneDetectionListenerTest {
     // GPS 좌표에서 충분히 멀어 어떤 반경으로도 포함되지 않는 오프셋.
     private static final double FAR_OFFSET = 1.0;
 
+    // Keeps the GPS inside the zone while making the zone center differ from the GPS coordinates.
+    private static final double ZONE_CENTER_OFFSET = 0.0003;
+
     @InjectMocks
     private SafeZoneDetectionListener safeZoneDetectionListener;
 
@@ -107,6 +110,21 @@ class SafeZoneDetectionListenerTest {
         assertThat(published.safeZoneKey()).isEqualTo(HOME_KEY);
         assertThat(published.safeZoneName()).isEqualTo(HOME_NAME);
         assertThat(published.detectedAt()).isEqualTo(LocationFixture.MEASURED_AT);
+    }
+
+    @Test
+    @DisplayName("진입 이벤트에는 전이를 일으킨 GPS 좌표가 위도·경도 순서 그대로 실린다")
+    void onGpsSaved_publishes_entered_with_transition_coordinates() {
+        givenZones(SafeZoneFixture.createSafeZoneInfoAt(
+                HOME_KEY, HOME_NAME, LocationFixture.LATITUDE + ZONE_CENTER_OFFSET, LocationFixture.LONGITUDE));
+        givenPreviousKeys(Set.of(HOME_KEY), Set.of());
+
+        safeZoneDetectionListener.onGpsSaved(gpsSavedEvent());
+
+        then(eventPublisher).should(times(1)).publishEvent(eventCaptor.capture());
+        SafeZoneEnteredEvent published = (SafeZoneEnteredEvent) eventCaptor.getValue();
+        assertThat(published.latitude()).isEqualTo(LocationFixture.LATITUDE);
+        assertThat(published.longitude()).isEqualTo(LocationFixture.LONGITUDE);
     }
 
     @Test

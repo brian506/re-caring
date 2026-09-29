@@ -39,6 +39,9 @@ public class NotificationFixture {
     public static final String ANOMALY_BODY = "김소연님이 지정된 경로에서 이탈했습니다.";
     public static final String ANOMALY_EVIDENCE = "{name} 님이 지정된 경로에서 이탈했습니다.";
     public static final LocalDateTime ANOMALY_RECORDED_AT = LocationFixture.DETECTED_AT;
+    public static final String SAFE_ZONE_EVENT_TYPE = "SAFE_ZONE_EXITED";
+    public static final String SAFE_ZONE_TITLE = "안심존 이탈 알림";
+    public static final String SAFE_ZONE_BODY = "김소연님이 안심존 1에서 벗어났어요.";
     public static final Long FEEDBACK_NOTIFICATION_ID = 30L;
     public static final String FEEDBACK_COMMENT = "집에 계셨어요";
 
@@ -196,6 +199,31 @@ public class NotificationFixture {
 
     public static Notification anomalyNotificationWithId(Long id, String recipientMemberKey, Map<String, String> dataPayload) {
         return withId(id, anomalyNotification(recipientMemberKey, dataPayload));
+    }
+
+    public static Map<String, String> safeZoneDataPayload() {
+        return Map.of(
+                "type", SAFE_ZONE_EVENT_TYPE,
+                "wardKey", WARD_KEY,
+                "safeZoneKey", LocationFixture.SAFE_ZONE_KEY,
+                "recordedAt", LocationFixture.DETECTED_AT_TEXT,
+                "latitude", String.valueOf(LocationFixture.LATITUDE),
+                "longitude", String.valueOf(LocationFixture.LONGITUDE)
+        );
+    }
+
+    public static Notification safeZoneNotification(String recipientMemberKey) {
+        return Notification.builder()
+                .recipientMemberKey(recipientMemberKey)
+                .eventType(SAFE_ZONE_EVENT_TYPE)
+                .title(SAFE_ZONE_TITLE)
+                .body(SAFE_ZONE_BODY)
+                .dataPayload(safeZoneDataPayload())
+                .build();
+    }
+
+    public static Notification safeZoneNotificationWithId(Long id, String recipientMemberKey) {
+        return withId(id, safeZoneNotification(recipientMemberKey));
     }
 
     private static Notification withId(Long id, Notification notification) {

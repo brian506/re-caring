@@ -5,6 +5,7 @@ import com.recaring.location.dataaccess.entity.LocationSetting;
 import com.recaring.location.dataaccess.entity.AnomalyDetection;
 import com.recaring.location.event.AnomalyDetectedEvent;
 import com.recaring.location.event.BatteryThresholdAlertEvent;
+import com.recaring.location.event.LocationSignalLostEvent;
 import com.recaring.location.event.SafeZoneEnteredEvent;
 import com.recaring.location.event.SafeZoneExitedEvent;
 import com.recaring.location.vo.AnomalyAlert;
@@ -36,6 +37,10 @@ public class LocationFixture {
     public static final String LAST_NOTIFIED_THRESHOLD_FIELD = "lastNotifiedThreshold";
     public static final LocalDateTime MEASURED_AT = LocalDateTime.of(2026, 7, 27, 10, 15, 0);
     public static final LocalDateTime RECORDED_AT = LocalDateTime.of(2026, 7, 27, 10, 15, 3);
+    public static final String MEASURED_AT_TEXT = "2026-07-27 10:15:00";
+    public static final String RECORDED_AT_TEXT = "2026-07-27 10:15:03";
+    public static final String OTHER_WARD_KEY = "ward-member-key-002";
+    public static final String THIRD_WARD_KEY = "ward-member-key-003";
 
     public static final LocalDateTime DETECTED_AT = LocalDateTime.of(2026, 7, 27, 10, 20, 5);
     public static final String DETECTED_AT_TEXT = "2026-07-27 10:20:05";
@@ -55,6 +60,10 @@ public class LocationFixture {
 
     public static Gps createGps(Integer battery) {
         return new Gps(LATITUDE, LONGITUDE, RECORDED_AT, ACCURACY, battery, SPEED, MEASURED_AT);
+    }
+
+    public static Gps createGpsReceivedAt(LocalDateTime recordedAt) {
+        return new Gps(LATITUDE, LONGITUDE, recordedAt, ACCURACY, BATTERY, SPEED, MEASURED_AT);
     }
 
     public static Gps createGpsWithAccuracy(Double accuracy) {
@@ -106,11 +115,15 @@ public class LocationFixture {
     }
 
     public static SafeZoneEnteredEvent createSafeZoneEnteredEvent() {
-        return new SafeZoneEnteredEvent(WARD_KEY, SAFE_ZONE_KEY, SAFE_ZONE_NAME, DETECTED_AT);
+        return new SafeZoneEnteredEvent(WARD_KEY, SAFE_ZONE_KEY, SAFE_ZONE_NAME, LATITUDE, LONGITUDE, DETECTED_AT);
     }
 
     public static SafeZoneExitedEvent createSafeZoneExitedEvent() {
-        return new SafeZoneExitedEvent(WARD_KEY, SAFE_ZONE_KEY, SAFE_ZONE_NAME, DETECTED_AT);
+        return new SafeZoneExitedEvent(WARD_KEY, SAFE_ZONE_KEY, SAFE_ZONE_NAME, LATITUDE, LONGITUDE, DETECTED_AT);
+    }
+
+    public static LocationSignalLostEvent createLocationSignalLostEvent() {
+        return new LocationSignalLostEvent(WARD_KEY, createGps());
     }
 
     public static BatteryThresholdAlertEvent createBatteryThresholdAlertEvent() {
