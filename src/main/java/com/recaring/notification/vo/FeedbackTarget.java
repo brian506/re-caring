@@ -1,6 +1,7 @@
 package com.recaring.notification.vo;
 
 import com.recaring.location.vo.DetectionType;
+import com.recaring.notification.dataaccess.entity.FeedbackReason;
 import com.recaring.notification.dataaccess.entity.Notification;
 
 import java.time.LocalDateTime;
@@ -12,6 +13,7 @@ public record FeedbackTarget(
         Long notificationId,
         String recipientMemberKey,
         String eventType,
+        FeedbackCategory category,
         DetectionType detectionType,
         String wardMemberKey,
         LocalDateTime recordedAt
@@ -30,6 +32,7 @@ public record FeedbackTarget(
                 notification.getId(),
                 notification.getRecipientMemberKey(),
                 notification.getEventType(),
+                FeedbackCategory.find(notification.getEventType()).orElse(null),
                 DetectionType.find(notification.getEventType()).orElse(null),
                 payload.get(WARD_KEY),
                 parseRecordedAt(payload.get(RECORDED_AT))
@@ -41,11 +44,19 @@ public record FeedbackTarget(
     }
 
     public boolean isFeedbackEligible() {
-        return detectionType != null;
+        return category != null;
+    }
+
+    public boolean requiresDetection() {
+        return category == FeedbackCategory.ANOMALY;
+    }
+
+    public boolean allowsReason(FeedbackReason reason) {
+        return category != null && category.allows(reason);
     }
 
     public boolean hasDetectionKeys() {
-        return wardMemberKey != null && recordedAt != null && isFeedbackEligible();
+        return wardMemberKey != null && recordedAt != null && detectionType != null;
     }
 
     private static LocalDateTime parseRecordedAt(String value) {

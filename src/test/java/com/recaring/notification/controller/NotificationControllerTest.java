@@ -259,6 +259,25 @@ class NotificationControllerTest extends AbstractIntegrationTest {
                 .expectStatus().isUnauthorized();
     }
 
+    @Test
+    @DisplayName("안심존 알림은 평가 대상으로, 배터리 알림은 평가 대상이 아닌 것으로 내려온다")
+    void getMyNotifications_marks_safe_zone_notification_as_feedback_eligible() {
+        Notification battery = saveNotification(guardian.getMemberKey());
+        Notification safeZone = notificationRepository.saveAndFlush(
+                NotificationFixture.safeZoneNotification(guardian.getMemberKey()));
+
+        client.get()
+                .uri("/api/v1/notifications?size=2")
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(guardian.getMemberKey(), guardian.getRole()))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.data.items[0].notificationKey").isEqualTo(safeZone.getNotificationKey())
+                .jsonPath("$.data.items[0].feedbackEligible").isEqualTo(true)
+                .jsonPath("$.data.items[1].notificationKey").isEqualTo(battery.getNotificationKey())
+                .jsonPath("$.data.items[1].feedbackEligible").isEqualTo(false);
+    }
+
     private Notification saveNotification(String recipientMemberKey) {
         return notificationRepository.saveAndFlush(NotificationFixture.batteryLowNotification(recipientMemberKey));
     }

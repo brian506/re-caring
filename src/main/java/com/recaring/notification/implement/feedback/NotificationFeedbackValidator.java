@@ -2,6 +2,7 @@ package com.recaring.notification.implement.feedback;
 
 import com.recaring.notification.dataaccess.repository.NotificationFeedbackRepository;
 import com.recaring.notification.vo.FeedbackTarget;
+import com.recaring.notification.vo.NotificationFeedbackAnswer;
 import com.recaring.support.exception.AppException;
 import com.recaring.support.exception.ErrorType;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,12 @@ public class NotificationFeedbackValidator {
         }
         if (notificationFeedbackRepository.existsByNotificationId(target.notificationId())) {
             throw new AppException(ErrorType.NOTIFICATION_FEEDBACK_ALREADY_SUBMITTED);
+        }
+    }
+
+    public void validateReason(FeedbackTarget target, NotificationFeedbackAnswer answer) {
+        if (!target.allowsReason(answer.reason())) {
+            throw new AppException(ErrorType.NOTIFICATION_FEEDBACK_REASON_NOT_ALLOWED);
         }
     }
 }

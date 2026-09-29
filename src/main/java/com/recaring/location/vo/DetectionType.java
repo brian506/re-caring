@@ -10,7 +10,7 @@ public enum DetectionType {
     WANDERING("배회 알림"),
     ABNORMAL_DWELLING("장시간 정지 알림"),
     ROUTE_DEVIATION("낯선 장소 알림"),
-    TIME_ANOMALY("평소와 다른 시간 외출 알림");
+    TIME_ANOMALY("시간대 이상 알림");
 
     private final String notificationTitle;
 

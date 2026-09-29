@@ -27,8 +27,9 @@ public class NotificationFeedbackManager {
     public void submit(String memberKey, String notificationKey, NotificationFeedbackAnswer answer) {
         FeedbackTarget target = notificationReader.findFeedbackTarget(notificationKey);
         notificationFeedbackValidator.validateSubmittable(target, memberKey);
+        notificationFeedbackValidator.validateReason(target, answer);
 
-        Long anomalyDetectionId = resolveAnomalyDetectionId(target);
+        Long anomalyDetectionId = target.requiresDetection() ? resolveAnomalyDetectionId(target) : null;
         notificationFeedbackRepository.save(NotificationFeedback.builder()
                 .notificationId(target.notificationId())
                 .anomalyDetectionId(anomalyDetectionId)
@@ -37,8 +38,8 @@ public class NotificationFeedbackManager {
                 .comment(answer.comment())
                 .build());
 
-        log.info("[알림 피드백 : 제출 완료]: notificationKey={} | accuracy={} | reason={} | anomalyDetectionId={}",
-                notificationKey, answer.accuracy(), answer.reason(), anomalyDetectionId);
+        log.info("[알림 피드백 : 제출 완료]: notificationKey={} | category={} | accuracy={} | reason={} | anomalyDetectionId={}",
+                notificationKey, target.category(), answer.accuracy(), answer.reason(), anomalyDetectionId);
     }
 
     private Long resolveAnomalyDetectionId(FeedbackTarget target) {

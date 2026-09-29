@@ -34,7 +34,7 @@ public class NotificationFeedback extends BaseEntity {
     @Column(name = "notification_id", nullable = false)
     private Long notificationId;
 
-    @Column(name = "anomaly_detection_id", nullable = false)
+    @Column(name = "anomaly_detection_id")
     private Long anomalyDetectionId;
 
     @Enumerated(EnumType.STRING)

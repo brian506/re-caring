@@ -41,7 +41,7 @@ class SafeZoneNotificationListenerTest {
     private MemberReader memberReader;
 
     @Test
-    @DisplayName("안심존에 도착하면 누가 도착했는지 문구에 담아 보낸다")
+    @DisplayName("안심존에 도착하면 누가 도착했는지와 위치 확인용 좌표·측정 시각을 담아 보낸다")
     void sends_entered_notification_with_ward_name() {
         given(notificationSettingReader.isSafeZoneEntryEnabled(NotificationFixture.WARD_KEY)).willReturn(true);
         givenCaregiversAndWardName();
@@ -54,16 +54,12 @@ class SafeZoneNotificationListenerTest {
                 "SAFE_ZONE_ENTERED",
                 "안심존 진입 알림",
                 "김소연님이 안심존 1에 도착했어요.",
-                Map.of(
-                        "type", "SAFE_ZONE_ENTERED",
-                        "wardKey", NotificationFixture.WARD_KEY,
-                        "safeZoneKey", LocationFixture.SAFE_ZONE_KEY
-                )
+                expectedPayload("SAFE_ZONE_ENTERED")
         );
     }
 
     @Test
-    @DisplayName("안심존에서 벗어나면 누가 벗어났는지 문구에 담아 보낸다")
+    @DisplayName("안심존에서 벗어나면 누가 벗어났는지와 위치 확인용 좌표·측정 시각을 담아 보낸다")
     void sends_exited_notification_with_ward_name() {
         given(notificationSettingReader.isSafeZoneExitEnabled(NotificationFixture.WARD_KEY)).willReturn(true);
         givenCaregiversAndWardName();
@@ -76,11 +72,7 @@ class SafeZoneNotificationListenerTest {
                 "SAFE_ZONE_EXITED",
                 "안심존 이탈 알림",
                 "김소연님이 안심존 1에서 벗어났어요.",
-                Map.of(
-                        "type", "SAFE_ZONE_EXITED",
-                        "wardKey", NotificationFixture.WARD_KEY,
-                        "safeZoneKey", LocationFixture.SAFE_ZONE_KEY
-                )
+                expectedPayload("SAFE_ZONE_EXITED")
         );
     }
 
@@ -128,11 +120,18 @@ class SafeZoneNotificationListenerTest {
                 "SAFE_ZONE_ENTERED",
                 "안심존 진입 알림",
                 "김소연님이 안심존 1에 도착했어요.",
-                Map.of(
-                        "type", "SAFE_ZONE_ENTERED",
-                        "wardKey", NotificationFixture.WARD_KEY,
-                        "safeZoneKey", LocationFixture.SAFE_ZONE_KEY
-                )
+                expectedPayload("SAFE_ZONE_ENTERED")
+        );
+    }
+
+    private Map<String, String> expectedPayload(String type) {
+        return Map.of(
+                "type", type,
+                "wardKey", NotificationFixture.WARD_KEY,
+                "safeZoneKey", LocationFixture.SAFE_ZONE_KEY,
+                "recordedAt", LocationFixture.DETECTED_AT_TEXT,
+                "latitude", String.valueOf(LocationFixture.LATITUDE),
+                "longitude", String.valueOf(LocationFixture.LONGITUDE)
         );
     }
 

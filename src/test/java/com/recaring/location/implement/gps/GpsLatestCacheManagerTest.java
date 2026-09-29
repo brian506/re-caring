@@ -2,6 +2,7 @@ package com.recaring.location.implement.gps;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.recaring.config.mapper.JacksonConfig;
 import com.recaring.location.fixture.LocationFixture;
 import com.recaring.location.vo.Gps;
 import org.junit.jupiter.api.DisplayName;
@@ -16,6 +17,9 @@ import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.data.redis.RedisConnectionFailureException;
 import java.util.concurrent.TimeUnit;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -75,7 +79,7 @@ class GpsLatestCacheManagerTest {
     }
 
     @Test
-    @DisplayName("GPS 정보를 직렬화하여 Redis에 TTL 11분으로 저장한다")
+    @DisplayName("GPS 정보를 직렬화하여 Redis에 TTL 25시간으로 저장한다")
     void save_serializes_and_stores_with_ttl() throws Exception {
         Gps gps = LocationFixture.createGps();
         given(objectMapper.writeValueAsString(gps)).willReturn("{\"lat\":%s}".formatted(LocationFixture.LATITUDE));
@@ -84,7 +88,7 @@ class GpsLatestCacheManagerTest {
         manager.save(LocationFixture.WARD_KEY, gps);
 
         then(valueOps).should(times(1))
-                .set(eq("gps:latest:" + LocationFixture.WARD_KEY), anyString(), eq(11L), eq(TimeUnit.MINUTES));
+                .set(eq("gps:latest:" + LocationFixture.WARD_KEY), anyString(), eq(25L), eq(TimeUnit.HOURS));
     }
 
     @Test
@@ -108,5 +112,45 @@ class GpsLatestCacheManagerTest {
                 .given(valueOps).set(anyString(), anyString(), anyLong(), any(TimeUnit.class));
 
         assertThatCode(() -> manager.save(LocationFixture.WARD_KEY, gps)).doesNotThrowAnyException();
+    }
+
+    @Test
+    @DisplayName("여러 대상자를 한 번에 조회하면 대상자마다 자기 위치가 짝지어진다")
+    void findAll_pairs_each_ward_with_its_own_gps() throws Exception {
+        ObjectMapper realMapper = new JacksonConfig().objectMapper();
+        GpsLatestCacheManager realMapperManager = new GpsLatestCacheManager(redisTemplate, realMapper);
+        Gps wardGps = LocationFixture.createGps();
+        Gps otherWardGps = LocationFixture.createGpsReceivedAt(LocationFixture.RECORDED_AT.plusMinutes(5));
+        given(redisTemplate.opsForValue()).willReturn(valueOps);
+        given(valueOps.multiGet(List.of(
+                "gps:latest:" + LocationFixture.WARD_KEY,
+                "gps:latest:" + LocationFixture.OTHER_WARD_KEY)))
+                .willReturn(List.of(realMapper.writeValueAsString(wardGps), realMapper.writeValueAsString(otherWardGps)));
+
+        Map<String, Gps> result = realMapperManager.findAll(
+                List.of(LocationFixture.WARD_KEY, LocationFixture.OTHER_WARD_KEY));
+
+        assertThat(result).containsExactlyInAnyOrderEntriesOf(Map.of(
+                LocationFixture.WARD_KEY, wardGps,
+                LocationFixture.OTHER_WARD_KEY, otherWardGps));
+    }
+
+    @Test
+    @DisplayName("캐시에 없는 대상자와 역직렬화에 실패한 값은 결과에서 빠지고 나머지는 유지된다")
+    void findAll_skips_missing_and_malformed_values() throws Exception {
+        ObjectMapper realMapper = new JacksonConfig().objectMapper();
+        GpsLatestCacheManager realMapperManager = new GpsLatestCacheManager(redisTemplate, realMapper);
+        Gps wardGps = LocationFixture.createGps();
+        given(redisTemplate.opsForValue()).willReturn(valueOps);
+        given(valueOps.multiGet(List.of(
+                "gps:latest:" + LocationFixture.WARD_KEY,
+                "gps:latest:" + LocationFixture.OTHER_WARD_KEY,
+                "gps:latest:" + LocationFixture.THIRD_WARD_KEY)))
+                .willReturn(Arrays.asList(realMapper.writeValueAsString(wardGps), null, "invalid-json"));
+
+        Map<String, Gps> result = realMapperManager.findAll(List.of(
+                LocationFixture.WARD_KEY, LocationFixture.OTHER_WARD_KEY, LocationFixture.THIRD_WARD_KEY));
+
+        assertThat(result).containsExactlyEntriesOf(Map.of(LocationFixture.WARD_KEY, wardGps));
     }
 }

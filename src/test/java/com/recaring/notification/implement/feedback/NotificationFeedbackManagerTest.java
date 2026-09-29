@@ -154,6 +154,25 @@ class NotificationFeedbackManagerTest {
         then(notificationFeedbackRepository).should(never()).save(any());
     }
 
+    @Test
+    @DisplayName("안심존 알림 평가는 탐지 기록을 찾지 않고 탐지 연결 없이 저장한다")
+    void submit_saves_safe_zone_feedback_without_detection() {
+        given(notificationReader.findFeedbackTarget(NOTIFICATION_KEY)).willReturn(FeedbackTarget.from(
+                NotificationFixture.safeZoneNotificationWithId(NOTIFICATION_ID, NotificationFixture.GUARDIAN_KEY)));
+
+        notificationFeedbackManager.submit(
+                NotificationFixture.GUARDIAN_KEY,
+                NOTIFICATION_KEY,
+                NotificationFixture.inaccurateFeedbackAnswer(FeedbackReason.GPS_INACCURATE, NotificationFixture.FEEDBACK_COMMENT));
+
+        ArgumentCaptor<NotificationFeedback> saved = ArgumentCaptor.forClass(NotificationFeedback.class);
+        then(notificationFeedbackRepository).should().save(saved.capture());
+        assertThat(saved.getValue().getNotificationId()).isEqualTo(NOTIFICATION_ID);
+        assertThat(saved.getValue().getAnomalyDetectionId()).isNull();
+        assertThat(saved.getValue().getReason()).isEqualTo(FeedbackReason.GPS_INACCURATE);
+        then(anomalyDetectionManager).shouldHaveNoInteractions();
+    }
+
     private FeedbackTarget anomalyTarget() {
         return FeedbackTarget.from(
                 NotificationFixture.anomalyNotificationWithId(NOTIFICATION_ID, NotificationFixture.GUARDIAN_KEY));
