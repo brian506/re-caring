@@ -276,7 +276,7 @@ class AuthControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("POST /api/v1/auth/sign-in/local - 비밀번호가 틀리면 토큰을 발급하지 않는다")
+    @DisplayName("POST /api/v1/auth/sign-in/local - 비밀번호가 틀리면 INVALID_CREDENTIALS로 거절하고 토큰을 발급하지 않는다")
     void signIn_fail_with_wrong_password() {
         prepareLocalMember(MemberFixture.OTHER_PHONE, AuthFixture.RAW_PASSWORD);
 
@@ -292,13 +292,13 @@ class AuthControllerTest extends AbstractIntegrationTest {
                 .exchange()
                 .expectStatus().isBadRequest()
                 .expectBody()
-                .jsonPath("$.error.errorCode").isEqualTo("E2017");
+                .jsonPath("$.error.errorCode").isEqualTo("E2022");
 
         assertThat(refreshTokenRepository.count()).isZero();
     }
 
     @Test
-    @DisplayName("POST /api/v1/auth/sign-in/local - 가입되지 않은 전화번호면 NOT_FOUND_ACCOUNT로 거절하고 토큰을 발급하지 않는다")
+    @DisplayName("POST /api/v1/auth/sign-in/local - 가입되지 않은 전화번호면 INVALID_CREDENTIALS로 거절하고 토큰을 발급하지 않는다")
     void signIn_fail_with_unregistered_phone() {
         prepareLocalMember(SmsFixture.PHONE, AuthFixture.RAW_PASSWORD);
 
@@ -314,7 +314,7 @@ class AuthControllerTest extends AbstractIntegrationTest {
                 .exchange()
                 .expectStatus().isBadRequest()
                 .expectBody()
-                .jsonPath("$.error.errorCode").isEqualTo("E2016");
+                .jsonPath("$.error.errorCode").isEqualTo("E2022");
 
         assertThat(refreshTokenRepository.count()).isZero();
     }
