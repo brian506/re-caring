@@ -1,6 +1,7 @@
 package com.recaring.member.dataaccess.entity;
 
 import com.recaring.common.entity.BaseEntity;
+import com.recaring.member.vo.ProfileAvatarCode;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -49,8 +50,8 @@ public class Member extends BaseEntity {
     @Column(nullable = false)
     private SubscriptionType subscriptionType;
 
-    @Column(length = 30)
-    private String profileAvatarCode; // null이면 앱이 성별·memberKey 기준으로 자동 배정한다
+    @Column(nullable = false, length = 30)
+    private String profileAvatarCode;
 
 
     @Builder
@@ -64,6 +65,7 @@ public class Member extends BaseEntity {
         this.role = role;
         this.signUpType = signUpType;
         this.subscriptionType = SubscriptionType.BASIC;
+        this.profileAvatarCode = ProfileAvatarCode.defaultFor(memberKey, role, gender).value();
     }
 
     public void updateProfile(String name, LocalDate birth) {
@@ -79,6 +81,10 @@ public class Member extends BaseEntity {
     public void changeProfileAvatarCode(String profileAvatarCode) {
         this.profileAvatarCode = profileAvatarCode;
         update();
+    }
+
+    public void resetProfileAvatarCode() {
+        changeProfileAvatarCode(ProfileAvatarCode.defaultFor(memberKey, role, gender).value());
     }
 
     public void changePhone(String phone) {

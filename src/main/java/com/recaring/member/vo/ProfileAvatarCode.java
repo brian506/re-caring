@@ -1,5 +1,7 @@
 package com.recaring.member.vo;
 
+import com.recaring.member.dataaccess.entity.Gender;
+import com.recaring.member.dataaccess.entity.MemberRole;
 import com.recaring.support.exception.AppException;
 import com.recaring.support.exception.ErrorType;
 
@@ -7,9 +9,11 @@ import java.util.Set;
 
 /**
  * 앱이 번들로 가진 기본 프로필 일러스트 식별자. 서버는 이미지가 아니라 이 코드만 저장한다.
- * value가 null이면 "직접 고른 얼굴 없음"이며, 앱이 성별·memberKey 기준으로 자동 배정한다.
+ * value가 null이면 "직접 고른 얼굴 없음"이며, 회원에게는 역할·성별·memberKey 기준 기본 코드가 대신 배정된다.
  */
 public record ProfileAvatarCode(String value) {
+
+    private static final int VARIANT_COUNT = 4;
 
     private static final Set<String> ALLOWED_CODES = Set.of(
             "senior_female_1", "senior_female_2", "senior_female_3", "senior_female_4",
@@ -32,6 +36,13 @@ public record ProfileAvatarCode(String value) {
             return new ProfileAvatarCode(null);
         }
         return new ProfileAvatarCode(raw.trim());
+    }
+
+    public static ProfileAvatarCode defaultFor(String memberKey, MemberRole role, Gender gender) {
+        String age = role == MemberRole.WARD ? "senior" : "adult";
+        String sex = gender == Gender.FEMALE ? "female" : "male";
+        int variant = Math.floorMod(memberKey.hashCode(), VARIANT_COUNT) + 1;
+        return new ProfileAvatarCode(age + "_" + sex + "_" + variant);
     }
 
     public boolean isCleared() {
