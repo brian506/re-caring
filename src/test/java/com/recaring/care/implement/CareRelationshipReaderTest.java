@@ -58,7 +58,8 @@ class CareRelationshipReaderTest {
 
         // then
         assertThat(result).containsExactly(
-                CareFixture.createWardInfo(ward.getMemberKey(), CareRole.PRIMARY_GUARDIAN));
+                CareFixture.createWardInfo(ward.getMemberKey(), null, CareRole.PRIMARY_GUARDIAN,
+                        ward.getProfileAvatarCode(), null));
     }
 
     @Test
@@ -79,7 +80,8 @@ class CareRelationshipReaderTest {
 
         // then
         assertThat(result).containsExactly(
-                CareFixture.createWardInfo(ward.getMemberKey(), "할머니", CareRole.PRIMARY_GUARDIAN));
+                CareFixture.createWardInfo(ward.getMemberKey(), "할머니", CareRole.PRIMARY_GUARDIAN,
+                        ward.getProfileAvatarCode(), null));
     }
 
     @Test
@@ -135,7 +137,8 @@ class CareRelationshipReaderTest {
 
         // then
         assertThat(result).containsExactly(
-                CareFixture.createCaregiverInfo(caregiver.getMemberKey(), CareRole.MANAGER));
+                CareFixture.createCaregiverInfo(caregiver.getMemberKey(), CareRole.MANAGER,
+                        caregiver.getProfileAvatarCode(), null));
     }
 
     @Test
