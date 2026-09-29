@@ -218,7 +218,7 @@ public class CareController {
             description = """
                     내가 보는 보호 대상자의 얼굴을 앱 번들 일러스트 16종 중 하나로 지정합니다. 나에게만 보이며,
                     대상자 본인이 고른 얼굴(wardProfileAvatarCode)이나 다른 보호자의 화면은 바뀌지 않습니다.
-                    앱은 designatedProfileAvatarCode > wardProfileAvatarCode > 자동 배정 순으로 표시합니다.
+                    앱은 designatedProfileAvatarCode > wardProfileAvatarCode 순으로 표시합니다. wardProfileAvatarCode는 항상 채워집니다.
                     허용 코드 외 값은 400(E3008)이며, 빈 문자열이나 생략은 지정 해제입니다.
                     [보호 대상자와 케어 관계가 있는 회원 전용]
                     """

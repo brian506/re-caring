@@ -602,9 +602,10 @@ class MemberControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("PATCH /me - 아바타 코드에 빈 문자열을 보내면 직접 고른 얼굴이 해제된다")
-    void updateMyInfo_clears_avatar_code_when_blank() {
-        patchAvatar(guardian, MemberFixture.AVATAR_CODE);
+    @DisplayName("PATCH /me - 아바타 코드에 빈 문자열을 보내면 가입 때 배정된 기본 얼굴로 돌아간다")
+    void updateMyInfo_resets_avatar_code_to_default_when_blank() {
+        String defaultCode = memberRepository.findByMemberKey(guardian.getMemberKey()).orElseThrow().getProfileAvatarCode();
+        patchAvatar(guardian, MemberFixture.OTHER_AVATAR_CODE);
 
         client.patch()
                 .uri("/api/v1/members/me")
@@ -617,7 +618,7 @@ class MemberControllerTest extends AbstractIntegrationTest {
                 .expectStatus().isOk();
 
         assertThat(memberRepository.findByMemberKey(guardian.getMemberKey()).orElseThrow().getProfileAvatarCode())
-                .isNull();
+                .isEqualTo(defaultCode);
     }
 
     @Test
@@ -661,15 +662,27 @@ class MemberControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("GET /me - 얼굴을 고른 적이 없으면 profileAvatarCode는 null이다")
-    void getMyInfo_returns_null_avatar_code_when_never_chosen() {
+    @DisplayName("GET /me - 얼굴을 고른 적 없는 남성 보호자는 성인 남성 기본 얼굴이 채워져 있다")
+    void getMyInfo_returns_adult_default_avatar_for_guardian() {
         client.get()
                 .uri("/api/v1/members/me")
                 .header(HttpHeaders.AUTHORIZATION, bearerToken(guardian))
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
-                .jsonPath("$.data.profileAvatarCode").isEqualTo(null);
+                .jsonPath("$.data.profileAvatarCode").value(code -> assertThat((String) code).matches("adult_male_[1-4]"));
+    }
+
+    @Test
+    @DisplayName("GET /me - 얼굴을 고른 적 없는 여성 보호 대상자는 시니어 여성 기본 얼굴이 채워져 있다")
+    void getMyInfo_returns_senior_default_avatar_for_ward() {
+        client.get()
+                .uri("/api/v1/members/me")
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(ward))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.data.profileAvatarCode").value(code -> assertThat((String) code).matches("senior_female_[1-4]"));
     }
 
     private void patchAvatar(Member member, String code) {

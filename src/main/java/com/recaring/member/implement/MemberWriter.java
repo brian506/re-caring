@@ -46,6 +46,10 @@ public class MemberWriter {
     public void updateProfileAvatarCode(String memberKey, ProfileAvatarCode code) {
         Member member = memberRepository.findByMemberKey(memberKey)
                 .orElseThrow(() -> new AppException(ErrorType.NOT_FOUND_ACCOUNT));
+        if (code.isCleared()) {
+            member.resetProfileAvatarCode();
+            return;
+        }
         member.changeProfileAvatarCode(code.value());
     }
 

@@ -56,7 +56,7 @@
 | Notification | PATCH | `/api/v1/notifications/settings/{wardKey}/emergency-call` | 응급호출 알림 토글 |
 | Notification | PATCH | `/api/v1/notifications/settings/{wardKey}/battery` | 배터리 알림 토글 + 알림 받을 잔량(%) 다중 선택 (10~100, 10 단위, 개수 제한 없음). 기본값 없음 — 빈 배열이면 알림 안 감 |
 | Member | GET | `/api/v1/members/me` | 내 정보 조회 (JWT 인증, Member+약관+안심존 통합) |
-| Member | PATCH | `/api/v1/members/me` | 내 정보 수정 (이름·생년월일·비밀번호·profileAvatarCode 부분 수정, JWT 인증. 아바타는 빈 문자열이면 해제, 허용 코드 외 E3008) |
+| Member | PATCH | `/api/v1/members/me` | 내 정보 수정 (이름·생년월일·비밀번호·profileAvatarCode 부분 수정, JWT 인증. 아바타는 빈 문자열이면 기본 코드로 재배정, 허용 코드 외 E3008) |
 | Member | POST | `/api/v1/members/phones` | 연락처 기반 가입 회원 조회 (GUARDIAN) |
 | Member | PATCH | `/api/v1/members/me/phone` | 전화번호(로그인 ID) 변경. Request `{ smsToken, password }` — 새 번호 SMS 인증 토큰 + 현재 비밀번호. 비밀번호 불일치 시 토큰 미소비. 새 번호 중복 E3006(409) |
 | Member | DELETE | `/api/v1/members/me` | 회원 탈퇴 |
@@ -73,7 +73,7 @@
 
 | Entity | Table | 주요 필드 |
 |--------|-------|---------|
-| Member | members | memberKey(UUID), role(GUARDIAN/WARD), name, phone, profileAvatarCode(nullable, 앱 번들 일러스트 16종 코드. null이면 앱이 자동 배정) |
+| Member | members | memberKey(UUID), role(GUARDIAN/WARD), name, phone, profileAvatarCode(NOT NULL, 앱 번들 일러스트 16종 코드. 가입 시 역할(WARD→senior, GUARDIAN→adult)+성별+memberKey 해시로 기본 배정) |
 | LocalAuth | local_auth | memberKey, password (로그인 ID는 `members.phone`) |
 | OAuth | oauths | provider(KAKAO/NAVER), providerId, memberKey |
 | LoginHistory | login_histories | memberKey, ip, loginAt |
@@ -161,7 +161,7 @@ PENDING 초대가 첫 주보호자보다 먼저 만들어졌을 수 있기 때�
 프로필 아바타는 이미지가 아니라 앱 번들 일러스트 16종의 코드 문자열(`ProfileAvatarCode` VO, 예: `senior_female_1`)만 저장한다.
 본인이 고른 얼굴은 `members.profile_avatar_code`(전역), 보호자가 대상자·관계자에게 붙인 얼굴은 `designated_avatars`(호출자 범위)로 나눈다.
 별명과 달리 별도 테이블인 이유는 "보호자가 관계자에게 붙인 얼굴"이 `(보호자, 관계자)` 쌍이라 `care_relationships` 행에 자리가 없기 때문이다.
-응답은 본인 값과 내가 지정한 값(`designatedProfileAvatarCode`)을 둘 다 내리고, 앱이 지정 > 본인 > 자동 배정 순으로 고른다.
+응답은 본인 값과 내가 지정한 값(`designatedProfileAvatarCode`)을 둘 다 내리고, 앱이 지정 > 본인 순으로 고른다. 본인 값은 가입 시 서버가 기본 배정하므로 항상 채워져 있다(#235).
 서버는 기본값을 채우지 않는다 — null이어야 앱이 "직접 고른 값 없음"을 구분해 자동 배정한다. 빈 문자열은 해제 신호다
 (앱 JSON 직렬화가 null 필드를 생략해 null로는 해제를 못 보낸다).
 
