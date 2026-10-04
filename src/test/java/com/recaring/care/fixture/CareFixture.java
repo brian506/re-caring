@@ -100,7 +100,7 @@ public class CareFixture {
     public static WardInfo createWardInfo(String memberKey, String wardNickname, CareRole careRole,
                                           String wardProfileAvatarCode, String designatedProfileAvatarCode) {
         return new WardInfo(memberKey, "보호대상자", wardNickname, WARD_PHONE, Gender.FEMALE, careRole,
-                wardProfileAvatarCode, designatedProfileAvatarCode);
+                wardProfileAvatarCode, designatedProfileAvatarCode, null);
     }
 
     public static DesignatedAvatar createDesignatedAvatar(String ownerKey, String wardKey, String targetKey, String code) {
