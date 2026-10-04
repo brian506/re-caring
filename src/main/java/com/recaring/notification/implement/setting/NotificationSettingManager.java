@@ -27,6 +27,12 @@ public class NotificationSettingManager {
     }
 
     @Transactional
+    public void updateDangerZone(String wardKey, String caregiverKey, boolean entryEnabled, boolean exitEnabled) {
+        notificationSettingRepository.insertDefaultIfAbsent(wardKey, caregiverKey);
+        notificationSettingRepository.updateDangerZone(wardKey, caregiverKey, entryEnabled, exitEnabled);
+    }
+
+    @Transactional
     public void updateAnomaly(
             String wardKey,
             String caregiverKey,

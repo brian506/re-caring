@@ -31,6 +31,12 @@ public class NotificationSettingService {
     }
 
     @Transactional
+    public void updateDangerZone(String requesterKey, String wardKey, boolean entryEnabled, boolean exitEnabled) {
+        notificationSettingValidator.validateSettingAccess(requesterKey, wardKey);
+        notificationSettingManager.updateDangerZone(wardKey, requesterKey, entryEnabled, exitEnabled);
+    }
+
+    @Transactional
     public void updateAnomaly(String requesterKey, UpdateAnomalyNotificationSettingCommand command) {
         notificationSettingValidator.validateSettingAccess(requesterKey, command.wardKey());
         notificationSettingManager.updateAnomaly(

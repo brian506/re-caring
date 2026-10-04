@@ -8,6 +8,8 @@ public interface NotificationSettingRepositoryCustom {
 
     void updateSafeZone(String wardMemberKey, String caregiverMemberKey, boolean entryEnabled, boolean exitEnabled);
 
+    void updateDangerZone(String wardMemberKey, String caregiverMemberKey, boolean entryEnabled, boolean exitEnabled);
+
     void updateAnomaly(
             String wardMemberKey,
             String caregiverMemberKey,

@@ -41,6 +41,16 @@ public class NotificationSettingRepositoryCustomImpl extends QuerydslRepositoryS
     }
 
     @Override
+    public void updateDangerZone(String wardMemberKey, String caregiverMemberKey, boolean entryEnabled, boolean exitEnabled) {
+        update(notificationSetting)
+                .set(notificationSetting.dangerZoneEntryEnabled, entryEnabled)
+                .set(notificationSetting.dangerZoneExitEnabled, exitEnabled)
+                .set(notificationSetting.updatedAt, LocalDateTime.now())
+                .where(ownedBy(wardMemberKey, caregiverMemberKey))
+                .execute();
+    }
+
+    @Override
     public void updateAnomaly(
             String wardMemberKey,
             String caregiverMemberKey,

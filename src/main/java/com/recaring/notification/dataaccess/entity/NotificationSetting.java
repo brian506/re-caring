@@ -42,6 +42,12 @@ public class NotificationSetting extends BaseEntity {
     @Column(name = "safe_zone_exit_enabled", nullable = false, columnDefinition = "boolean not null default true")
     private boolean safeZoneExitEnabled;
 
+    @Column(name = "danger_zone_entry_enabled", nullable = false, columnDefinition = "boolean not null default true")
+    private boolean dangerZoneEntryEnabled;
+
+    @Column(name = "danger_zone_exit_enabled", nullable = false, columnDefinition = "boolean not null default true")
+    private boolean dangerZoneExitEnabled;
+
     @Column(name = "route_deviation_enabled", nullable = false, columnDefinition = "boolean not null default true")
     private boolean routeDeviationEnabled;
 
@@ -74,6 +80,8 @@ public class NotificationSetting extends BaseEntity {
             String caregiverMemberKey,
             boolean safeZoneEntryEnabled,
             boolean safeZoneExitEnabled,
+            boolean dangerZoneEntryEnabled,
+            boolean dangerZoneExitEnabled,
             boolean routeDeviationEnabled,
             boolean speedAnomalyEnabled,
             boolean wanderingAnomalyEnabled,
@@ -87,6 +95,8 @@ public class NotificationSetting extends BaseEntity {
         this.caregiverMemberKey = caregiverMemberKey;
         this.safeZoneEntryEnabled = safeZoneEntryEnabled;
         this.safeZoneExitEnabled = safeZoneExitEnabled;
+        this.dangerZoneEntryEnabled = dangerZoneEntryEnabled;
+        this.dangerZoneExitEnabled = dangerZoneExitEnabled;
         this.routeDeviationEnabled = routeDeviationEnabled;
         this.speedAnomalyEnabled = speedAnomalyEnabled;
         this.wanderingAnomalyEnabled = wanderingAnomalyEnabled;
@@ -103,6 +113,8 @@ public class NotificationSetting extends BaseEntity {
                 .caregiverMemberKey(caregiverMemberKey)
                 .safeZoneEntryEnabled(true)
                 .safeZoneExitEnabled(true)
+                .dangerZoneEntryEnabled(true)
+                .dangerZoneExitEnabled(true)
                 .routeDeviationEnabled(true)
                 .speedAnomalyEnabled(true)
                 .wanderingAnomalyEnabled(true)
@@ -117,6 +129,12 @@ public class NotificationSetting extends BaseEntity {
     public void updateSafeZone(boolean entryEnabled, boolean exitEnabled) {
         this.safeZoneEntryEnabled = entryEnabled;
         this.safeZoneExitEnabled = exitEnabled;
+        update();
+    }
+
+    public void updateDangerZone(boolean entryEnabled, boolean exitEnabled) {
+        this.dangerZoneEntryEnabled = entryEnabled;
+        this.dangerZoneExitEnabled = exitEnabled;
         update();
     }
 

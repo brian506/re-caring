@@ -36,23 +36,23 @@ public class SafeZoneNotificationListener {
     @Async("broadcastExecutor")
     @EventListener
     public void onSafeZoneEntered(SafeZoneEnteredEvent event) {
-        send(event.wardMemberKey(), event.safeZoneKey(), SafeZoneAlertType.SAFE_ZONE_ENTERED,
-                event.safeZoneName() + "에 도착했어요.", event.latitude(), event.longitude(), event.detectedAt());
+        send(event.wardMemberKey(), event.safeZoneKey(), event.safeZoneName(),
+                SafeZoneAlertType.entered(event.zoneType()), event.latitude(), event.longitude(), event.detectedAt());
     }
 
     @Async("broadcastExecutor")
     @EventListener
     public void onSafeZoneExited(SafeZoneExitedEvent event) {
-        send(event.wardMemberKey(), event.safeZoneKey(), SafeZoneAlertType.SAFE_ZONE_EXITED,
-                event.safeZoneName() + "에서 벗어났어요.", event.latitude(), event.longitude(), event.detectedAt());
+        send(event.wardMemberKey(), event.safeZoneKey(), event.safeZoneName(),
+                SafeZoneAlertType.exited(event.zoneType()), event.latitude(), event.longitude(), event.detectedAt());
     }
 
     // 보호자는 여러 대상자의 알림을 한 화면에서 본다. 누구에 대한 알림인지 본문 첫머리로 구분한다.
     private void send(
             String wardMemberKey,
             String safeZoneKey,
+            String safeZoneName,
             SafeZoneAlertType alertType,
-            String bodySuffix,
             double latitude,
             double longitude,
             LocalDateTime detectedAt
@@ -60,13 +60,13 @@ public class SafeZoneNotificationListener {
         List<CaregiverInfo> caregivers = notificationSettingReader.filterRecipients(
                 wardMemberKey,
                 careRelationshipReader.findCaregiverInfos(wardMemberKey),
-                settings -> alertType.isEnabledIn(settings.safeZone()));
+                alertType::isEnabledIn);
         if (caregivers.isEmpty()) {
             log.info("[안심존 알림 : 수신자 없음]: wardMemberKey={} | alertType={}", wardMemberKey, alertType);
             return;
         }
 
-        String body = memberReader.findNameByMemberKey(wardMemberKey) + "님이 " + bodySuffix;
+        String body = memberReader.findNameByMemberKey(wardMemberKey) + "님이 " + alertType.bodySuffix(safeZoneName);
 
         List<String> guardianKeys = caregivers.stream()
                 .filter(caregiver -> caregiver.careRole().isGuardian())

@@ -3,6 +3,7 @@ package com.recaring.notification.controller;
 import com.recaring.notification.business.NotificationSettingService;
 import com.recaring.notification.controller.request.UpdateAnomalyNotificationSettingRequest;
 import com.recaring.notification.controller.request.UpdateBatteryNotificationSettingRequest;
+import com.recaring.notification.controller.request.UpdateDangerZoneNotificationSettingRequest;
 import com.recaring.notification.controller.request.UpdateEmergencyCallNotificationSettingRequest;
 import com.recaring.notification.controller.request.UpdateSafeZoneNotificationSettingRequest;
 import com.recaring.notification.controller.response.NotificationSettingResponse;
@@ -57,6 +58,21 @@ public class NotificationSettingController {
             @Valid @RequestBody UpdateSafeZoneNotificationSettingRequest request
     ) {
         notificationSettingService.updateSafeZone(memberKey, wardKey, request.entryEnabled(), request.exitEnabled());
+        return ResponseEntity.ok(ApiResponse.success());
+    }
+
+    @Operation(
+            summary = "위험존 알림 설정 변경",
+            description = "위험존 진입/이탈 알림 활성화 여부를 변경합니다. 요청한 보호자 본인에게만 적용됩니다."
+    )
+    @PatchMapping("/{wardKey}/danger-zone")
+    public ResponseEntity<ApiResponse<Void>> updateDangerZone(
+            @Parameter(hidden = true)
+            @AuthMember String memberKey,
+            @PathVariable String wardKey,
+            @Valid @RequestBody UpdateDangerZoneNotificationSettingRequest request
+    ) {
+        notificationSettingService.updateDangerZone(memberKey, wardKey, request.entryEnabled(), request.exitEnabled());
         return ResponseEntity.ok(ApiResponse.success());
     }
 

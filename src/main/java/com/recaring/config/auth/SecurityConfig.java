@@ -117,6 +117,7 @@ public class SecurityConfig {
                                 mvc.matcher(HttpMethod.GET,   "/api/v1/location/history/{wardKey}"),
                                 mvc.matcher(HttpMethod.GET,   "/api/v1/notifications/settings/{wardKey}"),
                                 mvc.matcher(HttpMethod.PATCH, "/api/v1/notifications/settings/{wardKey}/safe-zone"),
+                                mvc.matcher(HttpMethod.PATCH, "/api/v1/notifications/settings/{wardKey}/danger-zone"),
                                 mvc.matcher(HttpMethod.PATCH, "/api/v1/notifications/settings/{wardKey}/anomaly"),
                                 mvc.matcher(HttpMethod.PATCH, "/api/v1/notifications/settings/{wardKey}/emergency-call"),
                                 mvc.matcher(HttpMethod.PATCH, "/api/v1/notifications/settings/{wardKey}/battery"),
