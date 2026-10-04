@@ -1,13 +1,13 @@
 package com.recaring.notification.implement.setting;
 
+import com.recaring.care.dataaccess.entity.CareRole;
+import com.recaring.care.fixture.CareFixture;
+import com.recaring.care.vo.CaregiverInfo;
 import com.recaring.location.vo.DetectionType;
-import com.recaring.notification.vo.NotificationSettings;
-import com.recaring.notification.dataaccess.entity.NotificationSetting;
 import com.recaring.notification.dataaccess.repository.NotificationSettingRepository;
 import com.recaring.notification.fixture.NotificationFixture;
 import com.recaring.notification.vo.BatteryNotificationSetting;
-import com.recaring.support.exception.AppException;
-import com.recaring.support.exception.ErrorType;
+import com.recaring.notification.vo.NotificationSettings;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,17 +17,23 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.BDDMockito.times;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("알림 설정 조회 단위 테스트")
 class NotificationSettingReaderTest {
+
+    private static final CaregiverInfo GUARDIAN =
+            CareFixture.createCaregiverInfo(NotificationFixture.GUARDIAN_KEY, CareRole.PRIMARY_GUARDIAN);
+    private static final CaregiverInfo OTHER_GUARDIAN =
+            CareFixture.createCaregiverInfo(NotificationFixture.OTHER_GUARDIAN_KEY, CareRole.GUARDIAN);
+    private static final CaregiverInfo MANAGER =
+            CareFixture.createCaregiverInfo(NotificationFixture.MANAGER_KEY, CareRole.MANAGER);
 
     @InjectMocks
     private NotificationSettingReader notificationSettingReader;
@@ -36,12 +42,14 @@ class NotificationSettingReaderTest {
     private NotificationSettingRepository notificationSettingRepository;
 
     @Test
-    @DisplayName("설정한 적이 없으면 모든 알림이 켜져 있고 배터리 임계값은 비어 있다")
+    @DisplayName("설정한 적 없는 보호자는 모든 알림이 켜져 있고 배터리 임계값은 비어 있다")
     void findSetting_returns_all_enabled_when_never_configured() {
-        given(notificationSettingRepository.findByWardMemberKey(NotificationFixture.WARD_KEY))
+        given(notificationSettingRepository.findByWardMemberKeyAndCaregiverMemberKey(
+                NotificationFixture.WARD_KEY, NotificationFixture.GUARDIAN_KEY))
                 .willReturn(Optional.empty());
 
-        NotificationSettings result = notificationSettingReader.findSetting(NotificationFixture.WARD_KEY);
+        NotificationSettings result = notificationSettingReader.findSetting(
+                NotificationFixture.WARD_KEY, NotificationFixture.GUARDIAN_KEY);
 
         assertThat(result.safeZone().entryEnabled()).isTrue();
         assertThat(result.safeZone().exitEnabled()).isTrue();
@@ -56,13 +64,16 @@ class NotificationSettingReaderTest {
     }
 
     @Test
-    @DisplayName("저장된 설정은 항목별 값을 그대로 돌려준다")
-    void findSetting_returns_stored_values_per_item() {
-        given(notificationSettingRepository.findByWardMemberKey(NotificationFixture.WARD_KEY))
+    @DisplayName("저장된 설정은 요청한 보호자의 항목별 값을 그대로 돌려준다")
+    void findSetting_returns_stored_values_of_the_caregiver() {
+        given(notificationSettingRepository.findByWardMemberKeyAndCaregiverMemberKey(
+                NotificationFixture.WARD_KEY, NotificationFixture.GUARDIAN_KEY))
                 .willReturn(Optional.of(NotificationFixture.createSettingWithAnomalyToggles(
-                        NotificationFixture.WARD_KEY, false, true, false, true, true)));
+                        NotificationFixture.WARD_KEY, NotificationFixture.GUARDIAN_KEY,
+                        false, true, false, true, true)));
 
-        NotificationSettings result = notificationSettingReader.findSetting(NotificationFixture.WARD_KEY);
+        NotificationSettings result = notificationSettingReader.findSetting(
+                NotificationFixture.WARD_KEY, NotificationFixture.GUARDIAN_KEY);
 
         assertThat(result.safeZone().entryEnabled()).isTrue();
         assertThat(result.safeZone().exitEnabled()).isFalse();
@@ -76,7 +87,55 @@ class NotificationSettingReaderTest {
         assertThat(result.battery().thresholdPercents()).containsExactly(40, 90);
     }
 
-    @ParameterizedTest(name = "{0} 토글만 꺼두면 그 유형의 알림만 꺼진다")
+    @Test
+    @DisplayName("안심존 진입 알림을 끈 보호자만 수신자에서 빠지고 나머지는 남는다")
+    void filterRecipients_excludes_only_caregiver_who_turned_off_entry() {
+        given(notificationSettingRepository.findAllByWardMemberKey(NotificationFixture.WARD_KEY))
+                .willReturn(List.of(
+                        NotificationFixture.createSafeZoneSetting(
+                                NotificationFixture.WARD_KEY, NotificationFixture.GUARDIAN_KEY, false, true),
+                        NotificationFixture.createSafeZoneSetting(
+                                NotificationFixture.WARD_KEY, NotificationFixture.OTHER_GUARDIAN_KEY, true, true)));
+
+        List<CaregiverInfo> result = notificationSettingReader.filterRecipients(
+                NotificationFixture.WARD_KEY,
+                List.of(GUARDIAN, OTHER_GUARDIAN),
+                settings -> settings.safeZone().entryEnabled());
+
+        assertThat(result).containsExactly(OTHER_GUARDIAN);
+    }
+
+    @Test
+    @DisplayName("설정 행이 없는 보호자는 수신자로 남는다")
+    void filterRecipients_keeps_caregiver_without_setting_row() {
+        given(notificationSettingRepository.findAllByWardMemberKey(NotificationFixture.WARD_KEY))
+                .willReturn(List.of(NotificationFixture.createSafeZoneSetting(
+                        NotificationFixture.WARD_KEY, NotificationFixture.GUARDIAN_KEY, false, false)));
+
+        List<CaregiverInfo> result = notificationSettingReader.filterRecipients(
+                NotificationFixture.WARD_KEY,
+                List.of(GUARDIAN, MANAGER),
+                settings -> settings.safeZone().entryEnabled());
+
+        assertThat(result).containsExactly(MANAGER);
+    }
+
+    @Test
+    @DisplayName("진입은 켜고 이탈만 끈 보호자는 이탈 알림 수신자에서만 빠진다")
+    void filterRecipients_reads_exit_toggle_separately_from_entry() {
+        given(notificationSettingRepository.findAllByWardMemberKey(NotificationFixture.WARD_KEY))
+                .willReturn(List.of(NotificationFixture.createSafeZoneSetting(
+                        NotificationFixture.WARD_KEY, NotificationFixture.GUARDIAN_KEY, true, false)));
+
+        List<CaregiverInfo> result = notificationSettingReader.filterRecipients(
+                NotificationFixture.WARD_KEY,
+                List.of(GUARDIAN),
+                settings -> settings.safeZone().exitEnabled());
+
+        assertThat(result).isEmpty();
+    }
+
+    @ParameterizedTest(name = "{0} 토글만 꺼둔 보호자는 그 유형의 알림 수신자에서 빠진다")
     @CsvSource({
             "SPEED_ANOMALY,     false, true,  true,  true,  true",
             "WANDERING,         true,  false, true,  true,  true",
@@ -84,8 +143,8 @@ class NotificationSettingReaderTest {
             "ROUTE_DEVIATION,   true,  true,  true,  false, true",
             "TIME_ANOMALY,      true,  true,  true,  true,  false",
     })
-    @DisplayName("탐지 유형마다 자기 토글을 읽는다")
-    void isAnomalyEnabled_reads_the_toggle_of_its_own_type(
+    @DisplayName("이상탐지는 탐지 유형마다 그 유형의 토글로 거른다")
+    void filterRecipients_reads_the_anomaly_toggle_of_its_own_type(
             DetectionType detectionType,
             boolean speedEnabled,
             boolean wanderingEnabled,
@@ -93,121 +152,38 @@ class NotificationSettingReaderTest {
             boolean routeDeviationEnabled,
             boolean timeAnomalyEnabled
     ) {
-        given(notificationSettingRepository.findByWardMemberKey(NotificationFixture.WARD_KEY))
-                .willReturn(Optional.of(NotificationFixture.createSettingWithAnomalyToggles(
-                        NotificationFixture.WARD_KEY,
+        given(notificationSettingRepository.findAllByWardMemberKey(NotificationFixture.WARD_KEY))
+                .willReturn(List.of(NotificationFixture.createSettingWithAnomalyToggles(
+                        NotificationFixture.WARD_KEY, NotificationFixture.GUARDIAN_KEY,
                         speedEnabled, wanderingEnabled, abnormalDwellingEnabled,
                         routeDeviationEnabled, timeAnomalyEnabled)));
 
-        boolean result = notificationSettingReader.isAnomalyEnabled(NotificationFixture.WARD_KEY, detectionType);
+        List<CaregiverInfo> result = notificationSettingReader.filterRecipients(
+                NotificationFixture.WARD_KEY,
+                List.of(GUARDIAN, OTHER_GUARDIAN),
+                settings -> settings.anomaly().isEnabled(detectionType));
 
-        assertThat(result).isFalse();
+        assertThat(result).containsExactly(OTHER_GUARDIAN);
     }
 
     @Test
-    @DisplayName("설정한 적이 없으면 이상탐지 알림은 켜진 것으로 본다")
-    void isAnomalyEnabled_returns_true_when_never_configured() {
-        given(notificationSettingRepository.findByWardMemberKey(NotificationFixture.WARD_KEY))
-                .willReturn(Optional.empty());
+    @DisplayName("배터리 설정은 행이 있는 보호자만 보호자별 스위치와 임계값으로 돌려준다")
+    void findBatterySettings_returns_settings_per_caregiver() {
+        given(notificationSettingRepository.findAllByWardMemberKey(NotificationFixture.WARD_KEY))
+                .willReturn(List.of(
+                        NotificationFixture.createBatterySetting(
+                                NotificationFixture.WARD_KEY, NotificationFixture.GUARDIAN_KEY, true, "20"),
+                        NotificationFixture.createBatterySetting(
+                                NotificationFixture.WARD_KEY, NotificationFixture.OTHER_GUARDIAN_KEY, false, "50,30")));
 
-        boolean result = notificationSettingReader.isAnomalyEnabled(
-                NotificationFixture.WARD_KEY, DetectionType.WANDERING);
+        Map<String, BatteryNotificationSetting> result =
+                notificationSettingReader.findBatterySettings(NotificationFixture.WARD_KEY);
 
-        assertThat(result).isTrue();
-    }
-
-    @Test
-    @DisplayName("설정한 적이 없으면 안심존 진입 알림은 켜진 것으로 본다")
-    void isSafeZoneEntryEnabled_returns_true_when_never_configured() {
-        given(notificationSettingRepository.findByWardMemberKey(NotificationFixture.WARD_KEY))
-                .willReturn(Optional.empty());
-
-        boolean result = notificationSettingReader.isSafeZoneEntryEnabled(NotificationFixture.WARD_KEY);
-
-        assertThat(result).isTrue();
-    }
-
-    @Test
-    @DisplayName("저장된 안심존 진입 토글이 켜져 있으면 켜진 것으로 읽는다")
-    void isSafeZoneEntryEnabled_reads_stored_toggle() {
-        given(notificationSettingRepository.findByWardMemberKey(NotificationFixture.WARD_KEY))
-                .willReturn(Optional.of(NotificationFixture.createSetting(NotificationFixture.WARD_KEY)));
-
-        boolean result = notificationSettingReader.isSafeZoneEntryEnabled(NotificationFixture.WARD_KEY);
-
-        assertThat(result).isTrue();
-    }
-
-    @Test
-    @DisplayName("설정한 적이 없으면 안심존 이탈 알림은 켜진 것으로 본다")
-    void isSafeZoneExitEnabled_returns_true_when_never_configured() {
-        given(notificationSettingRepository.findByWardMemberKey(NotificationFixture.WARD_KEY))
-                .willReturn(Optional.empty());
-
-        boolean result = notificationSettingReader.isSafeZoneExitEnabled(NotificationFixture.WARD_KEY);
-
-        assertThat(result).isTrue();
-    }
-
-    @Test
-    @DisplayName("저장된 안심존 이탈 토글이 꺼져 있으면 꺼진 것으로 읽는다")
-    void isSafeZoneExitEnabled_reads_stored_toggle() {
-        given(notificationSettingRepository.findByWardMemberKey(NotificationFixture.WARD_KEY))
-                .willReturn(Optional.of(NotificationFixture.createSetting(NotificationFixture.WARD_KEY)));
-
-        boolean result = notificationSettingReader.isSafeZoneExitEnabled(NotificationFixture.WARD_KEY);
-
-        assertThat(result).isFalse();
-    }
-
-    @Test
-    @DisplayName("설정을 반드시 찾아야 하는 조회는 행이 없으면 NOT_FOUND_DATA")
-    void findExistingSetting_throws_when_absent() {
-        given(notificationSettingRepository.findByWardMemberKey(NotificationFixture.WARD_KEY))
-                .willReturn(Optional.empty());
-
-        assertThatThrownBy(() -> notificationSettingReader.findExistingSetting(NotificationFixture.WARD_KEY))
-                .isInstanceOf(AppException.class)
-                .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_FOUND_DATA);
-    }
-
-    @Test
-    @DisplayName("설정을 반드시 찾아야 하는 조회는 저장된 설정을 그대로 돌려준다")
-    void findExistingSetting_returns_stored_setting() {
-        NotificationSetting expected = NotificationFixture.createSetting(NotificationFixture.WARD_KEY);
-        given(notificationSettingRepository.findByWardMemberKey(NotificationFixture.WARD_KEY))
-                .willReturn(Optional.of(expected));
-
-        NotificationSetting result = notificationSettingReader.findExistingSetting(NotificationFixture.WARD_KEY);
-
-        assertThat(result).isSameAs(expected);
-    }
-
-    @Test
-    @DisplayName("배터리 스위치와 선택한 임계값을 한 번의 조회로 함께 돌려준다")
-    void findBatterySetting_returns_switch_and_percents_in_one_lookup() {
-        given(notificationSettingRepository.findByWardMemberKey(NotificationFixture.WARD_KEY))
-                .willReturn(Optional.of(NotificationFixture.createSetting(NotificationFixture.WARD_KEY)));
-
-        BatteryNotificationSetting result =
-                notificationSettingReader.findBatterySetting(NotificationFixture.WARD_KEY);
-
-        assertThat(result.enabled()).isFalse();
-        assertThat(result.thresholds().percents()).containsExactly(40, 90);
-        then(notificationSettingRepository).should(times(1))
-                .findByWardMemberKey(NotificationFixture.WARD_KEY);
-    }
-
-    @Test
-    @DisplayName("설정한 적이 없으면 배터리 알림은 켜짐 + 임계값 없음이다")
-    void findBatterySetting_returns_default_when_never_configured() {
-        given(notificationSettingRepository.findByWardMemberKey(NotificationFixture.WARD_KEY))
-                .willReturn(Optional.empty());
-
-        BatteryNotificationSetting result =
-                notificationSettingReader.findBatterySetting(NotificationFixture.WARD_KEY);
-
-        assertThat(result.enabled()).isTrue();
-        assertThat(result.hasNoThreshold()).isTrue();
+        assertThat(result).containsOnlyKeys(NotificationFixture.GUARDIAN_KEY, NotificationFixture.OTHER_GUARDIAN_KEY);
+        assertThat(result.get(NotificationFixture.GUARDIAN_KEY).enabled()).isTrue();
+        assertThat(result.get(NotificationFixture.GUARDIAN_KEY).thresholds().percents()).containsExactly(20);
+        assertThat(result.get(NotificationFixture.OTHER_GUARDIAN_KEY).enabled()).isFalse();
+        assertThat(result.get(NotificationFixture.OTHER_GUARDIAN_KEY).thresholds().percents())
+                .containsExactlyInAnyOrder(50, 30);
     }
 }

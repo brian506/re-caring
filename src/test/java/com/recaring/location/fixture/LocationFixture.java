@@ -5,6 +5,7 @@ import com.recaring.location.dataaccess.entity.LocationSetting;
 import com.recaring.location.dataaccess.entity.AnomalyDetection;
 import com.recaring.location.event.AnomalyDetectedEvent;
 import com.recaring.location.event.BatteryThresholdAlertEvent;
+import com.recaring.location.vo.BatteryAlertState;
 import com.recaring.location.event.LocationSignalLostEvent;
 import com.recaring.location.event.SafeZoneEnteredEvent;
 import com.recaring.location.event.SafeZoneExitedEvent;
@@ -19,6 +20,7 @@ import com.recaring.safezone.fixture.SafeZoneFixture;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,6 +29,7 @@ public class LocationFixture {
     public static final String WARD_KEY = "ward-member-key-001";
     public static final String GUARDIAN_KEY = "guardian-member-key-001";
     public static final String MANAGER_KEY = "manager-member-key-001";
+    public static final String OTHER_GUARDIAN_KEY = "other-guardian-member-key-001";
     public static final double LATITUDE = 37.5665;
     public static final double LONGITUDE = 126.9780;
     public static final Double ACCURACY = 15.0;
@@ -34,7 +37,6 @@ public class LocationFixture {
     public static final int NOTIFIED_THRESHOLD = 20;
     public static final Double SPEED = 1.4;
     public static final String BATTERY_ALERT_STATE_KEY = "device:battery:" + WARD_KEY;
-    public static final String LAST_NOTIFIED_THRESHOLD_FIELD = "lastNotifiedThreshold";
     public static final LocalDateTime MEASURED_AT = LocalDateTime.of(2026, 7, 27, 10, 15, 0);
     public static final LocalDateTime RECORDED_AT = LocalDateTime.of(2026, 7, 27, 10, 15, 3);
     public static final String MEASURED_AT_TEXT = "2026-07-27 10:15:00";
@@ -126,8 +128,16 @@ public class LocationFixture {
         return new LocationSignalLostEvent(WARD_KEY, createGps());
     }
 
+    public static BatteryAlertState batteryAlertState(int lastNotifiedThreshold) {
+        return new BatteryAlertState(lastNotifiedThreshold);
+    }
+
     public static BatteryThresholdAlertEvent createBatteryThresholdAlertEvent() {
-        return new BatteryThresholdAlertEvent(WARD_KEY, NOTIFIED_THRESHOLD, DETECTED_AT);
+        return createBatteryThresholdAlertEvent(List.of(GUARDIAN_KEY, MANAGER_KEY));
+    }
+
+    public static BatteryThresholdAlertEvent createBatteryThresholdAlertEvent(List<String> recipientKeys) {
+        return new BatteryThresholdAlertEvent(WARD_KEY, NOTIFIED_THRESHOLD, DETECTED_AT, recipientKeys);
     }
 
     public static AnomalyAlert createAnomalyAlert(DetectionType detectionType, String evidence) {
@@ -188,9 +198,14 @@ public class LocationFixture {
                 .build();
     }
 
-    public static LocationSetting createLocationSetting(int collectionIntervalSeconds) {
+    public static LocationSetting createLocationSetting(String caregiverKey, int collectionIntervalSeconds) {
+        return createLocationSetting(WARD_KEY, caregiverKey, collectionIntervalSeconds);
+    }
+
+    public static LocationSetting createLocationSetting(String wardKey, String caregiverKey, int collectionIntervalSeconds) {
         return LocationSetting.builder()
-                .wardMemberKey(WARD_KEY)
+                .wardMemberKey(wardKey)
+                .caregiverMemberKey(caregiverKey)
                 .collectionIntervalSeconds(collectionIntervalSeconds)
                 .build();
     }

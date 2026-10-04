@@ -92,12 +92,12 @@ class MemberWithdrawalManagerTest {
         then(oAuthRepository).should().deleteByMemberKey(MEMBER_KEY);
         then(membersTermsAgreementWriter).should().deleteByMemberKey(MEMBER_KEY);
         then(fcmDeviceTokenRepository).should().deleteByMemberKey(MEMBER_KEY);
-        then(notificationSettingRepository).should().deleteByWardMemberKey(MEMBER_KEY);
+        then(notificationSettingRepository).should().deleteByMemberKey(MEMBER_KEY);
         then(careRelationshipManager).should().leaveAllCare(MEMBER_KEY);
         then(careInvitationWriter).should().deleteAllByMemberKey(MEMBER_KEY);
         then(gpsHistoryManager).should().deleteByWardMemberKey(MEMBER_KEY);
         then(anomalyDetectionManager).should().deleteByWardMemberKey(MEMBER_KEY);
-        then(locationSettingRepository).should().deleteByWardMemberKey(MEMBER_KEY);
+        then(locationSettingRepository).should().deleteByMemberKey(MEMBER_KEY);
         then(safeZoneWriter).should().deleteByWardMemberKey(MEMBER_KEY);
         then(wardDeviceTokenRepository).should().deleteByWardKey(MEMBER_KEY);
         then(memberWriter).should().deleteByMemberKey(MEMBER_KEY);

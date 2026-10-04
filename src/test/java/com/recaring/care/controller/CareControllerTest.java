@@ -8,8 +8,12 @@ import com.recaring.care.dataaccess.repository.CareInvitationRepository;
 import com.recaring.care.dataaccess.repository.CareRelationshipRepository;
 import com.recaring.care.dataaccess.repository.DesignatedAvatarRepository;
 import com.recaring.care.fixture.CareFixture;
+import com.recaring.location.dataaccess.repository.LocationSettingRepository;
+import com.recaring.location.fixture.LocationFixture;
 import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.dataaccess.repository.MemberRepository;
+import com.recaring.notification.dataaccess.repository.NotificationSettingRepository;
+import com.recaring.notification.fixture.NotificationFixture;
 import com.recaring.support.AbstractIntegrationTest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,6 +35,8 @@ class CareControllerTest extends AbstractIntegrationTest {
     @Autowired private CareInvitationRepository careInvitationRepository;
     @Autowired private CareRelationshipRepository careRelationshipRepository;
     @Autowired private DesignatedAvatarRepository designatedAvatarRepository;
+    @Autowired private NotificationSettingRepository notificationSettingRepository;
+    @Autowired private LocationSettingRepository locationSettingRepository;
 
     private Member guardian;
     private Member ward;
@@ -44,6 +50,8 @@ class CareControllerTest extends AbstractIntegrationTest {
     @AfterEach
     void tearDown() {
         designatedAvatarRepository.deleteAllInBatch();
+        notificationSettingRepository.deleteAllInBatch();
+        locationSettingRepository.deleteAllInBatch();
         careRelationshipRepository.deleteAllInBatch();
         careInvitationRepository.deleteAllInBatch();
         memberRepository.deleteAllInBatch();
@@ -610,6 +618,39 @@ class CareControllerTest extends AbstractIntegrationTest {
         assertThat(careRelationshipRepository.findCareRelationship(
                 ward.getMemberKey(), manager.getMemberKey())).isEmpty();
         assertThat(careRelationshipRepository.findCareRelationship(
+                ward.getMemberKey(), guardian.getMemberKey())).isPresent();
+    }
+
+    @Test
+    @DisplayName("DELETE /api/v1/care/wards/{wardKey}/caregivers/{caregiverKey} - 내보낸 사람의 알림 설정·위치 주기는 지워지고 남은 보호자의 설정은 그대로다")
+    void removeCaregiver_deletes_settings_of_removed_caregiver_only() {
+        Member manager = memberRepository.save(CareFixture.createGuardianMember(CareFixture.MANAGER_PHONE));
+        careRelationshipRepository.save(
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+        careRelationshipRepository.save(
+                CareFixture.createManagerRelationship(ward.getMemberKey(), manager.getMemberKey()));
+        notificationSettingRepository.save(
+                NotificationFixture.createSetting(ward.getMemberKey(), guardian.getMemberKey()));
+        notificationSettingRepository.save(
+                NotificationFixture.createSetting(ward.getMemberKey(), manager.getMemberKey()));
+        locationSettingRepository.save(
+                LocationFixture.createLocationSetting(ward.getMemberKey(), guardian.getMemberKey(), 180));
+        locationSettingRepository.save(
+                LocationFixture.createLocationSetting(ward.getMemberKey(), manager.getMemberKey(), 60));
+
+        client.delete()
+                .uri("/api/v1/care/wards/" + ward.getMemberKey() + "/caregivers/" + manager.getMemberKey())
+                .header(HttpHeaders.AUTHORIZATION, authHeader(guardian))
+                .exchange()
+                .expectStatus().isOk();
+
+        assertThat(notificationSettingRepository.findByWardMemberKeyAndCaregiverMemberKey(
+                ward.getMemberKey(), manager.getMemberKey())).isEmpty();
+        assertThat(locationSettingRepository.findByWardMemberKeyAndCaregiverMemberKey(
+                ward.getMemberKey(), manager.getMemberKey())).isEmpty();
+        assertThat(notificationSettingRepository.findByWardMemberKeyAndCaregiverMemberKey(
+                ward.getMemberKey(), guardian.getMemberKey())).isPresent();
+        assertThat(locationSettingRepository.findByWardMemberKeyAndCaregiverMemberKey(
                 ward.getMemberKey(), guardian.getMemberKey())).isPresent();
     }
 

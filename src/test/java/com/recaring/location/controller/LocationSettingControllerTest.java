@@ -22,6 +22,8 @@ import org.springframework.http.MediaType;
 
 import java.util.Date;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 @DisplayName("LocationSettingController HTTP 통합 테스트")
 class LocationSettingControllerTest extends AbstractIntegrationTest {
 
@@ -168,18 +170,28 @@ class LocationSettingControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("GET /api/v1/location/settings/collection-interval/me - 보호 대상자 앱은 현재 주기만 조회한다")
-    void getMyCollectionInterval_returns_current_interval_only_for_ward_device() {
-        client.patch()
-                .uri("/api/v1/location/settings/{wardKey}/collection-interval", ward.getMemberKey())
-                .header(HttpHeaders.AUTHORIZATION, bearerToken(guardian))
-                .contentType(MediaType.APPLICATION_JSON)
-                .body("""
-                        {"intervalSeconds": 60}
-                        """)
-                .exchange()
-                .expectStatus().isOk();
+    @DisplayName("PATCH /api/v1/location/settings/{wardKey}/collection-interval - 보호자가 바꾼 주기는 다른 보호자의 주기에 반영되지 않는다")
+    void updateCollectionInterval_does_not_affect_other_guardian() {
+        patchInterval(guardian, 180);
 
+        client.get()
+                .uri("/api/v1/location/settings/{wardKey}/collection-interval", ward.getMemberKey())
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(coGuardian))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.data.currentIntervalSeconds").isEqualTo(30);
+        assertThat(locationSettingRepository.findByWardMemberKeyAndCaregiverMemberKey(
+                ward.getMemberKey(), guardian.getMemberKey()))
+                .hasValueSatisfying(setting -> assertThat(setting.getCollectionIntervalSeconds()).isEqualTo(180));
+        assertThat(locationSettingRepository.findByWardMemberKeyAndCaregiverMemberKey(
+                ward.getMemberKey(), coGuardian.getMemberKey()))
+                .isEmpty();
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/location/settings/collection-interval/me - 아무 보호자도 설정하지 않았으면 30초를 받는다")
+    void getMyCollectionInterval_returns_thirty_seconds_when_nobody_configured() {
         client.get()
                 .uri("/api/v1/location/settings/collection-interval/me")
                 .header(HttpHeaders.AUTHORIZATION, "Device " + wardDeviceToken)
@@ -187,8 +199,35 @@ class LocationSettingControllerTest extends AbstractIntegrationTest {
                 .expectStatus().isOk()
                 .expectBody()
                 .jsonPath("$.resultType").isEqualTo("SUCCESS")
-                .jsonPath("$.data.currentIntervalSeconds").isEqualTo(60)
+                .jsonPath("$.data.currentIntervalSeconds").isEqualTo(30)
                 .jsonPath("$.data.options").doesNotExist();
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/location/settings/collection-interval/me - 기기는 보호자들이 설정한 주기 중 가장 짧은 주기를 받는다")
+    void getMyCollectionInterval_returns_shortest_interval_among_guardians() {
+        patchInterval(guardian, 300);
+        patchInterval(coGuardian, 60);
+
+        client.get()
+                .uri("/api/v1/location/settings/collection-interval/me")
+                .header(HttpHeaders.AUTHORIZATION, "Device " + wardDeviceToken)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.data.currentIntervalSeconds").isEqualTo(60);
+    }
+
+    private void patchInterval(Member requester, int intervalSeconds) {
+        client.patch()
+                .uri("/api/v1/location/settings/{wardKey}/collection-interval", ward.getMemberKey())
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(requester))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"intervalSeconds": %d}
+                        """.formatted(intervalSeconds))
+                .exchange()
+                .expectStatus().isOk();
     }
 
     private String bearerToken(Member member) {
