@@ -21,13 +21,13 @@ public class NotificationSettingService {
     @Transactional(readOnly = true)
     public NotificationSettings getSetting(String requesterKey, String wardKey) {
         notificationSettingValidator.validateSettingAccess(requesterKey, wardKey);
-        return notificationSettingReader.findSetting(wardKey);
+        return notificationSettingReader.findSetting(wardKey, requesterKey);
     }
 
     @Transactional
     public void updateSafeZone(String requesterKey, String wardKey, boolean entryEnabled, boolean exitEnabled) {
         notificationSettingValidator.validateSettingAccess(requesterKey, wardKey);
-        notificationSettingManager.updateSafeZone(wardKey, entryEnabled, exitEnabled);
+        notificationSettingManager.updateSafeZone(wardKey, requesterKey, entryEnabled, exitEnabled);
     }
 
     @Transactional
@@ -35,6 +35,7 @@ public class NotificationSettingService {
         notificationSettingValidator.validateSettingAccess(requesterKey, command.wardKey());
         notificationSettingManager.updateAnomaly(
                 command.wardKey(),
+                requesterKey,
                 command.speedAnomalyEnabled(),
                 command.wanderingAnomalyEnabled(),
                 command.abnormalDwellingEnabled(),
@@ -46,12 +47,12 @@ public class NotificationSettingService {
     @Transactional
     public void updateEmergencyCall(String requesterKey, String wardKey, boolean enabled) {
         notificationSettingValidator.validateSettingAccess(requesterKey, wardKey);
-        notificationSettingManager.updateEmergencyCall(wardKey, enabled);
+        notificationSettingManager.updateEmergencyCall(wardKey, requesterKey, enabled);
     }
 
     @Transactional
     public void updateBattery(String requesterKey, String wardKey, boolean lowBatteryEnabled, BatteryThresholds thresholds) {
         notificationSettingValidator.validateSettingAccess(requesterKey, wardKey);
-        notificationSettingManager.updateBattery(wardKey, lowBatteryEnabled, thresholds);
+        notificationSettingManager.updateBattery(wardKey, requesterKey, lowBatteryEnabled, thresholds);
     }
 }

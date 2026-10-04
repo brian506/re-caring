@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(
         name = "notification_settings",
-        uniqueConstraints = @UniqueConstraint(columnNames = "ward_member_key")
+        uniqueConstraints = @UniqueConstraint(columnNames = {"ward_member_key", "caregiver_member_key"})
 )
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class NotificationSetting extends BaseEntity {
@@ -30,6 +30,9 @@ public class NotificationSetting extends BaseEntity {
 
     @Column(name = "ward_member_key", nullable = false)
     private String wardMemberKey;
+
+    @Column(name = "caregiver_member_key", nullable = false)
+    private String caregiverMemberKey;
 
     // columnDefinition의 DEFAULT는 insertDefaultIfAbsent의 슬림 INSERT(키 컬럼만 지정)를 위한 것이다.
     // 기본값을 DB 스키마에 두어 네이티브 INSERT의 값 나열 중복을 제거한다.
@@ -68,6 +71,7 @@ public class NotificationSetting extends BaseEntity {
     @Builder
     public NotificationSetting(
             String wardMemberKey,
+            String caregiverMemberKey,
             boolean safeZoneEntryEnabled,
             boolean safeZoneExitEnabled,
             boolean routeDeviationEnabled,
@@ -80,6 +84,7 @@ public class NotificationSetting extends BaseEntity {
             String batteryThresholdPercents
     ) {
         this.wardMemberKey = wardMemberKey;
+        this.caregiverMemberKey = caregiverMemberKey;
         this.safeZoneEntryEnabled = safeZoneEntryEnabled;
         this.safeZoneExitEnabled = safeZoneExitEnabled;
         this.routeDeviationEnabled = routeDeviationEnabled;
@@ -92,9 +97,10 @@ public class NotificationSetting extends BaseEntity {
         this.batteryThresholdPercents = batteryThresholdPercents;
     }
 
-    public static NotificationSetting defaultFor(String wardMemberKey) {
+    public static NotificationSetting defaultFor(String wardMemberKey, String caregiverMemberKey) {
         return NotificationSetting.builder()
                 .wardMemberKey(wardMemberKey)
+                .caregiverMemberKey(caregiverMemberKey)
                 .safeZoneEntryEnabled(true)
                 .safeZoneExitEnabled(true)
                 .routeDeviationEnabled(true)

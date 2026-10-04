@@ -28,6 +28,8 @@ public class QNotificationSetting extends EntityPathBase<NotificationSetting> {
 
     public final StringPath batteryThresholdPercents = createString("batteryThresholdPercents");
 
+    public final StringPath caregiverMemberKey = createString("caregiverMemberKey");
+
     //inherited
     public final DateTimePath<java.time.LocalDateTime> createdAt = _super.createdAt;
 

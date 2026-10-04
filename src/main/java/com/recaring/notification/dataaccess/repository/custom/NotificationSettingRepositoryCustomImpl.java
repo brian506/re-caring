@@ -1,5 +1,6 @@
 package com.recaring.notification.dataaccess.repository.custom;
 
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.recaring.notification.dataaccess.entity.NotificationSetting;
 import com.recaring.support.repository.QuerydslRepositorySupport;
 
@@ -15,25 +16,27 @@ public class NotificationSettingRepositoryCustomImpl extends QuerydslRepositoryS
     }
 
     @Override
-    public void deleteByWardMemberKey(String wardMemberKey) {
+    public void deleteByMemberKey(String memberKey) {
         delete(notificationSetting)
-                .where(notificationSetting.wardMemberKey.eq(wardMemberKey))
+                .where(notificationSetting.wardMemberKey.eq(memberKey)
+                        .or(notificationSetting.caregiverMemberKey.eq(memberKey)))
                 .execute();
     }
 
     @Override
-    public void updateSafeZone(String wardMemberKey, boolean entryEnabled, boolean exitEnabled) {
+    public void updateSafeZone(String wardMemberKey, String caregiverMemberKey, boolean entryEnabled, boolean exitEnabled) {
         update(notificationSetting)
                 .set(notificationSetting.safeZoneEntryEnabled, entryEnabled)
                 .set(notificationSetting.safeZoneExitEnabled, exitEnabled)
                 .set(notificationSetting.updatedAt, LocalDateTime.now())
-                .where(notificationSetting.wardMemberKey.eq(wardMemberKey))
+                .where(ownedBy(wardMemberKey, caregiverMemberKey))
                 .execute();
     }
 
     @Override
     public void updateAnomaly(
             String wardMemberKey,
+            String caregiverMemberKey,
             boolean speedAnomalyEnabled,
             boolean wanderingAnomalyEnabled,
             boolean abnormalDwellingEnabled,
@@ -47,26 +50,36 @@ public class NotificationSettingRepositoryCustomImpl extends QuerydslRepositoryS
                 .set(notificationSetting.routeDeviationEnabled, routeDeviationEnabled)
                 .set(notificationSetting.timeAnomalyEnabled, timeAnomalyEnabled)
                 .set(notificationSetting.updatedAt, LocalDateTime.now())
-                .where(notificationSetting.wardMemberKey.eq(wardMemberKey))
+                .where(ownedBy(wardMemberKey, caregiverMemberKey))
                 .execute();
     }
 
     @Override
-    public void updateEmergencyCall(String wardMemberKey, boolean enabled) {
+    public void updateEmergencyCall(String wardMemberKey, String caregiverMemberKey, boolean enabled) {
         update(notificationSetting)
                 .set(notificationSetting.emergencyCallEnabled, enabled)
                 .set(notificationSetting.updatedAt, LocalDateTime.now())
-                .where(notificationSetting.wardMemberKey.eq(wardMemberKey))
+                .where(ownedBy(wardMemberKey, caregiverMemberKey))
                 .execute();
     }
 
     @Override
-    public void updateBattery(String wardMemberKey, boolean lowBatteryEnabled, String batteryThresholdPercents) {
+    public void updateBattery(
+            String wardMemberKey,
+            String caregiverMemberKey,
+            boolean lowBatteryEnabled,
+            String batteryThresholdPercents
+    ) {
         update(notificationSetting)
                 .set(notificationSetting.lowBatteryEnabled, lowBatteryEnabled)
                 .set(notificationSetting.batteryThresholdPercents, batteryThresholdPercents)
                 .set(notificationSetting.updatedAt, LocalDateTime.now())
-                .where(notificationSetting.wardMemberKey.eq(wardMemberKey))
+                .where(ownedBy(wardMemberKey, caregiverMemberKey))
                 .execute();
+    }
+
+    private BooleanExpression ownedBy(String wardMemberKey, String caregiverMemberKey) {
+        return notificationSetting.wardMemberKey.eq(wardMemberKey)
+                .and(notificationSetting.caregiverMemberKey.eq(caregiverMemberKey));
     }
 }

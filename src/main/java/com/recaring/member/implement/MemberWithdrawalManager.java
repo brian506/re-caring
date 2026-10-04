@@ -68,7 +68,7 @@ public class MemberWithdrawalManager {
         oAuthRepository.deleteByMemberKey(memberKey);
         membersTermsAgreementWriter.deleteByMemberKey(memberKey);
         fcmDeviceTokenRepository.deleteByMemberKey(memberKey);
-        notificationSettingRepository.deleteByWardMemberKey(memberKey);
+        notificationSettingRepository.deleteByMemberKey(memberKey);
         careRelationshipManager.leaveAllCare(memberKey);
         careInvitationWriter.deleteAllByMemberKey(memberKey);
         gpsHistoryManager.deleteByWardMemberKey(memberKey);

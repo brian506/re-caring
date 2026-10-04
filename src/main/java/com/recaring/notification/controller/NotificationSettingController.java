@@ -31,7 +31,7 @@ public class NotificationSettingController {
 
     @Operation(
             summary = "알림 설정 조회",
-            description = "wardKey에 해당하는 피보호자의 알림 설정을 반환합니다."
+            description = "wardKey에 대해 요청한 보호자 본인이 설정한 알림 설정을 반환합니다. 설정은 보호자마다 독립적입니다. [케어 관계가 있는 보호자·관계자 전용]"
     )
     @GetMapping("/{wardKey}")
     public ResponseEntity<ApiResponse<NotificationSettingResponse>> getSetting(
@@ -47,7 +47,7 @@ public class NotificationSettingController {
 
     @Operation(
             summary = "안심존 알림 설정 변경",
-            description = "안심존 진입/이탈 알림 활성화 여부를 변경합니다."
+            description = "안심존 진입/이탈 알림 활성화 여부를 변경합니다. 요청한 보호자 본인에게만 적용됩니다."
     )
     @PatchMapping("/{wardKey}/safe-zone")
     public ResponseEntity<ApiResponse<Void>> updateSafeZone(
@@ -62,7 +62,7 @@ public class NotificationSettingController {
 
     @Operation(
             summary = "이상탐지 알림 설정 변경",
-            description = "빠른 이동/배회/장시간 정지/낯선 장소/시간대 이상 알림의 활성화 여부를 변경합니다."
+            description = "빠른 이동/배회/장시간 정지/낯선 장소/시간대 이상 알림의 활성화 여부를 변경합니다. 요청한 보호자 본인에게만 적용됩니다."
     )
     @PatchMapping("/{wardKey}/anomaly")
     public ResponseEntity<ApiResponse<Void>> updateAnomaly(
@@ -77,7 +77,7 @@ public class NotificationSettingController {
 
     @Operation(
             summary = "응급호출 알림 설정 변경",
-            description = "응급호출 알림 활성화 여부를 변경합니다."
+            description = "응급호출 알림 활성화 여부를 변경합니다. 요청한 보호자 본인에게만 적용됩니다."
     )
     @PatchMapping("/{wardKey}/emergency-call")
     public ResponseEntity<ApiResponse<Void>> updateEmergencyCall(
@@ -92,7 +92,7 @@ public class NotificationSettingController {
 
     @Operation(
             summary = "배터리 알림 설정 변경",
-            description = "배터리 알림 활성화 여부와 알림 받을 배터리 수치(%) 목록을 변경합니다. 10~100 사이 10 단위 값을 개수 제한 없이 선택할 수 있고, 기기 잔량이 선택한 수치에 도달하면 알림이 발송됩니다."
+            description = "배터리 알림 활성화 여부와 알림 받을 배터리 수치(%) 목록을 변경합니다. 10~100 사이 10 단위 값을 개수 제한 없이 선택할 수 있고, 기기 잔량이 선택한 수치에 도달하면 알림이 발송됩니다. 요청한 보호자 본인에게만 적용됩니다."
     )
     @PatchMapping("/{wardKey}/battery")
     public ResponseEntity<ApiResponse<Void>> updateBattery(

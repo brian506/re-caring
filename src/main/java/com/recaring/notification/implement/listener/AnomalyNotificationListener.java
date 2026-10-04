@@ -43,14 +43,13 @@ public class AnomalyNotificationListener {
         AnomalyAlert detection = event.alert();
         String wardMemberKey = detection.wardMemberKey();
 
-        // 토글 off이면 알림 스킵
-        if (!notificationSettingReader.isAnomalyEnabled(wardMemberKey, detection.detectionType())) {
-            return;
-        }
-
-        List<CaregiverInfo> caregivers = careRelationshipReader.findCaregiverInfos(wardMemberKey);
+        List<CaregiverInfo> caregivers = notificationSettingReader.filterRecipients(
+                wardMemberKey,
+                careRelationshipReader.findCaregiverInfos(wardMemberKey),
+                settings -> settings.anomaly().isEnabled(detection.detectionType()));
         if (caregivers.isEmpty()) {
-            log.warn("[이상탐지 알림 : 수신자 없음]: wardMemberKey={}", wardMemberKey);
+            log.info("[이상탐지 알림 : 수신자 없음]: wardMemberKey={} | detectionType={}",
+                    wardMemberKey, detection.detectionType());
             return;
         }
 

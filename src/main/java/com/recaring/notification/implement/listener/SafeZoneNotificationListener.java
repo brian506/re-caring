@@ -36,24 +36,14 @@ public class SafeZoneNotificationListener {
     @Async("broadcastExecutor")
     @EventListener
     public void onSafeZoneEntered(SafeZoneEnteredEvent event) {
-        String wardMemberKey = event.wardMemberKey();
-        if (!notificationSettingReader.isSafeZoneEntryEnabled(wardMemberKey)) {
-            log.info("[안심존 진입 알림 : 설정 꺼짐 스킵]: wardMemberKey={}", wardMemberKey);
-            return;
-        }
-        send(wardMemberKey, event.safeZoneKey(), SafeZoneAlertType.SAFE_ZONE_ENTERED,
+        send(event.wardMemberKey(), event.safeZoneKey(), SafeZoneAlertType.SAFE_ZONE_ENTERED,
                 event.safeZoneName() + "에 도착했어요.", event.latitude(), event.longitude(), event.detectedAt());
     }
 
     @Async("broadcastExecutor")
     @EventListener
     public void onSafeZoneExited(SafeZoneExitedEvent event) {
-        String wardMemberKey = event.wardMemberKey();
-        if (!notificationSettingReader.isSafeZoneExitEnabled(wardMemberKey)) {
-            log.info("[안심존 이탈 알림 : 설정 꺼짐 스킵]: wardMemberKey={}", wardMemberKey);
-            return;
-        }
-        send(wardMemberKey, event.safeZoneKey(), SafeZoneAlertType.SAFE_ZONE_EXITED,
+        send(event.wardMemberKey(), event.safeZoneKey(), SafeZoneAlertType.SAFE_ZONE_EXITED,
                 event.safeZoneName() + "에서 벗어났어요.", event.latitude(), event.longitude(), event.detectedAt());
     }
 
@@ -67,9 +57,12 @@ public class SafeZoneNotificationListener {
             double longitude,
             LocalDateTime detectedAt
     ) {
-        List<CaregiverInfo> caregivers = careRelationshipReader.findCaregiverInfos(wardMemberKey);
+        List<CaregiverInfo> caregivers = notificationSettingReader.filterRecipients(
+                wardMemberKey,
+                careRelationshipReader.findCaregiverInfos(wardMemberKey),
+                settings -> alertType.isEnabledIn(settings.safeZone()));
         if (caregivers.isEmpty()) {
-            log.warn("[안심존 알림 : 수신자 없음]: wardMemberKey={}", wardMemberKey);
+            log.info("[안심존 알림 : 수신자 없음]: wardMemberKey={} | alertType={}", wardMemberKey, alertType);
             return;
         }
 

@@ -18,6 +18,10 @@ public enum SafeZoneAlertType {
         return notificationTitle;
     }
 
+    public boolean isEnabledIn(SafeZoneSetting setting) {
+        return this == SAFE_ZONE_ENTERED ? setting.entryEnabled() : setting.exitEnabled();
+    }
+
     public static Optional<SafeZoneAlertType> find(String value) {
         return Arrays.stream(values())
                 .filter(type -> type.name().equals(value))

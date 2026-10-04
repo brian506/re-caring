@@ -34,11 +34,13 @@ public class BatteryThresholdNotificationListener {
         int thresholdPercent = event.thresholdPercent();
         log.info("[배터리 잔량 알림 : 이벤트 수신]: memberKey={} | threshold={}", memberKey, thresholdPercent);
 
-        List<CaregiverInfo> caregivers = careRelationshipReader.findCaregiverInfos(memberKey);
+        // 판정 이후 관계가 끊긴 보호자에게 보내지 않도록 현재 관계와 교집합을 취한다.
+        List<CaregiverInfo> caregivers = careRelationshipReader.findCaregiverInfos(memberKey).stream()
+                .filter(caregiver -> event.recipientKeys().contains(caregiver.memberKey()))
+                .toList();
         if (caregivers.isEmpty()) {
             return;
         }
-        // 보호 대상자와 연관된 보호자 + 관계자 조회
         List<String> guardianKeys = caregivers.stream()
                 .filter(caregiver -> caregiver.careRole().isGuardian())
                 .map(CaregiverInfo::memberKey)
