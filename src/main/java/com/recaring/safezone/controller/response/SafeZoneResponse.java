@@ -1,5 +1,6 @@
 package com.recaring.safezone.controller.response;
 
+import com.recaring.safezone.dataaccess.entity.SafeZoneType;
 import com.recaring.safezone.vo.SafeZoneInfo;
 
 public record SafeZoneResponse(
@@ -8,7 +9,8 @@ public record SafeZoneResponse(
         String address,
         double latitude,
         double longitude,
-        int radiusMeters
+        int radiusMeters,
+        SafeZoneType type
 ) {
     public static SafeZoneResponse from(SafeZoneInfo info) {
         return new SafeZoneResponse(
@@ -17,7 +19,8 @@ public record SafeZoneResponse(
                 info.address(),
                 info.latitude(),
                 info.longitude(),
-                info.radius().getMeters()
+                info.radius().getMeters(),
+                info.type()
         );
     }
 }

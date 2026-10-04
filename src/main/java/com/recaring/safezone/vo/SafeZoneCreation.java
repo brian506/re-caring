@@ -1,6 +1,7 @@
 package com.recaring.safezone.vo;
 
 import com.recaring.safezone.dataaccess.entity.SafeZoneRadius;
+import com.recaring.safezone.dataaccess.entity.SafeZoneType;
 import com.recaring.support.exception.AppException;
 import com.recaring.support.exception.ErrorType;
 
@@ -10,7 +11,8 @@ public record SafeZoneCreation(
         String address,
         double latitude,
         double longitude,
-        SafeZoneRadius radius
+        SafeZoneRadius radius,
+        SafeZoneType type
 ) {
     public SafeZoneCreation {
         if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {

@@ -23,12 +23,14 @@ public class SafeZoneWriter {
                 .latitude(command.latitude())
                 .longitude(command.longitude())
                 .radius(command.radius())
+                .type(command.type())
                 .build());
     }
 
     public void update(String safeZoneKey, String wardMemberKey, SafeZoneUpdate command) {
         SafeZone zone = getEntity(safeZoneKey, wardMemberKey);
-        zone.update(command.name(), command.address(), command.latitude(), command.longitude(), command.radius());
+        zone.update(command.name(), command.address(), command.latitude(), command.longitude(),
+                command.radius(), command.type());
     }
 
     public void delete(String safeZoneKey, String wardMemberKey) {

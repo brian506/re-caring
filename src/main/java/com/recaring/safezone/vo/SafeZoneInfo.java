@@ -2,6 +2,7 @@ package com.recaring.safezone.vo;
 
 import com.recaring.safezone.dataaccess.entity.SafeZone;
 import com.recaring.safezone.dataaccess.entity.SafeZoneRadius;
+import com.recaring.safezone.dataaccess.entity.SafeZoneType;
 
 /**
  * 안심존은 중심 좌표 + 반경의 원형이다. 어떤 좌표가 이 존 안에 있는지는 존 자신의 성질이므로
@@ -13,7 +14,8 @@ public record SafeZoneInfo(
         String address,
         double latitude,
         double longitude,
-        SafeZoneRadius radius
+        SafeZoneRadius radius,
+        SafeZoneType type
 ) {
     private static final double EARTH_RADIUS_METERS = 6_371_008.8;
 
@@ -24,7 +26,8 @@ public record SafeZoneInfo(
                 entity.getAddress(),
                 entity.getLatitude(),
                 entity.getLongitude(),
-                entity.getRadius()
+                entity.getRadius(),
+                entity.getType()
         );
     }
 
