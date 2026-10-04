@@ -4,6 +4,8 @@ import com.recaring.care.vo.WardInfo;
 import com.recaring.care.dataaccess.entity.CareRole;
 import com.recaring.member.dataaccess.entity.Gender;
 
+import java.time.LocalDateTime;
+
 public record WardResponse(
         String wardMemberKey,
         String wardName,
@@ -12,7 +14,8 @@ public record WardResponse(
         Gender wardGender,
         CareRole myRole,
         String wardProfileAvatarCode,
-        String designatedProfileAvatarCode
+        String designatedProfileAvatarCode,
+        LocalDateTime wardJoinedAt
 ) {
     public static WardResponse from(WardInfo info) {
         return new WardResponse(
@@ -23,7 +26,8 @@ public record WardResponse(
                 info.wardGender(),
                 info.myRole(),
                 info.wardProfileAvatarCode(),
-                info.designatedProfileAvatarCode()
+                info.designatedProfileAvatarCode(),
+                info.wardJoinedAt()
         );
     }
 }

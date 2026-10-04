@@ -39,7 +39,7 @@ public class CareRelationshipReader {
                     Member ward = memberMap.get(r.getWardMemberKey());
                     return new WardInfo(ward.getMemberKey(), ward.getName(), r.getWardNickname(), ward.getPhone(),
                             ward.getGender(), r.getCareRole(), ward.getProfileAvatarCode(),
-                            designatedAvatarCodes.get(ward.getMemberKey()));
+                            designatedAvatarCodes.get(ward.getMemberKey()), ward.getCreatedAt());
                 })
                 .toList();
     }
