@@ -27,10 +27,13 @@
 | Auth | POST | `/api/v1/auth/oauth/link/{kakao\|naver}` | OAuth 사후 연동 (JWT 인증, 로컬 가입 필수) |
 | Auth | POST | `/api/v1/auth/token/refresh` | 토큰 갱신 |
 | Auth | PATCH | `/api/v1/auth/password` | 비밀번호 변경. `verificationToken`은 1회용(성공·실패 무관하게 소비) |
-| Care | POST | `/api/v1/care/requests/ward` | 보호대상자 추가 요청 (GUARDIAN) |
+| Care | POST | `/api/v1/care/requests/ward` | 보호대상자 추가 요청 (GUARDIAN). 같은 (받는 회원, 대상자)에 대기 요청이 있으면 E5009 (manager·guardian 요청도 동일) |
 | Care | POST | `/api/v1/care/requests/manager` | 관리자 추가 요청 |
 | Care | POST | `/api/v1/care/requests/guardian` | 보호자 추가 요청 |
 | Care | GET | `/api/v1/care/requests/received` | 받은 케어 요청 목록 |
+| Care | GET | `/api/v1/care/requests/sent` | 보낸 케어 요청 목록 (GUARDIAN). `?status=` 기본 PENDING. `phoneNumber`는 받는 회원의 현재 번호, 대상자 추가 요청은 수락 후에만 `wardKey`·`wardName` 공개 |
+| Care | POST | `/api/v1/care/requests/{key}/resend` | 보낸 대기 요청 푸시 재전송 (GUARDIAN). 요청당 5분 간격, 위반 시 429 E5019 + `error.data.seconds` |
+| Care | DELETE | `/api/v1/care/requests/{key}` | 보낸 대기 요청 취소 (GUARDIAN, hard-delete) |
 | Care | PATCH | `/api/v1/care/requests/{key}/accept` | 케어 요청 수락 |
 | Care | PATCH | `/api/v1/care/requests/{key}/reject` | 케어 요청 거절 |
 | Care | GET | `/api/v1/care/wards` | 내 보호대상자 목록 |
@@ -188,6 +191,7 @@ investigation:{fingerprint}    Alert 조사 상태       TTL: 10분  { threadTs,
 device:state:{memberKey}       기기 상태             TTL 없음   ONLINE | LOW_BATTERY | OFFLINE
 device:battery:{wardKey}       배터리 재알림 억제(hash) TTL: 1일, 억제 해제·탈퇴 시 삭제  { caregiverKey: lastNotifiedThreshold }
 careRelationship::*            케어관계 캐시           TTL: 10분
+care:invitation:resend:{requestKey}  케어 요청 재전송 간격 제한(SETNX)  TTL: 5분
 ```
 
 안심존 상태는 Redis(`safezone:state:{wardKey}`)에서 `safe_zone_states` 테이블로 이전했다. 유실되면 복구 불가능한
