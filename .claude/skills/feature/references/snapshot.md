@@ -36,7 +36,7 @@
 | Care | DELETE | `/api/v1/care/requests/{key}` | 보낸 대기 요청 취소 (GUARDIAN, hard-delete) |
 | Care | PATCH | `/api/v1/care/requests/{key}/accept` | 케어 요청 수락 |
 | Care | PATCH | `/api/v1/care/requests/{key}/reject` | 케어 요청 거절 |
-| Care | GET | `/api/v1/care/wards` | 내 보호대상자 목록 |
+| Care | GET | `/api/v1/care/wards` | 내 보호대상자 목록. `wardJoinedAt`(대상자 가입 시각 = members.created_at, 위치기록 달력의 하한. 연동일이 아님 — 보호자는 연동 이전 기록도 조회 가능) |
 | Care | GET | `/api/v1/care/wards/{wardKey}/caregivers` | 보호자/관리자 목록 |
 | Care | DELETE | `/api/v1/care/wards/{wardKey}` | 보호 대상자 케어 관계 삭제 (케어 관계가 있는 회원 전원. **주보호자가 나가면 남은 사람 중 1명이 주보호자로 승계됨**) |
 | Care | DELETE | `/api/v1/care/wards/{wardKey}/caregivers/{caregiverKey}` | 특정 보호자/관계자 케어 관계 삭제 (PRIMARY_GUARDIAN only) |
@@ -59,7 +59,7 @@
 | Notification | PATCH | `/api/v1/notifications/settings/{wardKey}/anomaly` | 이상탐지 알림 토글 수정 (5종 각각 on/off. **민감도 제거됨**) |
 | Notification | PATCH | `/api/v1/notifications/settings/{wardKey}/emergency-call` | 응급호출 알림 토글 |
 | Notification | PATCH | `/api/v1/notifications/settings/{wardKey}/battery` | 배터리 알림 토글 + 알림 받을 잔량(%) 다중 선택 (10~100, 10 단위, 개수 제한 없음). 기본값 없음 — 빈 배열이면 알림 안 감 |
-| Member | GET | `/api/v1/members/me` | 내 정보 조회 (JWT 인증, Member+약관+안심존 통합) |
+| Member | GET | `/api/v1/members/me` | 내 정보 조회 (JWT 인증, Member+약관+안심존 통합). `joinedAt` = 가입 시각 |
 | Member | PATCH | `/api/v1/members/me` | 내 정보 수정 (이름·생년월일·비밀번호·profileAvatarCode 부분 수정, JWT 인증. 아바타는 빈 문자열이면 기본 코드로 재배정, 허용 코드 외 E3008) |
 | Member | POST | `/api/v1/members/phones` | 연락처 기반 가입 회원 조회 (GUARDIAN) |
 | Member | PATCH | `/api/v1/members/me/phone` | 전화번호(로그인 ID) 변경. Request `{ smsToken, password }` — 새 번호 SMS 인증 토큰 + 현재 비밀번호. 비밀번호 불일치 시 토큰 미소비. 새 번호 중복 E3006(409) |
