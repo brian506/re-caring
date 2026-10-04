@@ -45,6 +45,9 @@ public class NotificationFixture {
     public static final String SAFE_ZONE_EVENT_TYPE = "SAFE_ZONE_EXITED";
     public static final String SAFE_ZONE_TITLE = "안심존 이탈 알림";
     public static final String SAFE_ZONE_BODY = "김소연님이 안심존 1에서 벗어났어요.";
+    public static final String DANGER_ZONE_EVENT_TYPE = "DANGER_ZONE_ENTERED";
+    public static final String DANGER_ZONE_TITLE = "위험존 진입 알림";
+    public static final String DANGER_ZONE_BODY = "김소연님이 위험존 공사장에 들어갔어요.";
     public static final Long FEEDBACK_NOTIFICATION_ID = 30L;
     public static final String FEEDBACK_COMMENT = "집에 계셨어요";
 
@@ -110,6 +113,8 @@ public class NotificationFixture {
                 .caregiverMemberKey(caregiverKey)
                 .safeZoneEntryEnabled(true)
                 .safeZoneExitEnabled(false)
+                .dangerZoneEntryEnabled(true)
+                .dangerZoneExitEnabled(false)
                 .speedAnomalyEnabled(speedAnomalyEnabled)
                 .wanderingAnomalyEnabled(wanderingAnomalyEnabled)
                 .abnormalDwellingEnabled(abnormalDwellingEnabled)
@@ -129,6 +134,17 @@ public class NotificationFixture {
     ) {
         NotificationSetting setting = NotificationSetting.defaultFor(wardKey, caregiverKey);
         setting.updateSafeZone(entryEnabled, exitEnabled);
+        return setting;
+    }
+
+    public static NotificationSetting createDangerZoneSetting(
+            String wardKey,
+            String caregiverKey,
+            boolean entryEnabled,
+            boolean exitEnabled
+    ) {
+        NotificationSetting setting = NotificationSetting.defaultFor(wardKey, caregiverKey);
+        setting.updateDangerZone(entryEnabled, exitEnabled);
         return setting;
     }
 
@@ -250,6 +266,22 @@ public class NotificationFixture {
                 .title(SAFE_ZONE_TITLE)
                 .body(SAFE_ZONE_BODY)
                 .dataPayload(safeZoneDataPayload())
+                .build();
+    }
+
+    public static Notification dangerZoneNotification(String recipientMemberKey) {
+        return Notification.builder()
+                .recipientMemberKey(recipientMemberKey)
+                .eventType(DANGER_ZONE_EVENT_TYPE)
+                .title(DANGER_ZONE_TITLE)
+                .body(DANGER_ZONE_BODY)
+                .dataPayload(Map.of(
+                        "type", DANGER_ZONE_EVENT_TYPE,
+                        "wardKey", WARD_KEY,
+                        "safeZoneKey", LocationFixture.DANGER_ZONE_KEY,
+                        "recordedAt", LocationFixture.DETECTED_AT_TEXT,
+                        "latitude", String.valueOf(LocationFixture.LATITUDE),
+                        "longitude", String.valueOf(LocationFixture.LONGITUDE)))
                 .build();
     }
 

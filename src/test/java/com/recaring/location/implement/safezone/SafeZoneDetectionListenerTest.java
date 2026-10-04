@@ -5,6 +5,7 @@ import com.recaring.location.event.SafeZoneEnteredEvent;
 import com.recaring.location.event.SafeZoneExitedEvent;
 import com.recaring.location.fixture.LocationFixture;
 import com.recaring.location.vo.Gps;
+import com.recaring.safezone.dataaccess.entity.SafeZoneType;
 import com.recaring.safezone.fixture.SafeZoneFixture;
 import com.recaring.safezone.implement.SafeZoneReader;
 import com.recaring.safezone.vo.SafeZoneInfo;
@@ -38,6 +39,8 @@ class SafeZoneDetectionListenerTest {
     private static final String HOME_NAME = LocationFixture.HOME_ZONE_NAME;
     private static final String HOSPITAL_KEY = LocationFixture.HOSPITAL_ZONE_KEY;
     private static final String HOSPITAL_NAME = LocationFixture.HOSPITAL_ZONE_NAME;
+    private static final String DANGER_KEY = LocationFixture.DANGER_ZONE_KEY;
+    private static final String DANGER_NAME = LocationFixture.DANGER_ZONE_NAME;
 
     // GPS 좌표에서 충분히 멀어 어떤 반경으로도 포함되지 않는 오프셋.
     private static final double FAR_OFFSET = 1.0;
@@ -139,6 +142,36 @@ class SafeZoneDetectionListenerTest {
         SafeZoneExitedEvent published = (SafeZoneExitedEvent) eventCaptor.getValue();
         assertThat(published.safeZoneKey()).isEqualTo(HOME_KEY);
         assertThat(published.safeZoneName()).isEqualTo(HOME_NAME);
+    }
+
+    @Test
+    @DisplayName("위험존에 들어가면 진입 이벤트에 위험존 타입이 실린다")
+    void onGpsSaved_publishes_entered_with_danger_type() {
+        givenZones(SafeZoneFixture.createDangerZoneInfoAt(
+                DANGER_KEY, DANGER_NAME, LocationFixture.LATITUDE, LocationFixture.LONGITUDE));
+        givenPreviousKeys(Set.of(DANGER_KEY), Set.of());
+
+        safeZoneDetectionListener.onGpsSaved(gpsSavedEvent());
+
+        then(eventPublisher).should(times(1)).publishEvent(eventCaptor.capture());
+        SafeZoneEnteredEvent published = (SafeZoneEnteredEvent) eventCaptor.getValue();
+        assertThat(published.safeZoneKey()).isEqualTo(DANGER_KEY);
+        assertThat(published.zoneType()).isEqualTo(SafeZoneType.DANGER);
+    }
+
+    @Test
+    @DisplayName("위험존에서 나가면 이탈 이벤트에 위험존 타입이 실린다")
+    void onGpsSaved_publishes_exited_with_danger_type() {
+        givenZones(SafeZoneFixture.createDangerZoneInfoAt(
+                DANGER_KEY, DANGER_NAME, LocationFixture.LATITUDE + FAR_OFFSET, LocationFixture.LONGITUDE));
+        givenPreviousKeys(Set.of(), Set.of(DANGER_KEY));
+
+        safeZoneDetectionListener.onGpsSaved(gpsSavedEvent());
+
+        then(eventPublisher).should(times(1)).publishEvent(eventCaptor.capture());
+        SafeZoneExitedEvent published = (SafeZoneExitedEvent) eventCaptor.getValue();
+        assertThat(published.safeZoneKey()).isEqualTo(DANGER_KEY);
+        assertThat(published.zoneType()).isEqualTo(SafeZoneType.DANGER);
     }
 
     @Test

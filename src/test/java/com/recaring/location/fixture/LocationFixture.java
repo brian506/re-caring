@@ -16,6 +16,7 @@ import com.recaring.member.dataaccess.entity.Gender;
 import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.dataaccess.entity.MemberRole;
 import com.recaring.member.dataaccess.entity.SignUpType;
+import com.recaring.safezone.dataaccess.entity.SafeZoneType;
 import com.recaring.safezone.fixture.SafeZoneFixture;
 
 import java.time.LocalDate;
@@ -51,6 +52,8 @@ public class LocationFixture {
     public static final String WANDERING_EVIDENCE = "{name} 님이 같은 곳을 맴돌고 계십니다.";
     public static final String SAFE_ZONE_KEY = SafeZoneFixture.SAFE_ZONE_KEY;
     public static final String SAFE_ZONE_NAME = "안심존 1";
+    public static final String DANGER_ZONE_KEY = "danger-zone-key-001";
+    public static final String DANGER_ZONE_NAME = SafeZoneFixture.DANGER_ZONE_NAME;
     public static final String HOME_ZONE_KEY = "safe-zone-home";
     public static final String HOME_ZONE_NAME = "집";
     public static final String HOSPITAL_ZONE_KEY = "safe-zone-hospital";
@@ -117,11 +120,23 @@ public class LocationFixture {
     }
 
     public static SafeZoneEnteredEvent createSafeZoneEnteredEvent() {
-        return new SafeZoneEnteredEvent(WARD_KEY, SAFE_ZONE_KEY, SAFE_ZONE_NAME, LATITUDE, LONGITUDE, DETECTED_AT);
+        return new SafeZoneEnteredEvent(
+                WARD_KEY, SAFE_ZONE_KEY, SAFE_ZONE_NAME, SafeZoneType.SAFE, LATITUDE, LONGITUDE, DETECTED_AT);
+    }
+
+    public static SafeZoneEnteredEvent createDangerZoneEnteredEvent() {
+        return new SafeZoneEnteredEvent(
+                WARD_KEY, DANGER_ZONE_KEY, DANGER_ZONE_NAME, SafeZoneType.DANGER, LATITUDE, LONGITUDE, DETECTED_AT);
     }
 
     public static SafeZoneExitedEvent createSafeZoneExitedEvent() {
-        return new SafeZoneExitedEvent(WARD_KEY, SAFE_ZONE_KEY, SAFE_ZONE_NAME, LATITUDE, LONGITUDE, DETECTED_AT);
+        return new SafeZoneExitedEvent(
+                WARD_KEY, SAFE_ZONE_KEY, SAFE_ZONE_NAME, SafeZoneType.SAFE, LATITUDE, LONGITUDE, DETECTED_AT);
+    }
+
+    public static SafeZoneExitedEvent createDangerZoneExitedEvent() {
+        return new SafeZoneExitedEvent(
+                WARD_KEY, DANGER_ZONE_KEY, DANGER_ZONE_NAME, SafeZoneType.DANGER, LATITUDE, LONGITUDE, DETECTED_AT);
     }
 
     public static LocationSignalLostEvent createLocationSignalLostEvent() {

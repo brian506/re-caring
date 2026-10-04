@@ -72,6 +72,8 @@ class NotificationSettingControllerTest extends AbstractIntegrationTest {
                 .jsonPath("$.resultType").isEqualTo("SUCCESS")
                 .jsonPath("$.data.safeZone.entryEnabled").isEqualTo(true)
                 .jsonPath("$.data.safeZone.exitEnabled").isEqualTo(true)
+                .jsonPath("$.data.dangerZone.entryEnabled").isEqualTo(true)
+                .jsonPath("$.data.dangerZone.exitEnabled").isEqualTo(true)
                 .jsonPath("$.data.anomaly.speedAnomalyEnabled").isEqualTo(true)
                 .jsonPath("$.data.anomaly.wanderingAnomalyEnabled").isEqualTo(true)
                 .jsonPath("$.data.anomaly.abnormalDwellingEnabled").isEqualTo(true)
@@ -105,6 +107,55 @@ class NotificationSettingControllerTest extends AbstractIntegrationTest {
         assertThat(notificationSettingRepository.findByWardMemberKeyAndCaregiverMemberKey(
                 ward.getMemberKey(), manager.getMemberKey()))
                 .isEmpty();
+    }
+
+    @Test
+    @DisplayName("PATCH /danger-zone - 보호자가 바꾼 위험존 알림은 그 보호자에게만 저장되고 안심존 설정과 관계자 설정은 그대로다")
+    void updateDangerZone_by_guardian_does_not_affect_safe_zone_or_manager() {
+        patchDangerZone(guardian, false, false);
+        expectDangerZone(guardian, false, false);
+
+        patchDangerZone(guardian, true, false);
+        expectDangerZone(guardian, true, false);
+
+        expectSafeZone(guardian, true, true);
+        expectDangerZone(manager, true, true);
+        assertThat(notificationSettingRepository.findByWardMemberKeyAndCaregiverMemberKey(
+                ward.getMemberKey(), guardian.getMemberKey()))
+                .hasValueSatisfying(setting -> {
+                    assertThat(setting.isDangerZoneEntryEnabled()).isTrue();
+                    assertThat(setting.isDangerZoneExitEnabled()).isFalse();
+                    assertThat(setting.isSafeZoneEntryEnabled()).isTrue();
+                    assertThat(setting.isSafeZoneExitEnabled()).isTrue();
+                });
+        assertThat(notificationSettingRepository.findByWardMemberKeyAndCaregiverMemberKey(
+                ward.getMemberKey(), manager.getMemberKey()))
+                .isEmpty();
+    }
+
+    private void patchDangerZone(Member requester, boolean entryEnabled, boolean exitEnabled) {
+        client.patch()
+                .uri("/api/v1/notifications/settings/{wardKey}/danger-zone", ward.getMemberKey())
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(requester))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"entryEnabled": %s, "exitEnabled": %s}
+                        """.formatted(entryEnabled, exitEnabled))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.resultType").isEqualTo("SUCCESS");
+    }
+
+    private void expectDangerZone(Member requester, boolean entryEnabled, boolean exitEnabled) {
+        client.get()
+                .uri("/api/v1/notifications/settings/{wardKey}", ward.getMemberKey())
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(requester))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.data.dangerZone.entryEnabled").isEqualTo(entryEnabled)
+                .jsonPath("$.data.dangerZone.exitEnabled").isEqualTo(exitEnabled);
     }
 
     private void patchSafeZone(Member requester, boolean entryEnabled, boolean exitEnabled) {

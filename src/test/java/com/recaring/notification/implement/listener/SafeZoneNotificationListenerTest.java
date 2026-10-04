@@ -161,6 +161,96 @@ class SafeZoneNotificationListenerTest {
         );
     }
 
+    @Test
+    @DisplayName("위험존에 들어가면 위험존 진입 알림으로 보낸다")
+    void sends_danger_zone_entered_notification() {
+        givenCaregiversAndWardName();
+
+        safeZoneNotificationListener.onSafeZoneEntered(LocationFixture.createDangerZoneEnteredEvent());
+
+        then(notificationSendManager).should().sendToCareParties(
+                List.of(NotificationFixture.GUARDIAN_KEY),
+                List.of(NotificationFixture.MANAGER_KEY),
+                "DANGER_ZONE_ENTERED",
+                "위험존 진입 알림",
+                "김소연님이 위험존 공사장에 들어갔어요.",
+                expectedDangerPayload("DANGER_ZONE_ENTERED")
+        );
+    }
+
+    @Test
+    @DisplayName("위험존에서 벗어나면 위험존 이탈 알림으로 보낸다")
+    void sends_danger_zone_exited_notification() {
+        givenCaregiversAndWardName();
+
+        safeZoneNotificationListener.onSafeZoneExited(LocationFixture.createDangerZoneExitedEvent());
+
+        then(notificationSendManager).should().sendToCareParties(
+                List.of(NotificationFixture.GUARDIAN_KEY),
+                List.of(NotificationFixture.MANAGER_KEY),
+                "DANGER_ZONE_EXITED",
+                "위험존 이탈 알림",
+                "김소연님이 위험존 공사장에서 벗어났어요.",
+                expectedDangerPayload("DANGER_ZONE_EXITED")
+        );
+    }
+
+    @Test
+    @DisplayName("안심존 진입 알림을 끈 보호자도 위험존 진입 알림은 받는다")
+    void sends_danger_zone_entered_even_if_safe_zone_entry_is_off() {
+        given(notificationSettingRepository.findAllByWardMemberKey(NotificationFixture.WARD_KEY))
+                .willReturn(List.of(NotificationFixture.createSafeZoneSetting(
+                        NotificationFixture.WARD_KEY, NotificationFixture.GUARDIAN_KEY, false, false)));
+        givenCaregiversAndWardName();
+
+        safeZoneNotificationListener.onSafeZoneEntered(LocationFixture.createDangerZoneEnteredEvent());
+
+        then(notificationSendManager).should().sendToCareParties(
+                List.of(NotificationFixture.GUARDIAN_KEY),
+                List.of(NotificationFixture.MANAGER_KEY),
+                "DANGER_ZONE_ENTERED",
+                "위험존 진입 알림",
+                "김소연님이 위험존 공사장에 들어갔어요.",
+                expectedDangerPayload("DANGER_ZONE_ENTERED")
+        );
+    }
+
+    @Test
+    @DisplayName("위험존 진입 알림을 끈 보호자만 빼고 나머지에게 보낸다")
+    void sends_danger_zone_entered_only_to_caregivers_who_kept_it_on() {
+        given(notificationSettingRepository.findAllByWardMemberKey(NotificationFixture.WARD_KEY))
+                .willReturn(List.of(NotificationFixture.createDangerZoneSetting(
+                        NotificationFixture.WARD_KEY, NotificationFixture.GUARDIAN_KEY, false, true)));
+        given(careRelationshipReader.findCaregiverInfos(NotificationFixture.WARD_KEY))
+                .willReturn(List.of(
+                        CareFixture.createCaregiverInfo(NotificationFixture.GUARDIAN_KEY, CareRole.PRIMARY_GUARDIAN),
+                        CareFixture.createCaregiverInfo(NotificationFixture.OTHER_GUARDIAN_KEY, CareRole.GUARDIAN),
+                        CareFixture.createCaregiverInfo(NotificationFixture.MANAGER_KEY, CareRole.MANAGER)));
+        given(memberReader.findNameByMemberKey(NotificationFixture.WARD_KEY)).willReturn(NotificationFixture.WARD_NAME);
+
+        safeZoneNotificationListener.onSafeZoneEntered(LocationFixture.createDangerZoneEnteredEvent());
+
+        then(notificationSendManager).should().sendToCareParties(
+                List.of(NotificationFixture.OTHER_GUARDIAN_KEY),
+                List.of(NotificationFixture.MANAGER_KEY),
+                "DANGER_ZONE_ENTERED",
+                "위험존 진입 알림",
+                "김소연님이 위험존 공사장에 들어갔어요.",
+                expectedDangerPayload("DANGER_ZONE_ENTERED")
+        );
+    }
+
+    private Map<String, String> expectedDangerPayload(String type) {
+        return Map.of(
+                "type", type,
+                "wardKey", NotificationFixture.WARD_KEY,
+                "safeZoneKey", LocationFixture.DANGER_ZONE_KEY,
+                "recordedAt", LocationFixture.DETECTED_AT_TEXT,
+                "latitude", String.valueOf(LocationFixture.LATITUDE),
+                "longitude", String.valueOf(LocationFixture.LONGITUDE)
+        );
+    }
+
     private Map<String, String> expectedPayload(String type) {
         return Map.of(
                 "type", type,
