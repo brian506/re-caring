@@ -24,6 +24,8 @@ public class QLocationSetting extends EntityPathBase<LocationSetting> {
 
     public final com.recaring.common.entity.QBaseEntity _super = new com.recaring.common.entity.QBaseEntity(this);
 
+    public final StringPath caregiverMemberKey = createString("caregiverMemberKey");
+
     public final NumberPath<Integer> collectionIntervalSeconds = createNumber("collectionIntervalSeconds", Integer.class);
 
     //inherited

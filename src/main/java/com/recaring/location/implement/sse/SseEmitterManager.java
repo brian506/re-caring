@@ -3,6 +3,7 @@ package com.recaring.location.implement.sse;
 import com.recaring.location.implement.gps.GpsHistoryManager;
 import com.recaring.location.implement.gps.GpsLatestCacheManager;
 import com.recaring.location.vo.Gps;
+import com.recaring.location.vo.LocationCollectionInterval;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -24,6 +26,8 @@ public class SseEmitterManager {
     private static final long SSE_TIMEOUT = 5 * 60 * 1000L; // 5분
     private static final long POLL_INTERVAL_MS = 10_000L;   // GPS 수신 주기(30s) 이내로 설정하여 불필요한 Redis 조회 최소화
     private static final String EVENT_NAME = "location";
+    // 기기 수신 시각은 네트워크 지연으로 흔들린다. 기기 최소 주기(30s)보다 작아야 한 주기 건너뛰기를 막으면서 솎아내기가 유지된다.
+    private static final Duration SEND_INTERVAL_TOLERANCE = Duration.ofSeconds(10);
 
     private final GpsLatestCacheManager gpsLatestCacheManager;
     private final GpsHistoryManager gpsHistoryManager;
@@ -55,7 +59,7 @@ public class SseEmitterManager {
     // SSE 연결 수립과 동시에 폴링 루프를 시작한다.
     // 초기함최신값 전송과 이후 GPS 갱신 전송이 단일 루프에서 함께 처리된다.
     // todo 5분이 지나면 프론트에서 자동으로 재연결하느 로직 있어야 함
-    public SseEmitter connect(String wardKey) {
+    public SseEmitter connect(String wardKey, LocationCollectionInterval sendInterval) {
         SseEmitter emitter = new SseEmitter(SSE_TIMEOUT);
         AtomicBoolean active = new AtomicBoolean(true);
 
@@ -65,12 +69,13 @@ public class SseEmitterManager {
 
         activeConnections.incrementAndGet();
 
-        ssePollExecutor.execute(() -> pollLoop(emitter, wardKey, active));
+        Duration minGap = Duration.ofSeconds(sendInterval.seconds()).minus(SEND_INTERVAL_TOLERANCE);
+        ssePollExecutor.execute(() -> pollLoop(emitter, wardKey, minGap, active));
 
         return emitter;
     }
 
-    private void pollLoop(SseEmitter emitter, String wardKey, AtomicBoolean active) {
+    private void pollLoop(SseEmitter emitter, String wardKey, Duration minGap, AtomicBoolean active) {
         Gps lastSent = null;
         try {
             lastSent = sendInitial(emitter, wardKey);
@@ -80,7 +85,7 @@ public class SseEmitterManager {
                     break;
                 }
                 Optional<Gps> latest = gpsLatestCacheManager.find(wardKey);
-                if (latest.isPresent() && !latest.get().equals(lastSent)) {
+                if (latest.isPresent() && isDue(latest.get(), lastSent, minGap)) {
                     emitter.send(SseEmitter.event().name(EVENT_NAME).data(latest.get()));
                     lastSent = latest.get();
                 } else {
@@ -102,6 +107,17 @@ public class SseEmitterManager {
             stop(active, removedError);
             completeQuietly(emitter, null); // complete gracefully — completeWithError triggers Tomcat error dispatch on committed response
         }
+    }
+
+    // 기기는 보호자들 중 가장 짧은 주기로 수집하므로, 더 긴 주기를 고른 보호자에게는 그 주기가 지난 위치만 보낸다.
+    private boolean isDue(Gps latest, Gps lastSent, Duration minGap) {
+        if (lastSent == null) {
+            return true;
+        }
+        if (latest.equals(lastSent)) {
+            return false;
+        }
+        return !latest.recordedAt().isBefore(lastSent.recordedAt().plus(minGap));
     }
 
     // 연결 직후 1회. 캐시가 비어 있으면(WARD가 TTL 이상 GPS를 보내지 않음) DB의 마지막 위치로 대체한다.

@@ -24,6 +24,10 @@ public enum LocationCollectionInterval {
         return seconds;
     }
 
+    public LocationCollectionInterval shorter(LocationCollectionInterval other) {
+        return seconds <= other.seconds ? this : other;
+    }
+
     public static LocationCollectionInterval fromSeconds(Integer seconds) {
         if (seconds == null) {
             throw new AppException(ErrorType.INVALID_LOCATION_COLLECTION_INTERVAL);

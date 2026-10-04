@@ -29,7 +29,7 @@ public class LocationSettingController {
 
     @Operation(
             summary = "위치 수집 주기 조회",
-            description = "피보호자의 현재 위치 수집 주기와 선택 가능한 옵션 목록을 반환합니다. [GUARDIAN 전용]"
+            description = "요청한 보호자 본인이 설정한 위치 수신 주기와 선택 가능한 옵션 목록을 반환합니다. 설정한 적 없으면 30초입니다. [GUARDIAN 전용]"
     )
     @GetMapping("/{wardKey}/collection-interval")
     public ResponseEntity<ApiResponse<LocationCollectionIntervalSettingResponse>> getCollectionInterval(
@@ -46,7 +46,7 @@ public class LocationSettingController {
 
     @Operation(
             summary = "위치 수집 주기 변경",
-            description = "피보호자의 위치 수집 주기를 변경합니다. [GUARDIAN 전용]"
+            description = "요청한 보호자 본인의 위치 수신 주기를 변경합니다. 다른 보호자에게는 영향이 없으며, 실시간 위치(SSE)가 이 주기로 전달됩니다. [GUARDIAN 전용]"
     )
     @PatchMapping("/{wardKey}/collection-interval")
     public ResponseEntity<ApiResponse<Void>> updateCollectionInterval(
@@ -61,7 +61,7 @@ public class LocationSettingController {
 
     @Operation(
             summary = "내 위치 수집 주기 조회",
-            description = "피보호자 디바이스 앱에서 현재 설정된 위치 수집 주기를 조회합니다. [WARD Device Token 전용]"
+            description = "피보호자 디바이스 앱이 따라야 할 위치 수집 주기를 조회합니다. 보호자들이 설정한 주기 중 가장 짧은 값입니다. [WARD Device Token 전용]"
     )
     @GetMapping("/collection-interval/me")
     public ResponseEntity<ApiResponse<WardLocationCollectionIntervalResponse>> getMyCollectionInterval(

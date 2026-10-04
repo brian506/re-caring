@@ -73,7 +73,7 @@ public class MemberWithdrawalManager {
         careInvitationWriter.deleteAllByMemberKey(memberKey);
         gpsHistoryManager.deleteByWardMemberKey(memberKey);
         anomalyDetectionManager.deleteByWardMemberKey(memberKey);
-        locationSettingRepository.deleteByWardMemberKey(memberKey);
+        locationSettingRepository.deleteByMemberKey(memberKey);
         safeZoneWriter.deleteByWardMemberKey(memberKey);
         safeZoneStateManager.delete(memberKey);
         wardDeviceTokenRepository.deleteByWardKey(memberKey);

@@ -16,16 +16,16 @@ public class LocationSettingService {
     public LocationCollectionInterval getCollectionInterval(String requesterKey, String wardKey) {
         locationValidator.validateGuardianAccess(requesterKey, wardKey);
 
-        return locationSettingManager.findCollectionInterval(wardKey);
+        return locationSettingManager.findCollectionInterval(wardKey, requesterKey);
     }
 
     public void updateCollectionInterval(String requesterKey, String wardKey, LocationCollectionInterval interval) {
         locationValidator.validateGuardianAccess(requesterKey, wardKey);
 
-        locationSettingManager.updateCollectionInterval(wardKey, interval);
+        locationSettingManager.updateCollectionInterval(wardKey, requesterKey, interval);
     }
 
     public LocationCollectionInterval getMyCollectionInterval(String wardKey) {
-        return locationSettingManager.findCollectionInterval(wardKey);
+        return locationSettingManager.findDeviceCollectionInterval(wardKey);
     }
 }
