@@ -4,6 +4,8 @@ import com.recaring.location.fixture.LocationFixture;
 import com.recaring.location.implement.setting.LocationSettingManager;
 import com.recaring.location.implement.LocationValidator;
 import com.recaring.location.vo.LocationCollectionInterval;
+import com.recaring.support.exception.AppException;
+import com.recaring.support.exception.ErrorType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,8 +14,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.BDDMockito.willThrow;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("LocationSettingService 단위 테스트")
@@ -48,25 +52,31 @@ class LocationSettingServiceTest {
         locationSettingService.updateCollectionInterval(
                 LocationFixture.GUARDIAN_KEY,
                 LocationFixture.WARD_KEY,
-                LocationCollectionInterval.THIRTY_SECONDS
+                LocationCollectionInterval.THREE_MINUTES
         );
 
         then(locationValidator).should().validateGuardianAccess(LocationFixture.GUARDIAN_KEY, LocationFixture.WARD_KEY);
         then(locationSettingManager).should().updateCollectionInterval(
                 LocationFixture.WARD_KEY,
                 LocationFixture.GUARDIAN_KEY,
-                LocationCollectionInterval.THIRTY_SECONDS
+                LocationCollectionInterval.THREE_MINUTES
         );
     }
 
     @Test
-    @DisplayName("보호 대상자 기기는 보호자들 설정에서 정해진 기기 수집 주기를 받는다")
-    void getMyCollectionInterval_returns_device_collection_interval() {
-        given(locationSettingManager.findDeviceCollectionInterval(LocationFixture.WARD_KEY))
-                .willReturn(LocationCollectionInterval.ONE_MINUTE);
+    @DisplayName("보호 대상자와 관계가 없는 회원이 주기를 수정하면 거부되고 설정은 바뀌지 않는다")
+    void updateCollectionInterval_does_not_update_when_access_denied() {
+        willThrow(new AppException(ErrorType.NOT_GUARDIAN_OF_WARD))
+                .given(locationValidator).validateGuardianAccess(LocationFixture.GUARDIAN_KEY, LocationFixture.WARD_KEY);
 
-        LocationCollectionInterval result = locationSettingService.getMyCollectionInterval(LocationFixture.WARD_KEY);
+        assertThatThrownBy(() -> locationSettingService.updateCollectionInterval(
+                LocationFixture.GUARDIAN_KEY,
+                LocationFixture.WARD_KEY,
+                LocationCollectionInterval.THREE_MINUTES
+        ))
+                .isInstanceOf(AppException.class)
+                .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_GUARDIAN_OF_WARD);
 
-        assertThat(result.seconds()).isEqualTo(60);
+        then(locationSettingManager).shouldHaveNoInteractions();
     }
 }

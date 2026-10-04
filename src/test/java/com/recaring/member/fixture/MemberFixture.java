@@ -14,6 +14,8 @@ public class MemberFixture {
 
     public static final String MEMBER_KEY = "test-member-key-uuid";
     public static final String OTHER_MEMBER_KEY = "other-member-key-uuid";
+    public static final java.time.LocalDateTime JOINED_AT = java.time.LocalDateTime.of(2026, 8, 14, 10, 23);
+    public static final String JOINED_AT_TEXT = "2026-08-14T10:23:00";
 
     public static final String PHONE = "01012345678";
     public static final String OTHER_PHONE = "01087654321";

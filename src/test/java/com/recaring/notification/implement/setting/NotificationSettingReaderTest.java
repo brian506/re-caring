@@ -53,6 +53,8 @@ class NotificationSettingReaderTest {
 
         assertThat(result.safeZone().entryEnabled()).isTrue();
         assertThat(result.safeZone().exitEnabled()).isTrue();
+        assertThat(result.dangerZone().entryEnabled()).isTrue();
+        assertThat(result.dangerZone().exitEnabled()).isTrue();
         assertThat(result.anomaly().speedAnomalyEnabled()).isTrue();
         assertThat(result.anomaly().wanderingAnomalyEnabled()).isTrue();
         assertThat(result.anomaly().abnormalDwellingEnabled()).isTrue();
@@ -77,6 +79,8 @@ class NotificationSettingReaderTest {
 
         assertThat(result.safeZone().entryEnabled()).isTrue();
         assertThat(result.safeZone().exitEnabled()).isFalse();
+        assertThat(result.dangerZone().entryEnabled()).isTrue();
+        assertThat(result.dangerZone().exitEnabled()).isFalse();
         assertThat(result.anomaly().speedAnomalyEnabled()).isFalse();
         assertThat(result.anomaly().wanderingAnomalyEnabled()).isTrue();
         assertThat(result.anomaly().abnormalDwellingEnabled()).isFalse();

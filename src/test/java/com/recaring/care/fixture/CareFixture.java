@@ -29,6 +29,8 @@ public class CareFixture {
     public static final String MANAGER_PHONE = "01055556666";
     public static final String OTHER_GUARDIAN_PHONE = "01077778888";
     public static final String OTHER_WARD_PHONE = "01099990000";
+    public static final LocalDateTime WARD_JOINED_AT = LocalDateTime.of(2026, 8, 14, 10, 23);
+    public static final String WARD_JOINED_AT_TEXT = "2026-08-14T10:23:00";
 
     public static final String SENIOR_AVATAR_CODE = "senior_female_1";
     public static final String OTHER_SENIOR_AVATAR_CODE = "senior_female_2";

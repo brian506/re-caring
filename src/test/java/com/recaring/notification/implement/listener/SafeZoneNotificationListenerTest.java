@@ -240,6 +240,31 @@ class SafeZoneNotificationListenerTest {
         );
     }
 
+    @Test
+    @DisplayName("위험존 이탈 알림을 끈 보호자만 빼고 나머지에게 보낸다")
+    void sends_danger_zone_exited_only_to_caregivers_who_kept_it_on() {
+        given(notificationSettingRepository.findAllByWardMemberKey(NotificationFixture.WARD_KEY))
+                .willReturn(List.of(NotificationFixture.createDangerZoneSetting(
+                        NotificationFixture.WARD_KEY, NotificationFixture.GUARDIAN_KEY, true, false)));
+        given(careRelationshipReader.findCaregiverInfos(NotificationFixture.WARD_KEY))
+                .willReturn(List.of(
+                        CareFixture.createCaregiverInfo(NotificationFixture.GUARDIAN_KEY, CareRole.PRIMARY_GUARDIAN),
+                        CareFixture.createCaregiverInfo(NotificationFixture.OTHER_GUARDIAN_KEY, CareRole.GUARDIAN),
+                        CareFixture.createCaregiverInfo(NotificationFixture.MANAGER_KEY, CareRole.MANAGER)));
+        given(memberReader.findNameByMemberKey(NotificationFixture.WARD_KEY)).willReturn(NotificationFixture.WARD_NAME);
+
+        safeZoneNotificationListener.onSafeZoneExited(LocationFixture.createDangerZoneExitedEvent());
+
+        then(notificationSendManager).should().sendToCareParties(
+                List.of(NotificationFixture.OTHER_GUARDIAN_KEY),
+                List.of(NotificationFixture.MANAGER_KEY),
+                "DANGER_ZONE_EXITED",
+                "위험존 이탈 알림",
+                "김소연님이 위험존 공사장에서 벗어났어요.",
+                expectedDangerPayload("DANGER_ZONE_EXITED")
+        );
+    }
+
     private Map<String, String> expectedDangerPayload(String type) {
         return Map.of(
                 "type", type,

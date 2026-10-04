@@ -21,11 +21,14 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.groups.Tuple.tuple;
@@ -40,6 +43,7 @@ class CareControllerTest extends AbstractIntegrationTest {
     @Autowired private NotificationSettingRepository notificationSettingRepository;
     @Autowired private LocationSettingRepository locationSettingRepository;
     @Autowired private StringRedisTemplate redisTemplate;
+    @Autowired private JdbcTemplate jdbcTemplate;
 
     private Member guardian;
     private Member ward;
@@ -303,6 +307,8 @@ class CareControllerTest extends AbstractIntegrationTest {
                 CareFixture.createAcceptedWardInvitation(guardian.getMemberKey(), otherWard.getMemberKey()));
         careInvitationRepository.save(
                 CareFixture.createWardInvitation(other.getMemberKey(), otherWard.getMemberKey()));
+        overwriteCreatedAt(olderWardRequest, LocalDateTime.of(2026, 10, 5, 9, 0));
+        overwriteCreatedAt(newerManagerRequest, LocalDateTime.of(2026, 10, 5, 10, 0));
 
         client.get()
                 .uri("/api/v1/care/requests/sent")
@@ -394,8 +400,8 @@ class CareControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("POST /api/v1/care/requests/{requestKey}/resend - 대기 중인 요청을 재전송하면 성공하고 요청은 대기 상태로 남는다")
-    void resendRequest_succeeds_for_pending_request() {
+    @DisplayName("POST /api/v1/care/requests/{requestKey}/resend - 대기 중인 요청을 재전송하면 성공하고 요청은 대기 상태로 남으며 5분 재전송 간격이 시작된다")
+    void resendRequest_succeeds_and_starts_interval_for_pending_request() {
         CareInvitation pending = careInvitationRepository.save(
                 CareFixture.createWardInvitation(guardian.getMemberKey(), ward.getMemberKey()));
 
@@ -408,6 +414,8 @@ class CareControllerTest extends AbstractIntegrationTest {
                 .jsonPath("$.resultType").isEqualTo("SUCCESS");
 
         assertThat(statusOf(pending)).isEqualTo(CareInvitationStatus.PENDING);
+        assertThat(redisTemplate.getExpire("care:invitation:resend:" + pending.getRequestKey(), TimeUnit.SECONDS))
+                .isBetween(290L, 300L);
     }
 
     @Test
@@ -599,6 +607,23 @@ class CareControllerTest extends AbstractIntegrationTest {
                 .jsonPath("$.data").isArray()
                 .jsonPath("$.data[0].wardName").isEqualTo("보호대상자")
                 .jsonPath("$.data[0].wardGender").isEqualTo("FEMALE");
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/care/wards - 대상자 가입 시각을 wardJoinedAt으로 내려준다")
+    void getMyWards_returns_ward_joined_at() {
+        careRelationshipRepository.save(
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+        overwriteMemberCreatedAt(ward, CareFixture.WARD_JOINED_AT);
+
+        client.get()
+                .uri("/api/v1/care/wards")
+                .header(HttpHeaders.AUTHORIZATION, authHeader(guardian))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.data[0].wardMemberKey").isEqualTo(ward.getMemberKey())
+                .jsonPath("$.data[0].wardJoinedAt").isEqualTo(CareFixture.WARD_JOINED_AT_TEXT);
     }
 
     // ── 보호자/관리자 목록 조회 ────────────────────────────────────────────
@@ -1358,6 +1383,20 @@ class CareControllerTest extends AbstractIntegrationTest {
         return careRelationshipRepository
                 .findCareRelationship(ward.getMemberKey(), caregiver.getMemberKey())
                 .orElseThrow(() -> new AssertionError("케어 관계가 존재하지 않는다"));
+    }
+
+    private void overwriteCreatedAt(CareInvitation invitation, LocalDateTime createdAt) {
+        jdbcTemplate.update(
+                "UPDATE care_invitation SET created_at = ? WHERE care_invitation_id = ?",
+                createdAt, invitation.getId()
+        );
+    }
+
+    private void overwriteMemberCreatedAt(Member member, LocalDateTime createdAt) {
+        jdbcTemplate.update(
+                "UPDATE members SET created_at = ? WHERE member_id = ?",
+                createdAt, member.getId()
+        );
     }
 
     private CareInvitationStatus statusOf(CareInvitation invitation) {

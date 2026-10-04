@@ -15,9 +15,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -59,6 +61,7 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
     @Autowired private MemberRepository memberRepository;
     @Autowired private CareRelationshipRepository careRelationshipRepository;
     @Autowired private SafeZoneRepository safeZoneRepository;
+    @Autowired private JdbcTemplate jdbcTemplate;
 
     private Member ward;
     private Member victimWard;
@@ -226,6 +229,8 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
     @DisplayName("목록에는 안심존과 위험존이 각자의 타입과 함께 반환된다")
     void getSafeZones_returns_safe_and_danger_zones_with_type() {
         SafeZone dangerZone = safeZoneRepository.save(SafeZoneFixture.createDangerZone(ward.getMemberKey()));
+        overwriteCreatedAt(savedZone, LocalDateTime.of(2026, 10, 5, 9, 0));
+        overwriteCreatedAt(dangerZone, LocalDateTime.of(2026, 10, 5, 10, 0));
 
         client.get()
                 .uri(zonesUri())
@@ -493,5 +498,12 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
         assertThat(safeZoneRepository.findBySafeZoneKeyAndWardMemberKey(
                 victimZone.getSafeZoneKey(), victimWard.getMemberKey())
         ).get().extracting(SafeZone::getName).isEqualTo(SafeZoneFixture.NAME);
+    }
+
+    private void overwriteCreatedAt(SafeZone zone, LocalDateTime createdAt) {
+        jdbcTemplate.update(
+                "UPDATE safe_zones SET created_at = ? WHERE safe_zone_id = ?",
+                createdAt, zone.getId()
+        );
     }
 }
