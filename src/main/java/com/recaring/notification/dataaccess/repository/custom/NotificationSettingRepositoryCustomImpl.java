@@ -24,6 +24,13 @@ public class NotificationSettingRepositoryCustomImpl extends QuerydslRepositoryS
     }
 
     @Override
+    public void deleteByRelationship(String wardMemberKey, String caregiverMemberKey) {
+        delete(notificationSetting)
+                .where(ownedBy(wardMemberKey, caregiverMemberKey))
+                .execute();
+    }
+
+    @Override
     public void updateSafeZone(String wardMemberKey, String caregiverMemberKey, boolean entryEnabled, boolean exitEnabled) {
         update(notificationSetting)
                 .set(notificationSetting.safeZoneEntryEnabled, entryEnabled)

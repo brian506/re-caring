@@ -4,6 +4,8 @@ public interface NotificationSettingRepositoryCustom {
 
     void deleteByMemberKey(String memberKey);
 
+    void deleteByRelationship(String wardMemberKey, String caregiverMemberKey);
+
     void updateSafeZone(String wardMemberKey, String caregiverMemberKey, boolean entryEnabled, boolean exitEnabled);
 
     void updateAnomaly(

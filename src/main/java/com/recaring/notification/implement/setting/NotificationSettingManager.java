@@ -15,6 +15,12 @@ public class NotificationSettingManager {
     private final BatteryAlertStateManager batteryAlertStateManager;
 
     @Transactional
+    public void deleteByRelationship(String wardKey, String caregiverKey) {
+        notificationSettingRepository.deleteByRelationship(wardKey, caregiverKey);
+        batteryAlertStateManager.delete(wardKey, caregiverKey);
+    }
+
+    @Transactional
     public void updateSafeZone(String wardKey, String caregiverKey, boolean entryEnabled, boolean exitEnabled) {
         notificationSettingRepository.insertDefaultIfAbsent(wardKey, caregiverKey);
         notificationSettingRepository.updateSafeZone(wardKey, caregiverKey, entryEnabled, exitEnabled);

@@ -43,6 +43,11 @@ public class LocationSettingManager {
     }
 
     @Transactional
+    public void deleteByRelationship(String wardMemberKey, String caregiverMemberKey) {
+        locationSettingRepository.deleteByRelationship(wardMemberKey, caregiverMemberKey);
+    }
+
+    @Transactional
     public void updateCollectionInterval(
             String wardMemberKey,
             String caregiverMemberKey,

@@ -20,4 +20,11 @@ public class LocationSettingRepositoryCustomImpl extends QuerydslRepositorySuppo
                 .execute();
     }
 
+    @Override
+    public void deleteByRelationship(String wardMemberKey, String caregiverMemberKey) {
+        delete(locationSetting)
+                .where(locationSetting.wardMemberKey.eq(wardMemberKey)
+                        .and(locationSetting.caregiverMemberKey.eq(caregiverMemberKey)))
+                .execute();
+    }
 }

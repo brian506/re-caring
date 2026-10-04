@@ -5,6 +5,8 @@ import com.recaring.care.dataaccess.entity.CareRole;
 import com.recaring.care.dataaccess.repository.CareRelationshipRepository;
 import com.recaring.support.exception.AppException;
 import com.recaring.support.exception.ErrorType;
+import com.recaring.location.implement.setting.LocationSettingManager;
+import com.recaring.notification.implement.setting.NotificationSettingManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -30,6 +32,8 @@ public class CareRelationshipManager {
     private final CareRelationshipRepository careRelationshipRepository;
     private final CareInvitationWriter careInvitationWriter;
     private final DesignatedAvatarManager designatedAvatarManager;
+    private final NotificationSettingManager notificationSettingManager;
+    private final LocationSettingManager locationSettingManager;
 
     @CacheEvict(value = "careRelationship", allEntries = true)
     @Transactional
@@ -42,6 +46,8 @@ public class CareRelationshipManager {
 
         careRelationshipRepository.delete(leaving);
         designatedAvatarManager.deleteAllByRelationship(wardKey, caregiverKey);
+        notificationSettingManager.deleteByRelationship(wardKey, caregiverKey);
+        locationSettingManager.deleteByRelationship(wardKey, caregiverKey);
         log.info("[케어 관계 : 이탈]: wardKey={} | caregiverKey={} | careRole={}",
                 wardKey, caregiverKey, leaving.getCareRole());
 
