@@ -48,10 +48,11 @@
 | Location | GET | `/api/v1/location/settings/{wardKey}/collection-interval` | 요청 보호자 본인의 위치 수신 주기 조회 (GUARDIAN, 옵션 30/60/180/300초 포함, 미설정 시 30) |
 | Location | PATCH | `/api/v1/location/settings/{wardKey}/collection-interval` | 요청 보호자 본인의 위치 수신 주기 수정 (GUARDIAN only, 다른 보호자에 영향 없음) |
 | Location | GET | `/api/v1/location/settings/collection-interval/me` | 기기 수집 주기 조회 (WARD, Device Token 인증). 보호자 계열 설정 중 최솟값(미설정 보호자는 30) |
-| Notification | GET | `/api/v1/notifications?cursor&size` | 내 알림함 목록 조회 (WARD, GUARDIAN — recipient 기준). notification_id DESC 커서 페이징. `cursor`=직전 응답 `nextCursor`(첫 페이지는 생략), `size`=1~50(기본 10). 응답 `{ items, nextCursor, hasNext }`. 이상탐지 알림의 `dataPayload`는 `type/wardKey/score/recordedAt/latitude/longitude`, 안심존 진입·이탈 알림은 `type/wardKey/safeZoneKey/recordedAt/latitude/longitude`, 위치 수집 중단 알림(`LOCATION_SIGNAL_LOST`)은 `type/wardKey/lastReceivedAt/recordedAt/latitude/longitude`(마지막 위치, 값 전부 문자열) — 앱은 이걸로 위치 이력 탭에 핀을 찍는다. 그 외 알림 유형에는 좌표가 없다(#231 이전 안심존 알림도 없음). 각 item에 `feedbackEligible`(이상탐지 5종·안심존 진입/이탈이면 true)·`feedbackSubmitted`가 붙는다 — 평가 UI는 `eligible && !submitted`일 때만 노출 |
-| Notification | POST | `/api/v1/notifications/{notificationKey}/feedback` | 이상탐지·안심존 알림 정확도 피드백 제출 (WARD, GUARDIAN — 수신자 본인만). `{ accuracy: ACCURATE\|INACCURATE\|UNSURE, reason?, comment? }`. `reason`(USUAL_ROUTINE/BRIEF_STOPOVER/GPS_INACCURATE/OTHER)은 `INACCURATE`일 때만 필수이자 허용, 안심존 알림은 GPS_INACCURATE/OTHER만 허용(그 외 E9010), `comment`는 선택·최대 100자. 알림 1건당 1회(E9007). 대상 아님 E9006, 타인 알림 E9005, 없음 E9004, 연결된 탐지 기록 소실 E9009 |
-| Notification | GET | `/api/v1/notifications/settings/{wardKey}` | 요청 보호자 본인의 알림 설정 조회 (안심존·이상탐지·응급호출·배터리). 케어 관계 필수 — WARD 본인 접근 불가 |
+| Notification | GET | `/api/v1/notifications?cursor&size` | 내 알림함 목록 조회 (WARD, GUARDIAN — recipient 기준). notification_id DESC 커서 페이징. `cursor`=직전 응답 `nextCursor`(첫 페이지는 생략), `size`=1~50(기본 10). 응답 `{ items, nextCursor, hasNext }`. 이상탐지 알림의 `dataPayload`는 `type/wardKey/score/recordedAt/latitude/longitude`, 안심존·위험존 진입·이탈 알림은 `type/wardKey/safeZoneKey/recordedAt/latitude/longitude`(type: SAFE_ZONE_ENTERED/EXITED, DANGER_ZONE_ENTERED/EXITED), 위치 수집 중단 알림(`LOCATION_SIGNAL_LOST`)은 `type/wardKey/lastReceivedAt/recordedAt/latitude/longitude`(마지막 위치, 값 전부 문자열) — 앱은 이걸로 위치 이력 탭에 핀을 찍는다. 그 외 알림 유형에는 좌표가 없다(#231 이전 안심존 알림도 없음). 각 item에 `feedbackEligible`(이상탐지 5종·안심존/위험존 진입/이탈이면 true)·`feedbackSubmitted`가 붙는다 — 평가 UI는 `eligible && !submitted`일 때만 노출 |
+| Notification | POST | `/api/v1/notifications/{notificationKey}/feedback` | 이상탐지·안심존 알림 정확도 피드백 제출 (WARD, GUARDIAN — 수신자 본인만). `{ accuracy: ACCURATE\|INACCURATE\|UNSURE, reason?, comment? }`. `reason`(USUAL_ROUTINE/BRIEF_STOPOVER/GPS_INACCURATE/OTHER)은 `INACCURATE`일 때만 필수이자 허용, 안심존·위험존 알림은 GPS_INACCURATE/OTHER만 허용(그 외 E9010), `comment`는 선택·최대 100자. 알림 1건당 1회(E9007). 대상 아님 E9006, 타인 알림 E9005, 없음 E9004, 연결된 탐지 기록 소실 E9009 |
+| Notification | GET | `/api/v1/notifications/settings/{wardKey}` | 요청 보호자 본인의 알림 설정 조회 (안심존·위험존·이상탐지·응급호출·배터리). 케어 관계 필수 — WARD 본인 접근 불가 |
 | Notification | PATCH | `/api/v1/notifications/settings/{wardKey}/safe-zone` | 안심존 진입·이탈 알림 토글 |
+| Notification | PATCH | `/api/v1/notifications/settings/{wardKey}/danger-zone` | 위험존 진입·이탈 알림 토글 `{ entryEnabled, exitEnabled }` (#238) |
 | Notification | PATCH | `/api/v1/notifications/settings/{wardKey}/anomaly` | 이상탐지 알림 토글 수정 (5종 각각 on/off. **민감도 제거됨**) |
 | Notification | PATCH | `/api/v1/notifications/settings/{wardKey}/emergency-call` | 응급호출 알림 토글 |
 | Notification | PATCH | `/api/v1/notifications/settings/{wardKey}/battery` | 배터리 알림 토글 + 알림 받을 잔량(%) 다중 선택 (10~100, 10 단위, 개수 제한 없음). 기본값 없음 — 빈 배열이면 알림 안 감 |
@@ -61,10 +62,10 @@
 | Member | PATCH | `/api/v1/members/me/phone` | 전화번호(로그인 ID) 변경. Request `{ smsToken, password }` — 새 번호 SMS 인증 토큰 + 현재 비밀번호. 비밀번호 불일치 시 토큰 미소비. 새 번호 중복 E3006(409) |
 | Member | DELETE | `/api/v1/members/me` | 회원 탈퇴 |
 | Place | GET | `/api/v1/places/search?query=&latitude=&longitude=&radiusMeters=` | 장소 검색 (GUARDIAN·WARD, 카카오 로컬 키워드 검색 프록시, 최대 5건, 편향 결과가 3건 미만이거나 키워드 불일치면 전국 재검색 후 전국 결과를 앞에 두고 placeId로 병합, 결과 없음은 빈 배열 200) |
-| SafeZone | POST | `/api/v1/care/wards/{wardKey}/safe-zones` | 안심존 추가 (GUARDIAN only) |
-| SafeZone | GET | `/api/v1/care/wards/{wardKey}/safe-zones` | 안심존 목록 조회 (GUARDIAN, MANAGER) |
+| SafeZone | POST | `/api/v1/care/wards/{wardKey}/safe-zones` | 안심존·위험존 추가 (GUARDIAN only). `type`(SAFE/DANGER) 필수 |
+| SafeZone | GET | `/api/v1/care/wards/{wardKey}/safe-zones` | 안심존·위험존 목록 조회 (GUARDIAN, MANAGER). 평면 리스트, 항목별 `type`으로 구분 |
 | SafeZone | GET | `/api/v1/care/wards/{wardKey}/safe-zones/{safeZoneKey}` | 안심존 상세 조회 (GUARDIAN, MANAGER) |
-| SafeZone | PATCH | `/api/v1/care/wards/{wardKey}/safe-zones/{safeZoneKey}` | 안심존 수정 (GUARDIAN only) |
+| SafeZone | PATCH | `/api/v1/care/wards/{wardKey}/safe-zones/{safeZoneKey}` | 안심존·위험존 수정 (GUARDIAN only). `type` 변경 가능 |
 | SafeZone | DELETE | `/api/v1/care/wards/{wardKey}/safe-zones/{safeZoneKey}` | 안심존 삭제 (GUARDIAN only) |
 | SMS | POST | `/api/v1/auth/phone/send-code` | SMS 인증코드 발송. 번호당 1시간 5회(고정 창). 초과 시 429(E4005) + `error.data.seconds`(재요청 가능까지 남은 초) |
 | SMS | POST | `/api/v1/auth/phone/verify` | SMS 인증코드 검증. 응답 `{ verificationToken, registered }` — `registered`=해당 번호로 이미 가입된 회원 존재 여부. 가입 화면은 true일 때, 비밀번호 재설정 화면은 false일 때 진행을 막는다 |
@@ -84,12 +85,12 @@
 | LocationSetting | location_settings | (wardMemberKey, caregiverMemberKey) UNIQUE — 보호자별 수신 주기, collectionIntervalSeconds(30/60/180/300, 기본 30) |
 | WardDeviceToken | ward_device_tokens | wardKey(UUID, UNIQUE), token(UUID, UNIQUE), createdAt, expiresAt |
 | MembersTermsAgreement | members_terms_agreements | memberKey, agreedAt |
-| SafeZone | safe_zones | safeZoneKey(UUID), wardMemberKey, name, address, latitude, longitude, radius(SMALL/MEDIUM/LARGE/XLARGE) |
+| SafeZone | safe_zones | safeZoneKey(UUID), wardMemberKey, name, address, latitude, longitude, radius(SMALL/MEDIUM/LARGE/XLARGE), type(SAFE/DANGER — 위험존도 같은 테이블, #238) |
 | SafeZoneState | safe_zone_states | wardMemberKey(UNIQUE), safeZoneKeys(CSV, 현재 속한 안심존). 행 없음=최초 관측(알림 안 함), 빈 문자열=존 밖 |
 | Notification | notifications | notificationKey(UUID, UNIQUE), recipientMemberKey, eventType, title, body, dataPayload(jsonb, 리다이렉트용), createdAt. 수신자별 개별 row. 읽음 필드 없음. 목록 조회 정렬·커서는 notification_id DESC (created_at은 fan-out 시 동시각 행이 생겨 정렬 불안정) |
 | AnomalyDetection | anomaly_detections | wardMemberKey, detectionType(5종), score, recordedAt, latitude, longitude, evidence(1000자). `(wardMemberKey, detectionType, recordedAt)` UNIQUE = 재배달 멱등 키. 알림 토글과 무관하게 항상 저장되는 탐지 사건 원본 (1건 = 1 row) |
 | NotificationFeedback | notification_feedbacks | notificationId(UNIQUE — 1알림 1회), anomalyDetectionId(이상탐지 알림만 채움, 안심존 알림 평가는 NULL — 안심존 키·좌표는 notification_id로 알림 payload에서 찾는다), accuracy(ACCURATE/INACCURATE/UNSURE), reason(nullable, INACCURATE 전용), comment(100자, nullable). FK 제약은 걸지 않는다(이 프로젝트는 JPA 연관관계를 쓰지 않음). 이상탐지 알림의 `anomalyDetectionId`는 제출 시 `dataPayload`의 wardKey+type+recordedAt으로 `anomaly_detections`를 역조회해 채우며, **찾지 못하면 저장하지 않고 E9009로 거부한다** — 탐지 행과 조인되지 않는 라벨은 학습에 쓸 수 없고, 키 불일치 버그가 로그가 아니라 에러율로 드러나야 한다 |
-| NotificationSetting | notification_settings | (wardMemberKey, caregiverMemberKey) UNIQUE — 보호자별 설정, 안심존·응급호출 토글, 이상탐지 토글 5종(speed/wandering/abnormalDwelling/routeDeviation/timeAnomaly), lowBatteryEnabled, batteryThresholdPercents(CSV, 기본 '' = 선택 없음 → 알림 없음) |
+| NotificationSetting | notification_settings | (wardMemberKey, caregiverMemberKey) UNIQUE — 보호자별 설정, 안심존·위험존(진입/이탈)·응급호출 토글, 이상탐지 토글 5종(speed/wandering/abnormalDwelling/routeDeviation/timeAnomaly), lowBatteryEnabled, batteryThresholdPercents(CSV, 기본 '' = 선택 없음 → 알림 없음) |
 | AlertRunbook | alert_runbooks | errorSignature, commands(jsonb), resolutionContext, successCount, isValid |
 | AlertInvestigation | alert_investigations | fingerprint, alertName, severity, threadTs, status, fixCommands(jsonb) |
 
