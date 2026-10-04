@@ -20,6 +20,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -56,6 +57,8 @@ class MemberControllerTest extends AbstractIntegrationTest {
     private DesignatedAvatarRepository designatedAvatarRepository;
     @Autowired
     private PasswordEncoder passwordEncoder;
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
     @Autowired
     private JwtGenerator jwtGenerator;
     @Autowired
@@ -124,6 +127,21 @@ class MemberControllerTest extends AbstractIntegrationTest {
                 .jsonPath("$.data.email").doesNotExist()
                 .jsonPath("$.data.gender").isEqualTo("남")
                 .jsonPath("$.data.termsServiceAgreedAt").isNotEmpty();
+    }
+
+    @Test
+    @DisplayName("GET /me - 가입 시각을 joinedAt으로 내려준다")
+    void getMyInfo_returns_joined_at() {
+        jdbcTemplate.update("UPDATE members SET created_at = ? WHERE member_id = ?",
+                MemberFixture.JOINED_AT, guardian.getId());
+
+        client.get()
+                .uri("/api/v1/members/me")
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(guardian))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.data.joinedAt").isEqualTo(MemberFixture.JOINED_AT_TEXT);
     }
 
     @Test

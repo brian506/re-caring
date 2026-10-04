@@ -24,6 +24,7 @@ public record MyInfoResponse(
         LocalDateTime termsServiceAgreedAt,
         LocalDateTime termsPrivacyAgreedAt,
         LocalDateTime termsLocationAgreedAt,
+        LocalDateTime joinedAt,
         List<SafeZoneInfo> safeZones
 ) {
     public static MyInfoResponse of(Member member, MembersTermsAgreement termsAgreement,
@@ -41,6 +42,7 @@ public record MyInfoResponse(
                 termsAgreement.getTermsServiceAgreedAt(),
                 termsAgreement.getTermsPrivacyAgreedAt(),
                 termsAgreement.getTermsLocationAgreedAt(),
+                member.getCreatedAt(),
                 safeZones
         );
     }

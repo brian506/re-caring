@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(
         name = "notification_settings",
-        uniqueConstraints = @UniqueConstraint(columnNames = "ward_member_key")
+        uniqueConstraints = @UniqueConstraint(columnNames = {"ward_member_key", "caregiver_member_key"})
 )
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class NotificationSetting extends BaseEntity {
@@ -31,6 +31,9 @@ public class NotificationSetting extends BaseEntity {
     @Column(name = "ward_member_key", nullable = false)
     private String wardMemberKey;
 
+    @Column(name = "caregiver_member_key", nullable = false)
+    private String caregiverMemberKey;
+
     // columnDefinition의 DEFAULT는 insertDefaultIfAbsent의 슬림 INSERT(키 컬럼만 지정)를 위한 것이다.
     // 기본값을 DB 스키마에 두어 네이티브 INSERT의 값 나열 중복을 제거한다.
     @Column(name = "safe_zone_entry_enabled", nullable = false, columnDefinition = "boolean not null default true")
@@ -38,6 +41,12 @@ public class NotificationSetting extends BaseEntity {
 
     @Column(name = "safe_zone_exit_enabled", nullable = false, columnDefinition = "boolean not null default true")
     private boolean safeZoneExitEnabled;
+
+    @Column(name = "danger_zone_entry_enabled", nullable = false, columnDefinition = "boolean not null default true")
+    private boolean dangerZoneEntryEnabled;
+
+    @Column(name = "danger_zone_exit_enabled", nullable = false, columnDefinition = "boolean not null default true")
+    private boolean dangerZoneExitEnabled;
 
     @Column(name = "route_deviation_enabled", nullable = false, columnDefinition = "boolean not null default true")
     private boolean routeDeviationEnabled;
@@ -68,8 +77,11 @@ public class NotificationSetting extends BaseEntity {
     @Builder
     public NotificationSetting(
             String wardMemberKey,
+            String caregiverMemberKey,
             boolean safeZoneEntryEnabled,
             boolean safeZoneExitEnabled,
+            boolean dangerZoneEntryEnabled,
+            boolean dangerZoneExitEnabled,
             boolean routeDeviationEnabled,
             boolean speedAnomalyEnabled,
             boolean wanderingAnomalyEnabled,
@@ -80,8 +92,11 @@ public class NotificationSetting extends BaseEntity {
             String batteryThresholdPercents
     ) {
         this.wardMemberKey = wardMemberKey;
+        this.caregiverMemberKey = caregiverMemberKey;
         this.safeZoneEntryEnabled = safeZoneEntryEnabled;
         this.safeZoneExitEnabled = safeZoneExitEnabled;
+        this.dangerZoneEntryEnabled = dangerZoneEntryEnabled;
+        this.dangerZoneExitEnabled = dangerZoneExitEnabled;
         this.routeDeviationEnabled = routeDeviationEnabled;
         this.speedAnomalyEnabled = speedAnomalyEnabled;
         this.wanderingAnomalyEnabled = wanderingAnomalyEnabled;
@@ -92,11 +107,14 @@ public class NotificationSetting extends BaseEntity {
         this.batteryThresholdPercents = batteryThresholdPercents;
     }
 
-    public static NotificationSetting defaultFor(String wardMemberKey) {
+    public static NotificationSetting defaultFor(String wardMemberKey, String caregiverMemberKey) {
         return NotificationSetting.builder()
                 .wardMemberKey(wardMemberKey)
+                .caregiverMemberKey(caregiverMemberKey)
                 .safeZoneEntryEnabled(true)
                 .safeZoneExitEnabled(true)
+                .dangerZoneEntryEnabled(true)
+                .dangerZoneExitEnabled(true)
                 .routeDeviationEnabled(true)
                 .speedAnomalyEnabled(true)
                 .wanderingAnomalyEnabled(true)
@@ -111,6 +129,12 @@ public class NotificationSetting extends BaseEntity {
     public void updateSafeZone(boolean entryEnabled, boolean exitEnabled) {
         this.safeZoneEntryEnabled = entryEnabled;
         this.safeZoneExitEnabled = exitEnabled;
+        update();
+    }
+
+    public void updateDangerZone(boolean entryEnabled, boolean exitEnabled) {
+        this.dangerZoneEntryEnabled = entryEnabled;
+        this.dangerZoneExitEnabled = exitEnabled;
         update();
     }
 

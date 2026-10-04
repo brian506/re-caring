@@ -306,6 +306,23 @@ class NotificationFeedbackControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @DisplayName("위험존 알림을 위치 부정확 사유로 평가하면 탐지 기록 연결 없이 저장한다")
+    void submitFeedback_saves_danger_zone_feedback_without_detection() {
+        Notification notification = notificationRepository.saveAndFlush(
+                NotificationFixture.dangerZoneNotification(guardian.getMemberKey()));
+
+        submit(notification.getNotificationKey(), """
+                {"accuracy": "INACCURATE", "reason": "GPS_INACCURATE"}
+                """)
+                .expectStatus().isCreated();
+
+        NotificationFeedback saved = onlyFeedback();
+        assertThat(saved.getNotificationId()).isEqualTo(notification.getId());
+        assertThat(saved.getAnomalyDetectionId()).isNull();
+        assertThat(saved.getReason()).isEqualTo(FeedbackReason.GPS_INACCURATE);
+    }
+
+    @Test
     @DisplayName("안심존 알림에 생활 패턴 사유로 평가하면 거부한다")
     void submitFeedback_rejects_routine_reason_on_safe_zone_notification() {
         Notification notification = notificationRepository.saveAndFlush(

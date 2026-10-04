@@ -68,12 +68,12 @@ public class MemberWithdrawalManager {
         oAuthRepository.deleteByMemberKey(memberKey);
         membersTermsAgreementWriter.deleteByMemberKey(memberKey);
         fcmDeviceTokenRepository.deleteByMemberKey(memberKey);
-        notificationSettingRepository.deleteByWardMemberKey(memberKey);
+        notificationSettingRepository.deleteByMemberKey(memberKey);
         careRelationshipManager.leaveAllCare(memberKey);
         careInvitationWriter.deleteAllByMemberKey(memberKey);
         gpsHistoryManager.deleteByWardMemberKey(memberKey);
         anomalyDetectionManager.deleteByWardMemberKey(memberKey);
-        locationSettingRepository.deleteByWardMemberKey(memberKey);
+        locationSettingRepository.deleteByMemberKey(memberKey);
         safeZoneWriter.deleteByWardMemberKey(memberKey);
         safeZoneStateManager.delete(memberKey);
         wardDeviceTokenRepository.deleteByWardKey(memberKey);

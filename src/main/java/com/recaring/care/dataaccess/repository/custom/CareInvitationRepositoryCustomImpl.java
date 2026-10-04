@@ -38,6 +38,40 @@ public class CareInvitationRepositoryCustomImpl extends QuerydslRepositorySuppor
     }
 
     @Override
+    public List<CareInvitation> findSentRequests(String requesterKey, CareInvitationStatus status) {
+        return selectFrom(careInvitation)
+                .where(
+                        careInvitation.requesterMemberKey.eq(requesterKey),
+                        careInvitation.status.eq(status)
+                )
+                .orderBy(careInvitation.createdAt.desc())
+                .fetch();
+    }
+
+    @Override
+    public Optional<CareInvitation> findInvitationForRequester(String requestKey, String requesterKey) {
+        return Optional.ofNullable(
+                selectFrom(careInvitation)
+                        .where(careInvitation.requestKey.eq(requestKey),
+                                careInvitation.requesterMemberKey.eq(requesterKey))
+                        .fetchOne()
+        );
+    }
+
+    @Override
+    public boolean existsPending(String targetKey, String wardKey) {
+        Integer result = selectOne()
+                .from(careInvitation)
+                .where(
+                        careInvitation.targetMemberKey.eq(targetKey),
+                        careInvitation.wardMemberKey.eq(wardKey),
+                        careInvitation.status.eq(CareInvitationStatus.PENDING)
+                )
+                .fetchFirst();
+        return result != null;
+    }
+
+    @Override
     public void deleteAllByWardMemberKey(String wardMemberKey) {
         delete(careInvitation)
                 .where(careInvitation.wardMemberKey.eq(wardMemberKey))

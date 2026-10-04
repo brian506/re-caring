@@ -1,6 +1,7 @@
 package com.recaring.location.implement.sse;
 
 import com.recaring.location.fixture.LocationFixture;
+import com.recaring.location.vo.LocationCollectionInterval;
 import com.recaring.location.implement.gps.GpsHistoryManager;
 import com.recaring.location.implement.gps.GpsLatestCacheManager;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
@@ -36,7 +37,7 @@ class SseEmitterManagerTest {
         given(gpsLatestCacheManager.find(LocationFixture.WARD_KEY)).willReturn(Optional.empty());
         given(gpsHistoryManager.findLatest(LocationFixture.WARD_KEY)).willReturn(Optional.empty());
 
-        SseEmitter emitter = manager.connect(LocationFixture.WARD_KEY);
+        SseEmitter emitter = manager.connect(LocationFixture.WARD_KEY, LocationCollectionInterval.THIRTY_SECONDS);
 
         assertThat(emitter).isNotNull();
     }
@@ -47,8 +48,8 @@ class SseEmitterManagerTest {
         given(gpsLatestCacheManager.find(LocationFixture.WARD_KEY)).willReturn(Optional.empty());
         given(gpsHistoryManager.findLatest(LocationFixture.WARD_KEY)).willReturn(Optional.empty());
 
-        SseEmitter first = manager.connect(LocationFixture.WARD_KEY);
-        SseEmitter second = manager.connect(LocationFixture.WARD_KEY);
+        SseEmitter first = manager.connect(LocationFixture.WARD_KEY, LocationCollectionInterval.THIRTY_SECONDS);
+        SseEmitter second = manager.connect(LocationFixture.WARD_KEY, LocationCollectionInterval.THIRTY_SECONDS);
 
         assertThat(first).isNotSameAs(second);
     }
@@ -59,7 +60,7 @@ class SseEmitterManagerTest {
         given(gpsLatestCacheManager.find(LocationFixture.WARD_KEY)).willReturn(Optional.empty());
         given(gpsHistoryManager.findLatest(LocationFixture.WARD_KEY)).willReturn(Optional.empty());
 
-        manager.connect(LocationFixture.WARD_KEY);
+        manager.connect(LocationFixture.WARD_KEY, LocationCollectionInterval.THIRTY_SECONDS);
 
         verify(gpsHistoryManager, timeout(1000)).findLatest(LocationFixture.WARD_KEY);
     }
@@ -70,7 +71,7 @@ class SseEmitterManagerTest {
         given(gpsLatestCacheManager.find(LocationFixture.WARD_KEY))
                 .willReturn(Optional.of(LocationFixture.createGps()));
 
-        manager.connect(LocationFixture.WARD_KEY);
+        manager.connect(LocationFixture.WARD_KEY, LocationCollectionInterval.THIRTY_SECONDS);
 
         verify(gpsLatestCacheManager, timeout(1000)).find(LocationFixture.WARD_KEY);
         verify(gpsHistoryManager, never()).findLatest(LocationFixture.WARD_KEY);

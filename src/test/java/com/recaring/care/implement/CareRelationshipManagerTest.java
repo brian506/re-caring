@@ -6,6 +6,8 @@ import com.recaring.care.dataaccess.repository.CareRelationshipRepository;
 import com.recaring.care.fixture.CareFixture;
 import com.recaring.support.exception.AppException;
 import com.recaring.support.exception.ErrorType;
+import com.recaring.location.implement.setting.LocationSettingManager;
+import com.recaring.notification.implement.setting.NotificationSettingManager;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -45,6 +47,12 @@ class CareRelationshipManagerTest {
 
     @Mock
     private DesignatedAvatarManager designatedAvatarManager;
+
+    @Mock
+    private NotificationSettingManager notificationSettingManager;
+
+    @Mock
+    private LocationSettingManager locationSettingManager;
 
     @Test
     @DisplayName("주보호자가 떠나면 남은 보호자 중 먼저 등록된 사람이 주보호자가 된다")
@@ -243,5 +251,20 @@ class CareRelationshipManagerTest {
         careRelationshipManager.leaveAllCare(PRIMARY_KEY);
 
         then(designatedAvatarManager).should().deleteAllByMemberKey(PRIMARY_KEY);
+    }
+
+    @Test
+    @DisplayName("이탈하면 그 사람이 그 대상자에 대해 둔 알림 설정과 위치 수신 주기를 지운다")
+    void leaveCare_removes_settings_of_the_leaving_caregiver() {
+        given(careRelationshipRepository.findAllByWardMemberKey(WARD_KEY)).willReturn(List.of(
+                CareFixture.createRelationship(WARD_KEY, PRIMARY_KEY, CareRole.PRIMARY_GUARDIAN, 1L),
+                CareFixture.createRelationship(WARD_KEY, OLDER_GUARDIAN_KEY, CareRole.GUARDIAN, 2L)));
+
+        careRelationshipManager.leaveCare(WARD_KEY, OLDER_GUARDIAN_KEY);
+
+        then(notificationSettingManager).should().deleteByRelationship(WARD_KEY, OLDER_GUARDIAN_KEY);
+        then(locationSettingManager).should().deleteByRelationship(WARD_KEY, OLDER_GUARDIAN_KEY);
+        then(notificationSettingManager).should(never()).deleteByRelationship(WARD_KEY, PRIMARY_KEY);
+        then(locationSettingManager).should(never()).deleteByRelationship(WARD_KEY, PRIMARY_KEY);
     }
 }

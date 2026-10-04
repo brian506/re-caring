@@ -6,6 +6,7 @@ import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.dataaccess.repository.MemberRepository;
 import com.recaring.safezone.dataaccess.entity.SafeZone;
 import com.recaring.safezone.dataaccess.entity.SafeZoneRadius;
+import com.recaring.safezone.dataaccess.entity.SafeZoneType;
 import com.recaring.safezone.dataaccess.repository.SafeZoneRepository;
 import com.recaring.safezone.fixture.SafeZoneFixture;
 import com.recaring.support.AbstractIntegrationTest;
@@ -14,9 +15,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -34,17 +37,31 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
     private static final SafeZoneRadius NEW_RADIUS = SafeZoneRadius.SMALL;
 
     private static final String CREATE_BODY = """
+            {"name": "%s", "address": "%s", "latitude": %s, "longitude": %s, "radius": "%s", "type": "SAFE"}
+            """.formatted(NEW_NAME, NEW_ADDRESS, NEW_LATITUDE, NEW_LONGITUDE, NEW_RADIUS);
+
+    private static final String DANGER_CREATE_BODY = """
+            {"name": "%s", "address": "%s", "latitude": %s, "longitude": %s, "radius": "%s", "type": "DANGER"}
+            """.formatted(NEW_NAME, NEW_ADDRESS, NEW_LATITUDE, NEW_LONGITUDE, NEW_RADIUS);
+
+    private static final String CREATE_BODY_WITHOUT_TYPE = """
             {"name": "%s", "address": "%s", "latitude": %s, "longitude": %s, "radius": "%s"}
             """.formatted(NEW_NAME, NEW_ADDRESS, NEW_LATITUDE, NEW_LONGITUDE, NEW_RADIUS);
 
     private static final String UPDATE_BODY = """
-            {"name": "%s", "address": "%s", "latitude": %s, "longitude": %s, "radius": "%s"}
+            {"name": "%s", "address": "%s", "latitude": %s, "longitude": %s, "radius": "%s", "type": "SAFE"}
+            """.formatted(SafeZoneFixture.UPDATED_NAME, SafeZoneFixture.UPDATED_ADDRESS,
+            SafeZoneFixture.UPDATED_LATITUDE, SafeZoneFixture.UPDATED_LONGITUDE, SafeZoneFixture.UPDATED_RADIUS);
+
+    private static final String UPDATE_TO_DANGER_BODY = """
+            {"name": "%s", "address": "%s", "latitude": %s, "longitude": %s, "radius": "%s", "type": "DANGER"}
             """.formatted(SafeZoneFixture.UPDATED_NAME, SafeZoneFixture.UPDATED_ADDRESS,
             SafeZoneFixture.UPDATED_LATITUDE, SafeZoneFixture.UPDATED_LONGITUDE, SafeZoneFixture.UPDATED_RADIUS);
 
     @Autowired private MemberRepository memberRepository;
     @Autowired private CareRelationshipRepository careRelationshipRepository;
     @Autowired private SafeZoneRepository safeZoneRepository;
+    @Autowired private JdbcTemplate jdbcTemplate;
 
     private Member ward;
     private Member victimWard;
@@ -123,6 +140,36 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @DisplayName("보호자가 위험존을 추가하면 위험존 타입으로 저장된다")
+    void addSafeZone_persists_danger_type() {
+        client.post()
+                .uri(zonesUri())
+                .header(HttpHeaders.AUTHORIZATION, guardianAuth)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(DANGER_CREATE_BODY)
+                .exchange()
+                .expectStatus().isCreated();
+
+        SafeZone added = findAddedZone();
+        assertThat(added.getType()).isEqualTo(SafeZoneType.DANGER);
+        assertThat(added.getName()).isEqualTo(NEW_NAME);
+    }
+
+    @Test
+    @DisplayName("안심/위험 타입 없이 추가하면 400이 반환되고 저장되지 않는다")
+    void addSafeZone_returns_400_without_type() {
+        client.post()
+                .uri(zonesUri())
+                .header(HttpHeaders.AUTHORIZATION, guardianAuth)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(CREATE_BODY_WITHOUT_TYPE)
+                .exchange()
+                .expectStatus().isBadRequest();
+
+        assertThat(zonesOfWard()).hasSize(1);
+    }
+
+    @Test
     @DisplayName("관계자가 안심존을 추가하면 403이 반환되고 저장되지 않는다")
     void addSafeZone_returns_403_when_manager() {
         client.post()
@@ -176,6 +223,26 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
                 .jsonPath("$.data.length()").isEqualTo(1)
                 .jsonPath("$.data[0].safeZoneKey").isEqualTo(savedZone.getSafeZoneKey())
                 .jsonPath("$.data[0].name").isEqualTo(SafeZoneFixture.NAME);
+    }
+
+    @Test
+    @DisplayName("목록에는 안심존과 위험존이 각자의 타입과 함께 반환된다")
+    void getSafeZones_returns_safe_and_danger_zones_with_type() {
+        SafeZone dangerZone = safeZoneRepository.save(SafeZoneFixture.createDangerZone(ward.getMemberKey()));
+        overwriteCreatedAt(savedZone, LocalDateTime.of(2026, 10, 5, 9, 0));
+        overwriteCreatedAt(dangerZone, LocalDateTime.of(2026, 10, 5, 10, 0));
+
+        client.get()
+                .uri(zonesUri())
+                .header(HttpHeaders.AUTHORIZATION, guardianAuth)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.data.length()").isEqualTo(2)
+                .jsonPath("$.data[0].safeZoneKey").isEqualTo(savedZone.getSafeZoneKey())
+                .jsonPath("$.data[0].type").isEqualTo("SAFE")
+                .jsonPath("$.data[1].safeZoneKey").isEqualTo(dangerZone.getSafeZoneKey())
+                .jsonPath("$.data[1].type").isEqualTo("DANGER");
     }
 
     @Test
@@ -272,6 +339,20 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
         assertThat(updated.getLatitude()).isEqualTo(SafeZoneFixture.UPDATED_LATITUDE);
         assertThat(updated.getLongitude()).isEqualTo(SafeZoneFixture.UPDATED_LONGITUDE);
         assertThat(updated.getRadius()).isEqualTo(SafeZoneFixture.UPDATED_RADIUS);
+    }
+
+    @Test
+    @DisplayName("안심존을 위험존으로 수정하면 저장된 타입이 위험존으로 바뀐다")
+    void updateSafeZone_changes_type_to_danger() {
+        client.patch()
+                .uri(zoneUri(savedZone.getSafeZoneKey()))
+                .header(HttpHeaders.AUTHORIZATION, guardianAuth)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(UPDATE_TO_DANGER_BODY)
+                .exchange()
+                .expectStatus().isOk();
+
+        assertThat(reloadSavedZone().getType()).isEqualTo(SafeZoneType.DANGER);
     }
 
     @Test
@@ -417,5 +498,12 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
         assertThat(safeZoneRepository.findBySafeZoneKeyAndWardMemberKey(
                 victimZone.getSafeZoneKey(), victimWard.getMemberKey())
         ).get().extracting(SafeZone::getName).isEqualTo(SafeZoneFixture.NAME);
+    }
+
+    private void overwriteCreatedAt(SafeZone zone, LocalDateTime createdAt) {
+        jdbcTemplate.update(
+                "UPDATE safe_zones SET created_at = ? WHERE safe_zone_id = ?",
+                createdAt, zone.getId()
+        );
     }
 }

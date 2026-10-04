@@ -34,21 +34,13 @@ class NotificationSettingManagerTest {
     private BatteryAlertStateManager batteryAlertStateManager;
 
     @Test
-    @DisplayName("설정한 적 없는 대상자에게 기본 설정 행을 만들어 둔다")
-    void addDefaultIfAbsent_creates_default_row() {
-        notificationSettingManager.addDefaultIfAbsent(NotificationFixture.WARD_KEY);
-
-        then(notificationSettingRepository).should().insertDefaultIfAbsent(NotificationFixture.WARD_KEY);
-    }
-
-    @Test
-    @DisplayName("안심존 설정은 행을 먼저 확보한 뒤 갱신한다")
+    @DisplayName("안심존 설정은 그 보호자의 행을 먼저 확보한 뒤 그 행만 갱신한다")
     void updateSafeZone_ensures_row_before_updating() {
-        notificationSettingManager.updateSafeZone(NotificationFixture.WARD_KEY, false, true);
+        notificationSettingManager.updateSafeZone(NotificationFixture.WARD_KEY, NotificationFixture.GUARDIAN_KEY, false, true);
 
         InOrder inOrder = inOrder(notificationSettingRepository);
-        then(notificationSettingRepository).should(inOrder).insertDefaultIfAbsent(NotificationFixture.WARD_KEY);
-        then(notificationSettingRepository).should(inOrder).updateSafeZone(NotificationFixture.WARD_KEY, false, true);
+        then(notificationSettingRepository).should(inOrder).insertDefaultIfAbsent(NotificationFixture.WARD_KEY, NotificationFixture.GUARDIAN_KEY);
+        then(notificationSettingRepository).should(inOrder).updateSafeZone(NotificationFixture.WARD_KEY, NotificationFixture.GUARDIAN_KEY, false, true);
     }
 
     @ParameterizedTest(name = "{0}번 토글만 끄면 그 자리만 false로 갱신된다")
@@ -61,48 +53,57 @@ class NotificationSettingManagerTest {
 
         // When
         notificationSettingManager.updateAnomaly(
-                NotificationFixture.WARD_KEY, toggles[0], toggles[1], toggles[2], toggles[3], toggles[4]);
+                NotificationFixture.WARD_KEY, NotificationFixture.GUARDIAN_KEY, toggles[0], toggles[1], toggles[2], toggles[3], toggles[4]);
 
         // Then
         InOrder inOrder = inOrder(notificationSettingRepository);
-        then(notificationSettingRepository).should(inOrder).insertDefaultIfAbsent(NotificationFixture.WARD_KEY);
+        then(notificationSettingRepository).should(inOrder).insertDefaultIfAbsent(NotificationFixture.WARD_KEY, NotificationFixture.GUARDIAN_KEY);
         then(notificationSettingRepository).should(inOrder).updateAnomaly(
-                NotificationFixture.WARD_KEY, toggles[0], toggles[1], toggles[2], toggles[3], toggles[4]);
+                NotificationFixture.WARD_KEY, NotificationFixture.GUARDIAN_KEY, toggles[0], toggles[1], toggles[2], toggles[3], toggles[4]);
     }
 
     @Test
-    @DisplayName("응급 호출 설정은 행을 먼저 확보한 뒤 갱신한다")
+    @DisplayName("응급 호출 설정은 그 보호자의 행을 먼저 확보한 뒤 그 행만 갱신한다")
     void updateEmergencyCall_ensures_row_before_updating() {
-        notificationSettingManager.updateEmergencyCall(NotificationFixture.WARD_KEY, false);
+        notificationSettingManager.updateEmergencyCall(NotificationFixture.WARD_KEY, NotificationFixture.GUARDIAN_KEY, false);
 
         InOrder inOrder = inOrder(notificationSettingRepository);
-        then(notificationSettingRepository).should(inOrder).insertDefaultIfAbsent(NotificationFixture.WARD_KEY);
-        then(notificationSettingRepository).should(inOrder).updateEmergencyCall(NotificationFixture.WARD_KEY, false);
+        then(notificationSettingRepository).should(inOrder).insertDefaultIfAbsent(NotificationFixture.WARD_KEY, NotificationFixture.GUARDIAN_KEY);
+        then(notificationSettingRepository).should(inOrder).updateEmergencyCall(NotificationFixture.WARD_KEY, NotificationFixture.GUARDIAN_KEY, false);
     }
 
     @Test
     @DisplayName("배터리 알림을 켜면 고른 임계값을 저장하고 기존 발송 이력은 남긴다")
     void updateBattery_keeps_alert_state_when_enabled() {
         notificationSettingManager.updateBattery(
-                NotificationFixture.WARD_KEY, true, BatteryThresholds.ofPercents(List.of(30, 90)));
+                NotificationFixture.WARD_KEY, NotificationFixture.GUARDIAN_KEY, true, BatteryThresholds.ofPercents(List.of(30, 90)));
 
         InOrder inOrder = inOrder(notificationSettingRepository);
-        then(notificationSettingRepository).should(inOrder).insertDefaultIfAbsent(NotificationFixture.WARD_KEY);
+        then(notificationSettingRepository).should(inOrder).insertDefaultIfAbsent(NotificationFixture.WARD_KEY, NotificationFixture.GUARDIAN_KEY);
         then(notificationSettingRepository).should(inOrder)
-                .updateBattery(NotificationFixture.WARD_KEY, true, "30,90");
-        then(batteryAlertStateManager).should(never()).delete(NotificationFixture.WARD_KEY);
+                .updateBattery(NotificationFixture.WARD_KEY, NotificationFixture.GUARDIAN_KEY, true, "30,90");
+        then(batteryAlertStateManager).should(never()).delete(NotificationFixture.WARD_KEY, NotificationFixture.GUARDIAN_KEY);
     }
 
     @Test
-    @DisplayName("배터리 알림을 끄면 마지막 발송 이력도 함께 지운다")
+    @DisplayName("배터리 알림을 끄면 그 보호자의 마지막 발송 이력만 함께 지운다")
     void updateBattery_clears_alert_state_when_disabled() {
         notificationSettingManager.updateBattery(
-                NotificationFixture.WARD_KEY, false, BatteryThresholds.ofPercents(List.of(30, 90)));
+                NotificationFixture.WARD_KEY, NotificationFixture.GUARDIAN_KEY, false, BatteryThresholds.ofPercents(List.of(30, 90)));
 
         InOrder inOrder = inOrder(notificationSettingRepository);
-        then(notificationSettingRepository).should(inOrder).insertDefaultIfAbsent(NotificationFixture.WARD_KEY);
+        then(notificationSettingRepository).should(inOrder).insertDefaultIfAbsent(NotificationFixture.WARD_KEY, NotificationFixture.GUARDIAN_KEY);
         then(notificationSettingRepository).should(inOrder)
-                .updateBattery(NotificationFixture.WARD_KEY, false, "30,90");
-        then(batteryAlertStateManager).should().delete(NotificationFixture.WARD_KEY);
+                .updateBattery(NotificationFixture.WARD_KEY, NotificationFixture.GUARDIAN_KEY, false, "30,90");
+        then(batteryAlertStateManager).should().delete(NotificationFixture.WARD_KEY, NotificationFixture.GUARDIAN_KEY);
+    }
+
+    @Test
+    @DisplayName("관계를 정리하면 그 보호자의 설정 행과 배터리 발송 이력을 함께 지운다")
+    void deleteByRelationship_removes_setting_and_battery_state_of_the_caregiver() {
+        notificationSettingManager.deleteByRelationship(NotificationFixture.WARD_KEY, NotificationFixture.GUARDIAN_KEY);
+
+        then(notificationSettingRepository).should().deleteByRelationship(NotificationFixture.WARD_KEY, NotificationFixture.GUARDIAN_KEY);
+        then(batteryAlertStateManager).should().delete(NotificationFixture.WARD_KEY, NotificationFixture.GUARDIAN_KEY);
     }
 }

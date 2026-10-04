@@ -29,6 +29,7 @@ public class CareInvitationManager {
     private final CareInvitationWriter careInvitationWriter;
     private final CareRelationshipWriter careRelationshipWriter;
     private final CareRelationshipValidator careRelationshipValidator;
+    private final CareInvitationResendLimiter careInvitationResendLimiter;
     private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
@@ -38,6 +39,7 @@ public class CareInvitationManager {
 
         careRelationshipValidator.validateNoPrimaryGuardian(invitation.wardMemberKey());
         careRelationshipValidator.validateCanAddWard(invitation.requesterMemberKey(), invitation.wardMemberKey());
+        validateNoPending(invitation);
         CareInvitation saved = careInvitationWriter.register(invitation);
         eventPublisher.publishEvent(new CareInvitationSentEvent(saved.getRequestKey(), saved.getTargetMemberKey(), saved.getRequesterMemberKey(), saved.targetRole()));
     }
@@ -49,6 +51,7 @@ public class CareInvitationManager {
         NewCareInvitation invitation = NewCareInvitation.ofCaregiverRequest(requesterKey, Caregiver.of(newManager.getMemberKey(), newManager.getRole()), wardMemberKey, CareRole.MANAGER);
 
         careRelationshipValidator.validateCanAddCaregiver(invitation.requesterMemberKey(), invitation.wardMemberKey(), invitation.targetMemberKey());
+        validateNoPending(invitation);
         CareInvitation saved = careInvitationWriter.register(invitation);
         eventPublisher.publishEvent(new CareInvitationSentEvent(saved.getRequestKey(), saved.getTargetMemberKey(), saved.getRequesterMemberKey(), saved.targetRole()));
     }
@@ -60,6 +63,7 @@ public class CareInvitationManager {
         NewCareInvitation invitation = NewCareInvitation.ofCaregiverRequest(requesterKey, Caregiver.of(newGuardian.getMemberKey(), newGuardian.getRole()), wardMemberKey, CareRole.GUARDIAN);
 
         careRelationshipValidator.validateCanAddCaregiver(invitation.requesterMemberKey(), invitation.wardMemberKey(), invitation.targetMemberKey());
+        validateNoPending(invitation);
         CareInvitation saved = careInvitationWriter.register(invitation);
         eventPublisher.publishEvent(new CareInvitationSentEvent(saved.getRequestKey(), saved.getTargetMemberKey(), saved.getRequesterMemberKey(), saved.targetRole()));
     }
@@ -87,6 +91,27 @@ public class CareInvitationManager {
         CareInvitation request = careInvitationReader.findInvitationForRecipient(requestKey, memberKey);
         validatePending(request);
         careInvitationWriter.reject(request.getRequestKey());
+    }
+
+    @Transactional
+    public void resend(String requestKey, String requesterKey) {
+        CareInvitation invitation = careInvitationReader.findInvitationForRequester(requestKey, requesterKey);
+        validatePending(invitation);
+        careInvitationResendLimiter.acquire(invitation.getRequestKey());
+        eventPublisher.publishEvent(new CareInvitationSentEvent(invitation.getRequestKey(), invitation.getTargetMemberKey(), invitation.getRequesterMemberKey(), invitation.targetRole()));
+    }
+
+    @Transactional
+    public void cancel(String requestKey, String requesterKey) {
+        CareInvitation invitation = careInvitationReader.findInvitationForRequester(requestKey, requesterKey);
+        validatePending(invitation);
+        careInvitationWriter.delete(invitation.getRequestKey());
+    }
+
+    private void validateNoPending(NewCareInvitation invitation) {
+        if (careInvitationReader.existsPending(invitation.targetMemberKey(), invitation.wardMemberKey())) {
+            throw new AppException(ErrorType.ALREADY_PENDING_CARE_REQUEST);
+        }
     }
 
     private void validatePending(CareInvitation invitation) {

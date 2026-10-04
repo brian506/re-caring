@@ -19,6 +19,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 
 import java.util.Date;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import org.springframework.http.MediaType;
 
 @DisplayName("NotificationSettingController HTTP 통합 테스트")
@@ -70,6 +72,8 @@ class NotificationSettingControllerTest extends AbstractIntegrationTest {
                 .jsonPath("$.resultType").isEqualTo("SUCCESS")
                 .jsonPath("$.data.safeZone.entryEnabled").isEqualTo(true)
                 .jsonPath("$.data.safeZone.exitEnabled").isEqualTo(true)
+                .jsonPath("$.data.dangerZone.entryEnabled").isEqualTo(true)
+                .jsonPath("$.data.dangerZone.exitEnabled").isEqualTo(true)
                 .jsonPath("$.data.anomaly.speedAnomalyEnabled").isEqualTo(true)
                 .jsonPath("$.data.anomaly.wanderingAnomalyEnabled").isEqualTo(true)
                 .jsonPath("$.data.anomaly.abnormalDwellingEnabled").isEqualTo(true)
@@ -83,21 +87,56 @@ class NotificationSettingControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("PATCH /safe-zone - 관계자가 수정한 공통 설정을 대상자 본인이 조회한다")
-    void updateSafeZone_by_manager_is_visible_to_ward() {
+    @DisplayName("PATCH /safe-zone - 보호자가 바꾼 안심존 알림은 그 보호자에게만 저장되고 관계자의 설정은 그대로다")
+    void updateSafeZone_by_guardian_does_not_affect_manager() {
         // 기본값이 둘 다 true라, 먼저 둘 다 끄지 않으면 exit가 기본값과 같아 무엇도 검증되지 않는다
-        patchSafeZone(false, false);
-        expectSafeZone(false, false);
+        patchSafeZone(guardian, false, false);
+        expectSafeZone(guardian, false, false);
 
         // 서로 다른 값으로 다시 저장해 두 필드가 뒤바뀌지 않는지 확인한다
-        patchSafeZone(true, false);
-        expectSafeZone(true, false);
+        patchSafeZone(guardian, true, false);
+        expectSafeZone(guardian, true, false);
+
+        expectSafeZone(manager, true, true);
+        assertThat(notificationSettingRepository.findByWardMemberKeyAndCaregiverMemberKey(
+                ward.getMemberKey(), guardian.getMemberKey()))
+                .hasValueSatisfying(setting -> {
+                    assertThat(setting.isSafeZoneEntryEnabled()).isTrue();
+                    assertThat(setting.isSafeZoneExitEnabled()).isFalse();
+                });
+        assertThat(notificationSettingRepository.findByWardMemberKeyAndCaregiverMemberKey(
+                ward.getMemberKey(), manager.getMemberKey()))
+                .isEmpty();
     }
 
-    private void patchSafeZone(boolean entryEnabled, boolean exitEnabled) {
+    @Test
+    @DisplayName("PATCH /danger-zone - 보호자가 바꾼 위험존 알림은 그 보호자에게만 저장되고 안심존 설정과 관계자 설정은 그대로다")
+    void updateDangerZone_by_guardian_does_not_affect_safe_zone_or_manager() {
+        patchDangerZone(guardian, false, false);
+        expectDangerZone(guardian, false, false);
+
+        patchDangerZone(guardian, true, false);
+        expectDangerZone(guardian, true, false);
+
+        expectSafeZone(guardian, true, true);
+        expectDangerZone(manager, true, true);
+        assertThat(notificationSettingRepository.findByWardMemberKeyAndCaregiverMemberKey(
+                ward.getMemberKey(), guardian.getMemberKey()))
+                .hasValueSatisfying(setting -> {
+                    assertThat(setting.isDangerZoneEntryEnabled()).isTrue();
+                    assertThat(setting.isDangerZoneExitEnabled()).isFalse();
+                    assertThat(setting.isSafeZoneEntryEnabled()).isTrue();
+                    assertThat(setting.isSafeZoneExitEnabled()).isTrue();
+                });
+        assertThat(notificationSettingRepository.findByWardMemberKeyAndCaregiverMemberKey(
+                ward.getMemberKey(), manager.getMemberKey()))
+                .isEmpty();
+    }
+
+    private void patchDangerZone(Member requester, boolean entryEnabled, boolean exitEnabled) {
         client.patch()
-                .uri("/api/v1/notifications/settings/{wardKey}/safe-zone", ward.getMemberKey())
-                .header(HttpHeaders.AUTHORIZATION, bearerToken(manager))
+                .uri("/api/v1/notifications/settings/{wardKey}/danger-zone", ward.getMemberKey())
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(requester))
                 .contentType(MediaType.APPLICATION_JSON)
                 .body("""
                         {"entryEnabled": %s, "exitEnabled": %s}
@@ -108,10 +147,35 @@ class NotificationSettingControllerTest extends AbstractIntegrationTest {
                 .jsonPath("$.resultType").isEqualTo("SUCCESS");
     }
 
-    private void expectSafeZone(boolean entryEnabled, boolean exitEnabled) {
+    private void expectDangerZone(Member requester, boolean entryEnabled, boolean exitEnabled) {
         client.get()
                 .uri("/api/v1/notifications/settings/{wardKey}", ward.getMemberKey())
-                .header(HttpHeaders.AUTHORIZATION, bearerToken(ward))
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(requester))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.data.dangerZone.entryEnabled").isEqualTo(entryEnabled)
+                .jsonPath("$.data.dangerZone.exitEnabled").isEqualTo(exitEnabled);
+    }
+
+    private void patchSafeZone(Member requester, boolean entryEnabled, boolean exitEnabled) {
+        client.patch()
+                .uri("/api/v1/notifications/settings/{wardKey}/safe-zone", ward.getMemberKey())
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(requester))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"entryEnabled": %s, "exitEnabled": %s}
+                        """.formatted(entryEnabled, exitEnabled))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.resultType").isEqualTo("SUCCESS");
+    }
+
+    private void expectSafeZone(Member requester, boolean entryEnabled, boolean exitEnabled) {
+        client.get()
+                .uri("/api/v1/notifications/settings/{wardKey}", ward.getMemberKey())
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(requester))
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
@@ -121,15 +185,15 @@ class NotificationSettingControllerTest extends AbstractIntegrationTest {
 
     @ParameterizedTest(name = "{0}번 토글만 끄면 그 유형만 꺼진 채로 조회된다")
     @ValueSource(ints = {0, 1, 2, 3, 4})
-    @DisplayName("PATCH /anomaly - 대상자 본인이 끈 탐지 유형만 정확히 그 유형으로 저장된다")
-    void updateAnomaly_by_ward_disables_only_that_detection_type(int disabledIndex) {
+    @DisplayName("PATCH /anomaly - 보호자가 끈 탐지 유형만 정확히 그 유형으로 저장된다")
+    void updateAnomaly_by_guardian_disables_only_that_detection_type(int disabledIndex) {
         // 한 자리만 false로 두면 컬럼이 뒤바뀌어 저장될 때 조회 결과가 어긋난다
         boolean[] toggles = {true, true, true, true, true};
         toggles[disabledIndex] = false;
 
         client.patch()
                 .uri("/api/v1/notifications/settings/{wardKey}/anomaly", ward.getMemberKey())
-                .header(HttpHeaders.AUTHORIZATION, bearerToken(ward))
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(guardian))
                 .contentType(MediaType.APPLICATION_JSON)
                 .body("""
                         {
@@ -157,8 +221,8 @@ class NotificationSettingControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("PATCH /emergency-call - 주보호자가 응급호출 알림 설정을 수정한다")
-    void updateEmergencyCall_by_guardian_updates_setting() {
+    @DisplayName("PATCH /emergency-call - 주보호자가 끈 응급호출 알림은 주보호자 본인 설정에 저장된다")
+    void updateEmergencyCall_by_guardian_updates_own_setting() {
         client.patch()
                 .uri("/api/v1/notifications/settings/{wardKey}/emergency-call", ward.getMemberKey())
                 .header(HttpHeaders.AUTHORIZATION, bearerToken(guardian))
@@ -171,7 +235,7 @@ class NotificationSettingControllerTest extends AbstractIntegrationTest {
 
         client.get()
                 .uri("/api/v1/notifications/settings/{wardKey}", ward.getMemberKey())
-                .header(HttpHeaders.AUTHORIZATION, bearerToken(manager))
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(guardian))
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
@@ -208,6 +272,19 @@ class NotificationSettingControllerTest extends AbstractIntegrationTest {
         client.get()
                 .uri("/api/v1/notifications/settings/{wardKey}", ward.getMemberKey())
                 .header(HttpHeaders.AUTHORIZATION, bearerToken(otherGuardian))
+                .exchange()
+                .expectStatus().isForbidden()
+                .expectBody()
+                .jsonPath("$.resultType").isEqualTo("ERROR")
+                .jsonPath("$.error.errorCode").isEqualTo("E6001");
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/notifications/settings/{wardKey} - 대상자 본인은 알림 수신자가 아니므로 403을 반환한다")
+    void getSetting_returns_403_for_ward_self() {
+        client.get()
+                .uri("/api/v1/notifications/settings/{wardKey}", ward.getMemberKey())
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(ward))
                 .exchange()
                 .expectStatus().isForbidden()
                 .expectBody()

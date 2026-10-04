@@ -3,6 +3,7 @@ package com.recaring.location.business;
 import com.recaring.location.event.GpsSavedEvent;
 import com.recaring.location.implement.LocationValidator;
 import com.recaring.location.implement.gps.GpsHistoryManager;
+import com.recaring.location.implement.setting.LocationSettingManager;
 import com.recaring.location.implement.sse.SseEmitterManager;
 import com.recaring.location.vo.Gps;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ public class LocationService {
     private final GpsHistoryManager gpsHistoryManager;
     private final SseEmitterManager sseEmitterManager;
     private final LocationValidator locationValidator;
+    private final LocationSettingManager locationSettingManager;
     private final ApplicationEventPublisher eventPublisher;
 
     public void receiveGps(String wardMemberKey, Gps gps) {
@@ -31,7 +33,7 @@ public class LocationService {
 
     public SseEmitter streamLocation(String caregiverKey, String wardKey) {
         locationValidator.validateCaregiverAccess(caregiverKey, wardKey);
-        return sseEmitterManager.connect(wardKey);
+        return sseEmitterManager.connect(wardKey, locationSettingManager.findCollectionInterval(wardKey, caregiverKey));
     }
 
     public List<Gps> getHistory(String requesterKey, String wardKey, LocalDate date) {

@@ -4,6 +4,8 @@ import com.recaring.location.event.GpsSavedEvent;
 import com.recaring.location.fixture.LocationFixture;
 import com.recaring.location.implement.LocationValidator;
 import com.recaring.location.implement.gps.GpsHistoryManager;
+import com.recaring.location.implement.setting.LocationSettingManager;
+import com.recaring.location.vo.LocationCollectionInterval;
 import com.recaring.location.implement.sse.SseEmitterManager;
 import com.recaring.location.vo.Gps;
 import org.junit.jupiter.api.DisplayName;
@@ -33,6 +35,8 @@ class LocationServiceTest {
     private LocationValidator locationValidator;
     @Mock
     private ApplicationEventPublisher eventPublisher;
+    @Mock
+    private LocationSettingManager locationSettingManager;
 
     @Test
     @DisplayName("GPS 수신 시 DB에 저장하고 GpsSavedEvent를 발행한다")
@@ -49,11 +53,14 @@ class LocationServiceTest {
     }
 
     @Test
-    @DisplayName("SSE 연결 시 caregiverAccess 검증 후 emitter를 반환한다")
-    void streamLocation_returns_emitter_with_caregiver_validation() {
+    @DisplayName("SSE는 케어 관계를 확인한 뒤 요청한 보호자의 수신 주기로 연결한다")
+    void streamLocation_connects_with_interval_of_the_requester() {
         // Given
         SseEmitter mockEmitter = mock(SseEmitter.class);
-        given(sseEmitterManager.connect(LocationFixture.WARD_KEY)).willReturn(mockEmitter);
+        given(locationSettingManager.findCollectionInterval(LocationFixture.WARD_KEY, LocationFixture.GUARDIAN_KEY))
+                .willReturn(LocationCollectionInterval.THREE_MINUTES);
+        given(sseEmitterManager.connect(LocationFixture.WARD_KEY, LocationCollectionInterval.THREE_MINUTES))
+                .willReturn(mockEmitter);
 
         // When
         SseEmitter result = locationService.streamLocation(LocationFixture.GUARDIAN_KEY, LocationFixture.WARD_KEY);

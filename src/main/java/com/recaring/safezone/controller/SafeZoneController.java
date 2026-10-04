@@ -19,12 +19,12 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/care/wards/{wardKey}/safe-zones")
 @RequiredArgsConstructor
-@Tag(name = "SafeZone", description = "안심존 API (등록, 조회, 수정, 삭제)")
+@Tag(name = "SafeZone", description = "안심존·위험존 API (등록, 조회, 수정, 삭제)")
 public class SafeZoneController {
 
     private final SafeZoneService safeZoneService;
 
-    @Operation(summary = "안심존 추가", description = "보호자/관계자가 보호대상자의 안심존을 추가합니다.")
+    @Operation(summary = "안심존·위험존 추가", description = "보호자가 보호대상자의 안심존(SAFE) 또는 위험존(DANGER)을 추가합니다.")
     @PostMapping
     public ResponseEntity<ApiResponse<Void>> addSafeZone(
             @AuthMember String memberKey,
@@ -35,7 +35,7 @@ public class SafeZoneController {
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success());
     }
 
-    @Operation(summary = "안심존 목록 조회", description = "보호대상자에게 등록된 안심존 목록을 조회합니다.")
+    @Operation(summary = "안심존·위험존 목록 조회", description = "보호대상자에게 등록된 안심존·위험존 목록을 조회합니다. 각 항목의 type(SAFE/DANGER)으로 구분합니다.")
     @GetMapping
     public ResponseEntity<ApiResponse<List<SafeZoneResponse>>> getSafeZones(
             @AuthMember String memberKey,
@@ -61,7 +61,7 @@ public class SafeZoneController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @Operation(summary = "안심존 수정", description = "안심존의 이름, 주소, 위도, 경도, 반경을 수정합니다.")
+    @Operation(summary = "안심존·위험존 수정", description = "이름, 주소, 위도, 경도, 반경, 안심/위험 타입을 수정합니다.")
     @PatchMapping("/{safeZoneKey}")
     public ResponseEntity<ApiResponse<Void>> updateSafeZone(
             @AuthMember String memberKey,

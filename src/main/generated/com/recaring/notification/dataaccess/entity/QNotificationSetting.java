@@ -28,8 +28,14 @@ public class QNotificationSetting extends EntityPathBase<NotificationSetting> {
 
     public final StringPath batteryThresholdPercents = createString("batteryThresholdPercents");
 
+    public final StringPath caregiverMemberKey = createString("caregiverMemberKey");
+
     //inherited
     public final DateTimePath<java.time.LocalDateTime> createdAt = _super.createdAt;
+
+    public final BooleanPath dangerZoneEntryEnabled = createBoolean("dangerZoneEntryEnabled");
+
+    public final BooleanPath dangerZoneExitEnabled = createBoolean("dangerZoneExitEnabled");
 
     public final BooleanPath emergencyCallEnabled = createBoolean("emergencyCallEnabled");
 

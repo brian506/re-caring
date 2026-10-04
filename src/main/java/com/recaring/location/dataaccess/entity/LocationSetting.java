@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(
         name = "location_settings",
-        uniqueConstraints = @UniqueConstraint(columnNames = "ward_member_key")
+        uniqueConstraints = @UniqueConstraint(columnNames = {"ward_member_key", "caregiver_member_key"})
 )
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class LocationSetting extends BaseEntity {
@@ -30,12 +30,16 @@ public class LocationSetting extends BaseEntity {
     @Column(name = "ward_member_key", nullable = false)
     private String wardMemberKey;
 
+    @Column(name = "caregiver_member_key", nullable = false)
+    private String caregiverMemberKey;
+
     @Column(name = "collection_interval_seconds", nullable = false)
     private int collectionIntervalSeconds;
 
     @Builder
-    public LocationSetting(String wardMemberKey, int collectionIntervalSeconds) {
+    public LocationSetting(String wardMemberKey, String caregiverMemberKey, int collectionIntervalSeconds) {
         this.wardMemberKey = wardMemberKey;
+        this.caregiverMemberKey = caregiverMemberKey;
         this.collectionIntervalSeconds = collectionIntervalSeconds;
     }
 

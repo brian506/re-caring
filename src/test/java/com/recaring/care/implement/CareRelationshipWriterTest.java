@@ -9,6 +9,8 @@ import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.implement.MemberReader;
 import com.recaring.support.exception.AppException;
 import com.recaring.support.exception.ErrorType;
+import com.recaring.location.implement.setting.LocationSettingManager;
+import com.recaring.notification.implement.setting.NotificationSettingManager;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -47,6 +49,12 @@ class CareRelationshipWriterTest {
 
     @Mock
     private DesignatedAvatarManager designatedAvatarManager;
+
+    @Mock
+    private NotificationSettingManager notificationSettingManager;
+
+    @Mock
+    private LocationSettingManager locationSettingManager;
 
     @Captor
     private ArgumentCaptor<CareRelationship> relationshipCaptor;
@@ -155,6 +163,25 @@ class CareRelationshipWriterTest {
         // then
         then(designatedAvatarManager).should(times(1))
                 .deleteAllByRelationship(CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY);
+    }
+
+    @Test
+    @DisplayName("주보호자가 보호자를 내보내면 그 보호자의 알림 설정과 위치 수신 주기를 함께 지운다")
+    void delete_removes_settings_of_the_removed_caregiver() {
+        // given
+        given(careRelationshipRepository.findCareRelationship(
+                CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY))
+                .willReturn(Optional.of(CareFixture.createGuardianRelationship(
+                        CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY)));
+
+        // when
+        careRelationshipWriter.delete(CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY);
+
+        // then
+        then(notificationSettingManager).should(times(1))
+                .deleteByRelationship(CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY);
+        then(locationSettingManager).should(times(1))
+                .deleteByRelationship(CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY);
     }
 
     @Test

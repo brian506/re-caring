@@ -9,6 +9,8 @@ import com.recaring.care.controller.request.UpdateCareRoleRequest;
 import com.recaring.care.controller.request.UpdateWardNicknameRequest;
 import com.recaring.care.controller.response.CaregiverResponse;
 import com.recaring.care.controller.response.ReceivedCareRequestResponse;
+import com.recaring.care.controller.response.SentCareRequestResponse;
+import com.recaring.care.dataaccess.entity.CareInvitationStatus;
 import com.recaring.care.controller.response.WardResponse;
 import com.recaring.security.vo.AuthMember;
 import com.recaring.support.response.ApiResponse;
@@ -83,6 +85,49 @@ public class CareController {
                 .map(ReceivedCareRequestResponse::from)
                 .toList();
         return ResponseEntity.ok(ApiResponse.success(responses));
+    }
+
+    @Operation(
+            summary = "보낸 케어 요청 목록 조회",
+            description = "내가 보낸 케어 요청 목록을 최신순으로 반환합니다. status 기본값은 PENDING입니다. "
+                    + "대상자 추가 요청(targetRole=WARD)은 수락된 뒤에만 wardKey·wardName을 채웁니다. [GUARDIAN 전용]"
+    )
+    @GetMapping("/requests/sent")
+    public ResponseEntity<ApiResponse<List<SentCareRequestResponse>>> getSentRequests(
+            @AuthMember String memberKey,
+            @RequestParam(defaultValue = "PENDING") CareInvitationStatus status
+    ) {
+        List<SentCareRequestResponse> responses = careInvitationService.getSentRequests(memberKey, status)
+                .stream()
+                .map(SentCareRequestResponse::from)
+                .toList();
+        return ResponseEntity.ok(ApiResponse.success(responses));
+    }
+
+    @Operation(
+            summary = "케어 요청 재전송",
+            description = "내가 보낸 대기 중인 케어 요청의 알림을 다시 보냅니다. 요청마다 5분에 한 번만 가능합니다. [GUARDIAN 전용]"
+    )
+    @PostMapping("/requests/{requestKey}/resend")
+    public ResponseEntity<ApiResponse<Void>> resendRequest(
+            @AuthMember String memberKey,
+            @PathVariable String requestKey
+    ) {
+        careInvitationService.resend(requestKey, memberKey);
+        return ResponseEntity.ok(ApiResponse.success());
+    }
+
+    @Operation(
+            summary = "케어 요청 취소",
+            description = "내가 보낸 대기 중인 케어 요청을 취소(삭제)합니다. [GUARDIAN 전용]"
+    )
+    @DeleteMapping("/requests/{requestKey}")
+    public ResponseEntity<ApiResponse<Void>> cancelRequest(
+            @AuthMember String memberKey,
+            @PathVariable String requestKey
+    ) {
+        careInvitationService.cancel(requestKey, memberKey);
+        return ResponseEntity.ok(ApiResponse.success());
     }
 
     @Operation(

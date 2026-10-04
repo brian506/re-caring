@@ -13,12 +13,15 @@ import com.recaring.notification.dataaccess.entity.FeedbackReason;
 import com.recaring.notification.dataaccess.entity.FcmDeviceToken;
 import com.recaring.notification.dataaccess.entity.Notification;
 import com.recaring.notification.dataaccess.entity.NotificationSetting;
+import com.recaring.notification.vo.BatteryNotificationSetting;
+import com.recaring.notification.vo.BatteryThresholds;
 import com.recaring.notification.vo.NotificationFeedbackAnswer;
 import com.recaring.notification.vo.NotificationItem;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 public class NotificationFixture {
@@ -27,7 +30,7 @@ public class NotificationFixture {
     public static final String WARD_NAME = "김소연";
     public static final String GUARDIAN_KEY = LocationFixture.GUARDIAN_KEY;
     public static final String MANAGER_KEY = LocationFixture.MANAGER_KEY;
-    public static final String OTHER_GUARDIAN_KEY = "other-guardian-member-key-001";
+    public static final String OTHER_GUARDIAN_KEY = LocationFixture.OTHER_GUARDIAN_KEY;
     public static final String GUARDIAN_FCM_TOKEN = "guardian-fcm-token-001";
     public static final String MANAGER_FCM_TOKEN = "manager-fcm-token-001";
     public static final String BATTERY_LOW_EVENT_TYPE = "BATTERY_LOW";
@@ -42,6 +45,9 @@ public class NotificationFixture {
     public static final String SAFE_ZONE_EVENT_TYPE = "SAFE_ZONE_EXITED";
     public static final String SAFE_ZONE_TITLE = "안심존 이탈 알림";
     public static final String SAFE_ZONE_BODY = "김소연님이 안심존 1에서 벗어났어요.";
+    public static final String DANGER_ZONE_EVENT_TYPE = "DANGER_ZONE_ENTERED";
+    public static final String DANGER_ZONE_TITLE = "위험존 진입 알림";
+    public static final String DANGER_ZONE_BODY = "김소연님이 위험존 공사장에 들어갔어요.";
     public static final Long FEEDBACK_NOTIFICATION_ID = 30L;
     public static final String FEEDBACK_COMMENT = "집에 계셨어요";
 
@@ -89,12 +95,13 @@ public class NotificationFixture {
                 .build();
     }
 
-    public static NotificationSetting createSetting(String wardKey) {
-        return createSettingWithAnomalyToggles(wardKey, false, true, false, true, true);
+    public static NotificationSetting createSetting(String wardKey, String caregiverKey) {
+        return createSettingWithAnomalyToggles(wardKey, caregiverKey, false, true, false, true, true);
     }
 
     public static NotificationSetting createSettingWithAnomalyToggles(
             String wardKey,
+            String caregiverKey,
             boolean speedAnomalyEnabled,
             boolean wanderingAnomalyEnabled,
             boolean abnormalDwellingEnabled,
@@ -103,8 +110,11 @@ public class NotificationFixture {
     ) {
         return NotificationSetting.builder()
                 .wardMemberKey(wardKey)
+                .caregiverMemberKey(caregiverKey)
                 .safeZoneEntryEnabled(true)
                 .safeZoneExitEnabled(false)
+                .dangerZoneEntryEnabled(true)
+                .dangerZoneExitEnabled(false)
                 .speedAnomalyEnabled(speedAnomalyEnabled)
                 .wanderingAnomalyEnabled(wanderingAnomalyEnabled)
                 .abnormalDwellingEnabled(abnormalDwellingEnabled)
@@ -114,6 +124,43 @@ public class NotificationFixture {
                 .lowBatteryEnabled(false)
                 .batteryThresholdPercents("40,90")
                 .build();
+    }
+
+    public static NotificationSetting createSafeZoneSetting(
+            String wardKey,
+            String caregiverKey,
+            boolean entryEnabled,
+            boolean exitEnabled
+    ) {
+        NotificationSetting setting = NotificationSetting.defaultFor(wardKey, caregiverKey);
+        setting.updateSafeZone(entryEnabled, exitEnabled);
+        return setting;
+    }
+
+    public static NotificationSetting createDangerZoneSetting(
+            String wardKey,
+            String caregiverKey,
+            boolean entryEnabled,
+            boolean exitEnabled
+    ) {
+        NotificationSetting setting = NotificationSetting.defaultFor(wardKey, caregiverKey);
+        setting.updateDangerZone(entryEnabled, exitEnabled);
+        return setting;
+    }
+
+    public static NotificationSetting createBatterySetting(
+            String wardKey,
+            String caregiverKey,
+            boolean lowBatteryEnabled,
+            String batteryThresholdPercents
+    ) {
+        NotificationSetting setting = NotificationSetting.defaultFor(wardKey, caregiverKey);
+        setting.updateBattery(lowBatteryEnabled, BatteryThresholds.parse(batteryThresholdPercents));
+        return setting;
+    }
+
+    public static BatteryNotificationSetting batteryNotificationSetting(boolean enabled, Integer... percents) {
+        return new BatteryNotificationSetting(enabled, BatteryThresholds.ofPercents(List.of(percents)));
     }
 
     public static FcmDeviceToken guardianFcmDeviceToken(String token) {
@@ -219,6 +266,22 @@ public class NotificationFixture {
                 .title(SAFE_ZONE_TITLE)
                 .body(SAFE_ZONE_BODY)
                 .dataPayload(safeZoneDataPayload())
+                .build();
+    }
+
+    public static Notification dangerZoneNotification(String recipientMemberKey) {
+        return Notification.builder()
+                .recipientMemberKey(recipientMemberKey)
+                .eventType(DANGER_ZONE_EVENT_TYPE)
+                .title(DANGER_ZONE_TITLE)
+                .body(DANGER_ZONE_BODY)
+                .dataPayload(Map.of(
+                        "type", DANGER_ZONE_EVENT_TYPE,
+                        "wardKey", WARD_KEY,
+                        "safeZoneKey", LocationFixture.DANGER_ZONE_KEY,
+                        "recordedAt", LocationFixture.DETECTED_AT_TEXT,
+                        "latitude", String.valueOf(LocationFixture.LATITUDE),
+                        "longitude", String.valueOf(LocationFixture.LONGITUDE)))
                 .build();
     }
 

@@ -19,13 +19,14 @@ import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.never;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.times;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("BatteryThresholdNotificationListener 단위 테스트")
+@DisplayName("배터리 잔량 알림 리스너 단위 테스트")
 class BatteryThresholdNotificationListenerTest {
 
     private static final String EVENT_TYPE = "DEVICE_BATTERY_THRESHOLD";
@@ -77,6 +78,40 @@ class BatteryThresholdNotificationListenerTest {
 
         batteryThresholdNotificationListener.onBatteryThresholdAlert(
                 LocationFixture.createBatteryThresholdAlertEvent());
+
+        then(notificationSendManager).should(never())
+                .sendToCareParties(any(), any(), anyString(), anyString(), anyString(), any());
+    }
+
+    @Test
+    @DisplayName("판정에서 정해진 수신자에게만 보낸다")
+    void onBatteryThresholdAlert_sends_only_to_decided_recipients() {
+        given(careRelationshipReader.findCaregiverInfos(NotificationFixture.WARD_KEY))
+                .willReturn(List.of(
+                        CareFixture.createCaregiverInfo(NotificationFixture.GUARDIAN_KEY, CareRole.PRIMARY_GUARDIAN),
+                        CareFixture.createCaregiverInfo(NotificationFixture.OTHER_GUARDIAN_KEY, CareRole.GUARDIAN),
+                        CareFixture.createCaregiverInfo(NotificationFixture.MANAGER_KEY, CareRole.MANAGER)));
+        given(memberReader.findNameByMemberKey(NotificationFixture.WARD_KEY)).willReturn(NotificationFixture.WARD_NAME);
+
+        batteryThresholdNotificationListener.onBatteryThresholdAlert(
+                LocationFixture.createBatteryThresholdAlertEvent(List.of(NotificationFixture.OTHER_GUARDIAN_KEY)));
+
+        then(notificationSendManager).should().sendToCareParties(
+                eq(List.of(NotificationFixture.OTHER_GUARDIAN_KEY)),
+                eq(List.of()),
+                eq(EVENT_TYPE),
+                anyString(), anyString(), any());
+    }
+
+    @Test
+    @DisplayName("판정 이후 케어 관계가 끊긴 수신자에게는 보내지 않는다")
+    void onBatteryThresholdAlert_skips_recipient_whose_relationship_ended() {
+        given(careRelationshipReader.findCaregiverInfos(NotificationFixture.WARD_KEY))
+                .willReturn(List.of(
+                        CareFixture.createCaregiverInfo(NotificationFixture.GUARDIAN_KEY, CareRole.PRIMARY_GUARDIAN)));
+
+        batteryThresholdNotificationListener.onBatteryThresholdAlert(
+                LocationFixture.createBatteryThresholdAlertEvent(List.of(NotificationFixture.OTHER_GUARDIAN_KEY)));
 
         then(notificationSendManager).should(never())
                 .sendToCareParties(any(), any(), anyString(), anyString(), anyString(), any());

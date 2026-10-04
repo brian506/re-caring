@@ -9,11 +9,12 @@ import com.recaring.member.implement.MemberReader;
 import com.recaring.notification.fixture.NotificationFixture;
 import com.recaring.notification.implement.NotificationSendManager;
 import com.recaring.notification.implement.setting.NotificationSettingReader;
+import com.recaring.notification.dataaccess.repository.NotificationSettingRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -23,6 +24,7 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.never;
 import static org.mockito.BDDMockito.then;
@@ -33,22 +35,30 @@ class AnomalyNotificationListenerTest {
 
     private static final int MAX_BODY_LENGTH = 1000;
 
-    @InjectMocks
     private AnomalyNotificationListener anomalyNotificationListener;
 
     @Mock
     private CareRelationshipReader careRelationshipReader;
     @Mock
-    private NotificationSettingReader notificationSettingReader;
+    private NotificationSettingRepository notificationSettingRepository;
     @Mock
     private NotificationSendManager notificationSendManager;
     @Mock
     private MemberReader memberReader;
 
+    @BeforeEach
+    void setUp() {
+        anomalyNotificationListener = new AnomalyNotificationListener(
+                careRelationshipReader,
+                new NotificationSettingReader(notificationSettingRepository),
+                notificationSendManager,
+                memberReader);
+    }
+
     @Test
     @DisplayName("탐지 근거 문구의 이름 자리에 대상자 이름을 채워 보낸다")
     void fills_ward_name_into_evidence() {
-        givenEnabledWithCaregivers(DetectionType.WANDERING);
+        givenCaregiversAndWardName();
 
         anomalyNotificationListener.onAnomalyDetected(
                 LocationFixture.createAnomalyDetectedEvent(DetectionType.WANDERING, "{name} 님이 같은 곳을 맴돌고 계십니다."));
@@ -59,7 +69,7 @@ class AnomalyNotificationListenerTest {
     @Test
     @DisplayName("보호자와 관계자를 역할별로 나눠 알림 발송을 위임한다")
     void splits_recipients_by_care_role() {
-        givenEnabledWithCaregivers(DetectionType.SPEED_ANOMALY);
+        givenCaregiversAndWardName();
 
         anomalyNotificationListener.onAnomalyDetected(
                 LocationFixture.createAnomalyDetectedEvent(DetectionType.SPEED_ANOMALY, "{name} 님이 차량 속도로 이동 중입니다."));
@@ -83,23 +93,26 @@ class AnomalyNotificationListenerTest {
     }
 
     @Test
-    @DisplayName("해당 탐지 유형의 알림을 꺼두었으면 보내지 않는다")
-    void skips_when_type_toggle_is_off() {
-        given(notificationSettingReader.isAnomalyEnabled(
-                NotificationFixture.WARD_KEY, DetectionType.TIME_ANOMALY)).willReturn(false);
+    @DisplayName("그 탐지 유형의 알림을 끈 보호자에게만 보내지 않는다")
+    void skips_only_caregiver_who_turned_off_the_type() {
+        given(notificationSettingRepository.findAllByWardMemberKey(NotificationFixture.WARD_KEY))
+                .willReturn(List.of(NotificationFixture.createSettingWithAnomalyToggles(
+                        NotificationFixture.WARD_KEY, NotificationFixture.GUARDIAN_KEY, true, true, true, true, false)));
+        givenCaregiversAndWardName();
 
         anomalyNotificationListener.onAnomalyDetected(
                 LocationFixture.createAnomalyDetectedEvent(DetectionType.TIME_ANOMALY, "{name} 님은 평소 이 시각에는 나가신 적이 거의 없습니다."));
 
-        then(notificationSendManager).should(never())
-                .sendToCareParties(any(), any(), anyString(), anyString(), anyString(), any());
+        then(notificationSendManager).should().sendToCareParties(
+                eq(List.of()),
+                eq(List.of(NotificationFixture.MANAGER_KEY)),
+                eq(DetectionType.TIME_ANOMALY.name()),
+                anyString(), anyString(), any());
     }
 
     @Test
     @DisplayName("연결된 보호자가 없으면 보내지 않는다")
     void skips_when_no_caregiver() {
-        given(notificationSettingReader.isAnomalyEnabled(
-                NotificationFixture.WARD_KEY, DetectionType.WANDERING)).willReturn(true);
         given(careRelationshipReader.findCaregiverInfos(NotificationFixture.WARD_KEY))
                 .willReturn(List.of());
 
@@ -114,7 +127,7 @@ class AnomalyNotificationListenerTest {
     @Test
     @DisplayName("탐지 근거 문구가 비어 있어도 본문 없는 알림을 보내지 않는다")
     void falls_back_when_evidence_is_blank() {
-        givenEnabledWithCaregivers(DetectionType.ABNORMAL_DWELLING);
+        givenCaregiversAndWardName();
 
         anomalyNotificationListener.onAnomalyDetected(
                 LocationFixture.createAnomalyDetectedEvent(DetectionType.ABNORMAL_DWELLING, ""));
@@ -125,7 +138,7 @@ class AnomalyNotificationListenerTest {
     @Test
     @DisplayName("이름을 채운 뒤 본문이 정확히 1000자면 자르지 않는다")
     void keeps_body_at_the_length_limit() {
-        givenEnabledWithCaregivers(DetectionType.ROUTE_DEVIATION);
+        givenCaregiversAndWardName();
 
         anomalyNotificationListener.onAnomalyDetected(
                 LocationFixture.createAnomalyDetectedEvent(DetectionType.ROUTE_DEVIATION, "{name}" + "가".repeat(MAX_BODY_LENGTH - 3)));
@@ -138,7 +151,7 @@ class AnomalyNotificationListenerTest {
     @Test
     @DisplayName("이름을 채운 뒤 본문이 저장 한도를 넘으면 1000자로 자른다")
     void truncates_body_beyond_the_length_limit() {
-        givenEnabledWithCaregivers(DetectionType.ROUTE_DEVIATION);
+        givenCaregiversAndWardName();
 
         anomalyNotificationListener.onAnomalyDetected(
                 LocationFixture.createAnomalyDetectedEvent(DetectionType.ROUTE_DEVIATION, "{name}" + "가".repeat(MAX_BODY_LENGTH)));
@@ -146,9 +159,7 @@ class AnomalyNotificationListenerTest {
         assertThat(capturedBody()).hasSize(MAX_BODY_LENGTH);
     }
 
-    private void givenEnabledWithCaregivers(DetectionType detectionType) {
-        given(notificationSettingReader.isAnomalyEnabled(NotificationFixture.WARD_KEY, detectionType))
-                .willReturn(true);
+    private void givenCaregiversAndWardName() {
         given(careRelationshipReader.findCaregiverInfos(NotificationFixture.WARD_KEY))
                 .willReturn(List.of(
                         CareFixture.createCaregiverInfo(NotificationFixture.GUARDIAN_KEY, CareRole.GUARDIAN),

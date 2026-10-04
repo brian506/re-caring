@@ -27,6 +27,10 @@ public class CareFixture {
     public static final String GUARDIAN_PHONE = "01011112222";
     public static final String WARD_PHONE = "01033334444";
     public static final String MANAGER_PHONE = "01055556666";
+    public static final String OTHER_GUARDIAN_PHONE = "01077778888";
+    public static final String OTHER_WARD_PHONE = "01099990000";
+    public static final LocalDateTime WARD_JOINED_AT = LocalDateTime.of(2026, 8, 14, 10, 23);
+    public static final String WARD_JOINED_AT_TEXT = "2026-08-14T10:23:00";
 
     public static final String SENIOR_AVATAR_CODE = "senior_female_1";
     public static final String OTHER_SENIOR_AVATAR_CODE = "senior_female_2";
@@ -98,7 +102,7 @@ public class CareFixture {
     public static WardInfo createWardInfo(String memberKey, String wardNickname, CareRole careRole,
                                           String wardProfileAvatarCode, String designatedProfileAvatarCode) {
         return new WardInfo(memberKey, "보호대상자", wardNickname, WARD_PHONE, Gender.FEMALE, careRole,
-                wardProfileAvatarCode, designatedProfileAvatarCode);
+                wardProfileAvatarCode, designatedProfileAvatarCode, null);
     }
 
     public static DesignatedAvatar createDesignatedAvatar(String ownerKey, String wardKey, String targetKey, String code) {
@@ -165,5 +169,17 @@ public class CareFixture {
                 .wardMemberKey(wardKey)
                 .careRole(CareRole.MANAGER)
                 .build();
+    }
+
+    public static CareInvitation createAcceptedWardInvitation(String requesterKey, String wardKey) {
+        CareInvitation invitation = createWardInvitation(requesterKey, wardKey);
+        invitation.accept();
+        return invitation;
+    }
+
+    public static CareInvitation createRejectedWardInvitation(String requesterKey, String wardKey) {
+        CareInvitation invitation = createWardInvitation(requesterKey, wardKey);
+        invitation.reject();
+        return invitation;
     }
 }

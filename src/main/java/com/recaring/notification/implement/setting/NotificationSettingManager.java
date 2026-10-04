@@ -15,44 +15,52 @@ public class NotificationSettingManager {
     private final BatteryAlertStateManager batteryAlertStateManager;
 
     @Transactional
-    public void addDefaultIfAbsent(String wardKey) {
-        notificationSettingRepository.insertDefaultIfAbsent(wardKey);
+    public void deleteByRelationship(String wardKey, String caregiverKey) {
+        notificationSettingRepository.deleteByRelationship(wardKey, caregiverKey);
+        batteryAlertStateManager.delete(wardKey, caregiverKey);
     }
 
     @Transactional
-    public void updateSafeZone(String wardKey, boolean entryEnabled, boolean exitEnabled) {
-        notificationSettingRepository.insertDefaultIfAbsent(wardKey);
-        notificationSettingRepository.updateSafeZone(wardKey, entryEnabled, exitEnabled);
+    public void updateSafeZone(String wardKey, String caregiverKey, boolean entryEnabled, boolean exitEnabled) {
+        notificationSettingRepository.insertDefaultIfAbsent(wardKey, caregiverKey);
+        notificationSettingRepository.updateSafeZone(wardKey, caregiverKey, entryEnabled, exitEnabled);
+    }
+
+    @Transactional
+    public void updateDangerZone(String wardKey, String caregiverKey, boolean entryEnabled, boolean exitEnabled) {
+        notificationSettingRepository.insertDefaultIfAbsent(wardKey, caregiverKey);
+        notificationSettingRepository.updateDangerZone(wardKey, caregiverKey, entryEnabled, exitEnabled);
     }
 
     @Transactional
     public void updateAnomaly(
             String wardKey,
+            String caregiverKey,
             boolean speedAnomalyEnabled,
             boolean wanderingAnomalyEnabled,
             boolean abnormalDwellingEnabled,
             boolean routeDeviationEnabled,
             boolean timeAnomalyEnabled
     ) {
-        notificationSettingRepository.insertDefaultIfAbsent(wardKey);
+        notificationSettingRepository.insertDefaultIfAbsent(wardKey, caregiverKey);
         notificationSettingRepository.updateAnomaly(
-                wardKey,
+                wardKey, caregiverKey,
                 speedAnomalyEnabled, wanderingAnomalyEnabled, abnormalDwellingEnabled,
                 routeDeviationEnabled, timeAnomalyEnabled);
     }
 
     @Transactional
-    public void updateEmergencyCall(String wardKey, boolean enabled) {
-        notificationSettingRepository.insertDefaultIfAbsent(wardKey);
-        notificationSettingRepository.updateEmergencyCall(wardKey, enabled);
+    public void updateEmergencyCall(String wardKey, String caregiverKey, boolean enabled) {
+        notificationSettingRepository.insertDefaultIfAbsent(wardKey, caregiverKey);
+        notificationSettingRepository.updateEmergencyCall(wardKey, caregiverKey, enabled);
     }
 
     @Transactional
-    public void updateBattery(String wardKey, boolean lowBatteryEnabled, BatteryThresholds thresholds) {
-        notificationSettingRepository.insertDefaultIfAbsent(wardKey);
-        notificationSettingRepository.updateBattery(wardKey, lowBatteryEnabled, thresholds.format());
+    public void updateBattery(String wardKey, String caregiverKey, boolean lowBatteryEnabled, BatteryThresholds thresholds) {
+        notificationSettingRepository.insertDefaultIfAbsent(wardKey, caregiverKey);
+        notificationSettingRepository.updateBattery(wardKey, caregiverKey, lowBatteryEnabled, thresholds.format());
         if (!lowBatteryEnabled) {
-            batteryAlertStateManager.delete(wardKey);
+            batteryAlertStateManager.delete(wardKey, caregiverKey);
         }
     }
 }

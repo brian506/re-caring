@@ -9,6 +9,8 @@ import com.recaring.member.dataaccess.entity.MemberRole;
 import com.recaring.member.implement.MemberReader;
 import com.recaring.support.exception.AppException;
 import com.recaring.support.exception.ErrorType;
+import com.recaring.location.implement.setting.LocationSettingManager;
+import com.recaring.notification.implement.setting.NotificationSettingManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -24,6 +26,8 @@ public class CareRelationshipWriter {
     private final MemberReader memberReader;
     private final CareRelationshipValidator relationshipValidator;
     private final DesignatedAvatarManager designatedAvatarManager;
+    private final NotificationSettingManager notificationSettingManager;
+    private final LocationSettingManager locationSettingManager;
 
     @CacheEvict(value = "careRelationship", allEntries = true)
     @Transactional
@@ -63,6 +67,8 @@ public class CareRelationshipWriter {
     public void delete(String wardKey, String caregiverKey) {
         careRelationshipRepository.delete(findRelationship(wardKey, caregiverKey));
         designatedAvatarManager.deleteAllByRelationship(wardKey, caregiverKey);
+        notificationSettingManager.deleteByRelationship(wardKey, caregiverKey);
+        locationSettingManager.deleteByRelationship(wardKey, caregiverKey);
     }
 
     @Transactional
