@@ -1,7 +1,9 @@
 package com.recaring.care.implement;
 
 import com.recaring.care.vo.ReceivedRequestInfo;
+import com.recaring.care.vo.SentRequestInfo;
 import com.recaring.care.dataaccess.entity.CareInvitation;
+import com.recaring.care.dataaccess.entity.CareInvitationStatus;
 import com.recaring.care.dataaccess.repository.CareInvitationRepository;
 import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.implement.MemberReader;
@@ -26,6 +28,15 @@ public class CareInvitationReader {
                 .orElseThrow(() -> new AppException(ErrorType.NOT_FOUND_CARE_REQUEST));
     }
 
+    public CareInvitation findInvitationForRequester(String requestKey, String requesterKey) {
+        return careInvitationRepository.findInvitationForRequester(requestKey, requesterKey)
+                .orElseThrow(() -> new AppException(ErrorType.NOT_FOUND_CARE_REQUEST));
+    }
+
+    public boolean existsPending(String targetKey, String wardKey) {
+        return careInvitationRepository.existsPending(targetKey, wardKey);
+    }
+
     public List<ReceivedRequestInfo> findReceivedRequestInfos(String memberKey) {
         List<CareInvitation> requests = careInvitationRepository.findReceivedPendingRequests(memberKey);
 
@@ -40,6 +51,25 @@ public class CareInvitationReader {
                 .map(r -> ReceivedRequestInfo.of(
                         r,
                         memberMap.get(r.getRequesterMemberKey()),
+                        memberMap.get(r.getWardMemberKey())
+                ))
+                .toList();
+    }
+
+    public List<SentRequestInfo> findSentRequestInfos(String requesterKey, CareInvitationStatus status) {
+        List<CareInvitation> requests = careInvitationRepository.findSentRequests(requesterKey, status);
+
+        List<String> keys = requests.stream()
+                .flatMap(r -> Stream.of(r.getTargetMemberKey(), r.getWardMemberKey()))
+                .distinct()
+                .toList();
+
+        Map<String, Member> memberMap = memberReader.findAllByMemberKeys(keys);
+
+        return requests.stream()
+                .map(r -> SentRequestInfo.of(
+                        r,
+                        memberMap.get(r.getTargetMemberKey()),
                         memberMap.get(r.getWardMemberKey())
                 ))
                 .toList();

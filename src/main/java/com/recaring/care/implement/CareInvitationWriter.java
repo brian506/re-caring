@@ -35,6 +35,13 @@ public class CareInvitationWriter {
     }
 
     @Transactional
+    public void delete(String requestKey) {
+        CareInvitation request = careInvitationRepository.findByRequestKey(requestKey)
+                .orElseThrow(() -> new AppException(ErrorType.NOT_FOUND_CARE_REQUEST));
+        careInvitationRepository.delete(request);
+    }
+
+    @Transactional
     public void deleteAllByWardMemberKey(String wardMemberKey) {
         careInvitationRepository.deleteAllByWardMemberKey(wardMemberKey);
     }
