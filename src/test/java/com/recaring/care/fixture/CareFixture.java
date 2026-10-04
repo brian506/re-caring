@@ -27,6 +27,8 @@ public class CareFixture {
     public static final String GUARDIAN_PHONE = "01011112222";
     public static final String WARD_PHONE = "01033334444";
     public static final String MANAGER_PHONE = "01055556666";
+    public static final String OTHER_GUARDIAN_PHONE = "01077778888";
+    public static final String OTHER_WARD_PHONE = "01099990000";
 
     public static final String SENIOR_AVATAR_CODE = "senior_female_1";
     public static final String OTHER_SENIOR_AVATAR_CODE = "senior_female_2";
@@ -165,5 +167,17 @@ public class CareFixture {
                 .wardMemberKey(wardKey)
                 .careRole(CareRole.MANAGER)
                 .build();
+    }
+
+    public static CareInvitation createAcceptedWardInvitation(String requesterKey, String wardKey) {
+        CareInvitation invitation = createWardInvitation(requesterKey, wardKey);
+        invitation.accept();
+        return invitation;
+    }
+
+    public static CareInvitation createRejectedWardInvitation(String requesterKey, String wardKey) {
+        CareInvitation invitation = createWardInvitation(requesterKey, wardKey);
+        invitation.reject();
+        return invitation;
     }
 }

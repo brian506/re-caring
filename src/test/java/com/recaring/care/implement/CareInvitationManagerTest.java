@@ -2,6 +2,7 @@ package com.recaring.care.implement;
 
 import com.recaring.care.dataaccess.entity.CareInvitation;
 import com.recaring.care.dataaccess.entity.CareInvitationStatus;
+import com.recaring.care.dataaccess.entity.CarePartyRole;
 import com.recaring.care.event.CareInvitationAcceptedEvent;
 import com.recaring.care.event.CareInvitationSentEvent;
 import com.recaring.care.fixture.CareFixture;
@@ -20,6 +21,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.never;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.*;
 import static org.mockito.Mockito.times;
@@ -45,6 +47,9 @@ class CareInvitationManagerTest {
 
     @Mock
     private CareRelationshipValidator careRelationshipValidator;
+
+    @Mock
+    private CareInvitationResendLimiter careInvitationResendLimiter;
 
     @Mock
     private ApplicationEventPublisher eventPublisher;
@@ -176,5 +181,40 @@ class CareInvitationManagerTest {
                 .hasFieldOrPropertyWithValue("errorType", ErrorType.ALREADY_PROCESSED_CARE_REQUEST);
 
         then(careInvitationWriter).should(times(0)).reject(anyString());
+    }
+
+    @Test
+    @DisplayName("재전송 - 대기 중인 요청이면 처음 보낸 요청의 키·수신자·역할로 발송 이벤트를 다시 발행한다")
+    void resend_republishes_sent_event_for_pending_invitation() {
+        CareInvitation invitation = CareFixture.createManagerInvitation(
+                CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY);
+        given(careInvitationReader.findInvitationForRequester(
+                CareFixture.REQUEST_KEY, CareFixture.GUARDIAN_MEMBER_KEY)).willReturn(invitation);
+
+        careInvitationManager.resend(CareFixture.REQUEST_KEY, CareFixture.GUARDIAN_MEMBER_KEY);
+
+        then(eventPublisher).should(times(1)).publishEvent(new CareInvitationSentEvent(
+                invitation.getRequestKey(),
+                CareFixture.MANAGER_MEMBER_KEY,
+                CareFixture.GUARDIAN_MEMBER_KEY,
+                CarePartyRole.MANAGER));
+    }
+
+    @Test
+    @DisplayName("재전송 - 간격 제한에 걸리면 발송 이벤트를 발행하지 않는다")
+    void resend_does_not_publish_when_interval_limit_rejects() {
+        CareInvitation invitation = CareFixture.createWardInvitation(
+                CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY);
+        given(careInvitationReader.findInvitationForRequester(
+                CareFixture.REQUEST_KEY, CareFixture.GUARDIAN_MEMBER_KEY)).willReturn(invitation);
+        willThrow(new AppException(ErrorType.CARE_REQUEST_RESEND_TOO_SOON))
+                .given(careInvitationResendLimiter).acquire(invitation.getRequestKey());
+
+        assertThatThrownBy(() ->
+                careInvitationManager.resend(CareFixture.REQUEST_KEY, CareFixture.GUARDIAN_MEMBER_KEY))
+                .isInstanceOf(AppException.class)
+                .hasFieldOrPropertyWithValue("errorType", ErrorType.CARE_REQUEST_RESEND_TOO_SOON);
+
+        then(eventPublisher).should(never()).publishEvent(any(Object.class));
     }
 }

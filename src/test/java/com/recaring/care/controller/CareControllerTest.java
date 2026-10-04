@@ -20,7 +20,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 
 import java.util.List;
@@ -37,6 +39,7 @@ class CareControllerTest extends AbstractIntegrationTest {
     @Autowired private DesignatedAvatarRepository designatedAvatarRepository;
     @Autowired private NotificationSettingRepository notificationSettingRepository;
     @Autowired private LocationSettingRepository locationSettingRepository;
+    @Autowired private StringRedisTemplate redisTemplate;
 
     private Member guardian;
     private Member ward;
@@ -55,6 +58,7 @@ class CareControllerTest extends AbstractIntegrationTest {
         careRelationshipRepository.deleteAllInBatch();
         careInvitationRepository.deleteAllInBatch();
         memberRepository.deleteAllInBatch();
+        redisTemplate.delete(redisTemplate.keys("care:invitation:resend:*"));
     }
 
     private String authHeader(Member member) {
@@ -281,6 +285,300 @@ class CareControllerTest extends AbstractIntegrationTest {
         assertThat(statusOf(saved)).isEqualTo(CareInvitationStatus.REJECTED);
         assertThat(careRelationshipRepository.findCareRelationship(
                 ward.getMemberKey(), guardian.getMemberKey())).isEmpty();
+    }
+
+    // ── 보낸 케어 요청 ──────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("GET /api/v1/care/requests/sent - 내가 보낸 대기 요청만 최신순으로 받는 사람 번호·역할과 함께 반환한다")
+    void getSentRequests_returns_my_pending_requests_newest_first() {
+        Member manager = memberRepository.save(CareFixture.createGuardianMember(CareFixture.MANAGER_PHONE));
+        Member other = memberRepository.save(CareFixture.createGuardianMember(CareFixture.OTHER_GUARDIAN_PHONE));
+        Member otherWard = memberRepository.save(CareFixture.createWardMember(CareFixture.OTHER_WARD_PHONE));
+        CareInvitation olderWardRequest = careInvitationRepository.save(
+                CareFixture.createWardInvitation(guardian.getMemberKey(), ward.getMemberKey()));
+        CareInvitation newerManagerRequest = careInvitationRepository.save(
+                CareFixture.createManagerInvitation(guardian.getMemberKey(), manager.getMemberKey(), ward.getMemberKey()));
+        careInvitationRepository.save(
+                CareFixture.createAcceptedWardInvitation(guardian.getMemberKey(), otherWard.getMemberKey()));
+        careInvitationRepository.save(
+                CareFixture.createWardInvitation(other.getMemberKey(), otherWard.getMemberKey()));
+
+        client.get()
+                .uri("/api/v1/care/requests/sent")
+                .header(HttpHeaders.AUTHORIZATION, authHeader(guardian))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.data.length()").isEqualTo(2)
+                .jsonPath("$.data[0].requestKey").isEqualTo(newerManagerRequest.getRequestKey())
+                .jsonPath("$.data[0].phoneNumber").isEqualTo(CareFixture.MANAGER_PHONE)
+                .jsonPath("$.data[0].targetRole").isEqualTo("MANAGER")
+                .jsonPath("$.data[0].status").isEqualTo("PENDING")
+                .jsonPath("$.data[1].requestKey").isEqualTo(olderWardRequest.getRequestKey())
+                .jsonPath("$.data[1].phoneNumber").isEqualTo(CareFixture.WARD_PHONE)
+                .jsonPath("$.data[1].targetRole").isEqualTo("WARD")
+                .jsonPath("$.data[1].status").isEqualTo("PENDING");
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/care/requests/sent?status=REJECTED - 거절된 요청만 반환한다")
+    void getSentRequests_filters_by_rejected_status() {
+        Member otherWard = memberRepository.save(CareFixture.createWardMember(CareFixture.OTHER_WARD_PHONE));
+        careInvitationRepository.save(
+                CareFixture.createWardInvitation(guardian.getMemberKey(), ward.getMemberKey()));
+        CareInvitation rejected = careInvitationRepository.save(
+                CareFixture.createRejectedWardInvitation(guardian.getMemberKey(), otherWard.getMemberKey()));
+
+        client.get()
+                .uri("/api/v1/care/requests/sent?status=REJECTED")
+                .header(HttpHeaders.AUTHORIZATION, authHeader(guardian))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.data.length()").isEqualTo(1)
+                .jsonPath("$.data[0].requestKey").isEqualTo(rejected.getRequestKey())
+                .jsonPath("$.data[0].status").isEqualTo("REJECTED");
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/care/requests/sent - 대기 중인 대상자 추가 요청은 대상자 키·이름을 내려주지 않는다")
+    void getSentRequests_hides_ward_of_pending_ward_request() {
+        careInvitationRepository.save(
+                CareFixture.createWardInvitation(guardian.getMemberKey(), ward.getMemberKey()));
+
+        client.get()
+                .uri("/api/v1/care/requests/sent")
+                .header(HttpHeaders.AUTHORIZATION, authHeader(guardian))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.data.length()").isEqualTo(1)
+                .jsonPath("$.data[0].wardKey").isEmpty()
+                .jsonPath("$.data[0].wardName").isEmpty();
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/care/requests/sent?status=ACCEPTED - 수락된 대상자 추가 요청은 대상자 키·이름을 내려준다")
+    void getSentRequests_reveals_ward_of_accepted_ward_request() {
+        careInvitationRepository.save(
+                CareFixture.createAcceptedWardInvitation(guardian.getMemberKey(), ward.getMemberKey()));
+
+        client.get()
+                .uri("/api/v1/care/requests/sent?status=ACCEPTED")
+                .header(HttpHeaders.AUTHORIZATION, authHeader(guardian))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.data.length()").isEqualTo(1)
+                .jsonPath("$.data[0].wardKey").isEqualTo(ward.getMemberKey())
+                .jsonPath("$.data[0].wardName").isEqualTo(ward.getName());
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/care/requests/sent - 관리자 추가 요청은 대기 중에도 대상자 키·이름을 내려준다")
+    void getSentRequests_reveals_ward_of_pending_manager_request() {
+        Member manager = memberRepository.save(CareFixture.createGuardianMember(CareFixture.MANAGER_PHONE));
+        careInvitationRepository.save(
+                CareFixture.createManagerInvitation(guardian.getMemberKey(), manager.getMemberKey(), ward.getMemberKey()));
+
+        client.get()
+                .uri("/api/v1/care/requests/sent")
+                .header(HttpHeaders.AUTHORIZATION, authHeader(guardian))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.data.length()").isEqualTo(1)
+                .jsonPath("$.data[0].wardKey").isEqualTo(ward.getMemberKey())
+                .jsonPath("$.data[0].wardName").isEqualTo(ward.getName());
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/care/requests/{requestKey}/resend - 대기 중인 요청을 재전송하면 성공하고 요청은 대기 상태로 남는다")
+    void resendRequest_succeeds_for_pending_request() {
+        CareInvitation pending = careInvitationRepository.save(
+                CareFixture.createWardInvitation(guardian.getMemberKey(), ward.getMemberKey()));
+
+        client.post()
+                .uri("/api/v1/care/requests/" + pending.getRequestKey() + "/resend")
+                .header(HttpHeaders.AUTHORIZATION, authHeader(guardian))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.resultType").isEqualTo("SUCCESS");
+
+        assertThat(statusOf(pending)).isEqualTo(CareInvitationStatus.PENDING);
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/care/requests/{requestKey}/resend - 재전송 직후 다시 재전송하면 429와 5분 이내의 남은 초를 받는다")
+    void resendRequest_rejects_second_resend_within_interval() {
+        CareInvitation pending = careInvitationRepository.save(
+                CareFixture.createWardInvitation(guardian.getMemberKey(), ward.getMemberKey()));
+        client.post()
+                .uri("/api/v1/care/requests/" + pending.getRequestKey() + "/resend")
+                .header(HttpHeaders.AUTHORIZATION, authHeader(guardian))
+                .exchange()
+                .expectStatus().isOk();
+
+        client.post()
+                .uri("/api/v1/care/requests/" + pending.getRequestKey() + "/resend")
+                .header(HttpHeaders.AUTHORIZATION, authHeader(guardian))
+                .exchange()
+                .expectStatus().isEqualTo(HttpStatus.TOO_MANY_REQUESTS)
+                .expectBody()
+                .jsonPath("$.error.errorCode").isEqualTo("E5019")
+                .jsonPath("$.error.data.seconds").value(seconds ->
+                        assertThat(((Number) seconds).longValue()).isBetween(1L, 300L));
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/care/requests/{requestKey}/resend - 다른 사람이 보낸 요청은 재전송할 수 없다")
+    void resendRequest_fails_for_request_sent_by_someone_else() {
+        Member other = memberRepository.save(CareFixture.createGuardianMember(CareFixture.OTHER_GUARDIAN_PHONE));
+        CareInvitation pending = careInvitationRepository.save(
+                CareFixture.createWardInvitation(guardian.getMemberKey(), ward.getMemberKey()));
+
+        client.post()
+                .uri("/api/v1/care/requests/" + pending.getRequestKey() + "/resend")
+                .header(HttpHeaders.AUTHORIZATION, authHeader(other))
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.error.errorCode").isEqualTo("E5003");
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/care/requests/{requestKey}/resend - 이미 수락된 요청은 재전송할 수 없다")
+    void resendRequest_fails_for_accepted_request() {
+        CareInvitation accepted = careInvitationRepository.save(
+                CareFixture.createAcceptedWardInvitation(guardian.getMemberKey(), ward.getMemberKey()));
+
+        client.post()
+                .uri("/api/v1/care/requests/" + accepted.getRequestKey() + "/resend")
+                .header(HttpHeaders.AUTHORIZATION, authHeader(guardian))
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.error.errorCode").isEqualTo("E5006");
+    }
+
+    @Test
+    @DisplayName("DELETE /api/v1/care/requests/{requestKey} - 대기 중인 요청을 취소하면 요청 행이 삭제된다")
+    void cancelRequest_deletes_pending_request() {
+        CareInvitation pending = careInvitationRepository.save(
+                CareFixture.createWardInvitation(guardian.getMemberKey(), ward.getMemberKey()));
+
+        client.delete()
+                .uri("/api/v1/care/requests/" + pending.getRequestKey())
+                .header(HttpHeaders.AUTHORIZATION, authHeader(guardian))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.resultType").isEqualTo("SUCCESS");
+
+        assertThat(careInvitationRepository.findByRequestKey(pending.getRequestKey())).isEmpty();
+    }
+
+    @Test
+    @DisplayName("DELETE /api/v1/care/requests/{requestKey} - 다른 사람이 보낸 요청은 취소할 수 없고 요청은 남는다")
+    void cancelRequest_fails_for_request_sent_by_someone_else() {
+        Member other = memberRepository.save(CareFixture.createGuardianMember(CareFixture.OTHER_GUARDIAN_PHONE));
+        CareInvitation pending = careInvitationRepository.save(
+                CareFixture.createWardInvitation(guardian.getMemberKey(), ward.getMemberKey()));
+
+        client.delete()
+                .uri("/api/v1/care/requests/" + pending.getRequestKey())
+                .header(HttpHeaders.AUTHORIZATION, authHeader(other))
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.error.errorCode").isEqualTo("E5003");
+
+        assertThat(statusOf(pending)).isEqualTo(CareInvitationStatus.PENDING);
+    }
+
+    @Test
+    @DisplayName("DELETE /api/v1/care/requests/{requestKey} - 이미 수락된 요청은 취소할 수 없고 요청은 남는다")
+    void cancelRequest_fails_for_accepted_request() {
+        CareInvitation accepted = careInvitationRepository.save(
+                CareFixture.createAcceptedWardInvitation(guardian.getMemberKey(), ward.getMemberKey()));
+
+        client.delete()
+                .uri("/api/v1/care/requests/" + accepted.getRequestKey())
+                .header(HttpHeaders.AUTHORIZATION, authHeader(guardian))
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.error.errorCode").isEqualTo("E5006");
+
+        assertThat(statusOf(accepted)).isEqualTo(CareInvitationStatus.ACCEPTED);
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/care/requests/ward - 같은 대상자에게 대기 중인 요청이 있으면 E5009이고 요청이 늘지 않는다")
+    void requestAddWard_fails_when_pending_request_exists() {
+        careInvitationRepository.save(
+                CareFixture.createWardInvitation(guardian.getMemberKey(), ward.getMemberKey()));
+
+        client.post()
+                .uri("/api/v1/care/requests/ward")
+                .header(HttpHeaders.AUTHORIZATION, authHeader(guardian))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"phoneNumber": "%s"}
+                        """.formatted(CareFixture.WARD_PHONE))
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.error.errorCode").isEqualTo("E5009");
+
+        assertThat(careInvitationRepository.findAll()).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/care/requests/manager - 같은 사람에게 같은 대상자로 대기 중인 관리자 요청이 있으면 E5009이고 요청이 늘지 않는다")
+    void requestAddManager_fails_when_pending_request_exists() {
+        Member manager = memberRepository.save(CareFixture.createGuardianMember(CareFixture.MANAGER_PHONE));
+        careRelationshipRepository.save(
+                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+        careInvitationRepository.save(
+                CareFixture.createManagerInvitation(guardian.getMemberKey(), manager.getMemberKey(), ward.getMemberKey()));
+
+        client.post()
+                .uri("/api/v1/care/requests/manager")
+                .header(HttpHeaders.AUTHORIZATION, authHeader(guardian))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"phoneNumber": "%s", "wardMemberKey": "%s"}
+                        """.formatted(CareFixture.MANAGER_PHONE, ward.getMemberKey()))
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.error.errorCode").isEqualTo("E5009");
+
+        assertThat(careInvitationRepository.findAll()).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/care/requests/ward - 이전 요청이 거절됐으면 같은 대상자에게 다시 보낼 수 있다")
+    void requestAddWard_allows_resend_after_rejection() {
+        careInvitationRepository.save(
+                CareFixture.createRejectedWardInvitation(guardian.getMemberKey(), ward.getMemberKey()));
+
+        client.post()
+                .uri("/api/v1/care/requests/ward")
+                .header(HttpHeaders.AUTHORIZATION, authHeader(guardian))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"phoneNumber": "%s"}
+                        """.formatted(CareFixture.WARD_PHONE))
+                .exchange()
+                .expectStatus().isOk();
+
+        assertThat(careInvitationRepository.findAll())
+                .extracting(CareInvitation::getStatus)
+                .containsExactlyInAnyOrder(CareInvitationStatus.REJECTED, CareInvitationStatus.PENDING);
     }
 
     // ── 보호 대상자 목록 조회 ──────────────────────────────────────────────
