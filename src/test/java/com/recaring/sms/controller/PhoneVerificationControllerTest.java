@@ -39,8 +39,8 @@ class PhoneVerificationControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("POST /api/v1/auth/phone/send-code - 한 시간 한도를 다 쓴 번호는 429와 남은 초를 받고 인증번호가 저장되지 않는다")
-    void sendCode_rejects_phone_that_used_up_hourly_quota() {
+    @DisplayName("POST /api/v1/auth/phone/send-code - 10분 한도를 다 쓴 번호는 429와 남은 초를 받고 인증번호가 저장되지 않는다")
+    void sendCode_rejects_phone_that_used_up_window_quota() {
         redisTemplate.opsForValue().set(QUOTA_KEY_PREFIX + SmsFixture.PHONE, "5", 1800, TimeUnit.SECONDS);
 
         client.post()
@@ -62,7 +62,7 @@ class PhoneVerificationControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("POST /api/v1/auth/phone/send-code - 만료 시간이 없는 한도 카운터도 초과 시 1시간 만료가 다시 걸려 영구 차단되지 않는다")
+    @DisplayName("POST /api/v1/auth/phone/send-code - 만료 시간이 없는 한도 카운터도 초과 시 10분 만료가 다시 걸려 영구 차단되지 않는다")
     void sendCode_restores_expiry_on_counter_without_ttl() {
         redisTemplate.opsForValue().set(QUOTA_KEY_PREFIX + SmsFixture.PHONE, "5");
 
@@ -79,10 +79,10 @@ class PhoneVerificationControllerTest extends AbstractIntegrationTest {
                 .expectBody()
                 .jsonPath("$.error.errorCode").isEqualTo("E4005")
                 .jsonPath("$.error.data.seconds").value(seconds ->
-                        assertThat(((Number) seconds).longValue()).isBetween(3590L, 3600L));
+                        assertThat(((Number) seconds).longValue()).isBetween(590L, 600L));
 
         Long ttl = redisTemplate.getExpire(QUOTA_KEY_PREFIX + SmsFixture.PHONE, TimeUnit.SECONDS);
-        assertThat(ttl).isBetween(3590L, 3600L);
+        assertThat(ttl).isBetween(590L, 600L);
     }
 
     @Test

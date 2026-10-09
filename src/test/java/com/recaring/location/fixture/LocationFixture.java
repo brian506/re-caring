@@ -3,6 +3,7 @@ package com.recaring.location.fixture;
 import com.recaring.location.dataaccess.entity.SafeZoneState;
 import com.recaring.location.dataaccess.entity.LocationSetting;
 import com.recaring.location.dataaccess.entity.AnomalyDetection;
+import com.recaring.location.dataaccess.entity.GpsHistory;
 import com.recaring.location.event.AnomalyDetectedEvent;
 import com.recaring.location.event.BatteryThresholdAlertEvent;
 import com.recaring.location.vo.BatteryAlertState;
@@ -59,6 +60,14 @@ public class LocationFixture {
     public static final String HOSPITAL_ZONE_KEY = "safe-zone-hospital";
     public static final String HOSPITAL_ZONE_NAME = "병원";
 
+    public static final LocalDateTime TRACK_START = LocalDateTime.of(2026, 7, 27, 10, 0, 0);
+    public static final Double TRACK_ACCURACY = 10.0;
+    public static final Double INACCURATE_ACCURACY = 150.0;
+    // 위도 1도 ≈ 111,195m (지구 평균 반지름 6,371,008.8m 기준)
+    public static final double WALK_50M_LATITUDE_DELTA = 0.00045;
+    public static final double JUMP_15KM_LATITUDE_DELTA = 0.135;
+    public static final double JUMP_45KM_LATITUDE_DELTA = 0.405;
+
     public static Gps createGps() {
         return createGps(BATTERY);
     }
@@ -73,6 +82,28 @@ public class LocationFixture {
 
     public static Gps createGpsWithAccuracy(Double accuracy) {
         return new Gps(LATITUDE, LONGITUDE, RECORDED_AT, accuracy, BATTERY, SPEED, MEASURED_AT);
+    }
+
+    public static Gps createTrackPoint(double latitude, Double accuracy, LocalDateTime measuredAt) {
+        return createTrackPoint(latitude, accuracy, measuredAt, measuredAt);
+    }
+
+    public static Gps createTrackPoint(double latitude, Double accuracy,
+                                       LocalDateTime measuredAt, LocalDateTime recordedAt) {
+        return new Gps(latitude, LONGITUDE, recordedAt, accuracy, BATTERY, SPEED, measuredAt);
+    }
+
+    public static GpsHistory createGpsHistory(String wardKey, double latitude, Double accuracy, LocalDateTime measuredAt) {
+        return GpsHistory.builder()
+                .wardMemberKey(wardKey)
+                .latitude(latitude)
+                .longitude(LONGITUDE)
+                .recordedAt(measuredAt)
+                .accuracy(accuracy)
+                .battery(BATTERY)
+                .speed(SPEED)
+                .measuredAt(measuredAt)
+                .build();
     }
 
     public static Member createWard() {

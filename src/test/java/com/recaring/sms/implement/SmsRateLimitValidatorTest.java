@@ -21,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class SmsRateLimitValidatorTest extends AbstractIntegrationTest {
 
     private static final String QUOTA_KEY = "sms:quota:" + SmsFixture.PHONE;
-    private static final long WINDOW_SECONDS = 3600;
+    private static final long WINDOW_SECONDS = 600;
     private static final long SEEDED_TTL_SECONDS = 1800;
 
     @Autowired
@@ -36,7 +36,7 @@ class SmsRateLimitValidatorTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("한 시간 창에서 5번째 요청은 통과한다")
+    @DisplayName("10분 창에서 5번째 요청은 통과한다")
     void fifth_request_in_window_is_allowed() {
         redisTemplate.opsForValue().set(QUOTA_KEY, "4", SEEDED_TTL_SECONDS, TimeUnit.SECONDS);
 
@@ -57,8 +57,8 @@ class SmsRateLimitValidatorTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("창의 첫 요청이면 카운터에 1시간 만료가 걸린다")
-    void first_request_in_window_sets_one_hour_expiry() {
+    @DisplayName("창의 첫 요청이면 카운터에 10분 만료가 걸린다")
+    void first_request_in_window_sets_ten_minute_expiry() {
         smsRateLimitValidator.validate(SmsFixture.createPhoneNumber());
 
         Long ttl = redisTemplate.getExpire(QUOTA_KEY, TimeUnit.SECONDS);
