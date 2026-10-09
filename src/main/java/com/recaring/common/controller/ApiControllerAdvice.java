@@ -12,6 +12,7 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -76,6 +77,13 @@ public class ApiControllerAdvice {
     @ExceptionHandler({MissingServletRequestParameterException.class, MethodArgumentTypeMismatchException.class})
     public ResponseEntity<ApiResponse<@Nullable Object>> handleRequestParamException(Exception e) {
         log.warn("[요청 파라미터 : 바인딩 실패]: message={}", e.getMessage());
+        return new ResponseEntity<>(ApiResponse.error(ErrorType.INVALID_ACCESS_PATH, null), HttpStatus.BAD_REQUEST);
+    }
+
+    @NullMarked
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiResponse<@Nullable Object>> handleMessageNotReadableException(HttpMessageNotReadableException e) {
+        log.warn("[요청 본문 : 해석 실패]: message={}", e.getMessage());
         return new ResponseEntity<>(ApiResponse.error(ErrorType.INVALID_ACCESS_PATH, null), HttpStatus.BAD_REQUEST);
     }
 

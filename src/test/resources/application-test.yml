@@ -34,3 +34,6 @@ client:
 
 firebase:
   enabled: false
+
+admin:
+  api-key: "test-admin-api-key"

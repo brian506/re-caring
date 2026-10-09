@@ -26,6 +26,7 @@ throw new AppException(ErrorType.CARE_INVITATION_EXPIRED);
 | `E8000` ~ `E8xxx` | SafeZone |
 | `E9000` ~ `E9xxx` | Notification |
 | `E10000` ~ `E10xxx` | Place (장소 검색) |
+| `E11000` ~ `E11xxx` | Inquiry (1:1 문의) |
 
 ## 새 에러 추가 절차
 

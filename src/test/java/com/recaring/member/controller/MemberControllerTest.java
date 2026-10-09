@@ -5,6 +5,8 @@ import com.recaring.auth.dataaccess.repository.LocalAuthRepository;
 import com.recaring.care.dataaccess.repository.CareRelationshipRepository;
 import com.recaring.care.dataaccess.repository.DesignatedAvatarRepository;
 import com.recaring.care.fixture.CareFixture;
+import com.recaring.inquiry.dataaccess.repository.InquiryRepository;
+import com.recaring.inquiry.fixture.InquiryFixture;
 import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.dataaccess.entity.MemberRole;
 import com.recaring.member.dataaccess.repository.MemberRepository;
@@ -56,6 +58,8 @@ class MemberControllerTest extends AbstractIntegrationTest {
     @Autowired
     private DesignatedAvatarRepository designatedAvatarRepository;
     @Autowired
+    private InquiryRepository inquiryRepository;
+    @Autowired
     private PasswordEncoder passwordEncoder;
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -81,6 +85,7 @@ class MemberControllerTest extends AbstractIntegrationTest {
 
     @AfterEach
     void tearDown() {
+        inquiryRepository.deleteAllInBatch();
         designatedAvatarRepository.deleteAllInBatch();
         careRelationshipRepository.deleteAllInBatch();
         memberWithdrawalRepository.deleteAllInBatch();
@@ -554,6 +559,26 @@ class MemberControllerTest extends AbstractIntegrationTest {
         assertThat(designatedAvatarRepository.findAll())
                 .extracting("ownerMemberKey", "wardMemberKey", "targetMemberKey")
                 .containsExactly(tuple(guardian.getMemberKey(), otherWard.getMemberKey(), otherWard.getMemberKey()));
+    }
+
+    @Test
+    @DisplayName("DELETE /me - 탈퇴하면 그 회원의 문의는 삭제되고 다른 회원의 문의는 남는다")
+    void withdraw_removes_own_inquiries_only() {
+        inquiryRepository.save(InquiryFixture.createInquiry(guardian.getMemberKey()));
+        inquiryRepository.save(InquiryFixture.createInquiry(ward.getMemberKey()));
+
+        client.method(HttpMethod.DELETE)
+                .uri("/api/v1/members/me")
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(guardian))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"password": "%s"}
+                        """.formatted(PASSWORD))
+                .exchange()
+                .expectStatus().isOk();
+
+        assertThat(inquiryRepository.findByMemberKeyOrderByIdDesc(guardian.getMemberKey())).isEmpty();
+        assertThat(inquiryRepository.findByMemberKeyOrderByIdDesc(ward.getMemberKey())).hasSize(1);
     }
 
     @Test

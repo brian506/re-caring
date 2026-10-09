@@ -38,23 +38,40 @@ public class NotificationSendManager {
         notificationWriter.addAll(recipientMemberKeys, eventType, title, body, dataPayload);
 
         List<FcmDeviceToken> tokens = fcmDeviceTokenReader.findTokensByCareRoles(guardianMemberKeys, managerMemberKeys);
-        dispatch(tokens, title, body, dataPayload);
+        dispatch(tokens, FcmPushMessage.notification(title, body, dataPayload));
+    }
+
+    public void sendDataOnlyToCareParties(
+            Collection<String> guardianMemberKeys,
+            Collection<String> managerMemberKeys,
+            String eventType,
+            String title,
+            String body,
+            Map<String, String> dataPayload
+    ) {
+        List<String> recipientMemberKeys = Stream.concat(guardianMemberKeys.stream(), managerMemberKeys.stream())
+                .distinct()
+                .toList();
+        notificationWriter.addAll(recipientMemberKeys, eventType, title, body, dataPayload);
+
+        List<FcmDeviceToken> tokens = fcmDeviceTokenReader.findTokensByCareRoles(guardianMemberKeys, managerMemberKeys);
+        dispatch(tokens, FcmPushMessage.dataOnly(title, body, dataPayload));
     }
 
     public void sendToMember(String memberKey, String eventType, String title, String body, Map<String, String> dataPayload) {
         notificationWriter.addAll(List.of(memberKey), eventType, title, body, dataPayload);
 
         List<FcmDeviceToken> tokens = fcmDeviceTokenReader.findTokensByMemberKey(memberKey);
-        dispatch(tokens, title, body, dataPayload);
+        dispatch(tokens, FcmPushMessage.notification(title, body, dataPayload));
     }
 
-    private void dispatch(List<FcmDeviceToken> tokens, String title, String body, Map<String, String> dataPayload) {
+    private void dispatch(List<FcmDeviceToken> tokens, FcmPushMessage message) {
         if (tokens.isEmpty()) {
             return;
         }
 
         List<String> invalidTokens = fcmClient.sendAndCollectInvalidTokens(
-                new FcmPushMessage(title, body, dataPayload),
+                message,
                 tokens.stream().map(FcmDeviceToken::getToken).toList()
         );
         fcmDeviceTokenManager.deleteInvalidTokens(invalidTokens);
