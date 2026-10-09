@@ -191,6 +191,24 @@ class AdminInquiryControllerTest extends AbstractIntegrationTest {
                 .jsonPath("$.data[1].inquiryKey").isEqualTo(newerWaiting.getInquiryKey());
     }
 
+    @Test
+    @DisplayName("상태를 지정하지 않으면 답변 여부와 관계없이 전체 문의가 최신순으로 반환된다")
+    void getInquiries_returns_all_latest_first_without_status() {
+        Inquiry answered = inquiryRepository.save(
+                InquiryFixture.createAnsweredInquiry(guardian.getMemberKey(), InquiryFixture.OTHER_TITLE));
+
+        client.get()
+                .uri(ADMIN_INQUIRIES_URI)
+                .header(ADMIN_KEY_HEADER, InquiryFixture.ADMIN_API_KEY)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.data.length()").isEqualTo(2)
+                .jsonPath("$.data[0].inquiryKey").isEqualTo(answered.getInquiryKey())
+                .jsonPath("$.data[0].status").isEqualTo("ANSWERED")
+                .jsonPath("$.data[1].inquiryKey").isEqualTo(waiting.getInquiryKey());
+    }
+
     private String answerUri(String inquiryKey) {
         return ADMIN_INQUIRIES_URI + "/" + inquiryKey + "/answer";
     }

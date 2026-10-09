@@ -9,7 +9,6 @@ import com.recaring.notification.fixture.NotificationFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -17,7 +16,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 import java.util.Map;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.BDDMockito.given;
@@ -57,7 +55,9 @@ class NotificationSendManagerTest {
         then(notificationWriter).should().addAll(
                 List.of(NotificationFixture.GUARDIAN_KEY, NotificationFixture.MANAGER_KEY),
                 "SAFE_ZONE_EXIT", "title", "body", Map.of("wardKey", NotificationFixture.WARD_KEY));
-        then(fcmClient).should().sendAndCollectInvalidTokens(any(FcmPushMessage.class), any());
+        then(fcmClient).should().sendAndCollectInvalidTokens(
+                new FcmPushMessage("title", "body", Map.of("wardKey", NotificationFixture.WARD_KEY), false),
+                List.of(NotificationFixture.GUARDIAN_FCM_TOKEN, NotificationFixture.MANAGER_FCM_TOKEN));
         then(fcmDeviceTokenManager).should().deleteInvalidTokens(List.of());
     }
 
@@ -109,9 +109,13 @@ class NotificationSendManagerTest {
                 "홍길동님이 보호자로 케어 요청을 보냈어요.",
                 Map.of("type", "CARE_INVITATION_SENT"));
 
-        ArgumentCaptor<List<String>> tokenCaptor = ArgumentCaptor.forClass(List.class);
-        then(fcmClient).should().sendAndCollectInvalidTokens(any(FcmPushMessage.class), tokenCaptor.capture());
-        assertThat(tokenCaptor.getValue()).containsExactly(NotificationFixture.GUARDIAN_FCM_TOKEN);
+        then(fcmClient).should().sendAndCollectInvalidTokens(
+                new FcmPushMessage(
+                        "새로운 케어 요청",
+                        "홍길동님이 보호자로 케어 요청을 보냈어요.",
+                        Map.of("type", "CARE_INVITATION_SENT"),
+                        false),
+                List.of(NotificationFixture.GUARDIAN_FCM_TOKEN));
     }
 
     @Test
