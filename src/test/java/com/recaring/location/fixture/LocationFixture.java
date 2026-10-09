@@ -62,6 +62,7 @@ public class LocationFixture {
 
     public static final LocalDateTime TRACK_START = LocalDateTime.of(2026, 7, 27, 10, 0, 0);
     public static final Double TRACK_ACCURACY = 10.0;
+    public static final long TRACK_NETWORK_DELAY_SECONDS = 3;
     public static final Double INACCURATE_ACCURACY = 150.0;
     // 위도 1도 ≈ 111,195m (지구 평균 반지름 6,371,008.8m 기준)
     public static final double WALK_50M_LATITUDE_DELTA = 0.00045;
@@ -98,7 +99,7 @@ public class LocationFixture {
                 .wardMemberKey(wardKey)
                 .latitude(latitude)
                 .longitude(LONGITUDE)
-                .recordedAt(measuredAt)
+                .recordedAt(measuredAt.plusSeconds(TRACK_NETWORK_DELAY_SECONDS))
                 .accuracy(accuracy)
                 .battery(BATTERY)
                 .speed(SPEED)
