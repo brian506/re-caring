@@ -49,7 +49,7 @@ public class LocationSignalNotificationListener {
                 .map(CaregiverInfo::memberKey)
                 .toList();
 
-        notificationSendManager.sendToCareParties(
+        notificationSendManager.sendDataOnlyToCareParties(
                 guardianKeys,
                 managerKeys,
                 EVENT_TYPE_SIGNAL_LOST,

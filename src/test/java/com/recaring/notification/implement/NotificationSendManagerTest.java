@@ -62,6 +62,29 @@ class NotificationSendManagerTest {
     }
 
     @Test
+    @DisplayName("data 전용 발송 - 알림함에는 그대로 저장하고 FCM은 data 전용 메시지로 보낸다")
+    void sendDataOnlyToCareParties_records_and_sends_data_only_message() {
+        List<String> guardianKeys = List.of(NotificationFixture.GUARDIAN_KEY);
+        List<String> managerKeys = List.of(NotificationFixture.MANAGER_KEY);
+        List<FcmDeviceToken> tokens = List.of(
+                NotificationFixture.guardianFcmDeviceToken(NotificationFixture.GUARDIAN_FCM_TOKEN)
+        );
+        given(fcmDeviceTokenReader.findTokensByCareRoles(guardianKeys, managerKeys)).willReturn(tokens);
+        given(fcmClient.sendAndCollectInvalidTokens(any(FcmPushMessage.class), anyList())).willReturn(List.of());
+
+        notificationSendManager.sendDataOnlyToCareParties(
+                guardianKeys, managerKeys, "LOCATION_SIGNAL_LOST", "title", "body",
+                Map.of("wardKey", NotificationFixture.WARD_KEY));
+
+        then(notificationWriter).should().addAll(
+                List.of(NotificationFixture.GUARDIAN_KEY, NotificationFixture.MANAGER_KEY),
+                "LOCATION_SIGNAL_LOST", "title", "body", Map.of("wardKey", NotificationFixture.WARD_KEY));
+        then(fcmClient).should().sendAndCollectInvalidTokens(
+                new FcmPushMessage("title", "body", Map.of("wardKey", NotificationFixture.WARD_KEY), true),
+                List.of(NotificationFixture.GUARDIAN_FCM_TOKEN));
+    }
+
+    @Test
     @DisplayName("특정 회원 발송 - 해당 회원에게 알림을 저장하고 회원 토큰으로 FCM을 발송한다")
     void sendToMember_records_and_sends_to_member_tokens() {
         List<FcmDeviceToken> tokens = List.of(

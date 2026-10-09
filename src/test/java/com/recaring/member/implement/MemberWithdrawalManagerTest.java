@@ -9,6 +9,7 @@ import com.recaring.auth.vo.Password;
 import com.recaring.care.implement.CareInvitationWriter;
 import com.recaring.care.implement.CareRelationshipManager;
 import com.recaring.device.dataaccess.repository.WardDeviceTokenRepository;
+import com.recaring.inquiry.implement.InquiryManager;
 import com.recaring.location.dataaccess.repository.LocationSettingRepository;
 import com.recaring.location.implement.detection.AnomalyDetectionManager;
 import com.recaring.location.implement.detection.BatteryAlertStateManager;
@@ -66,6 +67,7 @@ class MemberWithdrawalManagerTest {
     @Mock private AnomalyDetectionManager anomalyDetectionManager;
     @Mock private BatteryAlertStateManager batteryAlertStateManager;
     @Mock private SafeZoneStateManager safeZoneStateManager;
+    @Mock private InquiryManager inquiryManager;
 
     @Mock private LocalAuthRepository localAuthRepository;
     @Mock private OAuthRepository oAuthRepository;
@@ -100,6 +102,7 @@ class MemberWithdrawalManagerTest {
         then(locationSettingRepository).should().deleteByMemberKey(MEMBER_KEY);
         then(safeZoneWriter).should().deleteByWardMemberKey(MEMBER_KEY);
         then(wardDeviceTokenRepository).should().deleteByWardKey(MEMBER_KEY);
+        then(inquiryManager).should().deleteByMemberKey(MEMBER_KEY);
         then(memberWriter).should().deleteByMemberKey(MEMBER_KEY);
 
         then(gpsLatestCacheManager).should().delete(MEMBER_KEY);

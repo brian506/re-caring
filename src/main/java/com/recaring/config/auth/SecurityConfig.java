@@ -1,5 +1,6 @@
 package com.recaring.config.auth;
 
+import com.recaring.security.filter.AdminApiKeyFilter;
 import com.recaring.security.filter.AuthExceptionTranslationFilter;
 import com.recaring.security.filter.DeviceTokenAuthFilter;
 import com.recaring.security.filter.JwtAuthenticationFilter;
@@ -39,6 +40,7 @@ public class SecurityConfig {
     private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
     private final AuthExceptionTranslationFilter authExceptionTranslationFilter;
     private final DeviceTokenAuthFilter deviceTokenAuthFilter;
+    private final AdminApiKeyFilter adminApiKeyFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -76,6 +78,8 @@ public class SecurityConfig {
                                 mvc.matcher("/actuator/**"),
                                 mvc.matcher("/error")
                         ).permitAll()
+
+                        .requestMatchers(mvc.matcher("/api/v1/admin/**")).hasRole("ADMIN")
 
                         // WARD 전용
                         .requestMatchers(
@@ -125,7 +129,9 @@ public class SecurityConfig {
                                 mvc.matcher(HttpMethod.PATCH, "/api/v1/notifications/settings/{wardKey}/emergency-call"),
                                 mvc.matcher(HttpMethod.PATCH, "/api/v1/notifications/settings/{wardKey}/battery"),
                                 // 안심존 등록 화면의 장소 검색 (카카오 로컬 API 프록시)
-                                mvc.matcher(HttpMethod.GET,   "/api/v1/places/search")
+                                mvc.matcher(HttpMethod.GET,   "/api/v1/places/search"),
+                                mvc.matcher(HttpMethod.POST,  "/api/v1/inquiries"),
+                                mvc.matcher(HttpMethod.GET,   "/api/v1/inquiries/me")
                         ).hasAnyRole("GUARDIAN", "WARD")
 
                         .anyRequest().authenticated())
@@ -138,6 +144,7 @@ public class SecurityConfig {
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(deviceTokenAuthFilter, JwtAuthenticationFilter.class)
                 .addFilterBefore(authExceptionTranslationFilter, DeviceTokenAuthFilter.class)
+                .addFilterAfter(adminApiKeyFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 

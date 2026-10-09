@@ -35,7 +35,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return (GPS_PATH.equals(request.getRequestURI())
+        return request.getRequestURI().startsWith(AdminApiKeyFilter.ADMIN_PATH_PREFIX)
+                || (GPS_PATH.equals(request.getRequestURI())
                 && HttpMethod.POST.name().equals(request.getMethod()))
                 || (LOCATION_INTERVAL_ME_PATH.equals(request.getRequestURI())
                 && HttpMethod.GET.name().equals(request.getMethod()));

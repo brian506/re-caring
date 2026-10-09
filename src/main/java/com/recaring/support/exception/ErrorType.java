@@ -105,7 +105,13 @@ public enum ErrorType {
     // Place (E10xxx)
     INVALID_PLACE_QUERY(HttpStatus.BAD_REQUEST, ErrorCode.E10000, "검색어를 입력해주세요.", LogLevel.WARN),
     PLACE_SEARCH_UNAVAILABLE(HttpStatus.BAD_GATEWAY, ErrorCode.E10001, "장소 검색을 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도해주세요.", LogLevel.ERROR),
-    PLACE_SEARCH_RATE_LIMITED(HttpStatus.TOO_MANY_REQUESTS, ErrorCode.E10002, "장소 검색 요청이 많습니다. 잠시 후 다시 시도해주세요.", LogLevel.WARN);
+    PLACE_SEARCH_RATE_LIMITED(HttpStatus.TOO_MANY_REQUESTS, ErrorCode.E10002, "장소 검색 요청이 많습니다. 잠시 후 다시 시도해주세요.", LogLevel.WARN),
+
+    // Inquiry (E11xxx)
+    INVALID_INQUIRY_TITLE(HttpStatus.BAD_REQUEST, ErrorCode.E11000, "문의 제목은 공백을 제외하고 1~50자여야 합니다.", LogLevel.WARN),
+    INVALID_INQUIRY_CONTENT(HttpStatus.BAD_REQUEST, ErrorCode.E11001, "문의 내용은 공백을 제외하고 1~1000자여야 합니다.", LogLevel.WARN),
+    INVALID_INQUIRY_ANSWER(HttpStatus.BAD_REQUEST, ErrorCode.E11002, "답변은 공백을 제외하고 1~2000자여야 합니다.", LogLevel.WARN),
+    INQUIRY_NOT_FOUND(HttpStatus.NOT_FOUND, ErrorCode.E11003, "문의를 찾을 수 없습니다.", LogLevel.WARN);
 
     private final HttpStatus status;
     private final ErrorCode errorCode;

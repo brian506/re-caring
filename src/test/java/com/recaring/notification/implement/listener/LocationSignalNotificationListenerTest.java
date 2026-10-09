@@ -52,7 +52,7 @@ class LocationSignalNotificationListenerTest {
 
         locationSignalNotificationListener.onLocationSignalLost(LocationFixture.createLocationSignalLostEvent());
 
-        then(notificationSendManager).should().sendToCareParties(
+        then(notificationSendManager).should().sendDataOnlyToCareParties(
                 List.of(NotificationFixture.GUARDIAN_KEY, NotificationFixture.OTHER_GUARDIAN_KEY),
                 List.of(NotificationFixture.MANAGER_KEY),
                 EVENT_TYPE,
@@ -77,6 +77,6 @@ class LocationSignalNotificationListenerTest {
         locationSignalNotificationListener.onLocationSignalLost(LocationFixture.createLocationSignalLostEvent());
 
         then(notificationSendManager).should(never())
-                .sendToCareParties(any(), any(), anyString(), anyString(), anyString(), any());
+                .sendDataOnlyToCareParties(any(), any(), anyString(), anyString(), anyString(), any());
     }
 }

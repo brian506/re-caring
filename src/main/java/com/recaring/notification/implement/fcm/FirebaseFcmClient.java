@@ -1,6 +1,7 @@
 package com.recaring.notification.implement.fcm;
 
 import com.google.firebase.ErrorCode;
+import com.google.firebase.messaging.AndroidConfig;
 import com.google.firebase.messaging.BatchResponse;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingException;
@@ -35,6 +36,9 @@ public class FirebaseFcmClient implements FcmClient {
 
     private static final Set<MessagingErrorCode> INVALID_TOKEN_ERROR_CODES =
             EnumSet.of(MessagingErrorCode.UNREGISTERED, MessagingErrorCode.INVALID_ARGUMENT);
+
+    private static final String DATA_TITLE_KEY = "title";
+    private static final String DATA_BODY_KEY = "body";
 
     private final FirebaseMessaging firebaseMessaging;
 
@@ -95,14 +99,7 @@ public class FirebaseFcmClient implements FcmClient {
     }
 
     private BatchResponse send(FcmPushMessage message, List<String> tokens, int attempt) {
-        MulticastMessage multicastMessage = MulticastMessage.builder()
-                .setNotification(Notification.builder()
-                        .setTitle(message.title())
-                        .setBody(message.body())
-                        .build())
-                .putAllData(message.dataPayload())
-                .addAllTokens(tokens)
-                .build();
+        MulticastMessage multicastMessage = buildMessage(message, tokens);
 
         try {
             return firebaseMessaging.sendEachForMulticast(multicastMessage);
@@ -115,6 +112,29 @@ public class FirebaseFcmClient implements FcmClient {
                     tokens.size(), attempt, exception.getMessage());
             return null;
         }
+    }
+
+    private MulticastMessage buildMessage(FcmPushMessage message, List<String> tokens) {
+        MulticastMessage.Builder builder = MulticastMessage.builder()
+                .putAllData(message.dataPayload())
+                .addAllTokens(tokens);
+
+        if (message.dataOnly()) {
+            return builder
+                    .putData(DATA_TITLE_KEY, message.title())
+                    .putData(DATA_BODY_KEY, message.body())
+                    .setAndroidConfig(AndroidConfig.builder()
+                            .setPriority(AndroidConfig.Priority.HIGH)
+                            .build())
+                    .build();
+        }
+
+        return builder
+                .setNotification(Notification.builder()
+                        .setTitle(message.title())
+                        .setBody(message.body())
+                        .build())
+                .build();
     }
 
     private String errorCode(FirebaseMessagingException exception) {
