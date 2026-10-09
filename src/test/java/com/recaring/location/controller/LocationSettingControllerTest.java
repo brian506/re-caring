@@ -52,7 +52,7 @@ class LocationSettingControllerTest extends AbstractIntegrationTest {
         manager = memberRepository.save(LocationFixture.createManager());
 
         careRelationshipRepository.save(
-                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+                CareFixture.createGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
         careRelationshipRepository.save(
                 CareFixture.createGuardianRelationship(ward.getMemberKey(), coGuardian.getMemberKey()));
         careRelationshipRepository.save(

@@ -29,7 +29,7 @@ import static org.mockito.BDDMockito.given;
 class NotificationSettingReaderTest {
 
     private static final CaregiverInfo GUARDIAN =
-            CareFixture.createCaregiverInfo(NotificationFixture.GUARDIAN_KEY, CareRole.PRIMARY_GUARDIAN);
+            CareFixture.createCaregiverInfo(NotificationFixture.GUARDIAN_KEY, CareRole.GUARDIAN);
     private static final CaregiverInfo OTHER_GUARDIAN =
             CareFixture.createCaregiverInfo(NotificationFixture.OTHER_GUARDIAN_KEY, CareRole.GUARDIAN);
     private static final CaregiverInfo MANAGER =

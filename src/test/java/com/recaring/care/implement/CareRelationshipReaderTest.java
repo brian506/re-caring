@@ -48,7 +48,7 @@ class CareRelationshipReaderTest {
         // given
         Member ward = CareFixture.createWardMember();
         given(careRelationshipRepository.findAllByCaregiverMemberKey(CareFixture.GUARDIAN_MEMBER_KEY))
-                .willReturn(List.of(CareFixture.createPrimaryGuardianRelationship(
+                .willReturn(List.of(CareFixture.createGuardianRelationship(
                         CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY)));
         given(memberReader.findAllByMemberKeys(List.of(CareFixture.WARD_MEMBER_KEY)))
                 .willReturn(Map.of(CareFixture.WARD_MEMBER_KEY, ward));
@@ -58,7 +58,7 @@ class CareRelationshipReaderTest {
 
         // then
         assertThat(result).containsExactly(
-                CareFixture.createWardInfo(ward.getMemberKey(), null, CareRole.PRIMARY_GUARDIAN,
+                CareFixture.createWardInfo(ward.getMemberKey(), null, CareRole.GUARDIAN,
                         ward.getProfileAvatarCode(), null));
     }
 
@@ -67,7 +67,7 @@ class CareRelationshipReaderTest {
     void findWardInfos_includes_both_real_name_and_nickname() {
         // given
         Member ward = CareFixture.createWardMember();
-        CareRelationship relationship = CareFixture.createPrimaryGuardianRelationship(
+        CareRelationship relationship = CareFixture.createGuardianRelationship(
                 CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY);
         relationship.changeWardNickname("할머니");
         given(careRelationshipRepository.findAllByCaregiverMemberKey(CareFixture.GUARDIAN_MEMBER_KEY))
@@ -80,7 +80,7 @@ class CareRelationshipReaderTest {
 
         // then
         assertThat(result).containsExactly(
-                CareFixture.createWardInfo(ward.getMemberKey(), "할머니", CareRole.PRIMARY_GUARDIAN,
+                CareFixture.createWardInfo(ward.getMemberKey(), "할머니", CareRole.GUARDIAN,
                         ward.getProfileAvatarCode(), null));
     }
 
@@ -90,7 +90,7 @@ class CareRelationshipReaderTest {
         // given
         Member ward = CareFixture.createWardMember();
         given(careRelationshipRepository.findAllByCaregiverMemberKey(CareFixture.GUARDIAN_MEMBER_KEY))
-                .willReturn(List.of(CareFixture.createPrimaryGuardianRelationship(
+                .willReturn(List.of(CareFixture.createGuardianRelationship(
                         CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY)));
         given(memberReader.findAllByMemberKeys(List.of(CareFixture.WARD_MEMBER_KEY)))
                 .willReturn(Map.of(CareFixture.WARD_MEMBER_KEY, ward));
@@ -188,7 +188,7 @@ class CareRelationshipReaderTest {
         Member ward = CareFixture.createWardMember();
         ward.changeProfileAvatarCode(CareFixture.SENIOR_AVATAR_CODE);
         given(careRelationshipRepository.findAllByCaregiverMemberKey(CareFixture.GUARDIAN_MEMBER_KEY))
-                .willReturn(List.of(CareFixture.createPrimaryGuardianRelationship(
+                .willReturn(List.of(CareFixture.createGuardianRelationship(
                         CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY)));
         given(memberReader.findAllByMemberKeys(List.of(CareFixture.WARD_MEMBER_KEY)))
                 .willReturn(Map.of(CareFixture.WARD_MEMBER_KEY, ward));
@@ -200,7 +200,7 @@ class CareRelationshipReaderTest {
 
         // then
         assertThat(result).containsExactly(CareFixture.createWardInfo(
-                ward.getMemberKey(), null, CareRole.PRIMARY_GUARDIAN,
+                ward.getMemberKey(), null, CareRole.GUARDIAN,
                 CareFixture.SENIOR_AVATAR_CODE, CareFixture.OTHER_SENIOR_AVATAR_CODE));
     }
 

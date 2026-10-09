@@ -37,6 +37,10 @@ public class CareInvitationReader {
         return careInvitationRepository.existsPending(targetKey, wardKey);
     }
 
+    public boolean existsPendingWardRequest(String requesterKey, String wardKey) {
+        return careInvitationRepository.existsPendingWardRequest(requesterKey, wardKey);
+    }
+
     public List<ReceivedRequestInfo> findReceivedRequestInfos(String memberKey) {
         List<CareInvitation> requests = careInvitationRepository.findReceivedPendingRequests(memberKey);
 

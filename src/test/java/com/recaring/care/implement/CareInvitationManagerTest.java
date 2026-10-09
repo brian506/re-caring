@@ -85,6 +85,22 @@ class CareInvitationManagerTest {
     }
 
     @Test
+    @DisplayName("보호 대상자 초대 - 같은 요청자가 같은 대상자에게 보낸 대기 요청이 있으면 ALREADY_PENDING_CARE_REQUEST이고 등록하지 않는다")
+    void sendWardInvitation_fails_when_same_requester_has_pending_request() {
+        Member ward = CareFixture.createWardMember();
+        given(memberReader.findByPhone(new PhoneNumber(CareFixture.WARD_PHONE))).willReturn(ward);
+        given(careInvitationReader.existsPendingWardRequest(CareFixture.GUARDIAN_MEMBER_KEY, ward.getMemberKey()))
+                .willReturn(true);
+
+        assertThatThrownBy(() ->
+                careInvitationManager.sendWardInvitation(CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_PHONE))
+                .isInstanceOf(AppException.class)
+                .hasFieldOrPropertyWithValue("errorType", ErrorType.ALREADY_PENDING_CARE_REQUEST);
+
+        then(careInvitationWriter).should(times(0)).register(any());
+    }
+
+    @Test
     @DisplayName("관리자 초대 - 전화번호로 GUARDIAN 회원을 찾아 초대장을 등록한다")
     void sendManagerInvitation_success() {
         Member manager = CareFixture.createGuardianMember(CareFixture.MANAGER_PHONE);
@@ -129,7 +145,7 @@ class CareInvitationManagerTest {
 
         careInvitationManager.accept(CareFixture.REQUEST_KEY, CareFixture.WARD_MEMBER_KEY);
 
-        then(careRelationshipWriter).should(times(1)).register(any(CareRelationshipRegistration.class), eq(CareFixture.WARD_MEMBER_KEY));
+        then(careRelationshipWriter).should(times(1)).register(any(CareRelationshipRegistration.class));
         then(careInvitationWriter).should(times(1)).accept(anyString());
         then(eventPublisher).should(times(1)).publishEvent(any(CareInvitationAcceptedEvent.class));
     }
@@ -145,7 +161,7 @@ class CareInvitationManagerTest {
         careInvitationManager.reject(CareFixture.REQUEST_KEY, CareFixture.WARD_MEMBER_KEY);
 
         then(careInvitationWriter).should(times(1)).reject(anyString());
-        then(careRelationshipWriter).should(times(0)).register(any(), any());
+        then(careRelationshipWriter).should(times(0)).register(any());
     }
 
     @Test
@@ -162,7 +178,7 @@ class CareInvitationManagerTest {
                 .isInstanceOf(AppException.class)
                 .hasFieldOrPropertyWithValue("errorType", ErrorType.ALREADY_PROCESSED_CARE_REQUEST);
 
-        then(careRelationshipWriter).should(times(0)).register(any(), any());
+        then(careRelationshipWriter).should(times(0)).register(any());
         then(careInvitationWriter).should(times(0)).accept(anyString());
     }
 

@@ -5,7 +5,6 @@ import com.recaring.care.business.CareRelationshipService;
 import com.recaring.care.controller.request.AddCaregiverRequest;
 import com.recaring.care.controller.request.AddWardRequest;
 import com.recaring.care.controller.request.DesignateAvatarRequest;
-import com.recaring.care.controller.request.UpdateCareRoleRequest;
 import com.recaring.care.controller.request.UpdateWardNicknameRequest;
 import com.recaring.care.controller.response.CaregiverResponse;
 import com.recaring.care.controller.response.ReceivedCareRequestResponse;
@@ -35,7 +34,9 @@ public class CareController {
 
     @Operation(
             summary = "보호 대상자(Ward) 추가 요청",
-            description = "보호자(GUARDIAN)가 전화번호로 보호 대상자에게 케어 요청을 전송합니다. [GUARDIAN 전용]"
+            description = "보호자(GUARDIAN)가 전화번호로 보호 대상자에게 케어 요청을 전송합니다. "
+                    + "이미 다른 보호자가 있는 대상자에게도 보낼 수 있으며, 대상자가 수락하면 GUARDIAN으로 연결됩니다. "
+                    + "같은 요청자가 같은 대상자에게 보낸 대기 요청이 있으면 E5009. [GUARDIAN 전용]"
     )
     @PostMapping("/requests/ward")
     public ResponseEntity<ApiResponse<Void>> requestAddWard(
@@ -61,7 +62,8 @@ public class CareController {
 
     @Operation(
             summary = "보호자(Guardian) 추가 요청",
-            description = "보호자(GUARDIAN)가 보호 대상자를 대신해 다른 보호자를 추가 요청합니다. [GUARDIAN 전용]"
+            description = "대상자의 기존 보호자가 신규 보호자에게 추가 요청을 보냅니다. 신규 보호자가 수락하면 GUARDIAN으로 연결됩니다. "
+                    + "해당 대상자의 보호자라면 누구나 보낼 수 있습니다. [GUARDIAN 전용]"
     )
     @PostMapping("/requests/guardian")
     public ResponseEntity<ApiResponse<Void>> requestAddGuardian(
@@ -190,10 +192,9 @@ public class CareController {
     @Operation(
             summary = "보호 대상자(Ward) 케어 관계 삭제",
             description = """
-                    보호자/관계자가 자신과 특정 보호 대상자 사이의 케어 관계를 삭제합니다.
-                    주보호자가 삭제해도 남은 보호자·관계자의 케어 관계는 유지되며, 주보호자가 한 명도 남지 않으면
-                    남은 보호자 중 가장 먼저 등록된 1명이 주보호자로 승계됩니다. 보호자가 없으면 관계자가 승계합니다.
-                    승계로 자신의 역할이 서버에서 바뀔 수 있으므로 클라이언트는 화면 진입 시 역할을 다시 조회해야 합니다.
+                    보호자/관계자가 자신과 특정 보호 대상자 사이의 케어 관계를 삭제합니다(본인 이탈).
+                    남은 보호자의 케어 관계는 유지되며, 내가 보낸 대기 중인 보호자 추가 요청은 함께 삭제됩니다.
+                    다른 보호자를 내보내는 기능은 없습니다.
                     [케어 관계가 있는 회원 전용]
                     """
     )
@@ -203,20 +204,6 @@ public class CareController {
             @Parameter(description = "보호 대상자 memberKey") @PathVariable String wardKey
     ) {
         careRelationshipService.removeWard(memberKey, wardKey);
-        return ResponseEntity.ok(ApiResponse.success());
-    }
-
-    @Operation(
-            summary = "보호자/관리자(Caregiver) 케어 관계 삭제",
-            description = "주보호자가 특정 보호 대상자에 연결된 보호자 또는 관계자를 케어 관계에서 삭제합니다. 주보호자는 삭제할 수 없습니다. [PRIMARY_GUARDIAN 전용]"
-    )
-    @DeleteMapping("/wards/{wardKey}/caregivers/{caregiverKey}")
-    public ResponseEntity<ApiResponse<Void>> removeCaregiver(
-            @AuthMember String memberKey,
-            @Parameter(description = "보호 대상자 memberKey") @PathVariable String wardKey,
-            @Parameter(description = "삭제할 보호자/관리자 memberKey") @PathVariable String caregiverKey
-    ) {
-        careRelationshipService.removeCaregiver(memberKey, wardKey, caregiverKey);
         return ResponseEntity.ok(ApiResponse.success());
     }
 
@@ -238,26 +225,6 @@ public class CareController {
         return ResponseEntity.ok(ApiResponse.success());
     }
 
-    @Operation(
-            summary = "보호자/관계자(Caregiver) 관계 수정",
-            description = """
-                    주보호자가 같은 보호 대상자에 연결된 다른 사람의 관계를 PRIMARY_GUARDIAN(주보호자),
-                    GUARDIAN(보호자), MANAGER(관계자) 중 하나로 변경합니다. 주보호자는 여러 명일 수 있습니다.
-                    이미 주보호자인 관계는 변경할 수 없습니다 — 주보호자 승격은 되돌릴 수 없으므로 클라이언트에서 사전 확인이 필요합니다.
-                    인원 한도는 역할과 무관하게 보호 대상자당 총 5명이라 역할 변경은 한도에 영향을 주지 않습니다.
-                    [PRIMARY_GUARDIAN 전용]
-                    """
-    )
-    @PatchMapping("/wards/{wardKey}/caregivers/{caregiverKey}/role")
-    public ResponseEntity<ApiResponse<Void>> updateCaregiverRole(
-            @AuthMember String memberKey,
-            @Parameter(description = "보호 대상자 memberKey") @PathVariable String wardKey,
-            @Parameter(description = "관계를 변경할 보호자/관계자 memberKey") @PathVariable String caregiverKey,
-            @Valid @RequestBody UpdateCareRoleRequest request
-    ) {
-        careRelationshipService.updateCaregiverRole(memberKey, wardKey, caregiverKey, request.careRole());
-        return ResponseEntity.ok(ApiResponse.success());
-    }
     @Operation(
             summary = "보호 대상자 프로필 아바타 지정",
             description = """

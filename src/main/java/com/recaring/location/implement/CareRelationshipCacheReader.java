@@ -19,6 +19,6 @@ public class CareRelationshipCacheReader {
 
     @Cacheable(value = "careRelationship", key = "#wardKey + ':' + #caregiverKey + ':GUARDIAN'")
     public boolean hasGuardianAccess(String wardKey, String caregiverKey) {
-        return careRelationshipRepository.existsCareRelationshipInRoles(wardKey, caregiverKey, CareRole.guardianRoles());
+        return careRelationshipRepository.existsCareRelationship(wardKey, caregiverKey, CareRole.GUARDIAN);
     }
 }

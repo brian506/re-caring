@@ -27,9 +27,9 @@
 | Auth | POST | `/api/v1/auth/oauth/link/{kakao\|naver}` | OAuth 사후 연동 (JWT 인증, 로컬 가입 필수) |
 | Auth | POST | `/api/v1/auth/token/refresh` | 토큰 갱신 |
 | Auth | PATCH | `/api/v1/auth/password` | 비밀번호 변경. `verificationToken`은 1회용(성공·실패 무관하게 소비) |
-| Care | POST | `/api/v1/care/requests/ward` | 보호대상자 추가 요청 (GUARDIAN). 같은 (받는 회원, 대상자)에 대기 요청이 있으면 E5009 (manager·guardian 요청도 동일) |
+| Care | POST | `/api/v1/care/requests/ward` | 보호대상자 추가 요청 (GUARDIAN). 이미 보호자가 있는 대상자에게도 가능, 수락 시 GUARDIAN. 같은 (요청자, 대상자) 대기 요청이 있으면 E5009 |
 | Care | POST | `/api/v1/care/requests/manager` | 관리자 추가 요청 |
-| Care | POST | `/api/v1/care/requests/guardian` | 보호자 추가 요청 |
+| Care | POST | `/api/v1/care/requests/guardian` | 보호자 추가 요청 (그 대상자의 보호자 누구나, 아니면 E5002). 같은 (받는 회원, 대상자) 대기 요청이 있으면 E5009 |
 | Care | GET | `/api/v1/care/requests/received` | 받은 케어 요청 목록 |
 | Care | GET | `/api/v1/care/requests/sent` | 보낸 케어 요청 목록 (GUARDIAN). `?status=` 기본 PENDING. `phoneNumber`는 받는 회원의 현재 번호, 대상자 추가 요청은 수락 후에만 `wardKey`·`wardName` 공개 |
 | Care | POST | `/api/v1/care/requests/{key}/resend` | 보낸 대기 요청 푸시 재전송 (GUARDIAN). 요청당 5분 간격, 위반 시 429 E5019 + `error.data.seconds` |
@@ -38,10 +38,8 @@
 | Care | PATCH | `/api/v1/care/requests/{key}/reject` | 케어 요청 거절 |
 | Care | GET | `/api/v1/care/wards` | 내 보호대상자 목록. `wardJoinedAt`(대상자 가입 시각 = members.created_at, 위치기록 달력의 하한. 연동일이 아님 — 보호자는 연동 이전 기록도 조회 가능) |
 | Care | GET | `/api/v1/care/wards/{wardKey}/caregivers` | 보호자/관리자 목록 |
-| Care | DELETE | `/api/v1/care/wards/{wardKey}` | 보호 대상자 케어 관계 삭제 (케어 관계가 있는 회원 전원. **주보호자가 나가면 남은 사람 중 1명이 주보호자로 승계됨**) |
-| Care | DELETE | `/api/v1/care/wards/{wardKey}/caregivers/{caregiverKey}` | 특정 보호자/관계자 케어 관계 삭제 (PRIMARY_GUARDIAN only) |
+| Care | DELETE | `/api/v1/care/wards/{wardKey}` | 보호 대상자 케어 관계 삭제 (본인 이탈. 내가 보낸 해당 대상자의 대기 초대도 삭제) |
 | Care | PATCH | `/api/v1/care/wards/{wardKey}/nickname` | 보호 대상자 별명 수정 (케어 관계가 있는 회원 전원, 보호자별로 따로 보임. 빈 값이면 해제) |
-| Care | PATCH | `/api/v1/care/wards/{wardKey}/caregivers/{caregiverKey}/role` | 보호자/관계자 관계 수정 (PRIMARY_GUARDIAN only, 주보호자로의 승격 포함. 이미 주보호자인 관계는 변경 불가) |
 | Care | PATCH | `/api/v1/care/wards/{wardKey}/avatar` | 내가 보는 보호 대상자 아바타 지정 (케어 관계가 있는 회원 전원, 호출자에게만 보임. 빈 값이면 해제, 허용 코드 외 E3008) |
 | Care | PATCH | `/api/v1/care/wards/{wardKey}/caregivers/{caregiverKey}/avatar` | 내가 보는 보호자/관계자 아바타 지정 (대상자 본인 또는 GUARDIAN 계열, 호출자에게만 보임. 빈 값이면 해제) |
 | Device | POST | `/api/v1/device/token` | Device Token 발급 (WARD, JWT 인증) |
@@ -81,9 +79,9 @@
 | LocalAuth | local_auth | memberKey, password (로그인 ID는 `members.phone`) |
 | OAuth | oauths | provider(KAKAO/NAVER), providerId, memberKey |
 | LoginHistory | login_histories | memberKey, ip, loginAt |
-| CareRelationship | care_relationships | caregiverKey, wardKey, role(PRIMARY_GUARDIAN/GUARDIAN/MANAGER), wardNickname(nullable, 보호자별 별명. null이면 대상자 실명 사용) |
+| CareRelationship | care_relationships | caregiverKey, wardKey, role(GUARDIAN/MANAGER — MANAGER는 MVP 미사용), wardNickname(nullable, 보호자별 별명. null이면 대상자 실명 사용) |
 | DesignatedAvatar | designated_avatars | ownerMemberKey(지정한 사람), wardMemberKey(케어 범위), targetMemberKey(얼굴이 붙는 사람), profileAvatarCode. `(owner, ward, target)` UNIQUE. 관계 삭제·탈퇴 시 함께 hard-delete |
-| CareInvitation | care_invitation | inviterKey, receiverKey, wardKey, careRole(수락 시 부여될 역할. 대상자 추가 요청은 PRIMARY_GUARDIAN), status(PENDING/ACCEPTED/REJECTED/EXPIRED), createdAt |
+| CareInvitation | care_invitation | inviterKey, receiverKey, wardKey, careRole(수락 시 부여될 역할. 대상자 추가 요청은 GUARDIAN), status(PENDING/ACCEPTED/REJECTED/EXPIRED), createdAt |
 | GpsHistory | gps_histories | wardMemberKey, latitude, longitude, recordedAt(서버 수신 시각), accuracy, battery, speed(m/s, nullable), measuredAt(기기 측정 시각, nullable — null이면 시간 간격 신뢰 불가). 시각 컬럼은 모두 KST 저장 |
 | LocationSetting | location_settings | (wardMemberKey, caregiverMemberKey) UNIQUE — 보호자별 수신 주기, collectionIntervalSeconds(30/60/180/300, 기본 30) |
 | WardDeviceToken | ward_device_tokens | wardKey(UUID, UNIQUE), token(UUID, UNIQUE), createdAt, expiresAt |
@@ -97,45 +95,41 @@
 | AlertRunbook | alert_runbooks | errorSignature, commands(jsonb), resolutionContext, successCount, isValid |
 | AlertInvestigation | alert_investigations | fingerprint, alertName, severity, threadTs, status, fixCommands(jsonb) |
 
-## 케어 역할(CareRole) 3단계
+## 케어 역할(CareRole) — 보호자-대상자 (#242)
 
-대상자를 등록한 사람이 `PRIMARY_GUARDIAN`(주보호자)이 되고, 그 사람만 다른 사람을 케어에 추가·삭제하거나
-역할을 바꿀 수 있다. 이전에는 `GUARDIAN`/`MANAGER` 2단계였고 주보호자도 `GUARDIAN`이었는데,
-`validateCanAddGuardian`이 GUARDIAN 한도 1을 검사해 **보호자 추가가 항상 실패**했다. 3단계로 나누며 함께 해소됐다.
+주보호자(`PRIMARY_GUARDIAN`) 개념은 #242에서 없앴다. MVP에서는 **보호자(`GUARDIAN`)-대상자** 관계만 쓴다.
+`MANAGER`(관계자) 값과 `POST /requests/manager` 코드는 남아 있지만 1차 배포에서는 쓰지 않는다.
+보호자끼리는 권한이 같다.
 
-| 기능 | PRIMARY_GUARDIAN | GUARDIAN | MANAGER |
-|------|------|------|------|
-| 보호자/관계자 추가 | O | X | X |
-| 케어관계 삭제(타인) | O | X | X |
-| 관계(역할) 변경 | O | X | X |
-| 안심존 등록·수정·삭제 | O | O | X |
-| 위치 수집주기 변경 | O | O | X |
-| 위치 조회·SSE | O | O | O |
-| 알림 수신·설정 | O | O | O |
-| 별명 설정 | O | O | O |
+관계는 두 방향으로만 맺어진다. 신규 보호자가 기존 보호자에게 합류를 요청하거나 기존 보호자가 승인하는 절차는 없다.
+1. **대상자 추가**(`POST /requests/ward`): 보호자 → 대상자, 대상자가 수락. **이미 보호자가 있는 대상자에게도 보낼 수 있다.**
+   대기 요청 중복(E5009)은 **(요청자, 대상자)** 기준이다(`existsPendingWardRequest`) — 여러 보호자가 각자 보낼 수 있어야 한다.
+2. **보호자 추가**(`POST /requests/guardian`): 그 대상자의 기존 보호자 누구나 → 신규 보호자, 신규 보호자가 수락.
+   대기 요청 중복은 **(받는 회원, 대상자)** 기준 — 두 보호자가 같은 사람을 초대하면 하나만 남는다.
 
-한도는 두 축이다. 대상자 1명에 붙는 케어 관계는 **역할과 무관하게 총 5명**(주보호자 포함), 보호자 1명이 맡을 수 있는 대상자는 5명.
-역할별 정원이 없으므로 역할 변경은 한도를 건드리지 않는다.
+| 기능 | GUARDIAN | MANAGER(미사용) |
+|------|------|------|
+| 보호자/관계자 추가 요청 | O | X |
+| 케어관계 삭제 | 본인 이탈만 | 본인 이탈만 |
+| 안심존 등록·수정·삭제 | O | X |
+| 위치 수집주기 변경 | O | X |
+| 위치 조회·SSE | O | O |
+| 알림 수신·설정 | O | O |
+| 별명 설정 | O | O |
 
-**주보호자는 여러 명일 수 있고, 승격으로만 늘어난다.** 주보호자가 다른 보호자·관계자를 주보호자로 올릴 수 있다.
-반대로 **주보호자를 내리거나 내보낼 수는 없다** — 역할 변경도(E5015) 삭제도(E5017) 막힌다. 승격시켜 준 쪽이 언제든
-되물릴 수 있으면 주보호자끼리 서로를 밀어내는 상태가 만들어지기 때문이다. 대가로 **승격은 되돌릴 수 없다.**
-잘못 올린 사람은 본인이 나가거나 탈퇴하기 전까지 그대로다. 클라이언트는 승격 전 확인을 받아야 한다.
+**타인 내보내기·역할 변경 API는 없다**(#242에서 제거). 동등한 보호자끼리 서로 내보낼 수 있게 하면 분쟁이 생긴다.
+관계를 끊는 방법은 본인 이탈(`DELETE /wards/{wardKey}`)과 탈퇴뿐이다. 관계자를 도입할 때 권한 규칙과 함께 다시 만든다.
 
-**주보호자가 떠나면 승계한다**(`CareRelationshipManager.settleAfterLeave`). 남은 관계 중 주보호자가 0명이면
-보호자 → 관계자 순, 같은 역할 안에서는 먼저 등록된 쪽이 주보호자가 된다(`SUCCESSION_ORDER`). 캐스케이드 삭제는 폐기했다.
-JPA 연관관계·cascade는 쓰지 않는다 — 조회 후 자바에서 판정하고 dirty checking으로 역할만 바꾼다.
-**이탈(`leaveCare`)과 탈퇴(`leaveAllCare`) 둘 다 이 경로를 탄다.** 탈퇴만 벌크 삭제로 끝내면 주보호자 없는 대상자가 남는다.
+한도는 두 축이다. 대상자 1명에 붙는 케어 관계는 **역할과 무관하게 총 5명**, 보호자 1명이 맡을 수 있는 대상자는 5명.
+대상자 추가가 열렸으므로 **두 축 모두 발급과 수락 양쪽에서 검사한다**(`validateCanAddWard`). 수락(`CareRelationshipWriter.register`)은
+대상자·보호자 두 회원 행을 **memberKey 정렬 순서로** `SELECT ... FOR UPDATE` 한 뒤 검사한다 — 대상자 수락과 보호자 초대 수락이 동시에
+들어와도 한도를 넘지 않고, 잠금 순서가 같아 교착이 생기지 않는다.
 
-`leaveCare`는 삭제 후 다시 조회하지 않고 **조회해 둔 목록에서 떠난 행만 걷어내** 승계를 판정한다.
-다시 조회하면 JPA 삭제가 flush됐는지에 결과가 달라진다.
-
-**마지막 관계까지 끊기면 그 대상자의 `care_invitation`도 지운다.** 초대에는 만료가 없어서(`expiredAt` 없음,
-`EXPIRED` 사용처 0건) 남겨두면 뒤늦은 수락으로 관계가 되살아나는데, 초대를 보낸 주보호자는 이미 떠난 뒤다.
-
-**주보호자가 없는 대상자에 맺어지는 관계는 역할과 무관하게 주보호자가 된다**(`CareRelationshipWriter.resolveCareRole`).
-관계자로 들어오게 두면 그를 내보낼 주체가 없는 대상자가 만들어진다 — `removeCaregiver`가 주보호자를 요구하기 때문이다.
-초대 정리와 이 승격은 같은 구멍을 앞뒤로 막는다: 정리가 새 관계의 유입을 줄이고, 승격이 그래도 들어온 관계를 안전하게 만든다.
+**이탈하면 그 사람이 그 대상자에 대해 보낸 대기 초대를 지운다**(`deletePendingSentBy`). 초대에는 만료가 없고(`expiredAt` 없음,
+`EXPIRED` 사용처 0건) 수락 시점에 발신자의 관계를 다시 보지 않아, 남겨두면 이탈 후 뒤늦은 수락으로 남은 보호자가 모르는 관계가 생긴다.
+"마지막 관계가 끊기면 대상자의 초대를 전부 지운다"는 규칙은 **없앴다** — 이제 무관한 보호자들이 보낸 대상자 추가 요청도
+그 대상자에 걸려 있고, 그건 기존 보호자와 상관없는 정상 요청이다. 탈퇴는 `CareInvitationWriter.deleteAllByMemberKey`가 정리한다.
+JPA 연관관계·cascade는 쓰지 않는다.
 
 **알림 설정·위치 수신 주기는 보호자별로 독립이다**(#237). `notification_settings`·`location_settings`는
 `(ward_member_key, caregiver_member_key)` 키라 한 보호자가 바꾼 값이 다른 보호자에게 퍼지지 않는다.
@@ -143,29 +137,17 @@ JPA 연관관계·cascade는 쓰지 않는다 — 조회 후 자바에서 판정
 배터리는 판정 자체가 보호자별이다 — 고른 잔량·억제 상태가 다르므로 도달 잔량마다 `BatteryThresholdAlertEvent(recipientKeys)`를 따로 낸다.
 기기는 하나라 수집 주기는 하나뿐이다: 기기는 **보호자 계열 설정의 최솟값**으로 수집하고, 더 긴 주기를 고른 보호자에게는
 SSE에서 `recordedAt` 간격으로 솎아 보낸다(허용 오차 10초). 관계자는 주기를 못 고르므로 계산에서 빠지고 기기 주기를 그대로 받는다.
-설정은 관계에 딸린 데이터라 **관계가 끊기면 함께 지운다** — 본인 이탈(`CareRelationshipManager.leaveCare`)과
-주보호자의 내보내기(`CareRelationshipWriter.delete`) 두 경로 모두 `deleteByRelationship`으로 설정 행과 배터리 억제 필드를 지운다.
+설정은 관계에 딸린 데이터라 **관계가 끊기면 함께 지운다** — 본인 이탈(`CareRelationshipManager.leaveCare`)이
+`deleteByRelationship`으로 설정 행과 배터리 억제 필드를 지운다.
 탈퇴 시에는 대상자·보호자 어느 쪽 키든 `deleteByMemberKey`로 지운다.
 
 **케어 관계가 끊겨도 대상자 데이터는 남는다** — `safe_zones`·
-`ward_device_tokens`·`gps_histories`·`anomaly_detections`. **의도한 동작이다.** 새 주보호자가 등록되면 이전 안심존과
+`ward_device_tokens`·`gps_histories`·`anomaly_detections`. **의도한 동작이다.** 새 보호자가 등록되면 이전 안심존과
 이력을 그대로 물려받는다. 대상자를 기준으로 쌓인 데이터라 보호자가 바뀐다고 초기화할 이유가 없다는 판단.
 
 안심존 단건 조회·수정·삭제는 `(safeZoneKey, wardMemberKey)` 쌍으로 스코프한다. `safeZoneKey`만으로 찾으면
 경로의 `wardKey`로 인가를 통과한 뒤 **다른 대상자의 안심존**을 읽고 고치고 지울 수 있다 —
 관계가 끊긴 전 보호자가 키를 기억하고 있으면 그대로 악용된다.
-
-**"대상자 추가" 경로는 주보호자가 이미 있으면 막는다**(E5018, `validateNoPrimaryGuardian`).
-주보호자가 다수여도 늘어나는 경로는 승격 하나뿐이어야 한다. 이걸 열면 전화번호만 아는 제3자가 대상자 추가 요청을
-보내고 대상자가 수락하는 것만으로 주보호자가 되며, 기존 주보호자는 개입할 수 없다. 이미 케어 중인 대상자에
-합류하려면 기존 주보호자가 초대해야 한다. 검사는 **발급(`sendWardInvitation`)·수락(`register`)** 두 곳에 있다 —
-PENDING 초대가 첫 주보호자보다 먼저 만들어졌을 수 있기 때문이다. DB 부분 유니크 인덱스는 **쓰지 않는다**(주보호자 다수 허용).
-이 검사를 `validateCanAddWard` 안에 넣으면 안 된다 — `register`가 GUARDIAN 계정의 **모든 수락 경로**에서
-그 메서드를 재사용하므로, 보호자·관계자 추가 수락이 전부 막힌다(실제로 겪은 회귀).
-
-**주의**: 보호자 계열 판정은 반드시 `CareRole.guardianRoles()` / `CareRole.isGuardian()`을 쓴다.
-`== CareRole.GUARDIAN`으로 적으면 주보호자가 권한·알림 대상에서 조용히 빠진다 —
-위치 SSE, 안심존 CRUD, 알림 수신자 분류가 모두 이 판정을 탄다.
 
 별명은 `(보호자, 대상자)` 쌍마다 하나라 `care_relationships`의 UNIQUE 키와 카디널리티가 같다.
 그래서 별도 테이블을 만들지 않고 `ward_nickname` 컬럼을 뒀다. 관계가 삭제되면 별명도 같이 사라진다.

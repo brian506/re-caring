@@ -72,10 +72,17 @@ public class CareInvitationRepositoryCustomImpl extends QuerydslRepositorySuppor
     }
 
     @Override
-    public void deleteAllByWardMemberKey(String wardMemberKey) {
-        delete(careInvitation)
-                .where(careInvitation.wardMemberKey.eq(wardMemberKey))
-                .execute();
+    public boolean existsPendingWardRequest(String requesterKey, String wardKey) {
+        Integer result = selectOne()
+                .from(careInvitation)
+                .where(
+                        careInvitation.requesterMemberKey.eq(requesterKey),
+                        careInvitation.targetMemberKey.eq(wardKey),
+                        careInvitation.wardMemberKey.eq(wardKey),
+                        careInvitation.status.eq(CareInvitationStatus.PENDING)
+                )
+                .fetchFirst();
+        return result != null;
     }
 
     @Override

@@ -13,7 +13,6 @@ import com.recaring.member.dataaccess.entity.Gender;
 import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.dataaccess.entity.MemberRole;
 import com.recaring.member.dataaccess.entity.SignUpType;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
 
@@ -125,17 +124,6 @@ public class CareFixture {
                 careRole, CareInvitationStatus.PENDING, createdAt);
     }
 
-    // 승계 순서(먼저 등록된 쪽이 이긴다)를 검증하려면 등록 순서를 나타내는 id가 필요하다.
-    public static CareRelationship createRelationship(String wardKey, String caregiverKey, CareRole careRole, long id) {
-        CareRelationship relationship = CareRelationship.of(wardKey, caregiverKey, careRole);
-        ReflectionTestUtils.setField(relationship, "id", id);
-        return relationship;
-    }
-
-    public static CareRelationship createPrimaryGuardianRelationship(String wardKey, String caregiverKey) {
-        return CareRelationship.of(wardKey, caregiverKey, CareRole.PRIMARY_GUARDIAN);
-    }
-
     public static CareRelationship createGuardianRelationship(String wardKey, String caregiverKey) {
         return CareRelationship.of(wardKey, caregiverKey, CareRole.GUARDIAN);
     }
@@ -149,7 +137,7 @@ public class CareFixture {
                 .requesterMemberKey(requesterKey)
                 .targetMemberKey(wardKey)
                 .wardMemberKey(wardKey)
-                .careRole(CareRole.PRIMARY_GUARDIAN)
+                .careRole(CareRole.GUARDIAN)
                 .build();
     }
 

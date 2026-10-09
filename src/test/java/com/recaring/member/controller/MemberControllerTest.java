@@ -498,7 +498,7 @@ class MemberControllerTest extends AbstractIntegrationTest {
     void withdraw_removes_designated_avatars_involving_the_member_only() {
         Member otherGuardian = memberRepository.save(CareFixture.createGuardianMember("01077778888"));
         careRelationshipRepository.save(
-                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+                CareFixture.createGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
         careRelationshipRepository.save(
                 CareFixture.createGuardianRelationship(ward.getMemberKey(), otherGuardian.getMemberKey()));
         designatedAvatarRepository.save(CareFixture.createDesignatedAvatar(
@@ -529,11 +529,11 @@ class MemberControllerTest extends AbstractIntegrationTest {
         Member otherGuardian = memberRepository.save(CareFixture.createGuardianMember("01077778888"));
         Member otherWard = memberRepository.save(CareFixture.createWardMember("01066667777"));
         careRelationshipRepository.save(
-                CareFixture.createPrimaryGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
+                CareFixture.createGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
         careRelationshipRepository.save(
                 CareFixture.createGuardianRelationship(ward.getMemberKey(), otherGuardian.getMemberKey()));
         careRelationshipRepository.save(
-                CareFixture.createPrimaryGuardianRelationship(otherWard.getMemberKey(), guardian.getMemberKey()));
+                CareFixture.createGuardianRelationship(otherWard.getMemberKey(), guardian.getMemberKey()));
         designatedAvatarRepository.save(CareFixture.createDesignatedAvatar(
                 guardian.getMemberKey(), ward.getMemberKey(), otherGuardian.getMemberKey(), CareFixture.ADULT_AVATAR_CODE));
         designatedAvatarRepository.save(CareFixture.createDesignatedAvatar(
