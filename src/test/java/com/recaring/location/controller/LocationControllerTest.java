@@ -23,6 +23,10 @@ import org.springframework.test.web.servlet.client.RestTestClient;
 
 import java.time.format.DateTimeFormatter;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("LocationController HTTP 통합 테스트")
 class LocationControllerTest extends AbstractIntegrationTest {
@@ -140,6 +144,31 @@ class LocationControllerTest extends AbstractIntegrationTest {
                 .jsonPath("$.data.length()").isEqualTo(1)
                 .jsonPath("$.data[0].latitude").isEqualTo(LocationFixture.LATITUDE)
                 .jsonPath("$.data[0].longitude").isEqualTo(LocationFixture.LONGITUDE);
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/location/history/{wardKey} - 정확도 150m 좌표와 튄 좌표는 응답에서 빠지고 DB에는 원본이 모두 남는다")
+    void getHistory_excludes_inaccurate_and_jumped_points_but_keeps_raw_rows() {
+        String wardKey = ward.getMemberKey();
+        LocalDateTime start = LocalDate.now().atTime(LocationFixture.TRACK_START.toLocalTime());
+        double walked = LocationFixture.LATITUDE + LocationFixture.WALK_50M_LATITUDE_DELTA;
+        double walkedTwice = LocationFixture.LATITUDE + LocationFixture.WALK_50M_LATITUDE_DELTA * 2;
+        gpsHistoryRepository.saveAll(List.of(
+                LocationFixture.createGpsHistory(wardKey, LocationFixture.LATITUDE, LocationFixture.TRACK_ACCURACY, start),
+                LocationFixture.createGpsHistory(wardKey, walked, LocationFixture.TRACK_ACCURACY, start.plusSeconds(30)),
+                LocationFixture.createGpsHistory(wardKey, walked, LocationFixture.INACCURATE_ACCURACY, start.plusSeconds(60)),
+                LocationFixture.createGpsHistory(wardKey, LocationFixture.LATITUDE + LocationFixture.JUMP_15KM_LATITUDE_DELTA,
+                        LocationFixture.TRACK_ACCURACY, start.plusSeconds(90)),
+                LocationFixture.createGpsHistory(wardKey, walkedTwice, LocationFixture.TRACK_ACCURACY, start.plusSeconds(120))));
+
+        getHistoryAsToday(guardianJwtToken)
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.data.length()").isEqualTo(3)
+                .jsonPath("$.data[0].latitude").isEqualTo(LocationFixture.LATITUDE)
+                .jsonPath("$.data[1].latitude").isEqualTo(walked)
+                .jsonPath("$.data[2].latitude").isEqualTo(walkedTwice);
+        assertThat(gpsHistoryRepository.count()).isEqualTo(5);
     }
 
     @Test

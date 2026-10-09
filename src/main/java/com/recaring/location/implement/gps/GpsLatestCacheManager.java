@@ -21,13 +21,22 @@ import java.util.concurrent.TimeUnit;
 public class GpsLatestCacheManager {
 
     private static final String KEY_PREFIX = "gps:latest:";
+    private static final String DISPLAY_KEY_PREFIX = "gps:display:";
     private static final long TTL_HOURS = 25;
 
     private final StringRedisTemplate redisTemplate;
     private final ObjectMapper objectMapper;
 
     public Optional<Gps> find(String wardMemberKey) {
-        String value = redisTemplate.opsForValue().get(KEY_PREFIX + wardMemberKey);
+        return read(KEY_PREFIX, wardMemberKey);
+    }
+
+    public Optional<Gps> findDisplayable(String wardMemberKey) {
+        return read(DISPLAY_KEY_PREFIX, wardMemberKey);
+    }
+
+    private Optional<Gps> read(String keyPrefix, String wardMemberKey) {
+        String value = redisTemplate.opsForValue().get(keyPrefix + wardMemberKey);
         if (value == null) {
             return Optional.empty();
         }
@@ -65,10 +74,18 @@ public class GpsLatestCacheManager {
     }
 
     public void save(String wardMemberKey, Gps gpsLatest) {
+        write(KEY_PREFIX, wardMemberKey, gpsLatest);
+    }
+
+    public void saveDisplayable(String wardMemberKey, Gps gps) {
+        write(DISPLAY_KEY_PREFIX, wardMemberKey, gps);
+    }
+
+    private void write(String keyPrefix, String wardMemberKey, Gps gps) {
         try {
-            String value = objectMapper.writeValueAsString(gpsLatest);
+            String value = objectMapper.writeValueAsString(gps);
             redisTemplate.opsForValue().set(
-                    KEY_PREFIX + wardMemberKey,
+                    keyPrefix + wardMemberKey,
                     value,
                     TTL_HOURS,
                     TimeUnit.HOURS
@@ -79,6 +96,6 @@ public class GpsLatestCacheManager {
     }
 
     public void delete(String wardMemberKey) {
-        redisTemplate.delete(KEY_PREFIX + wardMemberKey);
+        redisTemplate.delete(List.of(KEY_PREFIX + wardMemberKey, DISPLAY_KEY_PREFIX + wardMemberKey));
     }
 }

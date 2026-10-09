@@ -5,7 +5,6 @@ import com.recaring.support.repository.QuerydslRepositorySupport;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 import static com.recaring.location.dataaccess.entity.QGpsHistory.gpsHistory;
 
@@ -29,13 +28,12 @@ public class GpsHistoryRepositoryCustomImpl extends QuerydslRepositorySupport
     }
 
     @Override
-    public Optional<GpsHistory> findLatest(String wardMemberKey) {
-        return Optional.ofNullable(
-                selectFrom(gpsHistory)
-                        .where(gpsHistory.wardMemberKey.eq(wardMemberKey))
-                        .orderBy(gpsHistory.recordedAt.desc())
-                        .fetchFirst()
-        );
+    public List<GpsHistory> findRecent(String wardMemberKey, int limit) {
+        return selectFrom(gpsHistory)
+                .where(gpsHistory.wardMemberKey.eq(wardMemberKey))
+                .orderBy(gpsHistory.recordedAt.desc())
+                .limit(limit)
+                .fetch();
     }
 
     @Override

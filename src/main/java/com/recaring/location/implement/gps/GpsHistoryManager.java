@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,18 +15,24 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class GpsHistoryManager {
 
+    private static final int LATEST_LOOKBACK = 20;
+
     private final GpsHistoryRepository gpsHistoryRepository;
 
     public List<Gps> findDailyGpsHistory(String wardMemberKey, LocalDate date) {
-        return gpsHistoryRepository.findDailyGpsHistory(wardMemberKey, date)
+        return keepDisplayable(gpsHistoryRepository.findDailyGpsHistory(wardMemberKey, date)
                 .stream()
                 .map(Gps::from)
-                .toList();
+                .toList());
     }
 
-    public Optional<Gps> findLatest(String wardMemberKey) {
-        return gpsHistoryRepository.findLatest(wardMemberKey)
-                .map(Gps::from);
+    public Optional<Gps> findLatestDisplayable(String wardMemberKey) {
+        List<Gps> displayable = keepDisplayable(gpsHistoryRepository.findRecent(wardMemberKey, LATEST_LOOKBACK)
+                .reversed()
+                .stream()
+                .map(Gps::from)
+                .toList());
+        return displayable.isEmpty() ? Optional.empty() : Optional.of(displayable.getLast());
     }
 
     public void save(String wardMemberKey, Gps gps) {
@@ -43,5 +50,17 @@ public class GpsHistoryManager {
 
     public void deleteByWardMemberKey(String wardMemberKey) {
         gpsHistoryRepository.deleteByWardMemberKey(wardMemberKey);
+    }
+
+    private List<Gps> keepDisplayable(List<Gps> chronological) {
+        List<Gps> kept = new ArrayList<>();
+        Gps anchor = null;
+        for (Gps gps : chronological) {
+            if (gps.isDisplayableAfter(anchor)) {
+                kept.add(gps);
+                anchor = gps;
+            }
+        }
+        return kept;
     }
 }

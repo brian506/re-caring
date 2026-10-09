@@ -84,7 +84,7 @@ public class SseEmitterManager {
                 if (!active.get()) {
                     break;
                 }
-                Optional<Gps> latest = gpsLatestCacheManager.find(wardKey);
+                Optional<Gps> latest = gpsLatestCacheManager.findDisplayable(wardKey);
                 if (latest.isPresent() && isDue(latest.get(), lastSent, minGap)) {
                     emitter.send(SseEmitter.event().name(EVENT_NAME).data(latest.get()));
                     lastSent = latest.get();
@@ -120,11 +120,11 @@ public class SseEmitterManager {
         return !latest.recordedAt().isBefore(lastSent.recordedAt().plus(minGap));
     }
 
-    // 연결 직후 1회. 캐시가 비어 있으면(WARD가 TTL 이상 GPS를 보내지 않음) DB의 마지막 위치로 대체한다.
+    // 연결 직후 1회. 캐시가 비어 있으면(WARD가 TTL 이상 GPS를 보내지 않음) DB의 마지막 표시 가능 위치로 대체한다.
     // 폴링 중에는 캐시만 본다 — 매 주기 DB를 치면 연결 수에 비례해 부하가 늘기 때문이다.
     private Gps sendInitial(SseEmitter emitter, String wardKey) throws IOException {
-        Optional<Gps> initial = gpsLatestCacheManager.find(wardKey)
-                .or(() -> gpsHistoryManager.findLatest(wardKey));
+        Optional<Gps> initial = gpsLatestCacheManager.findDisplayable(wardKey)
+                .or(() -> gpsHistoryManager.findLatestDisplayable(wardKey));
         if (initial.isEmpty()) {
             emitter.send(SseEmitter.event().comment(""));
             return null;

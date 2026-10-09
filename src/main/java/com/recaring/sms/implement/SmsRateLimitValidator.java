@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
 public class SmsRateLimitValidator {
 
     private static final String QUOTA_KEY_PREFIX = "sms:quota:";
-    private static final Duration QUOTA_WINDOW = Duration.ofHours(1);
+    private static final Duration QUOTA_WINDOW = Duration.ofMinutes(10);
     private static final long QUOTA = 5;
 
     private final StringRedisTemplate redisTemplate;
