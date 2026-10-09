@@ -42,11 +42,6 @@ public class CareInvitationWriter {
     }
 
     @Transactional
-    public void deleteAllByWardMemberKey(String wardMemberKey) {
-        careInvitationRepository.deleteAllByWardMemberKey(wardMemberKey);
-    }
-
-    @Transactional
     public void deletePendingSentBy(String wardMemberKey, String requesterMemberKey) {
         careInvitationRepository.deletePendingByWardMemberKeyAndRequesterMemberKey(wardMemberKey, requesterMemberKey);
     }

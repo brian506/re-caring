@@ -88,7 +88,7 @@ class BatteryThresholdNotificationListenerTest {
     void onBatteryThresholdAlert_sends_only_to_decided_recipients() {
         given(careRelationshipReader.findCaregiverInfos(NotificationFixture.WARD_KEY))
                 .willReturn(List.of(
-                        CareFixture.createCaregiverInfo(NotificationFixture.GUARDIAN_KEY, CareRole.PRIMARY_GUARDIAN),
+                        CareFixture.createCaregiverInfo(NotificationFixture.GUARDIAN_KEY, CareRole.GUARDIAN),
                         CareFixture.createCaregiverInfo(NotificationFixture.OTHER_GUARDIAN_KEY, CareRole.GUARDIAN),
                         CareFixture.createCaregiverInfo(NotificationFixture.MANAGER_KEY, CareRole.MANAGER)));
         given(memberReader.findNameByMemberKey(NotificationFixture.WARD_KEY)).willReturn(NotificationFixture.WARD_NAME);
@@ -108,7 +108,7 @@ class BatteryThresholdNotificationListenerTest {
     void onBatteryThresholdAlert_skips_recipient_whose_relationship_ended() {
         given(careRelationshipReader.findCaregiverInfos(NotificationFixture.WARD_KEY))
                 .willReturn(List.of(
-                        CareFixture.createCaregiverInfo(NotificationFixture.GUARDIAN_KEY, CareRole.PRIMARY_GUARDIAN)));
+                        CareFixture.createCaregiverInfo(NotificationFixture.GUARDIAN_KEY, CareRole.GUARDIAN)));
 
         batteryThresholdNotificationListener.onBatteryThresholdAlert(
                 LocationFixture.createBatteryThresholdAlertEvent(List.of(NotificationFixture.OTHER_GUARDIAN_KEY)));

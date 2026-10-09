@@ -4,7 +4,6 @@ import com.recaring.care.dataaccess.entity.CareRelationship;
 import com.recaring.care.dataaccess.entity.CareRole;
 import com.recaring.support.repository.QuerydslRepositorySupport;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -51,31 +50,6 @@ public class CareRelationshipRepositoryCustomImpl extends QuerydslRepositorySupp
                 .where(
                         careRelationship.wardMemberKey.eq(wardKey),
                         careRelationship.caregiverMemberKey.eq(caregiverKey)
-                )
-                .fetchFirst();
-        return result != null;
-    }
-
-    @Override
-    public boolean existsCareRelationshipInRoles(String wardKey, String caregiverKey, Collection<CareRole> careRoles) {
-        Integer result = selectOne()
-                .from(careRelationship)
-                .where(
-                        careRelationship.wardMemberKey.eq(wardKey),
-                        careRelationship.caregiverMemberKey.eq(caregiverKey),
-                        careRelationship.careRole.in(careRoles)
-                )
-                .fetchFirst();
-        return result != null;
-    }
-
-    @Override
-    public boolean existsCareRelationshipWithRole(String wardKey, CareRole careRole) {
-        Integer result = selectOne()
-                .from(careRelationship)
-                .where(
-                        careRelationship.wardMemberKey.eq(wardKey),
-                        careRelationship.careRole.eq(careRole)
                 )
                 .fetchFirst();
         return result != null;

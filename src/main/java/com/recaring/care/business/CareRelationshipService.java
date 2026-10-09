@@ -1,6 +1,5 @@
 package com.recaring.care.business;
 
-import com.recaring.care.dataaccess.entity.CareRole;
 import com.recaring.care.implement.CareRelationshipManager;
 import com.recaring.care.implement.CareRelationshipReader;
 import com.recaring.care.implement.CareRelationshipValidator;
@@ -38,21 +37,9 @@ public class CareRelationshipService {
         careRelationshipManager.leaveCare(wardKey, guardianKey);
     }
 
-    public void removeCaregiver(String guardianKey, String wardKey, String caregiverKey) {
-        careRelationshipValidator.validatePrimaryGuardianRole(guardianKey, wardKey);
-        careRelationshipValidator.validateCaregiverRemovable(wardKey, caregiverKey);
-        careRelationshipWriter.delete(wardKey, caregiverKey);
-    }
-
     public void updateWardNickname(String caregiverKey, String wardKey, String nickname) {
         careRelationshipValidator.validateCaregiver(caregiverKey, wardKey);
         careRelationshipWriter.updateWardNickname(wardKey, caregiverKey, normalize(nickname));
-    }
-
-    public void updateCaregiverRole(String requesterKey, String wardKey, String caregiverKey, CareRole careRole) {
-        careRelationshipValidator.validatePrimaryGuardianRole(requesterKey, wardKey);
-        careRelationshipValidator.validateCareRoleChange(wardKey, caregiverKey);
-        careRelationshipWriter.updateCareRole(wardKey, caregiverKey, careRole);
     }
 
     public void designateWardAvatar(String caregiverKey, String wardKey, String profileAvatarCode) {

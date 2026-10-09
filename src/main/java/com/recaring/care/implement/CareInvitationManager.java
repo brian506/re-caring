@@ -37,9 +37,8 @@ public class CareInvitationManager {
         Member ward = memberReader.findByPhone(new PhoneNumber(phoneNumber));
         NewCareInvitation invitation = NewCareInvitation.ofWardRequest(requesterMemberKey, Ward.of(ward.getMemberKey(), ward.getRole()));
 
-        careRelationshipValidator.validateNoPrimaryGuardian(invitation.wardMemberKey());
         careRelationshipValidator.validateCanAddWard(invitation.requesterMemberKey(), invitation.wardMemberKey());
-        validateNoPending(invitation);
+        validateNoPendingWardRequest(invitation);
         CareInvitation saved = careInvitationWriter.register(invitation);
         eventPublisher.publishEvent(new CareInvitationSentEvent(saved.getRequestKey(), saved.getTargetMemberKey(), saved.getRequesterMemberKey(), saved.targetRole()));
     }
@@ -79,8 +78,7 @@ public class CareInvitationManager {
                         invitation.getWardMemberKey(),
                         invitation.getCaregiverKey(),
                         invitation.getCareRole()
-                ),
-                memberKey
+                )
         );
         careInvitationWriter.accept(invitation.getRequestKey());
         eventPublisher.publishEvent(new CareInvitationAcceptedEvent(invitation.getRequestKey(), memberKey, invitation.getRequesterMemberKey(), invitation.targetRole()));
@@ -110,6 +108,13 @@ public class CareInvitationManager {
 
     private void validateNoPending(NewCareInvitation invitation) {
         if (careInvitationReader.existsPending(invitation.targetMemberKey(), invitation.wardMemberKey())) {
+            throw new AppException(ErrorType.ALREADY_PENDING_CARE_REQUEST);
+        }
+    }
+
+    // 대상자에게는 여러 보호자가 각자 요청을 보낼 수 있으므로 같은 요청자의 대기 요청만 막는다.
+    private void validateNoPendingWardRequest(NewCareInvitation invitation) {
+        if (careInvitationReader.existsPendingWardRequest(invitation.requesterMemberKey(), invitation.wardMemberKey())) {
             throw new AppException(ErrorType.ALREADY_PENDING_CARE_REQUEST);
         }
     }

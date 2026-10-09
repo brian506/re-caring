@@ -100,7 +100,7 @@ class LocationSettingManagerTest {
                 LocationFixture.createLocationSetting(GUARDIAN_KEY, 300),
                 LocationFixture.createLocationSetting(OTHER_GUARDIAN_KEY, 60)));
         given(careRelationshipReader.findCaregiverInfos(LocationFixture.WARD_KEY)).willReturn(List.of(
-                CareFixture.createCaregiverInfo(GUARDIAN_KEY, CareRole.PRIMARY_GUARDIAN),
+                CareFixture.createCaregiverInfo(GUARDIAN_KEY, CareRole.GUARDIAN),
                 CareFixture.createCaregiverInfo(OTHER_GUARDIAN_KEY, CareRole.GUARDIAN)));
 
         LocationCollectionInterval result = locationSettingManager.findDeviceCollectionInterval(LocationFixture.WARD_KEY);
@@ -114,7 +114,7 @@ class LocationSettingManagerTest {
         given(locationSettingRepository.findAllByWardMemberKey(LocationFixture.WARD_KEY)).willReturn(List.of(
                 LocationFixture.createLocationSetting(GUARDIAN_KEY, 300)));
         given(careRelationshipReader.findCaregiverInfos(LocationFixture.WARD_KEY)).willReturn(List.of(
-                CareFixture.createCaregiverInfo(GUARDIAN_KEY, CareRole.PRIMARY_GUARDIAN),
+                CareFixture.createCaregiverInfo(GUARDIAN_KEY, CareRole.GUARDIAN),
                 CareFixture.createCaregiverInfo(OTHER_GUARDIAN_KEY, CareRole.GUARDIAN)));
 
         LocationCollectionInterval result = locationSettingManager.findDeviceCollectionInterval(LocationFixture.WARD_KEY);
@@ -128,7 +128,7 @@ class LocationSettingManagerTest {
         given(locationSettingRepository.findAllByWardMemberKey(LocationFixture.WARD_KEY)).willReturn(List.of(
                 LocationFixture.createLocationSetting(GUARDIAN_KEY, 300)));
         given(careRelationshipReader.findCaregiverInfos(LocationFixture.WARD_KEY)).willReturn(List.of(
-                CareFixture.createCaregiverInfo(GUARDIAN_KEY, CareRole.PRIMARY_GUARDIAN),
+                CareFixture.createCaregiverInfo(GUARDIAN_KEY, CareRole.GUARDIAN),
                 CareFixture.createCaregiverInfo(MANAGER_KEY, CareRole.MANAGER)));
 
         LocationCollectionInterval result = locationSettingManager.findDeviceCollectionInterval(LocationFixture.WARD_KEY);
@@ -143,7 +143,7 @@ class LocationSettingManagerTest {
                 LocationFixture.createLocationSetting(GUARDIAN_KEY, 300),
                 LocationFixture.createLocationSetting(OTHER_GUARDIAN_KEY, 30)));
         given(careRelationshipReader.findCaregiverInfos(LocationFixture.WARD_KEY)).willReturn(List.of(
-                CareFixture.createCaregiverInfo(GUARDIAN_KEY, CareRole.PRIMARY_GUARDIAN)));
+                CareFixture.createCaregiverInfo(GUARDIAN_KEY, CareRole.GUARDIAN)));
 
         LocationCollectionInterval result = locationSettingManager.findDeviceCollectionInterval(LocationFixture.WARD_KEY);
 

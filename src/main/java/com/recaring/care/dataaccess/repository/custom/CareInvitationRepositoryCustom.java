@@ -18,9 +18,9 @@ public interface CareInvitationRepositoryCustom {
 
     boolean existsPending(String targetKey, String wardKey);
 
-    void deleteAllByMemberKey(String memberKey);
+    boolean existsPendingWardRequest(String requesterKey, String wardKey);
 
-    void deleteAllByWardMemberKey(String wardMemberKey);
+    void deleteAllByMemberKey(String memberKey);
 
     void deletePendingByWardMemberKeyAndRequesterMemberKey(String wardMemberKey, String requesterMemberKey);
 }

@@ -91,7 +91,7 @@ class SafeZoneNotificationListenerTest {
                         NotificationFixture.WARD_KEY, NotificationFixture.GUARDIAN_KEY, false, true)));
         given(careRelationshipReader.findCaregiverInfos(NotificationFixture.WARD_KEY))
                 .willReturn(List.of(
-                        CareFixture.createCaregiverInfo(NotificationFixture.GUARDIAN_KEY, CareRole.PRIMARY_GUARDIAN),
+                        CareFixture.createCaregiverInfo(NotificationFixture.GUARDIAN_KEY, CareRole.GUARDIAN),
                         CareFixture.createCaregiverInfo(NotificationFixture.OTHER_GUARDIAN_KEY, CareRole.GUARDIAN),
                         CareFixture.createCaregiverInfo(NotificationFixture.MANAGER_KEY, CareRole.MANAGER)));
         given(memberReader.findNameByMemberKey(NotificationFixture.WARD_KEY)).willReturn(NotificationFixture.WARD_NAME);
@@ -117,7 +117,7 @@ class SafeZoneNotificationListenerTest {
                         NotificationFixture.createSafeZoneSetting(NotificationFixture.WARD_KEY, NotificationFixture.MANAGER_KEY, true, false)));
         given(careRelationshipReader.findCaregiverInfos(NotificationFixture.WARD_KEY))
                 .willReturn(List.of(
-                        CareFixture.createCaregiverInfo(NotificationFixture.GUARDIAN_KEY, CareRole.PRIMARY_GUARDIAN),
+                        CareFixture.createCaregiverInfo(NotificationFixture.GUARDIAN_KEY, CareRole.GUARDIAN),
                         CareFixture.createCaregiverInfo(NotificationFixture.MANAGER_KEY, CareRole.MANAGER)));
 
         safeZoneNotificationListener.onSafeZoneExited(LocationFixture.createSafeZoneExitedEvent());
@@ -139,11 +139,11 @@ class SafeZoneNotificationListenerTest {
     }
 
     @Test
-    @DisplayName("주보호자와 보호자는 모두 보호자 수신자로, 관계자는 관계자 수신자로 분류된다")
-    void classifies_primary_guardian_and_guardian_as_guardian_recipients() {
+    @DisplayName("보호자는 보호자 수신자로, 관계자는 관계자 수신자로 분류된다")
+    void classifies_guardians_and_managers_into_separate_recipients() {
         given(careRelationshipReader.findCaregiverInfos(NotificationFixture.WARD_KEY))
                 .willReturn(List.of(
-                        CareFixture.createCaregiverInfo(NotificationFixture.GUARDIAN_KEY, CareRole.PRIMARY_GUARDIAN),
+                        CareFixture.createCaregiverInfo(NotificationFixture.GUARDIAN_KEY, CareRole.GUARDIAN),
                         CareFixture.createCaregiverInfo(NotificationFixture.OTHER_GUARDIAN_KEY, CareRole.GUARDIAN),
                         CareFixture.createCaregiverInfo(NotificationFixture.MANAGER_KEY, CareRole.MANAGER)));
         given(memberReader.findNameByMemberKey(NotificationFixture.WARD_KEY))
@@ -223,7 +223,7 @@ class SafeZoneNotificationListenerTest {
                         NotificationFixture.WARD_KEY, NotificationFixture.GUARDIAN_KEY, false, true)));
         given(careRelationshipReader.findCaregiverInfos(NotificationFixture.WARD_KEY))
                 .willReturn(List.of(
-                        CareFixture.createCaregiverInfo(NotificationFixture.GUARDIAN_KEY, CareRole.PRIMARY_GUARDIAN),
+                        CareFixture.createCaregiverInfo(NotificationFixture.GUARDIAN_KEY, CareRole.GUARDIAN),
                         CareFixture.createCaregiverInfo(NotificationFixture.OTHER_GUARDIAN_KEY, CareRole.GUARDIAN),
                         CareFixture.createCaregiverInfo(NotificationFixture.MANAGER_KEY, CareRole.MANAGER)));
         given(memberReader.findNameByMemberKey(NotificationFixture.WARD_KEY)).willReturn(NotificationFixture.WARD_NAME);
@@ -248,7 +248,7 @@ class SafeZoneNotificationListenerTest {
                         NotificationFixture.WARD_KEY, NotificationFixture.GUARDIAN_KEY, true, false)));
         given(careRelationshipReader.findCaregiverInfos(NotificationFixture.WARD_KEY))
                 .willReturn(List.of(
-                        CareFixture.createCaregiverInfo(NotificationFixture.GUARDIAN_KEY, CareRole.PRIMARY_GUARDIAN),
+                        CareFixture.createCaregiverInfo(NotificationFixture.GUARDIAN_KEY, CareRole.GUARDIAN),
                         CareFixture.createCaregiverInfo(NotificationFixture.OTHER_GUARDIAN_KEY, CareRole.GUARDIAN),
                         CareFixture.createCaregiverInfo(NotificationFixture.MANAGER_KEY, CareRole.MANAGER)));
         given(memberReader.findNameByMemberKey(NotificationFixture.WARD_KEY)).willReturn(NotificationFixture.WARD_NAME);
