@@ -22,6 +22,8 @@ public class CareFixture {
     public static final String WARD_MEMBER_KEY = "ward-member-key";
     public static final String MANAGER_MEMBER_KEY = "manager-member-key";
     public static final String REQUEST_KEY = "test-request-key";
+    // Sorts before every other member key; used to pin the lock order when the ward key is the smaller one.
+    public static final String LOW_SORTING_WARD_MEMBER_KEY = "aaa-ward-member-key";
 
     public static final String GUARDIAN_PHONE = "01011112222";
     public static final String WARD_PHONE = "01033334444";

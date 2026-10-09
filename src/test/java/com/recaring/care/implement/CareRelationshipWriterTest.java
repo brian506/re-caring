@@ -87,8 +87,8 @@ class CareRelationshipWriterTest {
     }
 
     @Test
-    @DisplayName("두 회원은 대상자·보호자 순서와 무관하게 memberKey 오름차순으로 잠근 뒤 한도를 검증한다")
-    void register_locks_both_members_in_key_order_before_validation() {
+    @DisplayName("보호자 키가 더 작으면 보호자 행을 먼저 잠근 뒤 한도를 검증한다")
+    void register_locks_caregiver_first_when_caregiver_key_is_smaller() {
         // given — "guardian-member-key" < "ward-member-key"
         CareRelationshipRegistration registration = CareFixture.createRegistration(
                 CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY, CareRole.GUARDIAN);
@@ -102,5 +102,23 @@ class CareRelationshipWriterTest {
         order.verify(memberReader).findForUpdate(CareFixture.WARD_MEMBER_KEY);
         order.verify(relationshipValidator)
                 .validateCanAddWard(CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY);
+    }
+
+    @Test
+    @DisplayName("대상자 키가 더 작으면 대상자 행을 먼저 잠근 뒤 한도를 검증한다")
+    void register_locks_ward_first_when_ward_key_is_smaller() {
+        // given — "aaa-ward-member-key" < "guardian-member-key"
+        CareRelationshipRegistration registration = CareFixture.createRegistration(
+                CareFixture.LOW_SORTING_WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY, CareRole.GUARDIAN);
+
+        // when
+        careRelationshipWriter.register(registration);
+
+        // then
+        InOrder order = inOrder(memberReader, relationshipValidator);
+        order.verify(memberReader).findForUpdate(CareFixture.LOW_SORTING_WARD_MEMBER_KEY);
+        order.verify(memberReader).findForUpdate(CareFixture.GUARDIAN_MEMBER_KEY);
+        order.verify(relationshipValidator)
+                .validateCanAddWard(CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.LOW_SORTING_WARD_MEMBER_KEY);
     }
 }
