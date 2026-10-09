@@ -1,6 +1,6 @@
 # 프로젝트 스냅샷
 
-> 마지막 업데이트: 2026-10-05. 기능 추가·수정 시 해당 섹션을 갱신한다.
+> 마지막 업데이트: 2026-10-09. 기능 추가·수정 시 해당 섹션을 갱신한다.
 
 ## 도메인별 패키지 현황
 
@@ -46,8 +46,8 @@
 | Care | PATCH | `/api/v1/care/wards/{wardKey}/caregivers/{caregiverKey}/avatar` | 내가 보는 보호자/관계자 아바타 지정 (대상자 본인 또는 GUARDIAN 계열, 호출자에게만 보임. 빈 값이면 해제) |
 | Device | POST | `/api/v1/device/token` | Device Token 발급 (WARD, JWT 인증) |
 | Location | POST | `/api/v1/location/gps` | GPS 좌표 전송 (WARD, Device Token 인증) |
-| Location | GET | `/api/v1/location/stream/{wardKey}` | SSE 실시간 위치 스트림 (GUARDIAN). 요청 보호자 본인의 수신 주기로 솎아서 전송 |
-| Location | GET | `/api/v1/location/history/{wardKey}` | 날짜별 이동 경로 히스토리 |
+| Location | GET | `/api/v1/location/stream/{wardKey}` | SSE 실시간 위치 스트림 (GUARDIAN). 요청 보호자 본인의 수신 주기로 솎아서 전송. `gps:display`만 읽어 부정확(accuracy > 100m)·튀는 좌표(직전 표시 좌표 대비 50m/s 초과)는 보내지 않는다(#243) |
+| Location | GET | `/api/v1/location/history/{wardKey}` | 날짜별 이동 경로 히스토리. 시간순으로 훑으며 부정확·튀는 좌표를 제외해 응답(#243, `Gps.isDisplayableAfter`). DB 원본은 그대로 |
 | Location | GET | `/api/v1/location/settings/{wardKey}/collection-interval` | 요청 보호자 본인의 위치 수신 주기 조회 (GUARDIAN, 옵션 30/60/180/300초 포함, 미설정 시 30) |
 | Location | PATCH | `/api/v1/location/settings/{wardKey}/collection-interval` | 요청 보호자 본인의 위치 수신 주기 수정 (GUARDIAN only, 다른 보호자에 영향 없음) |
 | Location | GET | `/api/v1/location/settings/collection-interval/me` | 기기 수집 주기 조회 (WARD, Device Token 인증). 보호자 계열 설정 중 최솟값(미설정 보호자는 30) |
@@ -70,7 +70,7 @@
 | SafeZone | GET | `/api/v1/care/wards/{wardKey}/safe-zones/{safeZoneKey}` | 안심존 상세 조회 (GUARDIAN, MANAGER) |
 | SafeZone | PATCH | `/api/v1/care/wards/{wardKey}/safe-zones/{safeZoneKey}` | 안심존·위험존 수정 (GUARDIAN only). `type` 변경 가능 |
 | SafeZone | DELETE | `/api/v1/care/wards/{wardKey}/safe-zones/{safeZoneKey}` | 안심존 삭제 (GUARDIAN only) |
-| SMS | POST | `/api/v1/auth/phone/send-code` | SMS 인증코드 발송. 번호당 1시간 5회(고정 창). 초과 시 429(E4005) + `error.data.seconds`(재요청 가능까지 남은 초) |
+| SMS | POST | `/api/v1/auth/phone/send-code` | SMS 인증코드 발송. 번호당 10분 5회(고정 창). 초과 시 429(E4005) + `error.data.seconds`(재요청 가능까지 남은 초) |
 | SMS | POST | `/api/v1/auth/phone/verify` | SMS 인증코드 검증. 응답 `{ verificationToken, registered }` — `registered`=해당 번호로 이미 가입된 회원 존재 여부. 가입 화면은 true일 때, 비밀번호 재설정 화면은 false일 때 진행을 막는다 |
 
 ## 엔티티 목록
@@ -185,7 +185,8 @@ PENDING 초대가 첫 주보호자보다 먼저 만들어졌을 수 있기 때�
 phone:verify:{phone}           SMS 인증코드          TTL: 5분
 phone:token:{token}            인증 완료 토큰        TTL: 10분, 가입·재설정 시 GETDEL로 1회 소비
 sms:quota:{phone}              번호별 발송 횟수      TTL: 1시간 (고정 창, 한도 5). INCR=1일 때 EXPIRE, 초과 시 TTL 없으면 재설정
-gps:latest:{memberKey}         GPS 최신 위치         TTL: 25시간  Gps JSON — SSE 폴링 + 위치 수집 중단 판정(recordedAt)
+gps:latest:{memberKey}         GPS 최신 위치(원본)   TTL: 25시간  Gps JSON — 위치 수집 중단 판정(recordedAt). 부정확 좌표도 갱신해야 실내에서 오알림이 안 난다
+gps:display:{memberKey}        GPS 표시용 최신 위치  TTL: 25시간  Gps JSON — SSE 폴링. 정확도·속도 판정 통과분만 저장, 다음 판정의 기준점. 기준점이 10분(서버 수신 시각) 넘게 지나면 속도 판정 없이 재설정
 location:signal-lost:{memberKey}:{lastReceivedAt}  수집 중단 알림 중복 방지(SET NX)  TTL: 25시간
 investigation:{fingerprint}    Alert 조사 상태       TTL: 10분  { threadTs, status, startedAt, fixCommands }
 device:state:{memberKey}       기기 상태             TTL 없음   ONLINE | LOW_BATTERY | OFFLINE
