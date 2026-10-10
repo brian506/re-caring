@@ -1,7 +1,6 @@
 package com.recaring.safezone.vo;
 
 import com.recaring.safezone.dataaccess.entity.SafeZone;
-import com.recaring.safezone.dataaccess.entity.SafeZoneRadius;
 import com.recaring.safezone.dataaccess.entity.SafeZoneType;
 
 /**
@@ -14,7 +13,7 @@ public record SafeZoneInfo(
         String address,
         double latitude,
         double longitude,
-        SafeZoneRadius radius,
+        int radiusMeters,
         SafeZoneType type
 ) {
     private static final double EARTH_RADIUS_METERS = 6_371_008.8;
@@ -26,13 +25,13 @@ public record SafeZoneInfo(
                 entity.getAddress(),
                 entity.getLatitude(),
                 entity.getLongitude(),
-                entity.getRadius(),
+                entity.getRadiusMeters(),
                 entity.getType()
         );
     }
 
     public boolean contains(double targetLatitude, double targetLongitude) {
-        return distanceMetersTo(targetLatitude, targetLongitude) <= radius.getMeters();
+        return distanceMetersTo(targetLatitude, targetLongitude) <= radiusMeters;
     }
 
     private double distanceMetersTo(double targetLatitude, double targetLongitude) {

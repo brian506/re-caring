@@ -19,7 +19,7 @@ public record SafeZoneResponse(
                 info.address(),
                 info.latitude(),
                 info.longitude(),
-                info.radius().getMeters(),
+                info.radiusMeters(),
                 info.type()
         );
     }

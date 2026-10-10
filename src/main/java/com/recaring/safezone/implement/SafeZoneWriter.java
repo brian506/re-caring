@@ -22,7 +22,7 @@ public class SafeZoneWriter {
                 .address(command.address())
                 .latitude(command.latitude())
                 .longitude(command.longitude())
-                .radius(command.radius())
+                .radiusMeters(command.radius().meters())
                 .type(command.type())
                 .build());
     }
@@ -30,7 +30,7 @@ public class SafeZoneWriter {
     public void update(String safeZoneKey, String wardMemberKey, SafeZoneUpdate command) {
         SafeZone zone = getEntity(safeZoneKey, wardMemberKey);
         zone.update(command.name(), command.address(), command.latitude(), command.longitude(),
-                command.radius(), command.type());
+                command.radius().meters(), command.type());
     }
 
     public void delete(String safeZoneKey, String wardMemberKey) {

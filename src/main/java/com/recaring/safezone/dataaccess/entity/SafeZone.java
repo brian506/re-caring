@@ -39,9 +39,8 @@ public class SafeZone extends BaseEntity {
     @Column(nullable = false)
     private double longitude;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 10)
-    private SafeZoneRadius radius;
+    @Column(nullable = false)
+    private int radiusMeters;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 10)
@@ -49,24 +48,24 @@ public class SafeZone extends BaseEntity {
 
     @Builder
     public SafeZone(String wardMemberKey, String name, String address,
-                    double latitude, double longitude, SafeZoneRadius radius, SafeZoneType type) {
+                    double latitude, double longitude, int radiusMeters, SafeZoneType type) {
         this.safeZoneKey = UUID.randomUUID().toString();
         this.wardMemberKey = wardMemberKey;
         this.name = name;
         this.address = address;
         this.latitude = latitude;
         this.longitude = longitude;
-        this.radius = radius;
+        this.radiusMeters = radiusMeters;
         this.type = type;
     }
 
     public void update(String name, String address, double latitude, double longitude,
-                       SafeZoneRadius radius, SafeZoneType type) {
+                       int radiusMeters, SafeZoneType type) {
         this.name = name;
         this.address = address;
         this.latitude = latitude;
         this.longitude = longitude;
-        this.radius = radius;
+        this.radiusMeters = radiusMeters;
         this.type = type;
         update();
     }

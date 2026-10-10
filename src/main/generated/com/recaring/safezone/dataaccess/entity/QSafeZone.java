@@ -37,7 +37,7 @@ public class QSafeZone extends EntityPathBase<SafeZone> {
 
     public final StringPath name = createString("name");
 
-    public final EnumPath<SafeZoneRadius> radius = createEnum("radius", SafeZoneRadius.class);
+    public final NumberPath<Integer> radiusMeters = createNumber("radiusMeters", Integer.class);
 
     public final StringPath safeZoneKey = createString("safeZoneKey");
 

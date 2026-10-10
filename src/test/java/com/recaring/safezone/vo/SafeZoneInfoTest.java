@@ -1,6 +1,5 @@
 package com.recaring.safezone.vo;
 
-import com.recaring.safezone.dataaccess.entity.SafeZoneRadius;
 import com.recaring.safezone.fixture.SafeZoneFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,6 +10,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 class SafeZoneInfoTest {
 
     private static final String KEY = SafeZoneFixture.SAFE_ZONE_KEY;
+    private static final int SMALL_RADIUS_METERS = 500;
+    private static final int MEDIUM_RADIUS_METERS = 1000;
 
     // 위도 1도는 약 111,195m. 아래 오프셋은 모두 이 값에서 환산한 것이다.
     private static final double LAT_OFFSET_ABOUT_556_METERS = 0.005;
@@ -56,7 +57,7 @@ class SafeZoneInfoTest {
     @Test
     @DisplayName("반경 경계 직전(약 990m)은 존 안, 직후(약 1,012m)는 존 밖으로 판정한다")
     void contains_flips_at_radius_boundary() {
-        SafeZoneInfo zone = SafeZoneFixture.createSafeZoneInfoWithRadius(KEY, SafeZoneRadius.MEDIUM);
+        SafeZoneInfo zone = SafeZoneFixture.createSafeZoneInfoWithRadius(KEY, MEDIUM_RADIUS_METERS);
 
         assertThat(zone.contains(
                 SafeZoneFixture.LATITUDE + LAT_OFFSET_ABOUT_990_METERS, SafeZoneFixture.LONGITUDE)).isTrue();
@@ -89,8 +90,8 @@ class SafeZoneInfoTest {
     @Test
     @DisplayName("같은 좌표라도 반경이 작으면 존 밖으로 판정한다")
     void contains_depends_on_radius() {
-        SafeZoneInfo small = SafeZoneFixture.createSafeZoneInfoWithRadius(KEY, SafeZoneRadius.SMALL);
-        SafeZoneInfo medium = SafeZoneFixture.createSafeZoneInfoWithRadius(KEY, SafeZoneRadius.MEDIUM);
+        SafeZoneInfo small = SafeZoneFixture.createSafeZoneInfoWithRadius(KEY, SMALL_RADIUS_METERS);
+        SafeZoneInfo medium = SafeZoneFixture.createSafeZoneInfoWithRadius(KEY, MEDIUM_RADIUS_METERS);
         double latitude = SafeZoneFixture.LATITUDE + LAT_OFFSET_ABOUT_556_METERS;
 
         assertThat(small.contains(latitude, SafeZoneFixture.LONGITUDE)).isFalse();

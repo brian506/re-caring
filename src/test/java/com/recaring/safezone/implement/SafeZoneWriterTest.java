@@ -49,7 +49,7 @@ class SafeZoneWriterTest {
         assertThat(saved.getAddress()).isEqualTo(SafeZoneFixture.ADDRESS);
         assertThat(saved.getLatitude()).isEqualTo(SafeZoneFixture.LATITUDE);
         assertThat(saved.getLongitude()).isEqualTo(SafeZoneFixture.LONGITUDE);
-        assertThat(saved.getRadius()).isEqualTo(SafeZoneFixture.RADIUS);
+        assertThat(saved.getRadiusMeters()).isEqualTo(SafeZoneFixture.RADIUS_METERS);
         assertThat(saved.getSafeZoneKey()).isNotBlank();
     }
 
@@ -66,7 +66,7 @@ class SafeZoneWriterTest {
         assertThat(zone.getAddress()).isEqualTo(SafeZoneFixture.UPDATED_ADDRESS);
         assertThat(zone.getLatitude()).isEqualTo(SafeZoneFixture.UPDATED_LATITUDE);
         assertThat(zone.getLongitude()).isEqualTo(SafeZoneFixture.UPDATED_LONGITUDE);
-        assertThat(zone.getRadius()).isEqualTo(SafeZoneFixture.UPDATED_RADIUS);
+        assertThat(zone.getRadiusMeters()).isEqualTo(SafeZoneFixture.UPDATED_RADIUS_METERS);
     }
 
     @Test

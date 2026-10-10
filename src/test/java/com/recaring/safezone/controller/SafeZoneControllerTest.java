@@ -5,7 +5,6 @@ import com.recaring.care.fixture.CareFixture;
 import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.dataaccess.repository.MemberRepository;
 import com.recaring.safezone.dataaccess.entity.SafeZone;
-import com.recaring.safezone.dataaccess.entity.SafeZoneRadius;
 import com.recaring.safezone.dataaccess.entity.SafeZoneType;
 import com.recaring.safezone.dataaccess.repository.SafeZoneRepository;
 import com.recaring.safezone.fixture.SafeZoneFixture;
@@ -34,29 +33,34 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
     private static final String NEW_ADDRESS = "서울시 마포구 1";
     private static final double NEW_LATITUDE = 37.55;
     private static final double NEW_LONGITUDE = 126.92;
-    private static final SafeZoneRadius NEW_RADIUS = SafeZoneRadius.SMALL;
+    private static final int NEW_RADIUS_METERS = 230;
+    private static final int TOO_SMALL_RADIUS_METERS = 90;
 
     private static final String CREATE_BODY = """
-            {"name": "%s", "address": "%s", "latitude": %s, "longitude": %s, "radius": "%s", "type": "SAFE"}
-            """.formatted(NEW_NAME, NEW_ADDRESS, NEW_LATITUDE, NEW_LONGITUDE, NEW_RADIUS);
+            {"name": "%s", "address": "%s", "latitude": %s, "longitude": %s, "radiusMeters": %s, "type": "SAFE"}
+            """.formatted(NEW_NAME, NEW_ADDRESS, NEW_LATITUDE, NEW_LONGITUDE, NEW_RADIUS_METERS);
 
     private static final String DANGER_CREATE_BODY = """
-            {"name": "%s", "address": "%s", "latitude": %s, "longitude": %s, "radius": "%s", "type": "DANGER"}
-            """.formatted(NEW_NAME, NEW_ADDRESS, NEW_LATITUDE, NEW_LONGITUDE, NEW_RADIUS);
+            {"name": "%s", "address": "%s", "latitude": %s, "longitude": %s, "radiusMeters": %s, "type": "DANGER"}
+            """.formatted(NEW_NAME, NEW_ADDRESS, NEW_LATITUDE, NEW_LONGITUDE, NEW_RADIUS_METERS);
 
     private static final String CREATE_BODY_WITHOUT_TYPE = """
-            {"name": "%s", "address": "%s", "latitude": %s, "longitude": %s, "radius": "%s"}
-            """.formatted(NEW_NAME, NEW_ADDRESS, NEW_LATITUDE, NEW_LONGITUDE, NEW_RADIUS);
+            {"name": "%s", "address": "%s", "latitude": %s, "longitude": %s, "radiusMeters": %s}
+            """.formatted(NEW_NAME, NEW_ADDRESS, NEW_LATITUDE, NEW_LONGITUDE, NEW_RADIUS_METERS);
+
+    private static final String TOO_SMALL_RADIUS_BODY = """
+            {"name": "%s", "address": "%s", "latitude": %s, "longitude": %s, "radiusMeters": %s, "type": "SAFE"}
+            """.formatted(NEW_NAME, NEW_ADDRESS, NEW_LATITUDE, NEW_LONGITUDE, TOO_SMALL_RADIUS_METERS);
 
     private static final String UPDATE_BODY = """
-            {"name": "%s", "address": "%s", "latitude": %s, "longitude": %s, "radius": "%s", "type": "SAFE"}
+            {"name": "%s", "address": "%s", "latitude": %s, "longitude": %s, "radiusMeters": %s, "type": "SAFE"}
             """.formatted(SafeZoneFixture.UPDATED_NAME, SafeZoneFixture.UPDATED_ADDRESS,
-            SafeZoneFixture.UPDATED_LATITUDE, SafeZoneFixture.UPDATED_LONGITUDE, SafeZoneFixture.UPDATED_RADIUS);
+            SafeZoneFixture.UPDATED_LATITUDE, SafeZoneFixture.UPDATED_LONGITUDE, SafeZoneFixture.UPDATED_RADIUS_METERS);
 
     private static final String UPDATE_TO_DANGER_BODY = """
-            {"name": "%s", "address": "%s", "latitude": %s, "longitude": %s, "radius": "%s", "type": "DANGER"}
+            {"name": "%s", "address": "%s", "latitude": %s, "longitude": %s, "radiusMeters": %s, "type": "DANGER"}
             """.formatted(SafeZoneFixture.UPDATED_NAME, SafeZoneFixture.UPDATED_ADDRESS,
-            SafeZoneFixture.UPDATED_LATITUDE, SafeZoneFixture.UPDATED_LONGITUDE, SafeZoneFixture.UPDATED_RADIUS);
+            SafeZoneFixture.UPDATED_LATITUDE, SafeZoneFixture.UPDATED_LONGITUDE, SafeZoneFixture.UPDATED_RADIUS_METERS);
 
     @Autowired private MemberRepository memberRepository;
     @Autowired private CareRelationshipRepository careRelationshipRepository;
@@ -122,7 +126,7 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
         assertThat(added.getAddress()).isEqualTo(NEW_ADDRESS);
         assertThat(added.getLatitude()).isEqualTo(NEW_LATITUDE);
         assertThat(added.getLongitude()).isEqualTo(NEW_LONGITUDE);
-        assertThat(added.getRadius()).isEqualTo(NEW_RADIUS);
+        assertThat(added.getRadiusMeters()).isEqualTo(NEW_RADIUS_METERS);
     }
 
     @Test
@@ -165,6 +169,22 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
                 .body(CREATE_BODY_WITHOUT_TYPE)
                 .exchange()
                 .expectStatus().isBadRequest();
+
+        assertThat(zonesOfWard()).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("반경이 100m 미만이면 400 E8003이 반환되고 저장되지 않는다")
+    void addSafeZone_returns_400_when_radius_too_small() {
+        client.post()
+                .uri(zonesUri())
+                .header(HttpHeaders.AUTHORIZATION, guardianAuth)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(TOO_SMALL_RADIUS_BODY)
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.error.errorCode").isEqualTo("E8003");
 
         assertThat(zonesOfWard()).hasSize(1);
     }
@@ -291,7 +311,7 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
                 .jsonPath("$.resultType").isEqualTo("SUCCESS")
                 .jsonPath("$.data.name").isEqualTo(SafeZoneFixture.NAME)
                 .jsonPath("$.data.address").isEqualTo(SafeZoneFixture.ADDRESS)
-                .jsonPath("$.data.radiusMeters").isEqualTo(SafeZoneFixture.RADIUS.getMeters());
+                .jsonPath("$.data.radiusMeters").isEqualTo(SafeZoneFixture.RADIUS_METERS);
     }
 
     @Test
@@ -338,7 +358,7 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
         assertThat(updated.getAddress()).isEqualTo(SafeZoneFixture.UPDATED_ADDRESS);
         assertThat(updated.getLatitude()).isEqualTo(SafeZoneFixture.UPDATED_LATITUDE);
         assertThat(updated.getLongitude()).isEqualTo(SafeZoneFixture.UPDATED_LONGITUDE);
-        assertThat(updated.getRadius()).isEqualTo(SafeZoneFixture.UPDATED_RADIUS);
+        assertThat(updated.getRadiusMeters()).isEqualTo(SafeZoneFixture.UPDATED_RADIUS_METERS);
     }
 
     @Test
