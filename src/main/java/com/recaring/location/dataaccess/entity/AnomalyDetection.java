@@ -1,6 +1,8 @@
 package com.recaring.location.dataaccess.entity;
 
 import com.recaring.common.entity.BaseEntity;
+import com.recaring.location.vo.AnomalyAlertKind;
+import com.recaring.location.vo.AnomalyReasonCode;
 import com.recaring.location.vo.DetectionType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -53,12 +55,52 @@ public class AnomalyDetection extends BaseEntity {
     @Column(nullable = false)
     private double longitude;
 
-    @Column(nullable = false, length = 1000)
+    @Column(length = 1000)
     private String evidence;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "alert_kind", length = 30)
+    private AnomalyAlertKind alertKind;
+
+    // TODO: CREATE INDEX idx_anomaly_detections_event_id ON anomaly_detections(event_id);
+    @Column(name = "event_id", length = 100)
+    private String eventId;
+
+    @Column(name = "event_started_at")
+    private LocalDateTime eventStartedAt;
+
+    @Column(name = "event_ended_at")
+    private LocalDateTime eventEndedAt;
+
+    @Column(name = "categories", length = 200)
+    private String categories;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "reason_code", length = 50)
+    private AnomalyReasonCode reasonCode;
+
+    @Column(name = "duration_min")
+    private Integer durationMin;
+
+    @Column(name = "usual_min")
+    private Integer usualMin;
+
+    @Column(name = "speed_kmh")
+    private Integer speedKmh;
+
+    @Column(name = "event_hour")
+    private Integer eventHour;
+
+    @Column(name = "remind_seq")
+    private Integer remindSeq;
 
     @Builder
     public AnomalyDetection(String wardMemberKey, DetectionType detectionType, double score,
-                            LocalDateTime recordedAt, double latitude, double longitude, String evidence) {
+                            LocalDateTime recordedAt, double latitude, double longitude, String evidence,
+                            AnomalyAlertKind alertKind, String eventId, LocalDateTime eventStartedAt,
+                            LocalDateTime eventEndedAt, String categories, AnomalyReasonCode reasonCode,
+                            Integer durationMin, Integer usualMin, Integer speedKmh, Integer eventHour,
+                            Integer remindSeq) {
         this.wardMemberKey = wardMemberKey;
         this.detectionType = detectionType;
         this.score = score;
@@ -66,5 +108,16 @@ public class AnomalyDetection extends BaseEntity {
         this.latitude = latitude;
         this.longitude = longitude;
         this.evidence = evidence;
+        this.alertKind = alertKind;
+        this.eventId = eventId;
+        this.eventStartedAt = eventStartedAt;
+        this.eventEndedAt = eventEndedAt;
+        this.categories = categories;
+        this.reasonCode = reasonCode;
+        this.durationMin = durationMin;
+        this.usualMin = usualMin;
+        this.speedKmh = speedKmh;
+        this.eventHour = eventHour;
+        this.remindSeq = remindSeq;
     }
 }

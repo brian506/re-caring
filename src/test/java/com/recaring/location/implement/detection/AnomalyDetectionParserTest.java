@@ -2,6 +2,8 @@ package com.recaring.location.implement.detection;
 
 import com.recaring.location.fixture.LocationFixture;
 import com.recaring.location.vo.AnomalyAlert;
+import com.recaring.location.vo.AnomalyAlertKind;
+import com.recaring.location.vo.AnomalyReasonCode;
 import com.recaring.location.vo.DetectionType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -144,7 +146,7 @@ class AnomalyDetectionParserTest {
         assertThat(result.get().evidence()).hasSize(MAX_EVIDENCE_LENGTH);
     }
 
-    @ParameterizedTest(name = "근거 문구가 [{0}]이면 빈 문자열이 된다")
+    @ParameterizedTest(name = "근거 문구가 [{0}]이면 비어 있는 값이 된다")
     @NullAndEmptySource
     @ValueSource(strings = {" "})
     @DisplayName("근거 문구가 비어 있어도 메시지를 버리지 않는다")
@@ -155,7 +157,69 @@ class AnomalyDetectionParserTest {
         Optional<AnomalyAlert> result = anomalyDetectionParser.parse(fields);
 
         assertThat(result).isPresent();
-        assertThat(result.get().evidence()).isEmpty();
+        assertThat(result.get().evidence()).isNull();
     }
 
+    @Test
+    @DisplayName("사건 형식 메시지는 사건 식별자·알림 종류·사유 코드·숫자 필드를 함께 읽는다")
+    void parses_event_format_message() {
+        Optional<AnomalyAlert> result = anomalyDetectionParser.parse(LocationFixture.createEventAnomalyStreamFields());
+
+        assertThat(result).isPresent();
+        AnomalyAlert alert = result.get();
+        assertThat(alert.event().eventId()).isEqualTo(LocationFixture.EVENT_ID);
+        assertThat(alert.event().alertKind()).isEqualTo(AnomalyAlertKind.CATEGORY_ADDED);
+        assertThat(alert.event().startedAt()).isEqualTo(LocationFixture.EVENT_STARTED_AT);
+        assertThat(alert.event().categories()).isEqualTo(LocationFixture.ANOMALY_CATEGORIES);
+        assertThat(alert.reasonCode()).isEqualTo(AnomalyReasonCode.DWELL_AFTER_VEHICLE);
+        assertThat(alert.measures().durationMin()).isEqualTo(LocationFixture.DWELL_DURATION_MIN);
+        assertThat(alert.measures().usualMin()).isNull();
+        assertThat(alert.evidence()).isNull();
+    }
+
+    @Test
+    @DisplayName("알림 종류가 없는 이전 형식 메시지도 버리지 않고 사건 없이 읽는다")
+    void parses_legacy_message_without_event() {
+        Optional<AnomalyAlert> result = anomalyDetectionParser.parse(
+                LocationFixture.createAnomalyStreamFields(DetectionType.WANDERING, EVIDENCE));
+
+        assertThat(result).isPresent();
+        assertThat(result.get().event()).isNull();
+        assertThat(result.get().reasonCode()).isNull();
+    }
+
+    @Test
+    @DisplayName("알림 종류는 있는데 사건 식별자가 없으면 메시지를 버린다")
+    void discards_event_message_without_event_id() {
+        Map<String, String> fields = LocationFixture.createEventAnomalyStreamFields();
+        fields.remove("event_id");
+
+        Optional<AnomalyAlert> result = anomalyDetectionParser.parse(fields);
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    @DisplayName("협의되지 않은 알림 종류면 메시지를 버린다")
+    void discards_unknown_alert_kind() {
+        Map<String, String> fields = LocationFixture.createEventAnomalyStreamFields();
+        fields.put("alert_kind", "EVENT_PAUSED");
+
+        Optional<AnomalyAlert> result = anomalyDetectionParser.parse(fields);
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    @DisplayName("모르는 사유 코드는 메시지를 버리지 않고 사유 없이 읽는다")
+    void keeps_message_with_unknown_reason_code() {
+        Map<String, String> fields = LocationFixture.createEventAnomalyStreamFields();
+        fields.put("reason_code", "DWELL_HOSPITAL");
+
+        Optional<AnomalyAlert> result = anomalyDetectionParser.parse(fields);
+
+        assertThat(result).isPresent();
+        assertThat(result.get().reasonCode()).isNull();
+        assertThat(result.get().event().eventId()).isEqualTo(LocationFixture.EVENT_ID);
+    }
 }

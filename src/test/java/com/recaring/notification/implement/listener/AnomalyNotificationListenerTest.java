@@ -4,6 +4,8 @@ import com.recaring.care.dataaccess.entity.CareRole;
 import com.recaring.care.fixture.CareFixture;
 import com.recaring.care.implement.CareRelationshipReader;
 import com.recaring.location.fixture.LocationFixture;
+import com.recaring.location.vo.AnomalyAlertKind;
+import com.recaring.location.vo.AnomalyReasonCode;
 import com.recaring.location.vo.DetectionType;
 import com.recaring.member.implement.MemberReader;
 import com.recaring.notification.fixture.NotificationFixture;
@@ -32,8 +34,6 @@ import static org.mockito.BDDMockito.then;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("이상탐지 알림 리스너 단위 테스트")
 class AnomalyNotificationListenerTest {
-
-    private static final int MAX_BODY_LENGTH = 1000;
 
     private AnomalyNotificationListener anomalyNotificationListener;
 
@@ -125,38 +125,24 @@ class AnomalyNotificationListenerTest {
     }
 
     @Test
-    @DisplayName("탐지 근거 문구가 비어 있어도 본문 없는 알림을 보내지 않는다")
-    void falls_back_when_evidence_is_blank() {
+    @DisplayName("사건 형식 알림은 사건 식별자·알림 종류·사유 코드를 함께 담아 보낸다")
+    void puts_event_identifiers_into_payload() {
         givenCaregiversAndWardName();
 
-        anomalyNotificationListener.onAnomalyDetected(
-                LocationFixture.createAnomalyDetectedEvent(DetectionType.ABNORMAL_DWELLING, ""));
+        anomalyNotificationListener.onAnomalyDetected(LocationFixture.createAnomalyDetectedEvent(LocationFixture.createEventAnomalyAlert(
+                DetectionType.ABNORMAL_DWELLING, AnomalyAlertKind.CATEGORY_ADDED, AnomalyReasonCode.DWELL_AFTER_VEHICLE,
+                LocationFixture.anomalyMeasures(LocationFixture.DWELL_DURATION_MIN, null, null, null))));
 
-        assertThat(capturedBody()).isEqualTo("김소연님에게 이상 징후가 감지되었어요.");
-    }
-
-    @Test
-    @DisplayName("이름을 채운 뒤 본문이 정확히 1000자면 자르지 않는다")
-    void keeps_body_at_the_length_limit() {
-        givenCaregiversAndWardName();
-
-        anomalyNotificationListener.onAnomalyDetected(
-                LocationFixture.createAnomalyDetectedEvent(DetectionType.ROUTE_DEVIATION, "{name}" + "가".repeat(MAX_BODY_LENGTH - 3)));
-
-        assertThat(capturedBody()).hasSize(MAX_BODY_LENGTH);
-        assertThat(capturedBody()).startsWith(NotificationFixture.WARD_NAME);
-        assertThat(capturedBody()).endsWith("가");
-    }
-
-    @Test
-    @DisplayName("이름을 채운 뒤 본문이 저장 한도를 넘으면 1000자로 자른다")
-    void truncates_body_beyond_the_length_limit() {
-        givenCaregiversAndWardName();
-
-        anomalyNotificationListener.onAnomalyDetected(
-                LocationFixture.createAnomalyDetectedEvent(DetectionType.ROUTE_DEVIATION, "{name}" + "가".repeat(MAX_BODY_LENGTH)));
-
-        assertThat(capturedBody()).hasSize(MAX_BODY_LENGTH);
+        ArgumentCaptor<Map<String, String>> payloadCaptor = ArgumentCaptor.forClass(Map.class);
+        then(notificationSendManager).should().sendToCareParties(
+                any(), any(), anyString(), anyString(), anyString(), payloadCaptor.capture());
+        assertThat(payloadCaptor.getValue())
+                .containsEntry("type", DetectionType.ABNORMAL_DWELLING.name())
+                .containsEntry("wardKey", NotificationFixture.WARD_KEY)
+                .containsEntry("recordedAt", LocationFixture.DETECTED_AT_TEXT)
+                .containsEntry("eventId", LocationFixture.EVENT_ID)
+                .containsEntry("alertKind", "CATEGORY_ADDED")
+                .containsEntry("reasonCode", "DWELL_AFTER_VEHICLE");
     }
 
     private void givenCaregiversAndWardName() {

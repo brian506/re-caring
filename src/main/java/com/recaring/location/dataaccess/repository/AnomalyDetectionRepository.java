@@ -20,11 +20,15 @@ public interface AnomalyDetectionRepository extends JpaRepository<AnomalyDetecti
             value = """
                     INSERT INTO anomaly_detections (
                         created_at, updated_at, ward_member_key, detection_type,
-                        score, recorded_at, latitude, longitude, evidence
+                        score, recorded_at, latitude, longitude, evidence,
+                        alert_kind, event_id, event_started_at, event_ended_at, categories, reason_code,
+                        duration_min, usual_min, speed_kmh, event_hour, remind_seq
                     )
                     VALUES (
                         NOW(), NOW(), :wardMemberKey, :detectionType,
-                        :score, :recordedAt, :latitude, :longitude, :evidence
+                        :score, :recordedAt, :latitude, :longitude, :evidence,
+                        :alertKind, :eventId, :eventStartedAt, :eventEndedAt, :categories, :reasonCode,
+                        :durationMin, :usualMin, :speedKmh, :eventHour, :remindSeq
                     )
                     ON CONFLICT (ward_member_key, detection_type, recorded_at) DO NOTHING
                     """,
@@ -37,7 +41,18 @@ public interface AnomalyDetectionRepository extends JpaRepository<AnomalyDetecti
             @Param("recordedAt") LocalDateTime recordedAt,
             @Param("latitude") double latitude,
             @Param("longitude") double longitude,
-            @Param("evidence") String evidence
+            @Param("evidence") String evidence,
+            @Param("alertKind") String alertKind,
+            @Param("eventId") String eventId,
+            @Param("eventStartedAt") LocalDateTime eventStartedAt,
+            @Param("eventEndedAt") LocalDateTime eventEndedAt,
+            @Param("categories") String categories,
+            @Param("reasonCode") String reasonCode,
+            @Param("durationMin") Integer durationMin,
+            @Param("usualMin") Integer usualMin,
+            @Param("speedKmh") Integer speedKmh,
+            @Param("eventHour") Integer eventHour,
+            @Param("remindSeq") Integer remindSeq
     );
 
     @Query("""

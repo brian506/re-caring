@@ -1,6 +1,7 @@
 package com.recaring.notification.controller;
 
 import com.recaring.notification.business.NotificationService;
+import com.recaring.notification.controller.request.AcknowledgeAnomalyEventRequest;
 import com.recaring.notification.controller.request.SubmitNotificationFeedbackRequest;
 import com.recaring.notification.controller.response.NotificationSliceResponse;
 import com.recaring.security.vo.AuthMember;
@@ -75,5 +76,24 @@ public class NotificationController {
     ) {
         notificationService.submitFeedback(memberKey, notificationKey, request.toAnswer());
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success());
+    }
+
+    @Operation(
+            summary = "이상탐지 사건 확인",
+            description = """
+                    보호자가 이상탐지 알림을 확인했음을 알립니다. wardKey와 eventId는 푸시 data 또는
+                    알림 목록 dataPayload의 값을 그대로 보냅니다. 보호자 중 한 명이라도 확인하면
+                    해당 사건은 끝날 때까지 재알림이 가지 않습니다.
+                    이미 끝났거나 새 사건이 시작된 이전 사건을 확인하면 요청은 성공하지만 아무것도 바뀌지 않습니다.
+                    """
+    )
+    @PostMapping("/anomaly-events/acknowledge")
+    public ResponseEntity<ApiResponse<Void>> acknowledgeAnomalyEvent(
+            @Parameter(hidden = true)
+            @AuthMember String memberKey,
+            @Valid @RequestBody AcknowledgeAnomalyEventRequest request
+    ) {
+        notificationService.acknowledgeAnomalyEvent(memberKey, request.wardKey(), request.eventId());
+        return ResponseEntity.ok(ApiResponse.success());
     }
 }

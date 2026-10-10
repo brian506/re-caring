@@ -1,6 +1,6 @@
 # 프로젝트 스냅샷
 
-> 마지막 업데이트: 2026-10-09. 기능 추가·수정 시 해당 섹션을 갱신한다.
+> 마지막 업데이트: 2026-10-11. 기능 추가·수정 시 해당 섹션을 갱신한다.
 
 ## 도메인별 패키지 현황
 
@@ -9,9 +9,9 @@
 | `auth` | LocalAuthService, OAuthService, TokenRefreshService | LocalAuthAuthenticator, TokenIssuer, RefreshTokenReader/Writer, OAuthManager |
 | `care` | CareInvitationService, CareRelationshipService | CareInvitationManager, CareInvitationReader/Writer, CareRelationshipValidator, DesignatedAvatarManager |
 | `device` | DeviceTokenService | WardDeviceTokenManager, WardDeviceTokenReader |
-| `location` | LocationService, LocationSettingService | GpsHistoryManager, GpsLatestCacheManager/Listener, LocationSignalMonitor/AlertManager(signal), SseEmitterManager, LocationValidator, CareRelationshipCacheReader, BatteryThresholdEvaluator/BatteryDetectionListener/BatteryAlertStateManager/DetectionPublisher/DetectionListener/AnomalyDetectionConsumer/AnomalyDetectionParser/AnomalyDetectionManager(detection), SafeZoneStateManager/SafeZoneDetectionListener(safezone), LocationSettingManager |
+| `location` | LocationService, LocationSettingService | GpsHistoryManager, GpsLatestCacheManager/Listener, LocationSignalMonitor/AlertManager(signal), SseEmitterManager, LocationValidator, CareRelationshipCacheReader, BatteryThresholdEvaluator/BatteryDetectionListener/BatteryAlertStateManager/AnomalyAcknowledgementManager/DetectionPublisher/DetectionListener/AnomalyDetectionConsumer/AnomalyDetectionParser/AnomalyDetectionManager(detection), SafeZoneStateManager/SafeZoneDetectionListener(safezone), LocationSettingManager |
 | `member` | MemberService | MemberReader/Writer/Validator, MembersTermsAgreementWriter, MemberWithdrawalManager |
-| `notification` | NotificationService, NotificationSettingService, FcmDeviceTokenService | NotificationReader/Writer, NotificationSendManager, NotificationFeedbackManager/Validator(feedback), NotificationSettingReader/Manager/Validator, FcmDeviceTokenReader/Manager, FcmClient(Firebase/NoOp), CareInvitationNotificationListener, BatteryThresholdNotificationListener, SafeZoneNotificationListener, AnomalyNotificationListener, LocationSignalNotificationListener |
+| `notification` | NotificationService, NotificationSettingService, FcmDeviceTokenService | NotificationReader/Writer, NotificationSendManager, NotificationFeedbackManager/Validator(feedback), NotificationAcknowledgementManager(acknowledgement), NotificationSettingReader/Manager/Validator, FcmDeviceTokenReader/Manager, FcmClient(Firebase/NoOp), CareInvitationNotificationListener, BatteryThresholdNotificationListener, SafeZoneNotificationListener, AnomalyNotificationListener, LocationSignalNotificationListener |
 | `inquiry` | InquiryService | InquiryReader, InquiryManager(접수·답변·탈퇴 삭제, 답변 시 InquiryAnsweredEvent), InquiryOperatorNotifier(신규 접수 운영자 알림 — 현재 로그만) |
 | `place` | PlaceService | KakaoPlaceSearchClient (카카오 로컬 키워드 검색 프록시, 엔티티 없음) |
 | `safezone` | SafeZoneService | SafeZoneReader, SafeZoneWriter |
@@ -50,8 +50,9 @@
 | Location | GET | `/api/v1/location/settings/{wardKey}/collection-interval` | 요청 보호자 본인의 위치 수신 주기 조회 (GUARDIAN, 옵션 30/60/180/300초 포함, 미설정 시 30) |
 | Location | PATCH | `/api/v1/location/settings/{wardKey}/collection-interval` | 요청 보호자 본인의 위치 수신 주기 수정 (GUARDIAN only, 다른 보호자에 영향 없음) |
 | Location | GET | `/api/v1/location/settings/collection-interval/me` | 기기 수집 주기 조회 (WARD, Device Token 인증). 보호자 계열 설정 중 최솟값(미설정 보호자는 30) |
-| Notification | GET | `/api/v1/notifications?cursor&size` | 내 알림함 목록 조회 (WARD, GUARDIAN — recipient 기준). notification_id DESC 커서 페이징. `cursor`=직전 응답 `nextCursor`(첫 페이지는 생략), `size`=1~50(기본 10). 응답 `{ items, nextCursor, hasNext }`. 이상탐지 알림의 `dataPayload`는 `type/wardKey/score/recordedAt/latitude/longitude`, 안심존·위험존 진입·이탈 알림은 `type/wardKey/safeZoneKey/recordedAt/latitude/longitude`(type: SAFE_ZONE_ENTERED/EXITED, DANGER_ZONE_ENTERED/EXITED), 위치 수집 중단 알림(`LOCATION_SIGNAL_LOST`)은 `type/wardKey/lastReceivedAt/recordedAt/latitude/longitude`(마지막 위치, 값 전부 문자열) — 앱은 이걸로 위치 이력 탭에 핀을 찍는다. 이 알림은 FCM을 **data 전용**으로 보낸다(#246, notification 블록 없음, Android priority HIGH, data에 `title`/`body` 추가) — 백그라운드에서도 앱이 직접 알림을 그려 전화 버튼을 붙이기 위함. iOS 앱은 아직 없어 APNs는 고려하지 않았다. 그 외 알림 유형에는 좌표가 없다(#231 이전 안심존 알림도 없음). 각 item에 `feedbackEligible`(이상탐지 5종·안심존/위험존 진입/이탈이면 true)·`feedbackSubmitted`가 붙는다 — 평가 UI는 `eligible && !submitted`일 때만 노출 |
+| Notification | GET | `/api/v1/notifications?cursor&size` | 내 알림함 목록 조회 (WARD, GUARDIAN — recipient 기준). notification_id DESC 커서 페이징. `cursor`=직전 응답 `nextCursor`(첫 페이지는 생략), `size`=1~50(기본 10). 응답 `{ items, nextCursor, hasNext }`. 이상탐지 알림의 `dataPayload`는 `type/wardKey/score/recordedAt/latitude/longitude` + 사건 형식 메시지면 `eventId/alertKind/reasonCode`(#248 — 앱은 `eventId`로 한 사건의 알림을 묶는다), 안심존·위험존 진입·이탈 알림은 `type/wardKey/safeZoneKey/recordedAt/latitude/longitude`(type: SAFE_ZONE_ENTERED/EXITED, DANGER_ZONE_ENTERED/EXITED), 위치 수집 중단 알림(`LOCATION_SIGNAL_LOST`)은 `type/wardKey/lastReceivedAt/recordedAt/latitude/longitude`(마지막 위치, 값 전부 문자열) — 앱은 이걸로 위치 이력 탭에 핀을 찍는다. 이 알림은 FCM을 **data 전용**으로 보낸다(#246, notification 블록 없음, Android priority HIGH, data에 `title`/`body` 추가) — 백그라운드에서도 앱이 직접 알림을 그려 전화 버튼을 붙이기 위함. iOS 앱은 아직 없어 APNs는 고려하지 않았다. 그 외 알림 유형에는 좌표가 없다(#231 이전 안심존 알림도 없음). 각 item에 `feedbackEligible`(이상탐지 5종·안심존/위험존 진입/이탈이면 true)·`feedbackSubmitted`가 붙는다 — 평가 UI는 `eligible && !submitted`일 때만 노출 |
 | Notification | POST | `/api/v1/notifications/{notificationKey}/feedback` | 이상탐지·안심존 알림 정확도 피드백 제출 (WARD, GUARDIAN — 수신자 본인만). `{ accuracy: ACCURATE\|INACCURATE\|UNSURE, reason?, comment? }`. `reason`(USUAL_ROUTINE/BRIEF_STOPOVER/GPS_INACCURATE/OTHER)은 `INACCURATE`일 때만 필수이자 허용, 안심존·위험존 알림은 GPS_INACCURATE/OTHER만 허용(그 외 E9010), `comment`는 선택·최대 100자. 알림 1건당 1회(E9007). 대상 아님 E9006, 타인 알림 E9005, 없음 E9004, 연결된 탐지 기록 소실 E9009 |
+| Notification | POST | `/api/v1/notifications/anomaly-events/acknowledge` | 이상탐지 사건 보호자 확인 (#248). `{ wardKey, eventId }` — 푸시 data·알림 목록 dataPayload의 값을 그대로 보낸다(FCM은 수신자별 행을 만들기 전 한 번에 발송해 `notificationKey`가 푸시에 없으므로 사건 키로 받는다). 요청자-대상자 케어 관계 필수(보호자·관계자 모두, 없으면 E6001). 한 명이라도 확인하면 그 사건은 끝날 때까지 재알림(REMIND)이 가지 않는다. `eventId`가 현재 사건과 다르면(지난 사건) 200이지만 아무것도 바뀌지 않는다 |
 | Notification | GET | `/api/v1/notifications/settings/{wardKey}` | 요청 보호자 본인의 알림 설정 조회 (안심존·위험존·이상탐지·응급호출·배터리). 케어 관계 필수 — WARD 본인 접근 불가 |
 | Notification | PATCH | `/api/v1/notifications/settings/{wardKey}/safe-zone` | 안심존 진입·이탈 알림 토글 |
 | Notification | PATCH | `/api/v1/notifications/settings/{wardKey}/danger-zone` | 위험존 진입·이탈 알림 토글 `{ entryEnabled, exitEnabled }` (#238) |
@@ -94,7 +95,7 @@
 | SafeZone | safe_zones | safeZoneKey(UUID), wardMemberKey, name, address, latitude, longitude, radius(SMALL/MEDIUM/LARGE/XLARGE), type(SAFE/DANGER — 위험존도 같은 테이블, #238) |
 | SafeZoneState | safe_zone_states | wardMemberKey(UNIQUE), safeZoneKeys(CSV, 현재 속한 안심존). 행 없음=최초 관측(알림 안 함), 빈 문자열=존 밖 |
 | Notification | notifications | notificationKey(UUID, UNIQUE), recipientMemberKey, eventType, title, body, dataPayload(jsonb, 리다이렉트용), createdAt. 수신자별 개별 row. 읽음 필드 없음. 목록 조회 정렬·커서는 notification_id DESC (created_at은 fan-out 시 동시각 행이 생겨 정렬 불안정) |
-| AnomalyDetection | anomaly_detections | wardMemberKey, detectionType(5종), score, recordedAt, latitude, longitude, evidence(1000자). `(wardMemberKey, detectionType, recordedAt)` UNIQUE = 재배달 멱등 키. 알림 토글과 무관하게 항상 저장되는 탐지 사건 원본 (1건 = 1 row) |
+| AnomalyDetection | anomaly_detections | wardMemberKey, detectionType(5종), score, recordedAt, latitude, longitude, evidence(1000자, nullable — 엔진 2차 배포 후 안 옴), alertKind/eventId/eventStartedAt/eventEndedAt/categories/reasonCode/durationMin/usualMin/speedKmh/eventHour/remindSeq(#248, 전부 nullable — 이전 형식 메시지는 비어 있음). 사건(eventId) 하나에 알림 여러 행(START·CATEGORY_ADDED·REMIND·END). `(wardMemberKey, detectionType, recordedAt)` UNIQUE = 재배달 멱등 키. 알림 토글과 무관하게 항상 저장되는 탐지 사건 원본 (1건 = 1 row) |
 | NotificationFeedback | notification_feedbacks | notificationId(UNIQUE — 1알림 1회), anomalyDetectionId(이상탐지 알림만 채움, 안심존 알림 평가는 NULL — 안심존 키·좌표는 notification_id로 알림 payload에서 찾는다), accuracy(ACCURATE/INACCURATE/UNSURE), reason(nullable, INACCURATE 전용), comment(100자, nullable). FK 제약은 걸지 않는다(이 프로젝트는 JPA 연관관계를 쓰지 않음). 이상탐지 알림의 `anomalyDetectionId`는 제출 시 `dataPayload`의 wardKey+type+recordedAt으로 `anomaly_detections`를 역조회해 채우며, **찾지 못하면 저장하지 않고 E9009로 거부한다** — 탐지 행과 조인되지 않는 라벨은 학습에 쓸 수 없고, 키 불일치 버그가 로그가 아니라 에러율로 드러나야 한다 |
 | NotificationSetting | notification_settings | (wardMemberKey, caregiverMemberKey) UNIQUE — 보호자별 설정, 안심존·위험존(진입/이탈)·응급호출 토글, 이상탐지 토글 5종(speed/wandering/abnormalDwelling/routeDeviation/timeAnomaly), lowBatteryEnabled, batteryThresholdPercents(CSV, 기본 '' = 선택 없음 → 알림 없음) |
 | Inquiry | inquiries | inquiryKey(UUID, UNIQUE), memberKey, category(4종), title(50), content(1000), status(WAITING/ANSWERED), answer(2000, nullable), answeredAt(nullable). 탈퇴 시 hard-delete. 인덱스 `(member_key, inquiry_id DESC)` |
@@ -179,6 +180,7 @@ location:signal-lost:{memberKey}:{lastReceivedAt}  수집 중단 알림 중복 �
 investigation:{fingerprint}    Alert 조사 상태       TTL: 10분  { threadTs, status, startedAt, fixCommands }
 device:state:{memberKey}       기기 상태             TTL 없음   ONLINE | LOW_BATTERY | OFFLINE
 device:battery:{wardKey}       배터리 재알림 억제(hash) TTL: 1일, 억제 해제·탈퇴 시 삭제  { caregiverKey: lastNotifiedThreshold }
+anomaly:ack:{wardKey}          이상탐지 사건 보호자 확인(hash) TTL: 1일(알림마다 갱신), EVENT_END·탈퇴 시 삭제  { eventId, acknowledged }
 careRelationship::*            케어관계 캐시           TTL: 10분
 care:invitation:resend:{requestKey}  케어 요청 재전송 간격 제한(SETNX)  TTL: 5분
 ```
@@ -252,6 +254,7 @@ GpsSavedEvent → DetectionListener → DetectionPublisher → XADD gps-detectio
 | `recorded_at` | O | `Gps.recordedAt` — `yyyy-MM-dd HH:mm:ss` (KST, 오프셋 없음) |
 | `accuracy` | X | 미터. 100m 초과분 제외는 엔진 책임 |
 | `battery` | X | 0~100 |
+| `acknowledged` | O | `"true"`/`"false"` (#248). `anomaly:ack:{wardKey}`의 값, 없으면 false. 푸시되는 알림 수신 시 false로 리셋, 확인 API(`POST /api/v1/notifications/anomaly-events/acknowledge`)로 true. 엔진은 마지막 알림 이후 false→true 전환만 확인으로 인정하고, 확인되면 사건이 끝날 때까지 재알림하지 않는다 |
 
 - `recorded_at`은 **서버 수신 시각**이다. 엔진이 학습에 RDS `gps_histories`를, 탐지에 이 스트림을 쓰므로 두 경로의
   시각이 같은 의미여야 한다. `measured_at`(기기 측정)은 nullable이라 건마다 기준이 달라져 쓰지 않는다.
@@ -301,7 +304,8 @@ GpsSavedEvent → DetectionListener → DetectionPublisher → XADD gps-detectio
 
 ### `anomaly-alerts` — 엔진 → 백엔드 (백엔드가 컨슈머)
 
-엔진이 이상을 판정하면 **사건당 1건** 발행한다(30초 주기 아님). 백엔드는 `XREADGROUP`으로 소비하고
+엔진이 이상을 판정하면 사건 안에서 **카테고리가 처음 성립할 때마다 1건**(동시 성립은 1건으로 합침), 미확인이면 재알림을 발행한다.
+출력 형식은 엔진 문서 「탐지 알림 출력 형식 변경 안내 (백엔드용)」(2026-10-10)가 기준이다(#248). 백엔드는 `XREADGROUP`으로 소비하고
 알림을 저장한 뒤 `XACK`한다. 그룹 `recaring-backend`.
 
 | 필드 | 설명 |
@@ -311,7 +315,17 @@ GpsSavedEvent → DetectionListener → DetectionPublisher → XADD gps-detectio
 | `score` | 항상 0.5000~1.0000, 소수 4자리 |
 | `recorded_at` | 입력의 `recorded_at`을 **그대로 에코**. 엔진 자기 시계 금지. 구간을 보는 탐지(배회 등)는 판정을 트리거한 GPS point의 값 |
 | `latitude` / `longitude` | 소수 6자리 |
-| `evidence` | 보호자에게 그대로 보여줄 한국어 한 문장. 엔진이 고정 템플릿에 숫자만 채워 만든다 |
+| `evidence` | **전환 기간에만** 옴(엔진 1차 배포). 2차 배포에서 빠진다. `reason_code`가 없을 때만 문구 fallback으로 쓴다 |
+| `alert_kind` | `EVENT_START` / `CATEGORY_ADDED` / `REMIND` / `EVENT_END`. 없으면 이전 형식 메시지로 보고 바로 푸시한다. 모르는 값이면 버린다 |
+| `event_id` / `event_started_at` | 사건 식별자(`{key}:{사건 시작 시각}`)·시작 시각. `alert_kind`가 있는데 `event_id`가 없으면 버린다 |
+| `categories` | 이번에 성립한 카테고리 전부(쉼표 구분). `detection_type`은 그중 최상위 |
+| `reason_code` | 걸린 규칙 12종(`AnomalyReasonCode`). 모르는 값이면 null로 두고 evidence/기본 문구로 fallback |
+| `duration_min` / `usual_min` / `speed_kmh` / `hour` | 해당 시에만. 문구 조립용 숫자 |
+| `remind_seq` / `event_ended_at` | REMIND / EVENT_END에만 |
+
+**푸시 정책**(#248): 문구는 `AnomalyNotificationBody`가 `reason_code`별 템플릿으로 조립한다(분 → "1시간 30분").
+REMIND는 앞에 `[확인 필요] `를 붙인다. EVENT_END는 `anomaly_detections`에만 저장하고 푸시하지 않으며 `anomaly:ack` 키를 지운다.
+값이 없는 필드는 `"null"`이 아니라 필드 자체가 생략된다. 파서가 Map으로 읽으므로 모르는 필드가 늘어도 버려지지 않는다.
 
 **명세서 v2와 다른 점**: 명세의 `SIGNAL_LOST`는 채택하지 않았다(5종만). 다만 엔진이 보낼 가능성이 남아 있어
 파서가 모르는 유형을 만나면 예외 대신 빈 결과를 주고, 컨슈머가 그 메시지를 버린 뒤 ACK한다.
