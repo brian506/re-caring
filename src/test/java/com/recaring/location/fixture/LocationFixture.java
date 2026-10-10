@@ -11,6 +11,10 @@ import com.recaring.location.event.LocationSignalLostEvent;
 import com.recaring.location.event.SafeZoneEnteredEvent;
 import com.recaring.location.event.SafeZoneExitedEvent;
 import com.recaring.location.vo.AnomalyAlert;
+import com.recaring.location.vo.AnomalyAlertKind;
+import com.recaring.location.vo.AnomalyEvent;
+import com.recaring.location.vo.AnomalyMeasures;
+import com.recaring.location.vo.AnomalyReasonCode;
 import com.recaring.location.vo.DetectionType;
 import com.recaring.location.vo.Gps;
 import com.recaring.member.dataaccess.entity.Gender;
@@ -51,6 +55,13 @@ public class LocationFixture {
     public static final String DETECTED_AT_ISO_TEXT = "2026-07-27T10:20:05";
     public static final double ANOMALY_SCORE = 0.82;
     public static final String WANDERING_EVIDENCE = "{name} 님이 같은 곳을 맴돌고 계십니다.";
+    public static final LocalDateTime EVENT_STARTED_AT = LocalDateTime.of(2026, 7, 27, 10, 0, 0);
+    public static final String EVENT_STARTED_AT_ISO_TEXT = "2026-07-27T10:00:00";
+    public static final String EVENT_ID = WARD_KEY + ":" + EVENT_STARTED_AT_ISO_TEXT;
+    public static final String PREVIOUS_EVENT_ID = WARD_KEY + ":2026-07-26T21:00:00";
+    public static final String ANOMALY_ACK_KEY = "anomaly:ack:" + WARD_KEY;
+    public static final String ANOMALY_CATEGORIES = "ABNORMAL_DWELLING,ROUTE_DEVIATION";
+    public static final int DWELL_DURATION_MIN = 40;
     public static final String SAFE_ZONE_KEY = SafeZoneFixture.SAFE_ZONE_KEY;
     public static final String SAFE_ZONE_NAME = "안심존 1";
     public static final String DANGER_ZONE_KEY = "danger-zone-key-001";
@@ -189,7 +200,33 @@ public class LocationFixture {
 
     public static AnomalyAlert createAnomalyAlert(DetectionType detectionType, String evidence) {
         return new AnomalyAlert(
-                WARD_KEY, detectionType, ANOMALY_SCORE, DETECTED_AT, LATITUDE, LONGITUDE, evidence);
+                WARD_KEY, detectionType, ANOMALY_SCORE, DETECTED_AT, LATITUDE, LONGITUDE, evidence,
+                null, null, anomalyMeasures(null, null, null, null));
+    }
+
+    public static AnomalyAlert createEventAnomalyAlert(
+            DetectionType detectionType, AnomalyAlertKind alertKind, AnomalyReasonCode reasonCode,
+            AnomalyMeasures measures) {
+        return createEventAnomalyAlert(detectionType, alertKind, reasonCode, measures, null);
+    }
+
+    public static AnomalyAlert createEventAnomalyAlert(
+            DetectionType detectionType, AnomalyAlertKind alertKind, AnomalyReasonCode reasonCode,
+            AnomalyMeasures measures, String evidence) {
+        AnomalyEvent event = new AnomalyEvent(
+                EVENT_ID,
+                alertKind,
+                EVENT_STARTED_AT,
+                alertKind == AnomalyAlertKind.EVENT_END ? DETECTED_AT : null,
+                detectionType.name(),
+                alertKind == AnomalyAlertKind.REMIND ? 1 : null);
+        return new AnomalyAlert(
+                WARD_KEY, detectionType, ANOMALY_SCORE, DETECTED_AT, LATITUDE, LONGITUDE, evidence,
+                event, reasonCode, measures);
+    }
+
+    public static AnomalyMeasures anomalyMeasures(Integer durationMin, Integer usualMin, Integer speedKmh, Integer hour) {
+        return new AnomalyMeasures(durationMin, usualMin, speedKmh, hour);
     }
 
     public static AnomalyDetection createAnomalyDetection(DetectionType detectionType, String evidence) {
@@ -213,6 +250,10 @@ public class LocationFixture {
         return new AnomalyDetectedEvent(createAnomalyAlert(detectionType, evidence));
     }
 
+    public static AnomalyDetectedEvent createAnomalyDetectedEvent(AnomalyAlert alert) {
+        return new AnomalyDetectedEvent(alert);
+    }
+
     public static Map<String, String> createAnomalyStreamFields(DetectionType detectionType, String evidence) {
         Map<String, String> fields = new HashMap<>();
         fields.put("ward_member_key", WARD_KEY);
@@ -222,6 +263,18 @@ public class LocationFixture {
         fields.put("latitude", String.valueOf(LATITUDE));
         fields.put("longitude", String.valueOf(LONGITUDE));
         fields.put("evidence", evidence);
+        return fields;
+    }
+
+    public static Map<String, String> createEventAnomalyStreamFields() {
+        Map<String, String> fields = createAnomalyStreamFields(DetectionType.ABNORMAL_DWELLING, null);
+        fields.remove("evidence");
+        fields.put("alert_kind", AnomalyAlertKind.CATEGORY_ADDED.name());
+        fields.put("event_id", EVENT_ID);
+        fields.put("event_started_at", EVENT_STARTED_AT_ISO_TEXT);
+        fields.put("categories", ANOMALY_CATEGORIES);
+        fields.put("reason_code", AnomalyReasonCode.DWELL_AFTER_VEHICLE.name());
+        fields.put("duration_min", String.valueOf(DWELL_DURATION_MIN));
         return fields;
     }
 

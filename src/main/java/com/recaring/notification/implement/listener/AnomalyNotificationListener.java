@@ -8,12 +8,14 @@ import com.recaring.location.vo.AnomalyAlert;
 import com.recaring.member.implement.MemberReader;
 import com.recaring.notification.implement.NotificationSendManager;
 import com.recaring.notification.implement.setting.NotificationSettingReader;
+import com.recaring.notification.vo.AnomalyNotificationBody;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.time.format.DateTimeFormatter;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.Map;
@@ -25,10 +27,6 @@ public class AnomalyNotificationListener {
 
     private static final DateTimeFormatter RECORDED_AT_FORMAT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
-    private static final String NAME_PLACEHOLDER = "{name}";
-
-    private static final int MAX_BODY_LENGTH = 1000;
 
     private final CareRelationshipReader careRelationshipReader;
     private final NotificationSettingReader notificationSettingReader;
@@ -53,6 +51,11 @@ public class AnomalyNotificationListener {
             return;
         }
 
+        if (detection.reasonCode() == null && (detection.evidence() == null || detection.evidence().isBlank())) {
+            log.warn("[이상탐지 알림 : 문구 근거 없음]: wardMemberKey={} | detectionType={}",
+                    wardMemberKey, detection.detectionType());
+        }
+
         String wardName = memberReader.findNameByMemberKey(wardMemberKey);
         String eventType = detection.detectionType().name();
         notificationSendManager.sendToCareParties(
@@ -60,31 +63,30 @@ public class AnomalyNotificationListener {
                 memberKeysOf(caregivers, caregiver -> caregiver.careRole() == CareRole.MANAGER),
                 eventType,
                 detection.detectionType().notificationTitle(),
-                buildBody(detection.evidence(), wardName),
-                Map.of(
-                        "type", eventType,
-                        "wardKey", wardMemberKey,
-                        "score", String.valueOf(detection.score()),
-                        "recordedAt", RECORDED_AT_FORMAT.format(detection.recordedAt()),
-                        "latitude", String.valueOf(detection.latitude()),
-                        "longitude", String.valueOf(detection.longitude())
-                )
+                AnomalyNotificationBody.of(detection, wardName).value(),
+                buildPayload(detection, eventType)
         );
-        log.info("[이상탐지 알림 : 발송 완료]: wardMemberKey={} | detectionType={} | score={}",
-                wardMemberKey, detection.detectionType(), detection.score());
+        log.info("[이상탐지 알림 : 발송 완료]: wardMemberKey={} | detectionType={} | reasonCode={} | alertKind={} | score={}",
+                wardMemberKey, detection.detectionType(), detection.reasonCode(),
+                detection.event() == null ? null : detection.event().alertKind(), detection.score());
     }
 
-    private String buildBody(String evidence, String wardName) {
-        if (evidence == null || evidence.isBlank()) {
-            log.warn("[이상탐지 알림 : 근거 문구 없음]: wardName={}", wardName);
-            return wardName + "님에게 이상 징후가 감지되었어요.";
+    private Map<String, String> buildPayload(AnomalyAlert detection, String eventType) {
+        Map<String, String> payload = new LinkedHashMap<>();
+        payload.put("type", eventType);
+        payload.put("wardKey", detection.wardMemberKey());
+        payload.put("score", String.valueOf(detection.score()));
+        payload.put("recordedAt", RECORDED_AT_FORMAT.format(detection.recordedAt()));
+        payload.put("latitude", String.valueOf(detection.latitude()));
+        payload.put("longitude", String.valueOf(detection.longitude()));
+        if (detection.event() != null) {
+            payload.put("eventId", detection.event().eventId());
+            payload.put("alertKind", detection.event().alertKind().name());
         }
-        String body = evidence.replace(NAME_PLACEHOLDER, wardName);
-        if (body.length() <= MAX_BODY_LENGTH) {
-            return body;
+        if (detection.reasonCode() != null) {
+            payload.put("reasonCode", detection.reasonCode().name());
         }
-        log.warn("[이상탐지 알림 : 본문 길이 초과]: length={}", body.length());
-        return body.substring(0, MAX_BODY_LENGTH);
+        return payload;
     }
 
     private List<String> memberKeysOf(List<CaregiverInfo> caregivers, Predicate<CaregiverInfo> filter) {

@@ -10,6 +10,7 @@ import com.recaring.care.implement.CareRelationshipManager;
 import com.recaring.device.dataaccess.repository.WardDeviceTokenRepository;
 import com.recaring.inquiry.implement.InquiryManager;
 import com.recaring.location.dataaccess.repository.LocationSettingRepository;
+import com.recaring.location.implement.detection.AnomalyAcknowledgementManager;
 import com.recaring.location.implement.detection.AnomalyDetectionManager;
 import com.recaring.location.implement.detection.BatteryAlertStateManager;
 import com.recaring.location.implement.gps.GpsHistoryManager;
@@ -46,6 +47,7 @@ public class MemberWithdrawalManager {
     private final SafeZoneWriter safeZoneWriter;
     private final GpsLatestCacheManager gpsLatestCacheManager;
     private final BatteryAlertStateManager batteryAlertStateManager;
+    private final AnomalyAcknowledgementManager anomalyAcknowledgementManager;
     private final SafeZoneStateManager safeZoneStateManager;
     private final InquiryManager inquiryManager;
 
@@ -84,6 +86,7 @@ public class MemberWithdrawalManager {
         memberWriter.deleteByMemberKey(memberKey);
         gpsLatestCacheManager.delete(memberKey);
         batteryAlertStateManager.delete(memberKey);
+        anomalyAcknowledgementManager.delete(memberKey);
 
         log.info("[회원 탈퇴 : 완료]: memberKey={}", memberKey);
     }

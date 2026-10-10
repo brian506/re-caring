@@ -29,6 +29,7 @@ public class DetectionPublisher {
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private final StringRedisTemplate redisTemplate;
+    private final AnomalyAcknowledgementManager anomalyAcknowledgementManager;
 
     public void publish(String wardMemberKey, Gps gps) {
         try {
@@ -54,6 +55,7 @@ public class DetectionPublisher {
         fields.put("longitude", String.valueOf(gps.longitude()));
         fields.put("recorded_at", TIMESTAMP_FORMAT.format(gps.recordedAt()));
         putIfPresent(fields, "accuracy", gps.accuracy());
+        fields.put("acknowledged", String.valueOf(anomalyAcknowledgementManager.isAcknowledged(wardMemberKey)));
         return fields;
     }
 

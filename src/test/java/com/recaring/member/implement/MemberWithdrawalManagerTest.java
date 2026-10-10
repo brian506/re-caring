@@ -12,6 +12,7 @@ import com.recaring.device.dataaccess.repository.WardDeviceTokenRepository;
 import com.recaring.inquiry.implement.InquiryManager;
 import com.recaring.location.dataaccess.repository.LocationSettingRepository;
 import com.recaring.location.implement.detection.AnomalyDetectionManager;
+import com.recaring.location.implement.detection.AnomalyAcknowledgementManager;
 import com.recaring.location.implement.detection.BatteryAlertStateManager;
 import com.recaring.location.implement.gps.GpsHistoryManager;
 import com.recaring.location.implement.gps.GpsLatestCacheManager;
@@ -66,6 +67,7 @@ class MemberWithdrawalManagerTest {
     @Mock private GpsLatestCacheManager gpsLatestCacheManager;
     @Mock private AnomalyDetectionManager anomalyDetectionManager;
     @Mock private BatteryAlertStateManager batteryAlertStateManager;
+    @Mock private AnomalyAcknowledgementManager anomalyAcknowledgementManager;
     @Mock private SafeZoneStateManager safeZoneStateManager;
     @Mock private InquiryManager inquiryManager;
 
@@ -107,6 +109,7 @@ class MemberWithdrawalManagerTest {
 
         then(gpsLatestCacheManager).should().delete(MEMBER_KEY);
         then(batteryAlertStateManager).should().delete(MEMBER_KEY);
+        then(anomalyAcknowledgementManager).should().delete(MEMBER_KEY);
         then(safeZoneStateManager).should().delete(MEMBER_KEY);
     }
 
