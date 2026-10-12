@@ -1,6 +1,5 @@
 package com.recaring.safezone.vo;
 
-import com.recaring.safezone.dataaccess.entity.SafeZoneRadius;
 import com.recaring.safezone.dataaccess.entity.SafeZoneType;
 import com.recaring.support.exception.AppException;
 import com.recaring.support.exception.ErrorType;
