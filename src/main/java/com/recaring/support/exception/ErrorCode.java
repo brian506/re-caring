@@ -24,7 +24,7 @@ public enum ErrorCode {
     E5011, E5012, E5013, E5019,
 
     // Location (E6xxx) - GPS, SSE
-    E6000, E6001, E6002,
+    E6000, E6001, E6002, E6003,
 
     // Device (E7xxx) - Device Token
     E7000,

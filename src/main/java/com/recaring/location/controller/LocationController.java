@@ -2,6 +2,7 @@ package com.recaring.location.controller;
 
 import com.recaring.location.business.LocationService;
 import com.recaring.location.controller.request.GpsRequest;
+import com.recaring.location.controller.response.AnomalyEventRouteResponse;
 import com.recaring.location.controller.response.GpsHistoryResponse;
 import com.recaring.security.vo.AuthMember;
 import com.recaring.support.response.ApiResponse;
@@ -68,5 +69,22 @@ public class LocationController {
                 .map(GpsHistoryResponse::from)
                 .toList();
         return ResponseEntity.ok(ApiResponse.success(responses));
+    }
+
+    @Operation(
+            summary = "이상탐지 사건 경로 조회",
+            description = "보호자(GUARDIAN/MANAGER)가 이상탐지 사건의 시작부터 종료까지 이동 경로를 조회합니다. "
+                    + "eventId는 푸시 data 또는 알림 목록 dataPayload의 값을 그대로 보냅니다. "
+                    + "진행 중인 사건은 현재 시각까지(최대 시작 후 24시간) 조회하며 ongoing=true, endedAt=null입니다."
+    )
+    @GetMapping("/anomaly-events/{wardKey}/route")
+    public ResponseEntity<ApiResponse<AnomalyEventRouteResponse>> getAnomalyEventRoute(
+            @AuthMember String memberKey,
+            @PathVariable String wardKey,
+            @RequestParam String eventId
+    ) {
+        AnomalyEventRouteResponse response = AnomalyEventRouteResponse.from(
+                locationService.getAnomalyEventRoute(memberKey, wardKey, eventId, LocalDateTime.now()));
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 }

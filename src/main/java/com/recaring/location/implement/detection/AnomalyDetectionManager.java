@@ -4,8 +4,11 @@ import com.recaring.location.dataaccess.repository.AnomalyDetectionRepository;
 import com.recaring.location.event.AnomalyDetectedEvent;
 import com.recaring.location.vo.AnomalyAlert;
 import com.recaring.location.vo.AnomalyEvent;
+import com.recaring.location.vo.AnomalyEventPeriod;
 import com.recaring.location.vo.AnomalyMeasures;
 import com.recaring.location.vo.DetectionType;
+import com.recaring.support.exception.AppException;
+import com.recaring.support.exception.ErrorType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -72,6 +75,12 @@ public class AnomalyDetectionManager {
 
     public Optional<Long> findDetectionId(String wardMemberKey, DetectionType detectionType, LocalDateTime recordedAt) {
         return anomalyDetectionRepository.findIdByDetectionKeys(wardMemberKey, detectionType, recordedAt);
+    }
+
+    public AnomalyEventPeriod findEventPeriod(String wardMemberKey, String eventId) {
+        return anomalyDetectionRepository.findEventPeriod(wardMemberKey, eventId)
+                .filter(period -> period.startedAt() != null)
+                .orElseThrow(() -> new AppException(ErrorType.ANOMALY_EVENT_NOT_FOUND));
     }
 
     public void deleteByWardMemberKey(String wardMemberKey) {

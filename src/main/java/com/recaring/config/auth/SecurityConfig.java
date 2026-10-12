@@ -103,6 +103,7 @@ public class SecurityConfig {
                                 mvc.matcher(HttpMethod.DELETE, "/api/v1/care/wards/{wardKey}/caregivers/{caregiverKey}"),
                                 mvc.matcher(HttpMethod.GET,  "/api/v1/location/settings/{wardKey}/collection-interval"),
                                 mvc.matcher(HttpMethod.PATCH, "/api/v1/location/settings/{wardKey}/collection-interval"),
+                                mvc.matcher(HttpMethod.GET,  "/api/v1/location/anomaly-events/{wardKey}/route"),
                                 // SafeZone (GUARDIAN/MANAGER 모두 MemberRole.GUARDIAN)
                                 mvc.matcher(HttpMethod.POST,   "/api/v1/care/wards/{wardKey}/safe-zones"),
                                 mvc.matcher(HttpMethod.GET,    "/api/v1/care/wards/{wardKey}/safe-zones"),

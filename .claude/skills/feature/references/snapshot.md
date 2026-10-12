@@ -1,6 +1,6 @@
 # 프로젝트 스냅샷
 
-> 마지막 업데이트: 2026-10-11. 기능 추가·수정 시 해당 섹션을 갱신한다.
+> 마지막 업데이트: 2026-10-12. 기능 추가·수정 시 해당 섹션을 갱신한다.
 
 ## 도메인별 패키지 현황
 
@@ -47,6 +47,7 @@
 | Location | POST | `/api/v1/location/gps` | GPS 좌표 전송 (WARD, Device Token 인증) |
 | Location | GET | `/api/v1/location/stream/{wardKey}` | SSE 실시간 위치 스트림 (GUARDIAN). 요청 보호자 본인의 수신 주기로 솎아서 전송. `gps:display`만 읽어 부정확(accuracy > 100m)·튀는 좌표(직전 표시 좌표 대비 50m/s 초과)는 보내지 않는다(#243) |
 | Location | GET | `/api/v1/location/history/{wardKey}` | 날짜별 이동 경로 히스토리. 시간순으로 훑으며 부정확·튀는 좌표를 제외해 응답(#243, `Gps.isDisplayableAfter`). DB 원본은 그대로 |
+| Location | GET | `/api/v1/location/anomaly-events/{wardKey}/route?eventId=` | 이상탐지 사건 경로 (#252, GUARDIAN/MANAGER — 케어 관계 없으면 E6001). 엔진이 경로 좌표를 보내지 않으므로 `anomaly_detections`에서 같은 `eventId` 행의 `min(event_started_at)`~`max(event_ended_at)`를 구간으로 잡아 `gps_histories`를 조회한다(날짜 경계 무관, 날짜별 이력과 같은 튐 좌표 필터). 종료 행(EVENT_END)이 없으면 진행 중으로 보고 `min(now, 시작+24h)`까지 — 엔진이 EVENT_END를 꺼둔 동안 끝난 사건이 무한정 늘어나는 것을 막는 상한. 응답 `{ eventId, startedAt, endedAt(진행 중이면 null), ongoing, route: [{latitude, longitude, recordedAt}] }`. 사건 없음 E6003(404) |
 | Location | GET | `/api/v1/location/settings/{wardKey}/collection-interval` | 요청 보호자 본인의 위치 수신 주기 조회 (GUARDIAN, 옵션 30/60/180/300초 포함, 미설정 시 30) |
 | Location | PATCH | `/api/v1/location/settings/{wardKey}/collection-interval` | 요청 보호자 본인의 위치 수신 주기 수정 (GUARDIAN only, 다른 보호자에 영향 없음) |
 | Location | GET | `/api/v1/location/settings/collection-interval/me` | 기기 수집 주기 조회 (WARD, Device Token 인증). 보호자 계열 설정 중 최솟값(미설정 보호자는 30) |
@@ -323,7 +324,7 @@ GpsSavedEvent → DetectionListener → DetectionPublisher → XADD gps-detectio
 | `duration_min` / `usual_min` / `speed_kmh` / `hour` | 해당 시에만. 문구 조립용 숫자 |
 | `remind_seq` / `event_ended_at` | REMIND / EVENT_END에만 |
 
-**푸시 정책**(#248): 문구는 `AnomalyNotificationBody`가 `reason_code`별 템플릿으로 조립한다(분 → "1시간 30분").
+**푸시 정책**(#248): 문구는 `AnomalyNotificationBody`가 `reason_code`별 템플릿으로 조립한다(분 → "1시간 30분"). `duration_min`이 오면 괄호 안에 "지속 3시간 20분"으로 붙인다(속도·평소 체류와 함께면 쉼표로 이음, 시각 유형 NIGHT_OUTING·RARE_HOUR 제외).
 REMIND는 앞에 `[확인 필요] `를 붙인다. EVENT_END는 `anomaly_detections`에만 저장하고 푸시하지 않으며 `anomaly:ack` 키를 지운다.
 값이 없는 필드는 `"null"`이 아니라 필드 자체가 생략된다. 파서가 Map으로 읽으므로 모르는 필드가 늘어도 버려지지 않는다.
 
