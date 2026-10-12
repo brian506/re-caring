@@ -2,9 +2,12 @@ package com.recaring.location.business;
 
 import com.recaring.location.event.GpsSavedEvent;
 import com.recaring.location.implement.LocationValidator;
+import com.recaring.location.implement.detection.AnomalyDetectionManager;
 import com.recaring.location.implement.gps.GpsHistoryManager;
 import com.recaring.location.implement.setting.LocationSettingManager;
 import com.recaring.location.implement.sse.SseEmitterManager;
+import com.recaring.location.vo.AnomalyEventPeriod;
+import com.recaring.location.vo.AnomalyEventRoute;
 import com.recaring.location.vo.Gps;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -12,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -19,6 +23,7 @@ import java.util.List;
 public class LocationService {
 
     private final GpsHistoryManager gpsHistoryManager;
+    private final AnomalyDetectionManager anomalyDetectionManager;
     private final SseEmitterManager sseEmitterManager;
     private final LocationValidator locationValidator;
     private final LocationSettingManager locationSettingManager;
@@ -39,5 +44,12 @@ public class LocationService {
     public List<Gps> getHistory(String requesterKey, String wardKey, LocalDate date) {
         locationValidator.validateHistoryViewAccess(requesterKey, wardKey);
         return gpsHistoryManager.findDailyGpsHistory(wardKey, date);
+    }
+
+    public AnomalyEventRoute getAnomalyEventRoute(String caregiverKey, String wardKey, String eventId, LocalDateTime now) {
+        locationValidator.validateCaregiverAccess(caregiverKey, wardKey);
+        AnomalyEventPeriod period = anomalyDetectionManager.findEventPeriod(wardKey, eventId);
+        List<Gps> route = gpsHistoryManager.findGpsHistoryBetween(wardKey, period.startedAt(), period.routeEndAt(now));
+        return new AnomalyEventRoute(period, route);
     }
 }

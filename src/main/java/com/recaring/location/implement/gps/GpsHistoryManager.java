@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -21,6 +22,13 @@ public class GpsHistoryManager {
 
     public List<Gps> findDailyGpsHistory(String wardMemberKey, LocalDate date) {
         return keepDisplayable(gpsHistoryRepository.findDailyGpsHistory(wardMemberKey, date)
+                .stream()
+                .map(Gps::from)
+                .toList());
+    }
+
+    public List<Gps> findGpsHistoryBetween(String wardMemberKey, LocalDateTime from, LocalDateTime to) {
+        return keepDisplayable(gpsHistoryRepository.findGpsHistoryBetween(wardMemberKey, from, to)
                 .stream()
                 .map(Gps::from)
                 .toList());

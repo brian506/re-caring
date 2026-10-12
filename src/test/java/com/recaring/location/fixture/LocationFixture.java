@@ -80,6 +80,13 @@ public class LocationFixture {
     public static final double JUMP_15KM_LATITUDE_DELTA = 0.135;
     public static final double JUMP_45KM_LATITUDE_DELTA = 0.405;
 
+    public static final LocalDateTime ROUTE_EVENT_STARTED_AT = LocalDateTime.of(2026, 9, 24, 7, 4, 12);
+    public static final LocalDateTime ROUTE_EVENT_ENDED_AT = LocalDateTime.of(2026, 9, 24, 10, 55, 0);
+    public static final String ROUTE_EVENT_STARTED_AT_INSTANT_TEXT = "2026-09-23T22:04:12Z";
+    public static final String ROUTE_EVENT_ENDED_AT_INSTANT_TEXT = "2026-09-24T01:55:00Z";
+    public static final LocalDateTime OVERNIGHT_EVENT_STARTED_AT = LocalDateTime.of(2026, 9, 23, 23, 30, 0);
+    public static final LocalDateTime OVERNIGHT_EVENT_ENDED_AT = LocalDateTime.of(2026, 9, 24, 0, 30, 0);
+
     public static Gps createGps() {
         return createGps(BATTERY);
     }
@@ -115,6 +122,20 @@ public class LocationFixture {
                 .battery(BATTERY)
                 .speed(SPEED)
                 .measuredAt(measuredAt)
+                .build();
+    }
+
+    public static GpsHistory createGpsHistoryRecordedAt(
+            String wardKey, double latitude, Double accuracy, LocalDateTime recordedAt) {
+        return GpsHistory.builder()
+                .wardMemberKey(wardKey)
+                .latitude(latitude)
+                .longitude(LONGITUDE)
+                .recordedAt(recordedAt)
+                .accuracy(accuracy)
+                .battery(BATTERY)
+                .speed(SPEED)
+                .measuredAt(recordedAt)
                 .build();
     }
 
@@ -243,6 +264,37 @@ public class LocationFixture {
                 .latitude(LATITUDE)
                 .longitude(LONGITUDE)
                 .evidence(evidence)
+                .build();
+    }
+
+    public static String anomalyEventId(String wardKey, LocalDateTime startedAt) {
+        return wardKey + ":" + startedAt;
+    }
+
+    public static AnomalyDetection createEventStartDetection(String wardKey, LocalDateTime startedAt) {
+        return createEventDetection(wardKey, AnomalyAlertKind.EVENT_START, startedAt, null, startedAt);
+    }
+
+    public static AnomalyDetection createEventEndDetection(String wardKey, LocalDateTime startedAt, LocalDateTime endedAt) {
+        return createEventDetection(wardKey, AnomalyAlertKind.EVENT_END, startedAt, endedAt, endedAt);
+    }
+
+    private static AnomalyDetection createEventDetection(
+            String wardKey, AnomalyAlertKind alertKind, LocalDateTime startedAt, LocalDateTime endedAt,
+            LocalDateTime recordedAt) {
+        return AnomalyDetection.builder()
+                .wardMemberKey(wardKey)
+                .detectionType(DetectionType.SPEED_ANOMALY)
+                .score(ANOMALY_SCORE)
+                .recordedAt(recordedAt)
+                .latitude(LATITUDE)
+                .longitude(LONGITUDE)
+                .alertKind(alertKind)
+                .eventId(anomalyEventId(wardKey, startedAt))
+                .eventStartedAt(startedAt)
+                .eventEndedAt(endedAt)
+                .categories(DetectionType.SPEED_ANOMALY.name())
+                .reasonCode(AnomalyReasonCode.VEHICLE)
                 .build();
     }
 

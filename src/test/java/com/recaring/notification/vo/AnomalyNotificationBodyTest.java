@@ -28,9 +28,44 @@ class AnomalyNotificationBodyTest {
     void shows_usual_dwell_time_in_hours_and_minutes(int usualMin, String expectedDetail) {
         AnomalyNotificationBody body = AnomalyNotificationBody.of(LocationFixture.createEventAnomalyAlert(
                 DetectionType.ABNORMAL_DWELLING, AnomalyAlertKind.EVENT_START, AnomalyReasonCode.DWELL_KNOWN_LONG,
-                LocationFixture.anomalyMeasures(300, usualMin, null, null)), NotificationFixture.WARD_NAME);
+                LocationFixture.anomalyMeasures(null, usualMin, null, null)), NotificationFixture.WARD_NAME);
 
         assertThat(body.value()).isEqualTo("김소연님이 평소보다 오래 한 곳에 머물고 계십니다 (" + expectedDetail + ").");
+    }
+
+    @ParameterizedTest(name = "지속 {0}분이면 \"{1}\"")
+    @CsvSource({
+            "20, 지속 20분",
+            "60, 지속 1시간",
+            "200, 지속 3시간 20분"
+    })
+    @DisplayName("지속 시간을 시간·분으로 바꿔 보여준다")
+    void shows_duration_in_hours_and_minutes(int durationMin, String expectedDetail) {
+        AnomalyNotificationBody body = AnomalyNotificationBody.of(LocationFixture.createEventAnomalyAlert(
+                DetectionType.ABNORMAL_DWELLING, AnomalyAlertKind.EVENT_START, AnomalyReasonCode.DWELL_UNKNOWN,
+                LocationFixture.anomalyMeasures(durationMin, null, null, null)), NotificationFixture.WARD_NAME);
+
+        assertThat(body.value()).isEqualTo("김소연님이 낯선 곳에서 움직임이 없으십니다 (" + expectedDetail + ").");
+    }
+
+    @Test
+    @DisplayName("지속 시간과 평소 체류 시간이 함께 있으면 둘 다 보여준다")
+    void shows_duration_with_usual_dwell_time() {
+        AnomalyNotificationBody body = AnomalyNotificationBody.of(LocationFixture.createEventAnomalyAlert(
+                DetectionType.ABNORMAL_DWELLING, AnomalyAlertKind.EVENT_START, AnomalyReasonCode.DWELL_KNOWN_LONG,
+                LocationFixture.anomalyMeasures(135, 90, null, null)), NotificationFixture.WARD_NAME);
+
+        assertThat(body.value()).isEqualTo("김소연님이 평소보다 오래 한 곳에 머물고 계십니다 (지속 2시간 15분, 평소 약 1시간 30분).");
+    }
+
+    @Test
+    @DisplayName("차량 이동에 지속 시간이 오면 속도와 함께 보여준다")
+    void shows_vehicle_speed_with_duration() {
+        AnomalyNotificationBody body = AnomalyNotificationBody.of(LocationFixture.createEventAnomalyAlert(
+                DetectionType.SPEED_ANOMALY, AnomalyAlertKind.EVENT_START, AnomalyReasonCode.VEHICLE,
+                LocationFixture.anomalyMeasures(200, null, 41, null)), NotificationFixture.WARD_NAME);
+
+        assertThat(body.value()).isEqualTo("김소연님이 차량으로 이동 중입니다 (약 41km/h, 지속 3시간 20분).");
     }
 
     @Test
@@ -70,7 +105,7 @@ class AnomalyNotificationBodyTest {
                 DetectionType.ROUTE_DEVIATION, AnomalyAlertKind.REMIND, AnomalyReasonCode.OFF_ROUTE,
                 LocationFixture.anomalyMeasures(20, null, null, null)), NotificationFixture.WARD_NAME);
 
-        assertThat(body.value()).isEqualTo("[확인 필요] 김소연님이 평소 다니지 않던 곳에 계십니다.");
+        assertThat(body.value()).isEqualTo("[확인 필요] 김소연님이 평소 다니지 않던 곳에 계십니다 (지속 20분).");
     }
 
     @Test

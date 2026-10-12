@@ -7,6 +7,7 @@ import com.recaring.auth.dataaccess.repository.LocalAuthRepository;
 import com.recaring.care.dataaccess.repository.CareRelationshipRepository;
 import com.recaring.device.dataaccess.entity.WardDeviceToken;
 import com.recaring.device.dataaccess.repository.WardDeviceTokenRepository;
+import com.recaring.location.dataaccess.repository.AnomalyDetectionRepository;
 import com.recaring.location.dataaccess.repository.GpsHistoryRepository;
 import com.recaring.location.fixture.LocationFixture;
 import com.recaring.member.dataaccess.entity.Member;
@@ -38,6 +39,7 @@ class LocationControllerTest extends AbstractIntegrationTest {
     @Autowired private CareRelationshipRepository careRelationshipRepository;
     @Autowired private WardDeviceTokenRepository wardDeviceTokenRepository;
     @Autowired private GpsHistoryRepository gpsHistoryRepository;
+    @Autowired private AnomalyDetectionRepository anomalyDetectionRepository;
     @Autowired private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
     private Member ward;
@@ -77,6 +79,7 @@ class LocationControllerTest extends AbstractIntegrationTest {
     void tearDown() {
         careRelationshipRepository.deleteAllInBatch();
         gpsHistoryRepository.deleteAllInBatch();
+        anomalyDetectionRepository.deleteAllInBatch();
         wardDeviceTokenRepository.deleteAllInBatch();
         localAuthRepository.deleteAllInBatch();
         memberRepository.deleteAllInBatch();
@@ -218,6 +221,183 @@ class LocationControllerTest extends AbstractIntegrationTest {
                 .expectStatus().isForbidden();
     }
 
+    // ── 이상탐지 사건 경로 조회 ──────────────────────────────────────────────
+
+    @Test
+    @DisplayName("GET /api/v1/location/anomaly-events/{wardKey}/route - 종료된 사건은 시작~종료 구간 좌표를 시간순으로 돌려주고 다른 대상자 좌표는 섞지 않는다")
+    void getAnomalyEventRoute_returns_points_within_ended_event_in_order() {
+        String wardKey = ward.getMemberKey();
+        LocalDateTime start = LocationFixture.ROUTE_EVENT_STARTED_AT;
+        double first = LocationFixture.LATITUDE;
+        double second = LocationFixture.LATITUDE + LocationFixture.WALK_50M_LATITUDE_DELTA;
+        double third = LocationFixture.LATITUDE + LocationFixture.WALK_50M_LATITUDE_DELTA * 2;
+        anomalyDetectionRepository.saveAll(List.of(
+                LocationFixture.createEventStartDetection(wardKey, start),
+                LocationFixture.createEventEndDetection(wardKey, start, LocationFixture.ROUTE_EVENT_ENDED_AT)));
+        gpsHistoryRepository.saveAll(List.of(
+                LocationFixture.createGpsHistoryRecordedAt(wardKey, third, LocationFixture.TRACK_ACCURACY, start.plusHours(2)),
+                LocationFixture.createGpsHistoryRecordedAt(wardKey, first, LocationFixture.TRACK_ACCURACY, start.plusMinutes(10)),
+                LocationFixture.createGpsHistoryRecordedAt(LocationFixture.OTHER_WARD_KEY, LocationFixture.LATITUDE,
+                        LocationFixture.TRACK_ACCURACY, start.plusMinutes(30)),
+                LocationFixture.createGpsHistoryRecordedAt(wardKey, second, LocationFixture.TRACK_ACCURACY, start.plusHours(1))));
+
+        getAnomalyEventRoute(guardianJwtToken, wardKey, LocationFixture.anomalyEventId(wardKey, start))
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.data.eventId").isEqualTo(LocationFixture.anomalyEventId(wardKey, start))
+                .jsonPath("$.data.startedAt").isEqualTo(LocationFixture.ROUTE_EVENT_STARTED_AT_INSTANT_TEXT)
+                .jsonPath("$.data.endedAt").isEqualTo(LocationFixture.ROUTE_EVENT_ENDED_AT_INSTANT_TEXT)
+                .jsonPath("$.data.ongoing").isEqualTo(false)
+                .jsonPath("$.data.route.length()").isEqualTo(3)
+                .jsonPath("$.data.route[0].latitude").isEqualTo(first)
+                .jsonPath("$.data.route[1].latitude").isEqualTo(second)
+                .jsonPath("$.data.route[2].latitude").isEqualTo(third);
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/location/anomaly-events/{wardKey}/route - 자정을 넘는 사건은 두 날짜의 좌표를 모두 돌려준다")
+    void getAnomalyEventRoute_returns_points_across_midnight() {
+        String wardKey = ward.getMemberKey();
+        LocalDateTime start = LocationFixture.OVERNIGHT_EVENT_STARTED_AT;
+        double beforeMidnight = LocationFixture.LATITUDE;
+        double afterMidnight = LocationFixture.LATITUDE + LocationFixture.WALK_50M_LATITUDE_DELTA;
+        anomalyDetectionRepository.saveAll(List.of(
+                LocationFixture.createEventStartDetection(wardKey, start),
+                LocationFixture.createEventEndDetection(wardKey, start, LocationFixture.OVERNIGHT_EVENT_ENDED_AT)));
+        gpsHistoryRepository.saveAll(List.of(
+                LocationFixture.createGpsHistoryRecordedAt(wardKey, beforeMidnight, LocationFixture.TRACK_ACCURACY, start.plusMinutes(15)),
+                LocationFixture.createGpsHistoryRecordedAt(wardKey, afterMidnight, LocationFixture.TRACK_ACCURACY, start.plusMinutes(45))));
+
+        getAnomalyEventRoute(guardianJwtToken, wardKey, LocationFixture.anomalyEventId(wardKey, start))
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.data.route.length()").isEqualTo(2)
+                .jsonPath("$.data.route[0].latitude").isEqualTo(beforeMidnight)
+                .jsonPath("$.data.route[1].latitude").isEqualTo(afterMidnight);
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/location/anomaly-events/{wardKey}/route - 정확도가 낮은 좌표는 경로에서 뺀다")
+    void getAnomalyEventRoute_excludes_inaccurate_points() {
+        String wardKey = ward.getMemberKey();
+        LocalDateTime start = LocationFixture.ROUTE_EVENT_STARTED_AT;
+        double accurate = LocationFixture.LATITUDE;
+        double inaccurate = LocationFixture.LATITUDE + LocationFixture.WALK_50M_LATITUDE_DELTA;
+        double accurateLater = LocationFixture.LATITUDE + LocationFixture.WALK_50M_LATITUDE_DELTA * 2;
+        anomalyDetectionRepository.saveAll(List.of(
+                LocationFixture.createEventStartDetection(wardKey, start),
+                LocationFixture.createEventEndDetection(wardKey, start, LocationFixture.ROUTE_EVENT_ENDED_AT)));
+        gpsHistoryRepository.saveAll(List.of(
+                LocationFixture.createGpsHistoryRecordedAt(wardKey, accurate, LocationFixture.TRACK_ACCURACY, start.plusMinutes(10)),
+                LocationFixture.createGpsHistoryRecordedAt(wardKey, inaccurate, LocationFixture.INACCURATE_ACCURACY, start.plusMinutes(20)),
+                LocationFixture.createGpsHistoryRecordedAt(wardKey, accurateLater, LocationFixture.TRACK_ACCURACY, start.plusMinutes(30))));
+
+        getAnomalyEventRoute(guardianJwtToken, wardKey, LocationFixture.anomalyEventId(wardKey, start))
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.data.route.length()").isEqualTo(2)
+                .jsonPath("$.data.route[0].latitude").isEqualTo(accurate)
+                .jsonPath("$.data.route[1].latitude").isEqualTo(accurateLater);
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/location/anomaly-events/{wardKey}/route - 시작·종료 시각과 같은 좌표는 포함하고 1초 밖의 좌표는 뺀다")
+    void getAnomalyEventRoute_includes_points_exactly_at_bounds() {
+        String wardKey = ward.getMemberKey();
+        LocalDateTime start = LocationFixture.ROUTE_EVENT_STARTED_AT;
+        LocalDateTime end = LocationFixture.ROUTE_EVENT_ENDED_AT;
+        double beforeStart = LocationFixture.LATITUDE;
+        double atStart = LocationFixture.LATITUDE + LocationFixture.WALK_50M_LATITUDE_DELTA;
+        double atEnd = LocationFixture.LATITUDE + LocationFixture.WALK_50M_LATITUDE_DELTA * 2;
+        double afterEnd = LocationFixture.LATITUDE + LocationFixture.WALK_50M_LATITUDE_DELTA * 3;
+        anomalyDetectionRepository.saveAll(List.of(
+                LocationFixture.createEventStartDetection(wardKey, start),
+                LocationFixture.createEventEndDetection(wardKey, start, end)));
+        gpsHistoryRepository.saveAll(List.of(
+                LocationFixture.createGpsHistoryRecordedAt(wardKey, beforeStart, LocationFixture.TRACK_ACCURACY, start.minusSeconds(1)),
+                LocationFixture.createGpsHistoryRecordedAt(wardKey, atStart, LocationFixture.TRACK_ACCURACY, start),
+                LocationFixture.createGpsHistoryRecordedAt(wardKey, atEnd, LocationFixture.TRACK_ACCURACY, end),
+                LocationFixture.createGpsHistoryRecordedAt(wardKey, afterEnd, LocationFixture.TRACK_ACCURACY, end.plusSeconds(1))));
+
+        getAnomalyEventRoute(guardianJwtToken, wardKey, LocationFixture.anomalyEventId(wardKey, start))
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.data.route.length()").isEqualTo(2)
+                .jsonPath("$.data.route[0].latitude").isEqualTo(atStart)
+                .jsonPath("$.data.route[1].latitude").isEqualTo(atEnd);
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/location/anomaly-events/{wardKey}/route - 종료 기록이 없는 사건은 시작 후 정확히 24시간까지만 포함하고 진행 중으로 응답한다")
+    void getAnomalyEventRoute_caps_ongoing_event_at_24_hours() {
+        String wardKey = ward.getMemberKey();
+        LocalDateTime start = LocationFixture.ROUTE_EVENT_STARTED_AT;
+        double early = LocationFixture.LATITUDE;
+        double atCap = LocationFixture.LATITUDE + LocationFixture.WALK_50M_LATITUDE_DELTA;
+        double afterCap = LocationFixture.LATITUDE + LocationFixture.WALK_50M_LATITUDE_DELTA * 2;
+        anomalyDetectionRepository.save(LocationFixture.createEventStartDetection(wardKey, start));
+        gpsHistoryRepository.saveAll(List.of(
+                LocationFixture.createGpsHistoryRecordedAt(wardKey, early, LocationFixture.TRACK_ACCURACY, start.plusHours(1)),
+                LocationFixture.createGpsHistoryRecordedAt(wardKey, atCap, LocationFixture.TRACK_ACCURACY, start.plusHours(24)),
+                LocationFixture.createGpsHistoryRecordedAt(wardKey, afterCap, LocationFixture.TRACK_ACCURACY,
+                        start.plusHours(24).plusSeconds(1))));
+
+        getAnomalyEventRoute(guardianJwtToken, wardKey, LocationFixture.anomalyEventId(wardKey, start))
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.data.ongoing").isEqualTo(true)
+                .jsonPath("$.data.endedAt").doesNotExist()
+                .jsonPath("$.data.route.length()").isEqualTo(2)
+                .jsonPath("$.data.route[0].latitude").isEqualTo(early)
+                .jsonPath("$.data.route[1].latitude").isEqualTo(atCap);
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/location/anomaly-events/{wardKey}/route - 없는 사건을 조회하면 404 E6003이 반환된다")
+    void getAnomalyEventRoute_returns_404_for_unknown_event() {
+        String wardKey = ward.getMemberKey();
+
+        getAnomalyEventRoute(guardianJwtToken, wardKey,
+                LocationFixture.anomalyEventId(wardKey, LocationFixture.ROUTE_EVENT_STARTED_AT))
+                .expectStatus().isNotFound()
+                .expectBody()
+                .jsonPath("$.error.errorCode").isEqualTo("E6003");
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/location/anomaly-events/{wardKey}/route - 관계 있는 대상자 경로로 다른 대상자의 사건을 조회하면 404 E6003이 반환된다")
+    void getAnomalyEventRoute_returns_404_for_event_of_other_ward() {
+        LocalDateTime start = LocationFixture.ROUTE_EVENT_STARTED_AT;
+        anomalyDetectionRepository.saveAll(List.of(
+                LocationFixture.createEventStartDetection(LocationFixture.OTHER_WARD_KEY, start),
+                LocationFixture.createEventEndDetection(LocationFixture.OTHER_WARD_KEY, start, LocationFixture.ROUTE_EVENT_ENDED_AT)));
+
+        getAnomalyEventRoute(guardianJwtToken, ward.getMemberKey(),
+                LocationFixture.anomalyEventId(LocationFixture.OTHER_WARD_KEY, start))
+                .expectStatus().isNotFound()
+                .expectBody()
+                .jsonPath("$.error.errorCode").isEqualTo("E6003");
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/location/anomaly-events/{wardKey}/route - 케어 관계가 없는 보호자가 조회하면 403 E6001이 반환된다")
+    void getAnomalyEventRoute_returns_403_for_unrelated_guardian() {
+        String wardKey = ward.getMemberKey();
+        LocalDateTime start = LocationFixture.ROUTE_EVENT_STARTED_AT;
+        anomalyDetectionRepository.saveAll(List.of(
+                LocationFixture.createEventStartDetection(wardKey, start),
+                LocationFixture.createEventEndDetection(wardKey, start, LocationFixture.ROUTE_EVENT_ENDED_AT)));
+        Member unrelatedGuardian = memberRepository.save(LocationFixture.createCoGuardian());
+        localAuthRepository.save(AuthFixture.createLocalAuth(
+                unrelatedGuardian.getMemberKey(), passwordEncoder.encode(AuthFixture.RAW_PASSWORD)));
+        String unrelatedJwtToken = extractAccessToken(unrelatedGuardian.getPhone(), AuthFixture.RAW_PASSWORD);
+
+        getAnomalyEventRoute(unrelatedJwtToken, wardKey, LocationFixture.anomalyEventId(wardKey, start))
+                .expectStatus().isForbidden()
+                .expectBody()
+                .jsonPath("$.error.errorCode").isEqualTo("E6001");
+    }
+
     // ── SSE 스트림 ────────────────────────────────────────────────────────────
 
     @Test
@@ -237,6 +417,13 @@ class LocationControllerTest extends AbstractIntegrationTest {
                 .body("""
                         {"latitude": %s, "longitude": %s}
                         """.formatted(latitude, longitude))
+                .exchange();
+    }
+
+    private RestTestClient.ResponseSpec getAnomalyEventRoute(String jwtToken, String wardKey, String eventId) {
+        return client.get()
+                .uri("/api/v1/location/anomaly-events/{wardKey}/route?eventId={eventId}", wardKey, eventId)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtToken)
                 .exchange();
     }
 

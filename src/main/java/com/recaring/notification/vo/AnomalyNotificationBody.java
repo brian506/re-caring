@@ -3,6 +3,10 @@ package com.recaring.notification.vo;
 import com.recaring.location.vo.AnomalyAlert;
 import com.recaring.location.vo.AnomalyMeasures;
 
+import java.util.Arrays;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
 public record AnomalyNotificationBody(String value) {
 
     private static final String NAME_PLACEHOLDER = "{name}";
@@ -25,19 +29,18 @@ public record AnomalyNotificationBody(String value) {
             return fromEvidence(alert.evidence(), wardName);
         }
         return switch (alert.reasonCode()) {
-            case VEHICLE -> subject + "차량으로 이동 중입니다"
-                    + parenthesized(measures.speedKmh() == null ? null : "약 " + measures.speedKmh() + "km/h") + ".";
-            case DWELL_UNKNOWN -> subject + "낯선 곳에서 움직임이 없으십니다.";
-            case DWELL_AFTER_VEHICLE -> subject + "차에서 내린 뒤 낯선 곳에 머물고 계십니다.";
-            case DWELL_KNOWN_LONG -> subject + "평소보다 오래 한 곳에 머물고 계십니다"
-                    + parenthesized(measures.usualMin() == null ? null : "평소 약 " + formatMinutes(measures.usualMin())) + ".";
-            case DWELL_SAFEZONE_LONG -> subject + "안심존 안 한 곳에 오래 머물고 계십니다.";
-            case OFF_ROUTE -> subject + "평소 다니지 않던 곳에 계십니다.";
-            case OUTSIDE_SAFEZONE -> subject + "안심존을 벗어나 계십니다.";
-            case UNFAMILIAR_AREA -> subject + "평소 생활 범위에서 벗어난 곳에 계십니다.";
+            case VEHICLE -> sentence(subject + "차량으로 이동 중입니다", speed(measures), duration(measures));
+            case DWELL_UNKNOWN -> sentence(subject + "낯선 곳에서 움직임이 없으십니다", duration(measures));
+            case DWELL_AFTER_VEHICLE -> sentence(subject + "차에서 내린 뒤 낯선 곳에 머물고 계십니다", duration(measures));
+            case DWELL_KNOWN_LONG -> sentence(subject + "평소보다 오래 한 곳에 머물고 계십니다",
+                    duration(measures), usual(measures));
+            case DWELL_SAFEZONE_LONG -> sentence(subject + "안심존 안 한 곳에 오래 머물고 계십니다", duration(measures));
+            case OFF_ROUTE -> sentence(subject + "평소 다니지 않던 곳에 계십니다", duration(measures));
+            case OUTSIDE_SAFEZONE -> sentence(subject + "안심존을 벗어나 계십니다", duration(measures));
+            case UNFAMILIAR_AREA -> sentence(subject + "평소 생활 범위에서 벗어난 곳에 계십니다", duration(measures));
             case NIGHT_OUTING -> subject + "야간" + hourLabel(measures.hour()) + "에 외출하셨습니다.";
             case RARE_HOUR -> subject + "평소 나가지 않으시는 시각" + hourLabel(measures.hour()) + "에 외출하셨습니다.";
-            case UNUSUAL_HOUR_AT_PLACE -> subject + "평소 이 시각에는 계시지 않던 곳에 계십니다.";
+            case UNUSUAL_HOUR_AT_PLACE -> sentence(subject + "평소 이 시각에는 계시지 않던 곳에 계십니다", duration(measures));
             case NO_ARRIVAL -> fromEvidence(alert.evidence(), wardName);
         };
     }
@@ -49,8 +52,23 @@ public record AnomalyNotificationBody(String value) {
         return evidence.replace(NAME_PLACEHOLDER, wardName);
     }
 
-    private static String parenthesized(String detail) {
-        return detail == null ? "" : " (" + detail + ")";
+    private static String sentence(String text, String... details) {
+        String joined = Arrays.stream(details)
+                .filter(Objects::nonNull)
+                .collect(Collectors.joining(", "));
+        return joined.isEmpty() ? text + "." : text + " (" + joined + ").";
+    }
+
+    private static String speed(AnomalyMeasures measures) {
+        return measures.speedKmh() == null ? null : "약 " + measures.speedKmh() + "km/h";
+    }
+
+    private static String duration(AnomalyMeasures measures) {
+        return measures.durationMin() == null ? null : "지속 " + formatMinutes(measures.durationMin());
+    }
+
+    private static String usual(AnomalyMeasures measures) {
+        return measures.usualMin() == null ? null : "평소 약 " + formatMinutes(measures.usualMin());
     }
 
     private static String hourLabel(Integer hour) {

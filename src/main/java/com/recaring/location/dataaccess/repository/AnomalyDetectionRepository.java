@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.recaring.location.vo.AnomalyEventPeriod;
 import com.recaring.location.vo.DetectionType;
 
 import java.time.LocalDateTime;
@@ -65,6 +66,18 @@ public interface AnomalyDetectionRepository extends JpaRepository<AnomalyDetecti
             @Param("wardMemberKey") String wardMemberKey,
             @Param("detectionType") DetectionType detectionType,
             @Param("recordedAt") LocalDateTime recordedAt
+    );
+
+    @Query("""
+            select new com.recaring.location.vo.AnomalyEventPeriod(a.eventId, min(a.eventStartedAt), max(a.eventEndedAt))
+            from AnomalyDetection a
+            where a.wardMemberKey = :wardMemberKey
+              and a.eventId = :eventId
+            group by a.eventId
+            """)
+    Optional<AnomalyEventPeriod> findEventPeriod(
+            @Param("wardMemberKey") String wardMemberKey,
+            @Param("eventId") String eventId
     );
 
     void deleteByWardMemberKey(String wardMemberKey);
