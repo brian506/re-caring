@@ -14,7 +14,7 @@ public class LocationValidator {
     public void validateCaregiverAccess(String caregiverKey, String wardKey) {
         boolean hasRelationship = careRelationshipCacheReader.hasCaregiverAccess(wardKey, caregiverKey);
         if (!hasRelationship) {
-            throw new AppException(ErrorType.NOT_CARE_RELATED_WARD);
+            throw new AppException(ErrorType.NOT_FOUND_CARE_RELATIONSHIP);
         }
     }
 

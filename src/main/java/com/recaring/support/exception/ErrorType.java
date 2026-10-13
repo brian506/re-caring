@@ -75,7 +75,6 @@ public enum ErrorType {
 
     // Location (E6xxx)
     NOT_WARD_MEMBER(HttpStatus.FORBIDDEN, ErrorCode.E6000, "보호 대상자로 가입한 회원만 GPS를 전송할 수 있습니다.", LogLevel.WARN),
-    NOT_CARE_RELATED_WARD(HttpStatus.FORBIDDEN, ErrorCode.E6001, "케어 관계가 없는 보호 대상자입니다.", LogLevel.WARN),
     INVALID_LOCATION_COLLECTION_INTERVAL(HttpStatus.BAD_REQUEST, ErrorCode.E6002, "지원하지 않는 위치 수집 주기입니다.", LogLevel.WARN),
     ANOMALY_EVENT_NOT_FOUND(HttpStatus.NOT_FOUND, ErrorCode.E6003, "이상탐지 사건을 찾을 수 없습니다.", LogLevel.WARN),
 

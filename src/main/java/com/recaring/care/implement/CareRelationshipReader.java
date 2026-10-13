@@ -3,18 +3,14 @@ package com.recaring.care.implement;
 import com.recaring.care.vo.CaregiverInfo;
 import com.recaring.care.vo.WardInfo;
 import com.recaring.care.dataaccess.entity.CareRelationship;
-import com.recaring.care.vo.CareRole;
 import com.recaring.care.dataaccess.repository.CareRelationshipRepository;
 import com.recaring.member.implement.MemberReader;
 import com.recaring.member.vo.MemberInfo;
-import com.recaring.support.exception.AppException;
-import com.recaring.support.exception.ErrorType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 @Component
 @RequiredArgsConstructor
@@ -76,14 +72,5 @@ public class CareRelationshipReader {
                             designatedAvatarCodes.get(caregiver.memberKey()));
                 })
                 .toList();
-    }
-
-    public CareRole findCareRole(String wardKey, String caregiverKey) {
-        return careRelationshipRepository.findAllByWardMemberKey(wardKey)
-                .stream()
-                .filter(relationship -> Objects.equals(caregiverKey, relationship.getCaregiverMemberKey()))
-                .map(CareRelationship::getCareRole)
-                .findFirst()
-                .orElseThrow(() -> new AppException(ErrorType.NOT_CARE_RELATED_WARD));
     }
 }
