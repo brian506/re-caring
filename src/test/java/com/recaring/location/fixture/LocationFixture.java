@@ -95,6 +95,10 @@ public class LocationFixture {
         return new Gps(LATITUDE, LONGITUDE, RECORDED_AT, ACCURACY, battery, SPEED, MEASURED_AT);
     }
 
+    public static Gps createGpsWithoutDeviceMotion() {
+        return new Gps(LATITUDE, LONGITUDE, RECORDED_AT, ACCURACY, BATTERY, null, null);
+    }
+
     public static Gps createGpsReceivedAt(LocalDateTime recordedAt) {
         return new Gps(LATITUDE, LONGITUDE, recordedAt, ACCURACY, BATTERY, SPEED, MEASURED_AT);
     }
@@ -295,6 +299,22 @@ public class LocationFixture {
                 .eventEndedAt(endedAt)
                 .categories(DetectionType.SPEED_ANOMALY.name())
                 .reasonCode(AnomalyReasonCode.VEHICLE)
+                .build();
+    }
+
+    public static AnomalyDetection createEventEndDetection(DetectionType detectionType, LocalDateTime endedAt) {
+        return AnomalyDetection.builder()
+                .wardMemberKey(WARD_KEY)
+                .detectionType(detectionType)
+                .score(ANOMALY_SCORE)
+                .recordedAt(endedAt)
+                .latitude(LATITUDE)
+                .longitude(LONGITUDE)
+                .alertKind(AnomalyAlertKind.EVENT_END)
+                .eventId(EVENT_ID)
+                .eventStartedAt(EVENT_STARTED_AT)
+                .eventEndedAt(endedAt)
+                .categories(detectionType.name())
                 .build();
     }
 

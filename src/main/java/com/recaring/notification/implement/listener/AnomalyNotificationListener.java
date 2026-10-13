@@ -62,7 +62,7 @@ public class AnomalyNotificationListener {
                 memberKeysOf(caregivers, caregiver -> caregiver.careRole().isGuardian()),
                 memberKeysOf(caregivers, caregiver -> caregiver.careRole() == CareRole.MANAGER),
                 eventType,
-                detection.detectionType().notificationTitle(),
+                detection.notificationTitle(),
                 AnomalyNotificationBody.of(detection, wardName).value(),
                 buildPayload(detection, eventType)
         );

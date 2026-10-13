@@ -42,7 +42,7 @@ class DetectionPublisherTest {
     private AnomalyAcknowledgementManager anomalyAcknowledgementManager;
 
     @Test
-    @DisplayName("엔진이 판정에 쓰는 좌표 필드를 스트림에 올린다")
+    @DisplayName("엔진이 판정에 쓰는 좌표 필드와 기기 속도·측정 시각을 스트림에 올린다")
     void publishes_coordinate_fields() {
         given(redisTemplate.<String, String>opsForStream()).willReturn(streamOperations);
 
@@ -57,8 +57,23 @@ class DetectionPublisherTest {
                 .containsEntry("recorded_at", "2026-07-27 10:15:03")
                 .containsEntry("accuracy", String.valueOf(LocationFixture.ACCURACY))
                 .containsEntry("acknowledged", "false")
+                .containsEntry("speed", String.valueOf(LocationFixture.SPEED))
+                .containsEntry("measured_at", LocationFixture.MEASURED_AT_TEXT)
+                .doesNotContainKey("battery");
+    }
+
+    @Test
+    @DisplayName("기기가 속도와 측정 시각을 보내지 않았으면 두 필드를 싣지 않는다")
+    void omits_speed_and_measured_at_when_device_did_not_report() {
+        given(redisTemplate.<String, String>opsForStream()).willReturn(streamOperations);
+
+        detectionPublisher.publish(LocationFixture.WARD_KEY, LocationFixture.createGpsWithoutDeviceMotion());
+
+        ArgumentCaptor<Map<String, String>> captor = ArgumentCaptor.forClass(Map.class);
+        then(streamOperations).should().add(eq(STREAM_KEY), captor.capture(), any(XAddOptions.class));
+        assertThat(captor.getValue())
+                .containsEntry("recorded_at", LocationFixture.RECORDED_AT_TEXT)
                 .doesNotContainKey("speed")
-                .doesNotContainKey("battery")
                 .doesNotContainKey("measured_at");
     }
 

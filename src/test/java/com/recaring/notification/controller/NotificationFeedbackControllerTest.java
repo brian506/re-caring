@@ -103,6 +103,24 @@ class NotificationFeedbackControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @DisplayName("같은 좌표에 사건 종료 기록이 있어도 알림이 나간 탐지에 연결한다")
+    void submitFeedback_links_to_notified_detection_when_event_end_shares_the_point() {
+        AnomalyDetection eventEnd = anomalyDetectionRepository.saveAndFlush(
+                LocationFixture.createEventEndDetection(
+                        NotificationFixture.ANOMALY_TYPE, NotificationFixture.ANOMALY_RECORDED_AT));
+        Notification notification = saveAnomalyNotification(guardian.getMemberKey());
+
+        submit(notification.getNotificationKey(), """
+                {"accuracy": "ACCURATE"}
+                """)
+                .expectStatus().isCreated();
+
+        assertThat(onlyFeedback().getAnomalyDetectionId())
+                .isEqualTo(detection.getId())
+                .isNotEqualTo(eventEnd.getId());
+    }
+
+    @Test
     @DisplayName("정확 평가는 사유 없이 제출할 수 있다")
     void submitFeedback_accepts_accurate_answer_without_reason() {
         Notification notification = saveAnomalyNotification(guardian.getMemberKey());

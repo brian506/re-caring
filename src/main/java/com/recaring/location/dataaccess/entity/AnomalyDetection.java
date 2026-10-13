@@ -25,8 +25,8 @@ import java.time.LocalDateTime;
 @Table(
         name = "anomaly_detections",
         uniqueConstraints = @UniqueConstraint(
-                name = "uk_anomaly_detections_ward_type_recorded",
-                columnNames = {"ward_member_key", "detection_type", "recorded_at"})
+                name = "uk_anomaly_detections_ward_type_recorded_kind",
+                columnNames = {"ward_member_key", "detection_type", "recorded_at", "alert_kind"})
 )
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class AnomalyDetection extends BaseEntity {

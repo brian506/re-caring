@@ -14,8 +14,8 @@ import java.util.Optional;
 
 public interface AnomalyDetectionRepository extends JpaRepository<AnomalyDetection, Long> {
 
-    // ON CONFLICT는 uk_anomaly_detections_ward_type_recorded를 arbiter로 사용하므로 해당 제약이 반드시 존재해야 한다.
-    // 재배달된 중복은 0을 돌려주고, 신규 저장만 1이 된다.
+    // uk_anomaly_detections_ward_type_recorded_kind(NULLS NOT DISTINCT)가 멱등 키다. 같은 좌표에서 나온 알림과 EVENT_END는
+    // alert_kind로 구분된다. 재배달된 중복은 0을 돌려주고, 신규 저장만 1이 된다.
     @Modifying
     @Query(
             value = """
@@ -31,7 +31,7 @@ public interface AnomalyDetectionRepository extends JpaRepository<AnomalyDetecti
                         :alertKind, :eventId, :eventStartedAt, :eventEndedAt, :categories, :reasonCode,
                         :durationMin, :usualMin, :speedKmh, :eventHour, :remindSeq
                     )
-                    ON CONFLICT (ward_member_key, detection_type, recorded_at) DO NOTHING
+                    ON CONFLICT (ward_member_key, detection_type, recorded_at, alert_kind) DO NOTHING
                     """,
             nativeQuery = true
     )
@@ -61,6 +61,7 @@ public interface AnomalyDetectionRepository extends JpaRepository<AnomalyDetecti
             where a.wardMemberKey = :wardMemberKey
               and a.detectionType = :detectionType
               and a.recordedAt = :recordedAt
+              and (a.alertKind is null or a.alertKind <> com.recaring.location.vo.AnomalyAlertKind.EVENT_END)
             """)
     Optional<Long> findIdByDetectionKeys(
             @Param("wardMemberKey") String wardMemberKey,

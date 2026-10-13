@@ -51,8 +51,10 @@ public class AnomalyDetectionManager {
                 measures.hour(),
                 event == null ? null : event.remindSeq()
         );
-        // 중복 수신 시 skip
         if (inserted == 0) {
+            log.warn("[이상탐지 결과 : 중복 저장 생략]: wardMemberKey={} | detectionType={} | recordedAt={} | alertKind={} | eventId={}",
+                    alert.wardMemberKey(), alert.detectionType(), alert.recordedAt(),
+                    event == null ? null : event.alertKind(), event == null ? null : event.eventId());
             return;
         }
 
@@ -70,7 +72,10 @@ public class AnomalyDetectionManager {
             anomalyAcknowledgementManager.delete(alert.wardMemberKey());
             return;
         }
-        anomalyAcknowledgementManager.reset(alert.wardMemberKey(), alert.event().eventId());
+        // 푸시하지 않은 재알림으로 보호자 확인이 풀리면 안 된다.
+        if (alert.isPushed()) {
+            anomalyAcknowledgementManager.reset(alert.wardMemberKey(), alert.event().eventId());
+        }
     }
 
     public Optional<Long> findDetectionId(String wardMemberKey, DetectionType detectionType, LocalDateTime recordedAt) {

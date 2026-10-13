@@ -1,6 +1,7 @@
 package com.recaring.location.vo;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 // event·reasonCode가 null이면 사건 단위 출력 이전 형식(evidence만 있는 메시지)이다.
 public record AnomalyAlert(
@@ -16,7 +17,19 @@ public record AnomalyAlert(
         AnomalyMeasures measures
 ) {
     public boolean isPushed() {
-        return event == null || event.alertKind().isPushed();
+        if (event == null) {
+            return true;
+        }
+        if (isRemind() && reasonCode != null && !reasonCode.isRemindPushed()) {
+            return false;
+        }
+        return event.alertKind().isPushed();
+    }
+
+    public String notificationTitle() {
+        return Optional.ofNullable(reasonCode)
+                .flatMap(AnomalyReasonCode::notificationTitle)
+                .orElseGet(detectionType::notificationTitle);
     }
 
     public boolean isRemind() {

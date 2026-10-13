@@ -55,6 +55,10 @@ public class DetectionPublisher {
         fields.put("longitude", String.valueOf(gps.longitude()));
         fields.put("recorded_at", TIMESTAMP_FORMAT.format(gps.recordedAt()));
         putIfPresent(fields, "accuracy", gps.accuracy());
+        putIfPresent(fields, "speed", gps.speed());
+        if (gps.measuredAt() != null) {
+            fields.put("measured_at", TIMESTAMP_FORMAT.format(gps.measuredAt()));
+        }
         fields.put("acknowledged", String.valueOf(anomalyAcknowledgementManager.isAcknowledged(wardMemberKey)));
         return fields;
     }

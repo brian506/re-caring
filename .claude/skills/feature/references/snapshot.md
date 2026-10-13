@@ -1,6 +1,6 @@
 # 프로젝트 스냅샷
 
-> 마지막 업데이트: 2026-10-12. 기능 추가·수정 시 해당 섹션을 갱신한다.
+> 마지막 업데이트: 2026-10-13. 기능 추가·수정 시 해당 섹션을 갱신한다.
 
 ## 도메인별 패키지 현황
 
@@ -96,7 +96,7 @@
 | SafeZone | safe_zones | safeZoneKey(UUID), wardMemberKey, name, address, latitude, longitude, radiusMeters(int, 100~2000m — 앱 슬라이더 값을 그대로 저장), type(SAFE/DANGER — 위험존도 같은 테이블, #238) |
 | SafeZoneState | safe_zone_states | wardMemberKey(UNIQUE), safeZoneKeys(CSV, 현재 속한 안심존). 행 없음=최초 관측(알림 안 함), 빈 문자열=존 밖 |
 | Notification | notifications | notificationKey(UUID, UNIQUE), recipientMemberKey, eventType, title, body, dataPayload(jsonb, 리다이렉트용), createdAt. 수신자별 개별 row. 읽음 필드 없음. 목록 조회 정렬·커서는 notification_id DESC (created_at은 fan-out 시 동시각 행이 생겨 정렬 불안정) |
-| AnomalyDetection | anomaly_detections | wardMemberKey, detectionType(5종), score, recordedAt, latitude, longitude, evidence(1000자, nullable — 엔진 2차 배포 후 안 옴), alertKind/eventId/eventStartedAt/eventEndedAt/categories/reasonCode/durationMin/usualMin/speedKmh/eventHour/remindSeq(#248, 전부 nullable — 이전 형식 메시지는 비어 있음). 사건(eventId) 하나에 알림 여러 행(START·CATEGORY_ADDED·REMIND·END). `(wardMemberKey, detectionType, recordedAt)` UNIQUE = 재배달 멱등 키. 알림 토글과 무관하게 항상 저장되는 탐지 사건 원본 (1건 = 1 row) |
+| AnomalyDetection | anomaly_detections | wardMemberKey, detectionType(5종), score, recordedAt, latitude, longitude, evidence(1000자, nullable — 엔진 2차 배포 후 안 옴), alertKind/eventId/eventStartedAt/eventEndedAt/categories/reasonCode/durationMin/usualMin/speedKmh/eventHour/remindSeq(#248, 전부 nullable — 이전 형식 메시지는 비어 있음). 사건(eventId) 하나에 알림 여러 행(START·CATEGORY_ADDED·REMIND·END). `(wardMemberKey, detectionType, recordedAt, alertKind)` UNIQUE NULLS NOT DISTINCT = 재배달 멱등 키(#255). 알림 토글과 무관하게 항상 저장되는 탐지 사건 원본 (1건 = 1 row) |
 | NotificationFeedback | notification_feedbacks | notificationId(UNIQUE — 1알림 1회), anomalyDetectionId(이상탐지 알림만 채움, 안심존 알림 평가는 NULL — 안심존 키·좌표는 notification_id로 알림 payload에서 찾는다), accuracy(ACCURATE/INACCURATE/UNSURE), reason(nullable, INACCURATE 전용), comment(100자, nullable). FK 제약은 걸지 않는다(이 프로젝트는 JPA 연관관계를 쓰지 않음). 이상탐지 알림의 `anomalyDetectionId`는 제출 시 `dataPayload`의 wardKey+type+recordedAt으로 `anomaly_detections`를 역조회해 채우며, **찾지 못하면 저장하지 않고 E9009로 거부한다** — 탐지 행과 조인되지 않는 라벨은 학습에 쓸 수 없고, 키 불일치 버그가 로그가 아니라 에러율로 드러나야 한다 |
 | NotificationSetting | notification_settings | (wardMemberKey, caregiverMemberKey) UNIQUE — 보호자별 설정, 안심존·위험존(진입/이탈)·응급호출 토글, 이상탐지 토글 5종(speed/wandering/abnormalDwelling/routeDeviation/timeAnomaly), lowBatteryEnabled, batteryThresholdPercents(CSV, 기본 '' = 선택 없음 → 알림 없음) |
 | Inquiry | inquiries | inquiryKey(UUID, UNIQUE), memberKey, category(4종), title(50), content(1000), status(WAITING/ANSWERED), answer(2000, nullable), answeredAt(nullable). 탈퇴 시 hard-delete. 인덱스 `(member_key, inquiry_id DESC)` |
@@ -254,11 +254,13 @@ GpsSavedEvent → DetectionListener → DetectionPublisher → XADD gps-detectio
 | `latitude` / `longitude` | O | `Gps` (WGS84 십진도) |
 | `recorded_at` | O | `Gps.recordedAt` — `yyyy-MM-dd HH:mm:ss` (KST, 오프셋 없음) |
 | `accuracy` | X | 미터. 100m 초과분 제외는 엔진 책임 |
-| `battery` | X | 0~100 |
+| `speed` | X | 기기 순간 속도, m/s (#255) |
+| `measured_at` | X | 기기 측정 시각, `recorded_at`과 같은 형식 (#255) |
 | `acknowledged` | O | `"true"`/`"false"` (#248). `anomaly:ack:{wardKey}`의 값, 없으면 false. 푸시되는 알림 수신 시 false로 리셋, 확인 API(`POST /api/v1/notifications/anomaly-events/acknowledge`)로 true. 엔진은 마지막 알림 이후 false→true 전환만 확인으로 인정하고, 확인되면 사건이 끝날 때까지 재알림하지 않는다 |
 
 - `recorded_at`은 **서버 수신 시각**이다. 엔진이 학습에 RDS `gps_histories`를, 탐지에 이 스트림을 쓰므로 두 경로의
-  시각이 같은 의미여야 한다. `measured_at`(기기 측정)은 nullable이라 건마다 기준이 달라져 쓰지 않는다.
+  시각이 같은 의미여야 한다. `measured_at`·`speed`는 엔진이 판정 보조로 쓸 수 있게 추가로만 싣는다(#255).
+  엔진은 지연 분포를 확인한 뒤 필요할 때만 판정 시간축에 반영하기로 했다(기기 시계 오류 위험). 출력 시각은 계속 `recorded_at` 에코.
   같은 이유로 시각에 오프셋을 붙이지 않는다 — RDS `timestamp` 표기와 통일.
 - 정확도가 낮은 좌표도 거르지 않고 그대로 발행한다. 판정 제외는 엔진이 `accuracy`를 보고 정한다.
   (인라인 판정인 `SafeZoneDetectionListener`는 거르므로 기준이 다르다)
@@ -314,7 +316,7 @@ GpsSavedEvent → DetectionListener → DetectionPublisher → XADD gps-detectio
 | `ward_member_key` | 입력의 `ward_member_key` 그대로 (필드명도 동일 — `user_id` 아님) |
 | `detection_type` | 5종 — `SPEED_ANOMALY` / `WANDERING` / `ABNORMAL_DWELLING` / `ROUTE_DEVIATION` / `TIME_ANOMALY` |
 | `score` | 항상 0.5000~1.0000, 소수 4자리 |
-| `recorded_at` | 입력의 `recorded_at`을 **그대로 에코**. 엔진 자기 시계 금지. 구간을 보는 탐지(배회 등)는 판정을 트리거한 GPS point의 값 |
+| `detected_at` | 입력의 `recorded_at`을 **그대로 에코**(필드명은 `detected_at`, 파서는 `recorded_at`도 받는다). EVENT_END는 `event_ended_at`과 같은 값. 엔진 자기 시계 금지. 구간을 보는 탐지(배회 등)는 판정을 트리거한 GPS point의 값 |
 | `latitude` / `longitude` | 소수 6자리 |
 | `evidence` | **전환 기간에만** 옴(엔진 1차 배포). 2차 배포에서 빠진다. `reason_code`가 없을 때만 문구 fallback으로 쓴다 |
 | `alert_kind` | `EVENT_START` / `CATEGORY_ADDED` / `REMIND` / `EVENT_END`. 없으면 이전 형식 메시지로 보고 바로 푸시한다. 모르는 값이면 버린다 |
@@ -326,6 +328,9 @@ GpsSavedEvent → DetectionListener → DetectionPublisher → XADD gps-detectio
 
 **푸시 정책**(#248): 문구는 `AnomalyNotificationBody`가 `reason_code`별 템플릿으로 조립한다(분 → "1시간 30분"). `duration_min`이 오면 괄호 안에 "지속 3시간 20분"으로 붙인다(속도·평소 체류와 함께면 쉼표로 이음, 시각 유형 NIGHT_OUTING·RARE_HOUR 제외).
 REMIND는 앞에 `[확인 필요] `를 붙인다. EVENT_END는 `anomaly_detections`에만 저장하고 푸시하지 않으며 `anomaly:ack` 키를 지운다.
+제목은 `DetectionType` 기준이되, `DWELL_KNOWN_LONG`·`DWELL_SAFEZONE_LONG`만 "오래 머무름 확인"이다(#255, `AnomalyReasonCode.notificationTitle`).
+이 두 사유의 REMIND는 저장만 하고 푸시하지 않으며 `anomaly:ack`도 리셋하지 않는다 — 같은 자리에 있는 한 사건이 닫히지 않아 확인 전까지 매시간 울린다.
+엔진은 REMIND에 그 사건의 가장 최근 `reason_code`를 싣는다. REMIND는 새 좌표가 올 때만 나간다.
 값이 없는 필드는 `"null"`이 아니라 필드 자체가 생략된다. 파서가 Map으로 읽으므로 모르는 필드가 늘어도 버려지지 않는다.
 
 **명세서 v2와 다른 점**: 명세의 `SIGNAL_LOST`는 채택하지 않았다(5종만). 다만 엔진이 보낼 가능성이 남아 있어
@@ -358,14 +363,18 @@ AnomalyDetectionConsumer(수동 ACK)
   기동해도 된다. **`BUSYGROUP`은 정상으로 취급해야 한다** — 재기동·다중 태스크마다 발생하므로 던지면
   두 번째 배포부터 기동이 막힌다. (`RedisSystemException`으로 오며 `InvalidDataAccessApiUsageException`이 아니다)
 - 컨슈머 이름은 hostname이다. 태스크마다 달라야 PEL이 섞이지 않는다.
-- **시각 필드는 양방향 모두 `recorded_at`이다.** 백엔드가 `gps-detection`에 발행한 GPS 수신 시각(KST,
-  `yyyy-MM-dd HH:mm:ss`)을 엔진이 그대로 에코해 `anomaly-alerts`로 돌려준다. 엔진 자기 시계를 쓰면 안 된다 —
+- **시각 값은 양방향 모두 `recorded_at`이다.** 백엔드가 `gps-detection`에 발행한 GPS 수신 시각(KST,
+  `yyyy-MM-dd HH:mm:ss`)을 엔진이 그대로 에코해 `anomaly-alerts`의 `detected_at`으로 돌려준다. 엔진 자기 시계를 쓰면 안 된다 —
   컨테이너 TZ에 따라 값이 밀리고, 알림을 눌러 위치 이력으로 이동할 때 `GET /api/v1/location/history`의 `date`가
   엉뚱한 날짜가 된다(이 조회는 `gps_histories.recorded_at`을 KST LocalDate로 자른다). 재발행 때마다 값이
   달라지면 UNIQUE 멱등 키도 무력해진다. 구간을 보는 탐지(배회 등)는 **판정을 트리거한 GPS point의 값**을 보낸다.
   파서는 오프셋·`Z`를 받지 못하므로 포맷도 에코 대상이다.
 - **중복 재배달은 `anomaly_detections`의 UNIQUE 제약으로 막는다.** ACK 전에 죽어 재배달되면 INSERT가 0을 돌려주고
-  이벤트를 발행하지 않아 알림도 다시 나가지 않는다.
+  이벤트를 발행하지 않아 알림도 다시 나가지 않는다. 0이면 `[이상탐지 결과 : 중복 저장 생략]` WARN을 남긴다.
+  키는 `(ward_member_key, detection_type, recorded_at, alert_kind)` `NULLS NOT DISTINCT`다(#255). EVENT_END의 `detected_at`은
+  종료 시각(두절이면 마지막 좌표, 복귀면 도착 시각)이라 같은 좌표에서 나간 알림과 3컬럼 키가 겹쳐 버려졌다.
+  `NULLS NOT DISTINCT`는 운영 DDL에만 있고 엔티티(`ddl-auto=create`)는 일반 UNIQUE라, 로컬·테스트에서는 `alert_kind`가 null인
+  이전 형식 메시지의 중복이 걸러지지 않는다. 피드백 역조회(`findIdByDetectionKeys`)는 EVENT_END 행을 제외한다.
 - **저장과 알림은 반드시 한 트랜잭션이어야 한다.** 알림 저장이 실패했는데 탐지 저장만 커밋되면,
   재배달분이 중복으로 걸러져 알림이 영영 발송되지 않는다. `AnomalyDetectionManager.record`의 `@Transactional`이
   그 경계이며, 실패 시 통째로 롤백되고 ACK도 건너뛰어 다음 재배달에서 처음부터 다시 처리된다.
