@@ -71,7 +71,6 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
     private Member victimWard;
     private String guardianAuth;
     private String coGuardianAuth;
-    private String managerAuth;
     private String strangerAuth;
     private SafeZone savedZone;
 
@@ -79,7 +78,6 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
     void setUp() {
         Member guardian = memberRepository.save(CareFixture.createGuardianMember());
         Member coGuardian = memberRepository.save(CareFixture.createGuardianMember(CO_GUARDIAN_PHONE));
-        Member manager = memberRepository.save(CareFixture.createGuardianMember(CareFixture.MANAGER_PHONE));
         Member stranger = memberRepository.save(CareFixture.createGuardianMember(STRANGER_PHONE));
         ward = memberRepository.save(CareFixture.createWardMember());
         victimWard = memberRepository.save(CareFixture.createWardMember("01044445555"));
@@ -88,12 +86,9 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
                 CareFixture.createGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
         careRelationshipRepository.save(
                 CareFixture.createGuardianRelationship(ward.getMemberKey(), coGuardian.getMemberKey()));
-        careRelationshipRepository.save(
-                CareFixture.createManagerRelationship(ward.getMemberKey(), manager.getMemberKey()));
 
         guardianAuth = bearerToken(guardian.getMemberKey(), guardian.getRole());
         coGuardianAuth = bearerToken(coGuardian.getMemberKey(), coGuardian.getRole());
-        managerAuth = bearerToken(manager.getMemberKey(), manager.getRole());
         strangerAuth = bearerToken(stranger.getMemberKey(), stranger.getRole());
 
         savedZone = safeZoneRepository.save(SafeZoneFixture.createSafeZone(ward.getMemberKey()));
@@ -190,33 +185,17 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("관계자가 안심존을 추가하면 403 E5002가 반환되고 저장되지 않는다")
-    void addSafeZone_returns_403_when_manager() {
-        client.post()
-                .uri(zonesUri())
-                .header(HttpHeaders.AUTHORIZATION, managerAuth)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(CREATE_BODY)
-                .exchange()
-                .expectStatus().isForbidden()
-                .expectBody()
-                .jsonPath("$.error.errorCode").isEqualTo("E5002");
-
-        assertThat(zonesOfWard()).hasSize(1);
-    }
-
-    @Test
-    @DisplayName("케어 관계가 없는 보호자가 안심존을 추가하면 보호자 전용 작업이므로 403 E5002가 반환되고 저장되지 않는다")
-    void addSafeZone_returns_403_when_not_caregiver() {
+    @DisplayName("케어 관계가 없는 보호자가 안심존을 추가하면 400 E5011이 반환되고 저장되지 않는다")
+    void addSafeZone_returns_400_when_not_caregiver() {
         client.post()
                 .uri(zonesUri())
                 .header(HttpHeaders.AUTHORIZATION, strangerAuth)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(CREATE_BODY)
                 .exchange()
-                .expectStatus().isForbidden()
+                .expectStatus().isBadRequest()
                 .expectBody()
-                .jsonPath("$.error.errorCode").isEqualTo("E5002");
+                .jsonPath("$.error.errorCode").isEqualTo("E5011");
 
         assertThat(zonesOfWard()).hasSize(1);
     }
@@ -270,19 +249,6 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("관계자도 보호 대상자의 안심존 목록을 조회할 수 있다")
-    void getSafeZones_returns_list_when_manager() {
-        client.get()
-                .uri(zonesUri())
-                .header(HttpHeaders.AUTHORIZATION, managerAuth)
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$.data.length()").isEqualTo(1)
-                .jsonPath("$.data[0].name").isEqualTo(SafeZoneFixture.NAME);
-    }
-
-    @Test
     @DisplayName("케어 관계가 없는 보호자가 목록을 조회하면 400 E5011이 반환된다")
     void getSafeZones_returns_400_when_not_caregiver() {
         client.get()
@@ -318,18 +284,6 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
                 .jsonPath("$.data.name").isEqualTo(SafeZoneFixture.NAME)
                 .jsonPath("$.data.address").isEqualTo(SafeZoneFixture.ADDRESS)
                 .jsonPath("$.data.radiusMeters").isEqualTo(SafeZoneFixture.RADIUS_METERS);
-    }
-
-    @Test
-    @DisplayName("관계자도 안심존 상세를 조회할 수 있다")
-    void getSafeZone_returns_detail_when_manager() {
-        client.get()
-                .uri(zoneUri(savedZone.getSafeZoneKey()))
-                .header(HttpHeaders.AUTHORIZATION, managerAuth)
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$.data.name").isEqualTo(SafeZoneFixture.NAME);
     }
 
     @Test
@@ -382,22 +336,6 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("관계자가 안심존을 수정하면 403 E5002가 반환되고 값이 그대로 남는다")
-    void updateSafeZone_returns_403_when_manager() {
-        client.patch()
-                .uri(zoneUri(savedZone.getSafeZoneKey()))
-                .header(HttpHeaders.AUTHORIZATION, managerAuth)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(UPDATE_BODY)
-                .exchange()
-                .expectStatus().isForbidden()
-                .expectBody()
-                .jsonPath("$.error.errorCode").isEqualTo("E5002");
-
-        assertThat(reloadSavedZone().getName()).isEqualTo(SafeZoneFixture.NAME);
-    }
-
-    @Test
     @DisplayName("반경 100m 미만으로 수정하면 400 E8003이 반환되고 값이 그대로 남는다")
     void updateSafeZone_returns_400_when_radius_too_small() {
         client.patch()
@@ -414,17 +352,17 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("케어 관계가 없는 보호자가 안심존을 수정하면 보호자 전용 작업이므로 403 E5002가 반환되고 값이 그대로 남는다")
-    void updateSafeZone_returns_403_when_not_caregiver() {
+    @DisplayName("케어 관계가 없는 보호자가 안심존을 수정하면 400 E5011이 반환되고 값이 그대로 남는다")
+    void updateSafeZone_returns_400_when_not_caregiver() {
         client.patch()
                 .uri(zoneUri(savedZone.getSafeZoneKey()))
                 .header(HttpHeaders.AUTHORIZATION, strangerAuth)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(UPDATE_BODY)
                 .exchange()
-                .expectStatus().isForbidden()
+                .expectStatus().isBadRequest()
                 .expectBody()
-                .jsonPath("$.error.errorCode").isEqualTo("E5002");
+                .jsonPath("$.error.errorCode").isEqualTo("E5011");
 
         assertThat(reloadSavedZone().getName()).isEqualTo(SafeZoneFixture.NAME);
     }
@@ -446,29 +384,15 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("관계자가 안심존을 삭제하면 403 E5002가 반환되고 행이 남아 있다")
-    void deleteSafeZone_returns_403_when_manager() {
-        client.delete()
-                .uri(zoneUri(savedZone.getSafeZoneKey()))
-                .header(HttpHeaders.AUTHORIZATION, managerAuth)
-                .exchange()
-                .expectStatus().isForbidden()
-                .expectBody()
-                .jsonPath("$.error.errorCode").isEqualTo("E5002");
-
-        assertThat(safeZoneRepository.findBySafeZoneKeyAndWardMemberKey(savedZone.getSafeZoneKey(), ward.getMemberKey())).isPresent();
-    }
-
-    @Test
-    @DisplayName("케어 관계가 없는 보호자가 안심존을 삭제하면 보호자 전용 작업이므로 403 E5002가 반환되고 행이 남아 있다")
-    void deleteSafeZone_returns_403_when_not_caregiver() {
+    @DisplayName("케어 관계가 없는 보호자가 안심존을 삭제하면 400 E5011이 반환되고 행이 남아 있다")
+    void deleteSafeZone_returns_400_when_not_caregiver() {
         client.delete()
                 .uri(zoneUri(savedZone.getSafeZoneKey()))
                 .header(HttpHeaders.AUTHORIZATION, strangerAuth)
                 .exchange()
-                .expectStatus().isForbidden()
+                .expectStatus().isBadRequest()
                 .expectBody()
-                .jsonPath("$.error.errorCode").isEqualTo("E5002");
+                .jsonPath("$.error.errorCode").isEqualTo("E5011");
 
         assertThat(safeZoneRepository.findBySafeZoneKeyAndWardMemberKey(savedZone.getSafeZoneKey(), ward.getMemberKey())).isPresent();
     }

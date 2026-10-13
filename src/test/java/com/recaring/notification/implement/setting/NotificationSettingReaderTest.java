@@ -32,8 +32,8 @@ class NotificationSettingReaderTest {
             CareFixture.createCaregiverInfo(NotificationFixture.GUARDIAN_KEY, CareRole.GUARDIAN);
     private static final CaregiverInfo OTHER_GUARDIAN =
             CareFixture.createCaregiverInfo(NotificationFixture.OTHER_GUARDIAN_KEY, CareRole.GUARDIAN);
-    private static final CaregiverInfo MANAGER =
-            CareFixture.createCaregiverInfo(NotificationFixture.MANAGER_KEY, CareRole.MANAGER);
+    private static final CaregiverInfo SECOND_GUARDIAN =
+            CareFixture.createCaregiverInfo(NotificationFixture.SECOND_GUARDIAN_KEY, CareRole.GUARDIAN);
 
     @InjectMocks
     private NotificationSettingReader notificationSettingReader;
@@ -118,10 +118,10 @@ class NotificationSettingReaderTest {
 
         List<CaregiverInfo> result = notificationSettingReader.filterRecipients(
                 NotificationFixture.WARD_KEY,
-                List.of(GUARDIAN, MANAGER),
+                List.of(GUARDIAN, SECOND_GUARDIAN),
                 settings -> settings.safeZone().entryEnabled());
 
-        assertThat(result).containsExactly(MANAGER);
+        assertThat(result).containsExactly(SECOND_GUARDIAN);
     }
 
     @Test

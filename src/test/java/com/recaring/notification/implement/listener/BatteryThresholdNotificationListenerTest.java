@@ -44,21 +44,20 @@ class BatteryThresholdNotificationListenerTest {
     private MemberReader memberReader;
 
     @Test
-    @DisplayName("보호자와 관계자를 역할별로 나눠 알림 발송을 위임한다")
-    void onBatteryThresholdAlert_sends_to_care_parties_by_role() {
+    @DisplayName("연결된 보호자 전원에게 알림 발송을 위임한다")
+    void onBatteryThresholdAlert_sends_to_every_linked_caregiver() {
         given(careRelationshipReader.findCaregiverInfos(NotificationFixture.WARD_KEY))
                 .willReturn(List.of(
                         CareFixture.createCaregiverInfo(NotificationFixture.GUARDIAN_KEY, CareRole.GUARDIAN),
-                        CareFixture.createCaregiverInfo(NotificationFixture.MANAGER_KEY, CareRole.MANAGER)));
+                        CareFixture.createCaregiverInfo(NotificationFixture.SECOND_GUARDIAN_KEY, CareRole.GUARDIAN)));
         given(memberReader.findNameByMemberKey(NotificationFixture.WARD_KEY))
                 .willReturn(NotificationFixture.WARD_NAME);
 
         batteryThresholdNotificationListener.onBatteryThresholdAlert(
                 LocationFixture.createBatteryThresholdAlertEvent());
 
-        then(notificationSendManager).should(times(1)).sendToCareParties(
-                List.of(NotificationFixture.GUARDIAN_KEY),
-                List.of(NotificationFixture.MANAGER_KEY),
+        then(notificationSendManager).should(times(1)).sendToCaregivers(
+                List.of(NotificationFixture.GUARDIAN_KEY, NotificationFixture.SECOND_GUARDIAN_KEY),
                 EVENT_TYPE,
                 "배터리 잔량 알림",
                 NotificationFixture.WARD_NAME + "님의 배터리 잔량이 20%에 도달했어요.",
@@ -80,7 +79,7 @@ class BatteryThresholdNotificationListenerTest {
                 LocationFixture.createBatteryThresholdAlertEvent());
 
         then(notificationSendManager).should(never())
-                .sendToCareParties(any(), any(), anyString(), anyString(), anyString(), any());
+                .sendToCaregivers(any(), anyString(), anyString(), anyString(), any());
     }
 
     @Test
@@ -90,15 +89,14 @@ class BatteryThresholdNotificationListenerTest {
                 .willReturn(List.of(
                         CareFixture.createCaregiverInfo(NotificationFixture.GUARDIAN_KEY, CareRole.GUARDIAN),
                         CareFixture.createCaregiverInfo(NotificationFixture.OTHER_GUARDIAN_KEY, CareRole.GUARDIAN),
-                        CareFixture.createCaregiverInfo(NotificationFixture.MANAGER_KEY, CareRole.MANAGER)));
+                        CareFixture.createCaregiverInfo(NotificationFixture.SECOND_GUARDIAN_KEY, CareRole.GUARDIAN)));
         given(memberReader.findNameByMemberKey(NotificationFixture.WARD_KEY)).willReturn(NotificationFixture.WARD_NAME);
 
         batteryThresholdNotificationListener.onBatteryThresholdAlert(
                 LocationFixture.createBatteryThresholdAlertEvent(List.of(NotificationFixture.OTHER_GUARDIAN_KEY)));
 
-        then(notificationSendManager).should().sendToCareParties(
+        then(notificationSendManager).should().sendToCaregivers(
                 eq(List.of(NotificationFixture.OTHER_GUARDIAN_KEY)),
-                eq(List.of()),
                 eq(EVENT_TYPE),
                 anyString(), anyString(), any());
     }
@@ -114,6 +112,6 @@ class BatteryThresholdNotificationListenerTest {
                 LocationFixture.createBatteryThresholdAlertEvent(List.of(NotificationFixture.OTHER_GUARDIAN_KEY)));
 
         then(notificationSendManager).should(never())
-                .sendToCareParties(any(), any(), anyString(), anyString(), anyString(), any());
+                .sendToCaregivers(any(), anyString(), anyString(), anyString(), any());
     }
 }

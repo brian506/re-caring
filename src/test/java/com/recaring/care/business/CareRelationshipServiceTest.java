@@ -50,7 +50,7 @@ class CareRelationshipServiceTest {
     private DesignatedAvatarManager designatedAvatarManager;
 
     @Test
-    @DisplayName("보호자/관리자 목록 조회 시 접근 권한 검증 후 결과를 반환한다")
+    @DisplayName("보호자 목록 조회 시 접근 권한 검증 후 결과를 반환한다")
     void getCaregivers_validates_then_returns_result() {
         // given
         List<CaregiverInfo> expected = List.of(
@@ -69,16 +69,16 @@ class CareRelationshipServiceTest {
     }
 
     @Test
-    @DisplayName("보호자/관리자 목록 조회 시 권한이 없으면 예외가 전파된다")
+    @DisplayName("보호자 목록 조회 시 권한이 없으면 예외가 전파된다")
     void getCaregivers_propagates_exception_when_unauthorized() {
-        willThrow(new AppException(ErrorType.NOT_GUARDIAN_OF_WARD))
+        willThrow(new AppException(ErrorType.NOT_FOUND_CARE_RELATIONSHIP))
                 .given(careRelationshipValidator)
                 .validateCaregiverViewAccess(CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY);
 
         assertThatThrownBy(() ->
                 careRelationshipService.getCaregivers(CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY))
                 .isInstanceOf(AppException.class)
-                .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_GUARDIAN_OF_WARD);
+                .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_FOUND_CARE_RELATIONSHIP);
 
         then(careRelationshipReader).should(times(0)).findCaregiverInfos(any(), any());
     }
@@ -194,30 +194,30 @@ class CareRelationshipServiceTest {
     void designateCaregiverAvatar_validates_both_sides_then_designates() {
         careRelationshipService.designateCaregiverAvatar(
                 CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY,
-                CareFixture.MANAGER_MEMBER_KEY, CareFixture.ADULT_AVATAR_CODE);
+                CareFixture.SECOND_GUARDIAN_MEMBER_KEY, CareFixture.ADULT_AVATAR_CODE);
 
         InOrder inOrder = inOrder(careRelationshipValidator, designatedAvatarManager);
         inOrder.verify(careRelationshipValidator)
                 .validateCaregiverViewAccess(CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY);
         inOrder.verify(careRelationshipValidator)
-                .validateCaregiver(CareFixture.MANAGER_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY);
+                .validateCaregiver(CareFixture.SECOND_GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY);
         inOrder.verify(designatedAvatarManager).designate(
-                CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY,
+                CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY, CareFixture.SECOND_GUARDIAN_MEMBER_KEY,
                 new ProfileAvatarCode(CareFixture.ADULT_AVATAR_CODE));
     }
 
     @Test
     @DisplayName("보호자 얼굴 지정 - 요청자에게 열람 권한이 없으면 예외가 전파되고 저장하지 않는다")
     void designateCaregiverAvatar_propagates_exception_when_requester_unauthorized() {
-        willThrow(new AppException(ErrorType.NOT_GUARDIAN_OF_WARD))
+        willThrow(new AppException(ErrorType.NOT_FOUND_CARE_RELATIONSHIP))
                 .given(careRelationshipValidator)
-                .validateCaregiverViewAccess(CareFixture.MANAGER_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY);
+                .validateCaregiverViewAccess(CareFixture.SECOND_GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY);
 
         assertThatThrownBy(() -> careRelationshipService.designateCaregiverAvatar(
-                CareFixture.MANAGER_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY,
+                CareFixture.SECOND_GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY,
                 CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.ADULT_AVATAR_CODE))
                 .isInstanceOf(AppException.class)
-                .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_GUARDIAN_OF_WARD);
+                .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_FOUND_CARE_RELATIONSHIP);
 
         then(designatedAvatarManager).should(times(0)).designate(any(), any(), any(), any());
     }

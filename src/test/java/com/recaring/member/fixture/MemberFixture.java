@@ -5,7 +5,6 @@ import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.vo.MemberRole;
 import com.recaring.member.dataaccess.entity.MembersTermsAgreement;
 import com.recaring.member.dataaccess.entity.SignUpType;
-import com.recaring.member.dataaccess.entity.SubscriptionType;
 import com.recaring.member.vo.MemberInfo;
 import com.recaring.member.vo.TermsAgreementInfo;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -68,14 +67,6 @@ public class MemberFixture {
                 .build();
     }
 
-    // The entity constructor always assigns BASIC; the persisted column can hold PREMIUM,
-    // so tests reach that state through reflection instead of a production setter.
-    public static Member createMemberWithSubscription(SubscriptionType subscriptionType) {
-        Member member = createMember();
-        ReflectionTestUtils.setField(member, "subscriptionType", subscriptionType);
-        return member;
-    }
-
     public static Member createMemberWithKey(String memberKey, String phone) {
         Member member = createMember(phone);
         ReflectionTestUtils.setField(member, "memberKey", memberKey);
@@ -98,10 +89,6 @@ public class MemberFixture {
 
     public static MemberInfo createMemberInfoWithKey(String memberKey, String phone) {
         return MemberInfo.from(createMemberWithKey(memberKey, phone));
-    }
-
-    public static MemberInfo createMemberInfoWithSubscription(SubscriptionType subscriptionType) {
-        return MemberInfo.from(createMemberWithSubscription(subscriptionType));
     }
 
     public static TermsAgreementInfo createTermsAgreementInfo() {

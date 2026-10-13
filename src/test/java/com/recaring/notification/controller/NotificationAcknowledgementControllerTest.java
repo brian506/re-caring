@@ -31,17 +31,13 @@ class NotificationAcknowledgementControllerTest extends AbstractIntegrationTest 
 
     private Member ward;
     private Member guardian;
-    private Member manager;
 
     @BeforeEach
     void setUp() {
         ward = memberRepository.save(NotificationFixture.createWard());
         guardian = memberRepository.save(NotificationFixture.createGuardian());
-        manager = memberRepository.save(NotificationFixture.createManager());
         careRelationshipRepository.save(
                 CareFixture.createGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
-        careRelationshipRepository.save(
-                CareFixture.createManagerRelationship(ward.getMemberKey(), manager.getMemberKey()));
         anomalyAcknowledgementManager.reset(ward.getMemberKey(), LocationFixture.EVENT_ID);
     }
 
@@ -59,15 +55,6 @@ class NotificationAcknowledgementControllerTest extends AbstractIntegrationTest 
                 .expectStatus().isOk()
                 .expectBody()
                 .jsonPath("$.resultType").isEqualTo("SUCCESS");
-
-        assertThat(anomalyAcknowledgementManager.isAcknowledged(ward.getMemberKey())).isTrue();
-    }
-
-    @Test
-    @DisplayName("관계자도 사건을 확인할 수 있다")
-    void acknowledge_allows_manager() {
-        acknowledge(manager, ward.getMemberKey(), LocationFixture.EVENT_ID)
-                .expectStatus().isOk();
 
         assertThat(anomalyAcknowledgementManager.isAcknowledged(ward.getMemberKey())).isTrue();
     }

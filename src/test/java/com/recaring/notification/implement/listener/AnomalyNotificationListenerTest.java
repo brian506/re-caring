@@ -69,16 +69,15 @@ class AnomalyNotificationListenerTest {
     }
 
     @Test
-    @DisplayName("보호자와 관계자를 역할별로 나눠 알림 발송을 위임한다")
-    void splits_recipients_by_care_role() {
+    @DisplayName("연결된 보호자 전원에게 알림 발송을 위임한다")
+    void sends_to_every_linked_caregiver() {
         givenCaregiversAndWardName();
 
         anomalyNotificationListener.onAnomalyDetected(
                 LocationFixture.createAnomalyDetectedEvent(DetectionType.SPEED_ANOMALY, "{name} 님이 차량 속도로 이동 중입니다."));
 
-        then(notificationSendManager).should().sendToCareParties(
-                List.of(NotificationFixture.GUARDIAN_KEY),
-                List.of(NotificationFixture.MANAGER_KEY),
+        then(notificationSendManager).should().sendToCaregivers(
+                List.of(NotificationFixture.GUARDIAN_KEY, NotificationFixture.SECOND_GUARDIAN_KEY),
                 DetectionType.SPEED_ANOMALY.name(),
                 // 기댓값을 enum에서 되읽으면 유형↔제목이 뒤바뀌어도 통과하므로 문구를 직접 고정한다
                 "빠른 이동 알림",
@@ -105,9 +104,8 @@ class AnomalyNotificationListenerTest {
         anomalyNotificationListener.onAnomalyDetected(
                 LocationFixture.createAnomalyDetectedEvent(DetectionType.TIME_ANOMALY, "{name} 님은 평소 이 시각에는 나가신 적이 거의 없습니다."));
 
-        then(notificationSendManager).should().sendToCareParties(
-                eq(List.of()),
-                eq(List.of(NotificationFixture.MANAGER_KEY)),
+        then(notificationSendManager).should().sendToCaregivers(
+                eq(List.of(NotificationFixture.SECOND_GUARDIAN_KEY)),
                 eq(DetectionType.TIME_ANOMALY.name()),
                 anyString(), anyString(), any());
     }
@@ -122,7 +120,7 @@ class AnomalyNotificationListenerTest {
                 LocationFixture.createAnomalyDetectedEvent(DetectionType.WANDERING, "{name} 님이 같은 곳을 맴돌고 계십니다."));
 
         then(notificationSendManager).should(never())
-                .sendToCareParties(any(), any(), anyString(), anyString(), anyString(), any());
+                .sendToCaregivers(any(), anyString(), anyString(), anyString(), any());
         then(memberReader).should(never()).findNameByMemberKey(anyString());
     }
 
@@ -136,8 +134,8 @@ class AnomalyNotificationListenerTest {
                 LocationFixture.anomalyMeasures(LocationFixture.DWELL_DURATION_MIN, null, null, null))));
 
         ArgumentCaptor<Map<String, String>> payloadCaptor = ArgumentCaptor.forClass(Map.class);
-        then(notificationSendManager).should().sendToCareParties(
-                any(), any(), anyString(), anyString(), anyString(), payloadCaptor.capture());
+        then(notificationSendManager).should().sendToCaregivers(
+                any(), anyString(), anyString(), anyString(), payloadCaptor.capture());
         assertThat(payloadCaptor.getValue())
                 .containsEntry("type", DetectionType.ABNORMAL_DWELLING.name())
                 .containsEntry("wardKey", NotificationFixture.WARD_KEY)
@@ -200,22 +198,22 @@ class AnomalyNotificationListenerTest {
         given(careRelationshipReader.findCaregiverInfos(NotificationFixture.WARD_KEY))
                 .willReturn(List.of(
                         CareFixture.createCaregiverInfo(NotificationFixture.GUARDIAN_KEY, CareRole.GUARDIAN),
-                        CareFixture.createCaregiverInfo(NotificationFixture.MANAGER_KEY, CareRole.MANAGER)));
+                        CareFixture.createCaregiverInfo(NotificationFixture.SECOND_GUARDIAN_KEY, CareRole.GUARDIAN)));
         given(memberReader.findNameByMemberKey(NotificationFixture.WARD_KEY))
                 .willReturn(NotificationFixture.WARD_NAME);
     }
 
     private String capturedTitle() {
         ArgumentCaptor<String> titleCaptor = ArgumentCaptor.forClass(String.class);
-        then(notificationSendManager).should().sendToCareParties(
-                any(), any(), anyString(), titleCaptor.capture(), anyString(), any());
+        then(notificationSendManager).should().sendToCaregivers(
+                any(), anyString(), titleCaptor.capture(), anyString(), any());
         return titleCaptor.getValue();
     }
 
     private String capturedBody() {
         ArgumentCaptor<String> bodyCaptor = ArgumentCaptor.forClass(String.class);
-        then(notificationSendManager).should().sendToCareParties(
-                any(), any(), anyString(), anyString(), bodyCaptor.capture(), any());
+        then(notificationSendManager).should().sendToCaregivers(
+                any(), anyString(), anyString(), bodyCaptor.capture(), any());
         return bodyCaptor.getValue();
     }
 }

@@ -30,7 +30,7 @@ public class LocationFixture {
 
     public static final String WARD_KEY = "ward-member-key-001";
     public static final String GUARDIAN_KEY = "guardian-member-key-001";
-    public static final String MANAGER_KEY = "manager-member-key-001";
+    public static final String SECOND_GUARDIAN_KEY = "second-guardian-member-key-001";
     public static final String OTHER_GUARDIAN_KEY = "other-guardian-member-key-001";
     public static final double LATITUDE = 37.5665;
     public static final double LONGITUDE = 126.9780;
@@ -175,17 +175,6 @@ public class LocationFixture {
                 .build();
     }
 
-    public static Member createManager() {
-        return Member.builder()
-                .phone("01055556666")
-                .name("관리자")
-                .birth(LocalDate.of(1975, 1, 1))
-                .gender(Gender.MALE)
-                .role(MemberRole.GUARDIAN)
-                .signUpType(SignUpType.LOCAL)
-                .build();
-    }
-
     public static LocationSignalLostEvent createLocationSignalLostEvent() {
         return new LocationSignalLostEvent(WARD_KEY, createGps());
     }
@@ -195,7 +184,7 @@ public class LocationFixture {
     }
 
     public static BatteryThresholdAlertEvent createBatteryThresholdAlertEvent() {
-        return createBatteryThresholdAlertEvent(List.of(GUARDIAN_KEY, MANAGER_KEY));
+        return createBatteryThresholdAlertEvent(List.of(GUARDIAN_KEY, SECOND_GUARDIAN_KEY));
     }
 
     public static BatteryThresholdAlertEvent createBatteryThresholdAlertEvent(List<String> recipientKeys) {

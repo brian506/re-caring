@@ -59,14 +59,14 @@ class FcmDeviceTokenManagerTest {
                 .willReturn(Optional.of(existing));
 
         FcmDeviceTokenInfo result = fcmDeviceTokenManager.upsert(
-                NotificationFixture.MANAGER_KEY,
+                NotificationFixture.SECOND_GUARDIAN_KEY,
                 NotificationFixture.GUARDIAN_FCM_TOKEN,
-                CarePartyRole.MANAGER,
+                CarePartyRole.GUARDIAN,
                 FcmDevicePlatform.IOS
         );
 
-        assertThat(result.memberKey()).isEqualTo(NotificationFixture.MANAGER_KEY);
-        assertThat(result.careRole()).isEqualTo(CarePartyRole.MANAGER);
+        assertThat(result.memberKey()).isEqualTo(NotificationFixture.SECOND_GUARDIAN_KEY);
+        assertThat(result.careRole()).isEqualTo(CarePartyRole.GUARDIAN);
         assertThat(result.platform()).isEqualTo(FcmDevicePlatform.IOS);
         then(fcmDeviceTokenRepository).should().findByToken(NotificationFixture.GUARDIAN_FCM_TOKEN);
     }

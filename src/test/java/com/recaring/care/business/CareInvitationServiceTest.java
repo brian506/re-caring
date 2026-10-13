@@ -41,21 +41,12 @@ class CareInvitationServiceTest {
     }
 
     @Test
-    @DisplayName("관리자 초대 요청 시 Manager에 위임한다")
-    void sendManagerInvitation_delegates_to_manager() {
-        careInvitationService.sendManagerInvitation(CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.MANAGER_PHONE, CareFixture.WARD_MEMBER_KEY);
-
-        then(careInvitationManager).should(times(1))
-                .sendManagerInvitation(CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.MANAGER_PHONE, CareFixture.WARD_MEMBER_KEY);
-    }
-
-    @Test
     @DisplayName("보호자 초대 요청 시 Manager에 위임한다")
     void sendGuardianInvitation_delegates_to_manager() {
-        careInvitationService.sendGuardianInvitation(CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.MANAGER_PHONE, CareFixture.WARD_MEMBER_KEY);
+        careInvitationService.sendGuardianInvitation(CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.SECOND_GUARDIAN_PHONE, CareFixture.WARD_MEMBER_KEY);
 
         then(careInvitationManager).should(times(1))
-                .sendGuardianInvitation(CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.MANAGER_PHONE, CareFixture.WARD_MEMBER_KEY);
+                .sendGuardianInvitation(CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.SECOND_GUARDIAN_PHONE, CareFixture.WARD_MEMBER_KEY);
     }
 
     @Test

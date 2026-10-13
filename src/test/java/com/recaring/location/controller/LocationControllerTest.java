@@ -49,9 +49,7 @@ class LocationControllerTest extends AbstractIntegrationTest {
 
     private Member ward;
     private Member guardian;
-    private Member manager;
     private String guardianJwtToken;
-    private String managerJwtToken;
     private String wardJwtToken;
     private String wardDeviceToken;
 
@@ -59,15 +57,12 @@ class LocationControllerTest extends AbstractIntegrationTest {
     void setUp() {
         ward = memberRepository.save(LocationFixture.createWard());
         guardian = memberRepository.save(LocationFixture.createGuardian());
-        manager = memberRepository.save(LocationFixture.createManager());
 
         String encoded = passwordEncoder.encode(AuthFixture.RAW_PASSWORD);
         localAuthRepository.save(AuthFixture.createLocalAuth(ward.getMemberKey(), encoded));
         localAuthRepository.save(AuthFixture.createLocalAuth(guardian.getMemberKey(), encoded));
-        localAuthRepository.save(AuthFixture.createLocalAuth(manager.getMemberKey(), encoded));
 
         guardianJwtToken = extractAccessToken(guardian.getPhone(), AuthFixture.RAW_PASSWORD);
-        managerJwtToken = extractAccessToken(manager.getPhone(), AuthFixture.RAW_PASSWORD);
         wardJwtToken = extractAccessToken(ward.getPhone(), AuthFixture.RAW_PASSWORD);
 
         WardDeviceToken deviceToken = DeviceFixture.createDeviceToken(ward.getMemberKey());
@@ -76,8 +71,6 @@ class LocationControllerTest extends AbstractIntegrationTest {
 
         careRelationshipRepository.save(
                 CareFixture.createGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
-        careRelationshipRepository.save(
-                CareFixture.createManagerRelationship(ward.getMemberKey(), manager.getMemberKey()));
     }
 
     @AfterEach
@@ -177,19 +170,6 @@ class LocationControllerTest extends AbstractIntegrationTest {
                 .jsonPath("$.data[1].latitude").isEqualTo(walked)
                 .jsonPath("$.data[2].latitude").isEqualTo(walkedTwice);
         assertThat(gpsHistoryRepository.count()).isEqualTo(5);
-    }
-
-    @Test
-    @DisplayName("GET /api/v1/location/history/{wardKey} - MANAGER 역할의 케어 관계여도 좌표가 반환된다")
-    void getHistory_returns_recorded_coordinates_for_manager() {
-        sendGps(LocationFixture.LATITUDE, LocationFixture.LONGITUDE).expectStatus().isOk();
-
-        getHistoryAsToday(managerJwtToken)
-                .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$.data.length()").isEqualTo(1)
-                .jsonPath("$.data[0].latitude").isEqualTo(LocationFixture.LATITUDE)
-                .jsonPath("$.data[0].longitude").isEqualTo(LocationFixture.LONGITUDE);
     }
 
     @Test

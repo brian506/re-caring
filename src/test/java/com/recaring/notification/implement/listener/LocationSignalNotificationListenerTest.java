@@ -40,21 +40,20 @@ class LocationSignalNotificationListenerTest {
     private MemberReader memberReader;
 
     @Test
-    @DisplayName("보호자와 관계자에게 마지막 위치를 담아 위치 수집 중단을 알린다")
+    @DisplayName("연결된 보호자 전원에게 마지막 위치를 담아 위치 수집 중단을 알린다")
     void sends_signal_lost_notification_with_last_location() {
         given(careRelationshipReader.findCaregiverInfos(NotificationFixture.WARD_KEY))
                 .willReturn(List.of(
                         CareFixture.createCaregiverInfo(NotificationFixture.GUARDIAN_KEY, CareRole.GUARDIAN),
                         CareFixture.createCaregiverInfo(NotificationFixture.OTHER_GUARDIAN_KEY, CareRole.GUARDIAN),
-                        CareFixture.createCaregiverInfo(NotificationFixture.MANAGER_KEY, CareRole.MANAGER)));
+                        CareFixture.createCaregiverInfo(NotificationFixture.SECOND_GUARDIAN_KEY, CareRole.GUARDIAN)));
         given(memberReader.findNameByMemberKey(NotificationFixture.WARD_KEY))
                 .willReturn(NotificationFixture.WARD_NAME);
 
         locationSignalNotificationListener.onLocationSignalLost(LocationFixture.createLocationSignalLostEvent());
 
-        then(notificationSendManager).should().sendDataOnlyToCareParties(
-                List.of(NotificationFixture.GUARDIAN_KEY, NotificationFixture.OTHER_GUARDIAN_KEY),
-                List.of(NotificationFixture.MANAGER_KEY),
+        then(notificationSendManager).should().sendDataOnlyToCaregivers(
+                List.of(NotificationFixture.GUARDIAN_KEY, NotificationFixture.OTHER_GUARDIAN_KEY, NotificationFixture.SECOND_GUARDIAN_KEY),
                 EVENT_TYPE,
                 "위치 수집 중단 알림",
                 "김소연님의 위치가 20분 넘게 수집되지 않고 있어요. 기기 전원과 앱 로그인 상태를 확인해 주세요.",
@@ -77,6 +76,6 @@ class LocationSignalNotificationListenerTest {
         locationSignalNotificationListener.onLocationSignalLost(LocationFixture.createLocationSignalLostEvent());
 
         then(notificationSendManager).should(never())
-                .sendDataOnlyToCareParties(any(), any(), anyString(), anyString(), anyString(), any());
+                .sendDataOnlyToCaregivers(any(), anyString(), anyString(), anyString(), any());
     }
 }

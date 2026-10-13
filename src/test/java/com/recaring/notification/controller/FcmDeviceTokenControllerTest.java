@@ -32,13 +32,13 @@ class FcmDeviceTokenControllerTest extends AbstractIntegrationTest {
     private JwtGenerator jwtGenerator;
 
     private Member guardian;
-    private Member manager;
+    private Member secondGuardian;
     private Member ward;
 
     @BeforeEach
     void setUp() {
         guardian = memberRepository.save(NotificationFixture.createGuardian());
-        manager = memberRepository.save(NotificationFixture.createManager());
+        secondGuardian = memberRepository.save(NotificationFixture.createSecondGuardian());
         ward = memberRepository.save(NotificationFixture.createWard());
     }
 
@@ -97,27 +97,27 @@ class FcmDeviceTokenControllerTest extends AbstractIntegrationTest {
 
         client.put()
                 .uri("/api/v1/notifications/device-tokens")
-                .header(HttpHeaders.AUTHORIZATION, bearerToken(manager))
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(secondGuardian))
                 .contentType(MediaType.APPLICATION_JSON)
                 .body("""
                         {
                           "token": "shared-fcm-token-http",
-                          "careRole": "MANAGER",
+                          "careRole": "GUARDIAN",
                           "platform": "IOS"
                         }
                         """)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
-                .jsonPath("$.data.memberKey").isEqualTo(manager.getMemberKey())
-                .jsonPath("$.data.careRole").isEqualTo("MANAGER")
+                .jsonPath("$.data.memberKey").isEqualTo(secondGuardian.getMemberKey())
+                .jsonPath("$.data.careRole").isEqualTo("GUARDIAN")
                 .jsonPath("$.data.platform").isEqualTo("IOS");
 
         assertThat(fcmDeviceTokenRepository.findAll()).hasSize(1);
         assertThat(fcmDeviceTokenRepository.findByToken("shared-fcm-token-http"))
                 .isPresent()
                 .get()
-                .satisfies(token -> assertThat(token.getMemberKey()).isEqualTo(manager.getMemberKey()));
+                .satisfies(token -> assertThat(token.getMemberKey()).isEqualTo(secondGuardian.getMemberKey()));
     }
 
     @Test

@@ -29,7 +29,7 @@ class DesignatedAvatarManagerTest {
 
     private static final String OWNER_KEY = CareFixture.GUARDIAN_MEMBER_KEY;
     private static final String WARD_KEY = CareFixture.WARD_MEMBER_KEY;
-    private static final String MANAGER_KEY = CareFixture.MANAGER_MEMBER_KEY;
+    private static final String SECOND_GUARDIAN_KEY = CareFixture.SECOND_GUARDIAN_MEMBER_KEY;
 
     @InjectMocks
     private DesignatedAvatarManager designatedAvatarManager;
@@ -102,7 +102,7 @@ class DesignatedAvatarManagerTest {
     void findWardAvatarCodes_keeps_only_ward_self_designations() {
         given(designatedAvatarRepository.findAllByOwnerMemberKey(OWNER_KEY)).willReturn(List.of(
                 CareFixture.createDesignatedAvatar(OWNER_KEY, WARD_KEY, WARD_KEY, CareFixture.SENIOR_AVATAR_CODE),
-                CareFixture.createDesignatedAvatar(OWNER_KEY, WARD_KEY, MANAGER_KEY, CareFixture.ADULT_AVATAR_CODE)));
+                CareFixture.createDesignatedAvatar(OWNER_KEY, WARD_KEY, SECOND_GUARDIAN_KEY, CareFixture.ADULT_AVATAR_CODE)));
 
         Map<String, String> result = designatedAvatarManager.findWardAvatarCodes(OWNER_KEY);
 

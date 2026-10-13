@@ -41,7 +41,6 @@ class LocationSettingControllerTest extends AbstractIntegrationTest {
     private Member ward;
     private Member guardian;
     private Member coGuardian;
-    private Member manager;
     private String wardDeviceToken;
 
     @BeforeEach
@@ -49,14 +48,11 @@ class LocationSettingControllerTest extends AbstractIntegrationTest {
         ward = memberRepository.save(LocationFixture.createWard());
         guardian = memberRepository.save(LocationFixture.createGuardian());
         coGuardian = memberRepository.save(LocationFixture.createCoGuardian());
-        manager = memberRepository.save(LocationFixture.createManager());
 
         careRelationshipRepository.save(
                 CareFixture.createGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
         careRelationshipRepository.save(
                 CareFixture.createGuardianRelationship(ward.getMemberKey(), coGuardian.getMemberKey()));
-        careRelationshipRepository.save(
-                CareFixture.createManagerRelationship(ward.getMemberKey(), manager.getMemberKey()));
 
         WardDeviceToken deviceToken = wardDeviceTokenRepository.save(
                 DeviceFixture.createDeviceToken(ward.getMemberKey()));
@@ -153,20 +149,25 @@ class LocationSettingControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("PATCH /api/v1/location/settings/{wardKey}/collection-interval - 관리자는 수정할 수 없다")
-    void updateCollectionInterval_returns_403_for_manager() {
+    @DisplayName("PATCH /api/v1/location/settings/{wardKey}/collection-interval - 케어 관계가 없는 회원이 수정하면 400 E5011이고 설정은 생기지 않는다")
+    void updateCollectionInterval_returns_400_for_unrelated_member() {
+        Member stranger = memberRepository.save(CareFixture.createGuardianMember(CareFixture.OTHER_GUARDIAN_PHONE));
+
         client.patch()
                 .uri("/api/v1/location/settings/{wardKey}/collection-interval", ward.getMemberKey())
-                .header(HttpHeaders.AUTHORIZATION, bearerToken(manager))
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(stranger))
                 .contentType(MediaType.APPLICATION_JSON)
                 .body("""
-                        {"intervalSeconds": 30}
+                        {"intervalSeconds": 180}
                         """)
                 .exchange()
-                .expectStatus().isForbidden()
+                .expectStatus().isBadRequest()
                 .expectBody()
                 .jsonPath("$.resultType").isEqualTo("ERROR")
-                .jsonPath("$.error.errorCode").isEqualTo("E5002");
+                .jsonPath("$.error.errorCode").isEqualTo("E5011");
+
+        assertThat(locationSettingRepository.findByWardMemberKeyAndCaregiverMemberKey(
+                ward.getMemberKey(), stranger.getMemberKey())).isEmpty();
     }
 
     @Test

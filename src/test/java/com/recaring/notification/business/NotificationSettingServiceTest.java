@@ -98,14 +98,14 @@ class NotificationSettingServiceTest {
                 NotificationFixture.WARD_KEY, toggles[0], toggles[1], toggles[2], toggles[3], toggles[4]);
 
         // When
-        notificationSettingService.updateAnomaly(NotificationFixture.MANAGER_KEY, command);
+        notificationSettingService.updateAnomaly(NotificationFixture.SECOND_GUARDIAN_KEY, command);
 
         // Then
         InOrder inOrder = inOrder(careRelationshipValidator, notificationSettingManager);
         then(careRelationshipValidator).should(inOrder)
-                .validateCaregiver(NotificationFixture.MANAGER_KEY, NotificationFixture.WARD_KEY);
+                .validateCaregiver(NotificationFixture.SECOND_GUARDIAN_KEY, NotificationFixture.WARD_KEY);
         then(notificationSettingManager).should(inOrder).updateAnomaly(
-                NotificationFixture.WARD_KEY, NotificationFixture.MANAGER_KEY, toggles[0], toggles[1], toggles[2], toggles[3], toggles[4]);
+                NotificationFixture.WARD_KEY, NotificationFixture.SECOND_GUARDIAN_KEY, toggles[0], toggles[1], toggles[2], toggles[3], toggles[4]);
     }
 
     @Test

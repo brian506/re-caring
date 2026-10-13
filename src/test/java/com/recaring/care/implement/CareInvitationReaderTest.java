@@ -45,9 +45,9 @@ class CareInvitationReaderTest {
         // given
         MemberInfo requester = MemberInfo.from(CareFixture.createGuardianMember());
         MemberInfo ward = MemberInfo.from(CareFixture.createWardMember());
-        CareInvitation invitation = CareFixture.createManagerInvitation(
-                CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY);
-        given(careInvitationRepository.findReceivedPendingRequests(CareFixture.MANAGER_MEMBER_KEY))
+        CareInvitation invitation = CareFixture.createGuardianInvitation(
+                CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.SECOND_GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY);
+        given(careInvitationRepository.findReceivedPendingRequests(CareFixture.SECOND_GUARDIAN_MEMBER_KEY))
                 .willReturn(List.of(invitation));
         given(memberReader.findAllByMemberKeys(List.of(CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY)))
                 .willReturn(Map.of(
@@ -56,14 +56,14 @@ class CareInvitationReaderTest {
                 ));
 
         // when
-        List<ReceivedRequestInfo> result = careInvitationReader.findReceivedRequestInfos(CareFixture.MANAGER_MEMBER_KEY);
+        List<ReceivedRequestInfo> result = careInvitationReader.findReceivedRequestInfos(CareFixture.SECOND_GUARDIAN_MEMBER_KEY);
 
         // then
         assertThat(result).containsExactly(CareFixture.createReceivedRequestInfo(
                 invitation.getRequestKey(),
                 requester.memberKey(),
                 ward.memberKey(),
-                CareRole.MANAGER,
+                CareRole.GUARDIAN,
                 invitation.getCreatedAt()
         ));
     }
@@ -91,12 +91,12 @@ class CareInvitationReaderTest {
     @DisplayName("받은 요청이 없으면 빈 목록을 반환한다")
     void findReceivedRequestInfos_returns_empty_when_no_requests() {
         // given
-        given(careInvitationRepository.findReceivedPendingRequests(CareFixture.MANAGER_MEMBER_KEY))
+        given(careInvitationRepository.findReceivedPendingRequests(CareFixture.SECOND_GUARDIAN_MEMBER_KEY))
                 .willReturn(List.of());
         given(memberReader.findAllByMemberKeys(List.of())).willReturn(Map.of());
 
         // when
-        List<ReceivedRequestInfo> result = careInvitationReader.findReceivedRequestInfos(CareFixture.MANAGER_MEMBER_KEY);
+        List<ReceivedRequestInfo> result = careInvitationReader.findReceivedRequestInfos(CareFixture.SECOND_GUARDIAN_MEMBER_KEY);
 
         // then
         assertThat(result).isEmpty();
@@ -107,12 +107,12 @@ class CareInvitationReaderTest {
     void findInvitationForRecipient_throws_when_not_found() {
         // given
         given(careInvitationRepository.findInvitationForRecipient(
-                CareFixture.REQUEST_KEY, CareFixture.MANAGER_MEMBER_KEY))
+                CareFixture.REQUEST_KEY, CareFixture.SECOND_GUARDIAN_MEMBER_KEY))
                 .willReturn(Optional.empty());
 
         // when / then
         assertThatThrownBy(() -> careInvitationReader.findInvitationForRecipient(
-                CareFixture.REQUEST_KEY, CareFixture.MANAGER_MEMBER_KEY))
+                CareFixture.REQUEST_KEY, CareFixture.SECOND_GUARDIAN_MEMBER_KEY))
                 .isInstanceOf(AppException.class)
                 .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_FOUND_CARE_REQUEST);
     }

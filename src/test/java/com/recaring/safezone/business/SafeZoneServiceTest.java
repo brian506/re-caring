@@ -45,8 +45,8 @@ class SafeZoneServiceTest {
     // ── addSafeZone ──────────────────────────────────────────────────────────
 
     @Test
-    @DisplayName("보호자 관계가 확인되면 안심존 등록을 위임한다")
-    void addSafeZone_delegates_when_guardian() {
+    @DisplayName("케어 관계가 확인되면 안심존 등록을 위임한다")
+    void addSafeZone_delegates_when_caregiver() {
         SafeZoneCreation command = SafeZoneFixture.createCommand();
         safeZoneService.addSafeZone(REQUESTER_KEY, command);
 
@@ -54,14 +54,14 @@ class SafeZoneServiceTest {
     }
 
     @Test
-    @DisplayName("보호자 관계가 아니면 안심존을 등록하지 않고 NOT_GUARDIAN_OF_WARD 예외가 발생한다")
-    void addSafeZone_throws_when_not_guardian() {
+    @DisplayName("케어 관계가 없으면 안심존을 등록하지 않고 NOT_FOUND_CARE_RELATIONSHIP 예외가 발생한다")
+    void addSafeZone_throws_when_not_caregiver() {
         SafeZoneCreation command = SafeZoneFixture.createCommand();
-        givenNotGuardianOfWard();
+        givenNoCareRelationship();
 
         assertThatThrownBy(() -> safeZoneService.addSafeZone(REQUESTER_KEY, command))
                 .isInstanceOf(AppException.class)
-                .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_GUARDIAN_OF_WARD);
+                .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_FOUND_CARE_RELATIONSHIP);
 
         then(safeZoneWriter).should(never()).register(any());
     }
@@ -113,8 +113,8 @@ class SafeZoneServiceTest {
     // ── updateSafeZone ───────────────────────────────────────────────────────
 
     @Test
-    @DisplayName("보호자 관계가 확인되면 안심존 수정을 위임한다")
-    void updateSafeZone_delegates_when_guardian() {
+    @DisplayName("케어 관계가 확인되면 안심존 수정을 위임한다")
+    void updateSafeZone_delegates_when_caregiver() {
         SafeZoneUpdate command = SafeZoneFixture.updateCommand();
         safeZoneService.updateSafeZone(REQUESTER_KEY, WARD_KEY, SAFE_ZONE_KEY, command);
 
@@ -122,14 +122,14 @@ class SafeZoneServiceTest {
     }
 
     @Test
-    @DisplayName("보호자 관계가 아니면 안심존을 수정하지 않고 NOT_GUARDIAN_OF_WARD 예외가 발생한다")
-    void updateSafeZone_throws_when_not_guardian() {
+    @DisplayName("케어 관계가 없으면 안심존을 수정하지 않고 NOT_FOUND_CARE_RELATIONSHIP 예외가 발생한다")
+    void updateSafeZone_throws_when_not_caregiver() {
         SafeZoneUpdate command = SafeZoneFixture.updateCommand();
-        givenNotGuardianOfWard();
+        givenNoCareRelationship();
 
         assertThatThrownBy(() -> safeZoneService.updateSafeZone(REQUESTER_KEY, WARD_KEY, SAFE_ZONE_KEY, command))
                 .isInstanceOf(AppException.class)
-                .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_GUARDIAN_OF_WARD);
+                .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_FOUND_CARE_RELATIONSHIP);
 
         then(safeZoneWriter).should(never()).update(any(), any(), any());
     }
@@ -137,29 +137,25 @@ class SafeZoneServiceTest {
     // ── deleteSafeZone ───────────────────────────────────────────────────────
 
     @Test
-    @DisplayName("보호자 관계가 확인되면 안심존 삭제를 위임한다")
-    void deleteSafeZone_delegates_when_guardian() {
+    @DisplayName("케어 관계가 확인되면 안심존 삭제를 위임한다")
+    void deleteSafeZone_delegates_when_caregiver() {
         safeZoneService.deleteSafeZone(REQUESTER_KEY, WARD_KEY, SAFE_ZONE_KEY);
 
         then(safeZoneWriter).should().delete(SAFE_ZONE_KEY, WARD_KEY);
     }
 
     @Test
-    @DisplayName("보호자 관계가 아니면 안심존을 삭제하지 않고 NOT_GUARDIAN_OF_WARD 예외가 발생한다")
-    void deleteSafeZone_throws_when_not_guardian() {
-        givenNotGuardianOfWard();
+    @DisplayName("케어 관계가 없으면 안심존을 삭제하지 않고 NOT_FOUND_CARE_RELATIONSHIP 예외가 발생한다")
+    void deleteSafeZone_throws_when_not_caregiver() {
+        givenNoCareRelationship();
 
         assertThatThrownBy(() -> safeZoneService.deleteSafeZone(REQUESTER_KEY, WARD_KEY, SAFE_ZONE_KEY))
                 .isInstanceOf(AppException.class)
-                .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_GUARDIAN_OF_WARD);
+                .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_FOUND_CARE_RELATIONSHIP);
 
         then(safeZoneWriter).should(never()).delete(any(), any());
     }
 
-    private void givenNotGuardianOfWard() {
-        willThrow(new AppException(ErrorType.NOT_GUARDIAN_OF_WARD))
-                .given(careRelationshipValidator).validateGuardian(REQUESTER_KEY, WARD_KEY);
-    }
 
     private void givenNoCareRelationship() {
         willThrow(new AppException(ErrorType.NOT_FOUND_CARE_RELATIONSHIP))
