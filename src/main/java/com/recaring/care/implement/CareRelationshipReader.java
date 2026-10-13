@@ -86,12 +86,4 @@ public class CareRelationshipReader {
                 .findFirst()
                 .orElseThrow(() -> new AppException(ErrorType.NOT_CARE_RELATED_WARD));
     }
-
-    public boolean existsWithGuardianRole(String wardKey, String caregiverKey) {
-        return careRelationshipRepository.existsCareRelationship(wardKey, caregiverKey, CareRole.GUARDIAN);
-    }
-
-    public boolean exists(String wardKey, String caregiverKey) {
-        return careRelationshipRepository.existsCareRelationship(wardKey, caregiverKey);
-    }
 }

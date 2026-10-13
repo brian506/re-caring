@@ -39,7 +39,7 @@ public class CareRelationshipValidator {
     }
 
     public void validateCanAddCaregiver(String requesterKey, String wardMemberKey, String newCaregiverKey) {
-        validateGuardianRole(requesterKey, wardMemberKey);
+        validateGuardian(requesterKey, wardMemberKey);
 
         // memberValidator.validatePremium(requesterKey);
         List<CareRelationship> careRelationships = careRelationshipRepository.findAllByWardMemberKey(wardMemberKey);
@@ -62,7 +62,7 @@ public class CareRelationshipValidator {
         }
     }
 
-    private void validateGuardianRole(String requesterKey, String wardKey) {
+    public void validateGuardian(String requesterKey, String wardKey) {
         boolean isGuardian = careRelationshipRepository.existsCareRelationship(wardKey, requesterKey, CareRole.GUARDIAN);
         if (!isGuardian) {
             throw new AppException(ErrorType.NOT_GUARDIAN_OF_WARD);
