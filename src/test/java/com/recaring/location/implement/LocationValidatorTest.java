@@ -42,7 +42,7 @@ class LocationValidatorTest {
         assertThatThrownBy(() ->
                 locationValidator.validateCaregiverAccess(LocationFixture.GUARDIAN_KEY, LocationFixture.WARD_KEY))
                 .isInstanceOf(AppException.class)
-                .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_CARE_RELATED_WARD);
+                .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_FOUND_CARE_RELATIONSHIP);
     }
 
     @Test

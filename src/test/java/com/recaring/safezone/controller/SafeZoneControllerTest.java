@@ -190,7 +190,7 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("관계자가 안심존을 추가하면 403이 반환되고 저장되지 않는다")
+    @DisplayName("관계자가 안심존을 추가하면 403 E5002가 반환되고 저장되지 않는다")
     void addSafeZone_returns_403_when_manager() {
         client.post()
                 .uri(zonesUri())
@@ -198,13 +198,15 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(CREATE_BODY)
                 .exchange()
-                .expectStatus().isForbidden();
+                .expectStatus().isForbidden()
+                .expectBody()
+                .jsonPath("$.error.errorCode").isEqualTo("E5002");
 
         assertThat(zonesOfWard()).hasSize(1);
     }
 
     @Test
-    @DisplayName("케어 관계가 없는 보호자가 안심존을 추가하면 403이 반환되고 저장되지 않는다")
+    @DisplayName("케어 관계가 없는 보호자가 안심존을 추가하면 보호자 전용 작업이므로 403 E5002가 반환되고 저장되지 않는다")
     void addSafeZone_returns_403_when_not_caregiver() {
         client.post()
                 .uri(zonesUri())
@@ -212,7 +214,9 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(CREATE_BODY)
                 .exchange()
-                .expectStatus().isForbidden();
+                .expectStatus().isForbidden()
+                .expectBody()
+                .jsonPath("$.error.errorCode").isEqualTo("E5002");
 
         assertThat(zonesOfWard()).hasSize(1);
     }
@@ -279,13 +283,15 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("케어 관계가 없는 보호자가 목록을 조회하면 403이 반환된다")
-    void getSafeZones_returns_403_when_not_caregiver() {
+    @DisplayName("케어 관계가 없는 보호자가 목록을 조회하면 400 E5011이 반환된다")
+    void getSafeZones_returns_400_when_not_caregiver() {
         client.get()
                 .uri(zonesUri())
                 .header(HttpHeaders.AUTHORIZATION, strangerAuth)
                 .exchange()
-                .expectStatus().isForbidden();
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.error.errorCode").isEqualTo("E5011");
     }
 
     @Test
@@ -376,7 +382,7 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("관계자가 안심존을 수정하면 403이 반환되고 값이 그대로 남는다")
+    @DisplayName("관계자가 안심존을 수정하면 403 E5002가 반환되고 값이 그대로 남는다")
     void updateSafeZone_returns_403_when_manager() {
         client.patch()
                 .uri(zoneUri(savedZone.getSafeZoneKey()))
@@ -384,7 +390,9 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(UPDATE_BODY)
                 .exchange()
-                .expectStatus().isForbidden();
+                .expectStatus().isForbidden()
+                .expectBody()
+                .jsonPath("$.error.errorCode").isEqualTo("E5002");
 
         assertThat(reloadSavedZone().getName()).isEqualTo(SafeZoneFixture.NAME);
     }
@@ -406,7 +414,7 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("케어 관계가 없는 보호자가 안심존을 수정하면 403이 반환되고 값이 그대로 남는다")
+    @DisplayName("케어 관계가 없는 보호자가 안심존을 수정하면 보호자 전용 작업이므로 403 E5002가 반환되고 값이 그대로 남는다")
     void updateSafeZone_returns_403_when_not_caregiver() {
         client.patch()
                 .uri(zoneUri(savedZone.getSafeZoneKey()))
@@ -414,7 +422,9 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(UPDATE_BODY)
                 .exchange()
-                .expectStatus().isForbidden();
+                .expectStatus().isForbidden()
+                .expectBody()
+                .jsonPath("$.error.errorCode").isEqualTo("E5002");
 
         assertThat(reloadSavedZone().getName()).isEqualTo(SafeZoneFixture.NAME);
     }
@@ -436,25 +446,29 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("관계자가 안심존을 삭제하면 403이 반환되고 행이 남아 있다")
+    @DisplayName("관계자가 안심존을 삭제하면 403 E5002가 반환되고 행이 남아 있다")
     void deleteSafeZone_returns_403_when_manager() {
         client.delete()
                 .uri(zoneUri(savedZone.getSafeZoneKey()))
                 .header(HttpHeaders.AUTHORIZATION, managerAuth)
                 .exchange()
-                .expectStatus().isForbidden();
+                .expectStatus().isForbidden()
+                .expectBody()
+                .jsonPath("$.error.errorCode").isEqualTo("E5002");
 
         assertThat(safeZoneRepository.findBySafeZoneKeyAndWardMemberKey(savedZone.getSafeZoneKey(), ward.getMemberKey())).isPresent();
     }
 
     @Test
-    @DisplayName("케어 관계가 없는 보호자가 안심존을 삭제하면 403이 반환되고 행이 남아 있다")
+    @DisplayName("케어 관계가 없는 보호자가 안심존을 삭제하면 보호자 전용 작업이므로 403 E5002가 반환되고 행이 남아 있다")
     void deleteSafeZone_returns_403_when_not_caregiver() {
         client.delete()
                 .uri(zoneUri(savedZone.getSafeZoneKey()))
                 .header(HttpHeaders.AUTHORIZATION, strangerAuth)
                 .exchange()
-                .expectStatus().isForbidden();
+                .expectStatus().isForbidden()
+                .expectBody()
+                .jsonPath("$.error.errorCode").isEqualTo("E5002");
 
         assertThat(safeZoneRepository.findBySafeZoneKeyAndWardMemberKey(savedZone.getSafeZoneKey(), ward.getMemberKey())).isPresent();
     }

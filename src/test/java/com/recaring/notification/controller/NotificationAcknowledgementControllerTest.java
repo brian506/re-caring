@@ -87,9 +87,9 @@ class NotificationAcknowledgementControllerTest extends AbstractIntegrationTest 
         Member otherGuardian = memberRepository.save(NotificationFixture.createOtherGuardian());
 
         acknowledge(otherGuardian, ward.getMemberKey(), LocationFixture.EVENT_ID)
-                .expectStatus().isForbidden()
+                .expectStatus().isBadRequest()
                 .expectBody()
-                .jsonPath("$.error.errorCode").isEqualTo("E6001");
+                .jsonPath("$.error.errorCode").isEqualTo("E5011");
 
         assertThat(anomalyAcknowledgementManager.isAcknowledged(ward.getMemberKey())).isFalse();
     }

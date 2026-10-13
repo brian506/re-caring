@@ -267,29 +267,29 @@ class NotificationSettingControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("GET /api/v1/notifications/settings/{wardKey} - 케어 관계가 없으면 403을 반환한다")
-    void getSetting_returns_403_for_unrelated_member() {
+    @DisplayName("GET /api/v1/notifications/settings/{wardKey} - 케어 관계가 없으면 400 E5011을 반환한다")
+    void getSetting_returns_400_for_unrelated_member() {
         client.get()
                 .uri("/api/v1/notifications/settings/{wardKey}", ward.getMemberKey())
                 .header(HttpHeaders.AUTHORIZATION, bearerToken(otherGuardian))
                 .exchange()
-                .expectStatus().isForbidden()
+                .expectStatus().isBadRequest()
                 .expectBody()
                 .jsonPath("$.resultType").isEqualTo("ERROR")
-                .jsonPath("$.error.errorCode").isEqualTo("E6001");
+                .jsonPath("$.error.errorCode").isEqualTo("E5011");
     }
 
     @Test
-    @DisplayName("GET /api/v1/notifications/settings/{wardKey} - 대상자 본인은 알림 수신자가 아니므로 403을 반환한다")
-    void getSetting_returns_403_for_ward_self() {
+    @DisplayName("GET /api/v1/notifications/settings/{wardKey} - 대상자 본인은 알림 수신자가 아니므로 400 E5011을 반환한다")
+    void getSetting_returns_400_for_ward_self() {
         client.get()
                 .uri("/api/v1/notifications/settings/{wardKey}", ward.getMemberKey())
                 .header(HttpHeaders.AUTHORIZATION, bearerToken(ward))
                 .exchange()
-                .expectStatus().isForbidden()
+                .expectStatus().isBadRequest()
                 .expectBody()
                 .jsonPath("$.resultType").isEqualTo("ERROR")
-                .jsonPath("$.error.errorCode").isEqualTo("E6001");
+                .jsonPath("$.error.errorCode").isEqualTo("E5011");
     }
 
     @Test

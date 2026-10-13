@@ -215,15 +215,17 @@ class LocationControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("GET /api/v1/location/history/{wardKey} - 케어 관계 없는 wardKey 조회 시 403이 반환된다")
-    void getHistory_returns_403_for_unrelated_ward() {
+    @DisplayName("GET /api/v1/location/history/{wardKey} - 케어 관계 없는 wardKey 조회 시 400 E5011이 반환된다")
+    void getHistory_returns_400_for_unrelated_ward() {
         String today = LocalDate.now().format(DateTimeFormatter.ISO_DATE);
 
         client.get()
                 .uri("/api/v1/location/history/{wardKey}?date={date}", "non-existent-ward-key", today)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + guardianJwtToken)
                 .exchange()
-                .expectStatus().isForbidden();
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.error.errorCode").isEqualTo("E5011");
     }
 
     // ── 이상탐지 사건 경로 조회 ──────────────────────────────────────────────
@@ -431,8 +433,8 @@ class LocationControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("GET /api/v1/location/anomaly-events/{wardKey}/route - 케어 관계가 없는 보호자가 조회하면 403 E6001이 반환된다")
-    void getAnomalyEventRoute_returns_403_for_unrelated_guardian() {
+    @DisplayName("GET /api/v1/location/anomaly-events/{wardKey}/route - 케어 관계가 없는 보호자가 조회하면 400 E5011이 반환된다")
+    void getAnomalyEventRoute_returns_400_for_unrelated_guardian() {
         String wardKey = ward.getMemberKey();
         LocalDateTime start = LocationFixture.ROUTE_EVENT_STARTED_AT;
         anomalyDetectionRepository.saveAll(List.of(
@@ -444,9 +446,9 @@ class LocationControllerTest extends AbstractIntegrationTest {
         String unrelatedJwtToken = extractAccessToken(unrelatedGuardian.getPhone(), AuthFixture.RAW_PASSWORD);
 
         getAnomalyEventRoute(unrelatedJwtToken, wardKey, LocationFixture.anomalyEventId(wardKey, start))
-                .expectStatus().isForbidden()
+                .expectStatus().isBadRequest()
                 .expectBody()
-                .jsonPath("$.error.errorCode").isEqualTo("E6001");
+                .jsonPath("$.error.errorCode").isEqualTo("E5011");
     }
 
     // ── SSE 스트림 ────────────────────────────────────────────────────────────
