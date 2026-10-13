@@ -70,7 +70,7 @@
 | Notification | PATCH | `/api/v1/notifications/settings/{wardKey}/anomaly` | 이상탐지 알림 토글 수정 (5종 각각 on/off. **민감도 제거됨**) |
 | Notification | PATCH | `/api/v1/notifications/settings/{wardKey}/emergency-call` | 응급호출 알림 토글 |
 | Notification | PATCH | `/api/v1/notifications/settings/{wardKey}/battery` | 배터리 알림 토글 + 알림 받을 잔량(%) 다중 선택 (10~100, 10 단위, 개수 제한 없음). 기본값 없음 — 빈 배열이면 알림 안 감 |
-| Member | GET | `/api/v1/members/me` | 내 정보 조회 (JWT 인증, Member+약관+안심존 통합). `joinedAt` = 가입 시각 |
+| Member | GET | `/api/v1/members/me` | 내 정보 조회 (JWT 인증, Member+약관+안심존 통합). `joinedAt` = 가입 시각. `subscriptionType`은 #254에서 제거(구독제 폐지) |
 | Member | PATCH | `/api/v1/members/me` | 내 정보 수정 (이름·생년월일·비밀번호·profileAvatarCode 부분 수정, JWT 인증. 아바타는 빈 문자열이면 기본 코드로 재배정, 허용 코드 외 E3008) |
 | Member | POST | `/api/v1/members/phones` | 연락처 기반 가입 회원 조회 (GUARDIAN) |
 | Member | PATCH | `/api/v1/members/me/phone` | 전화번호(로그인 ID) 변경. Request `{ smsToken, password }` — 새 번호 SMS 인증 토큰 + 현재 비밀번호. 비밀번호 불일치 시 토큰 미소비. 새 번호 중복 E3006(409) |

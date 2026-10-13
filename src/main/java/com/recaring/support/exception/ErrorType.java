@@ -42,9 +42,7 @@ public enum ErrorType {
     INVALID_CREDENTIALS(HttpStatus.BAD_REQUEST, ErrorCode.E2022, "전화번호 또는 비밀번호가 올바르지 않습니다.", LogLevel.INFO),
 
     // Member (E3xxx)
-    PREMIUM_ONLY(HttpStatus.BAD_REQUEST, ErrorCode.E3003, "프리미엄 구독을 한 회원만 접근 가능합니다", LogLevel.WARN),
     BASIC_ONLY(HttpStatus.BAD_REQUEST, ErrorCode.E3004, "베이식 구독을 한 회원만 접근 가능합니다", LogLevel.WARN),
-    SUBSCRIPTION_ONLY(HttpStatus.BAD_REQUEST, ErrorCode.E3005, "멤버십 결제가 필요한 기능입니다.", LogLevel.WARN),
     ALREADY_REGISTERED_PHONE(HttpStatus.CONFLICT, ErrorCode.E3006, "이미 가입된 전화번호입니다.", LogLevel.WARN),
     INVALID_PROFILE_AVATAR_CODE(HttpStatus.BAD_REQUEST, ErrorCode.E3008, "지원하지 않는 프로필 아바타 코드입니다.", LogLevel.WARN),
 

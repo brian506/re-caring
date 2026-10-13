@@ -2,7 +2,6 @@ package com.recaring.care.implement;
 
 import com.recaring.care.dataaccess.entity.CareRelationship;
 import com.recaring.care.dataaccess.repository.CareRelationshipRepository;
-import com.recaring.member.implement.MemberValidator;
 import com.recaring.support.exception.AppException;
 import com.recaring.support.exception.ErrorType;
 import lombok.RequiredArgsConstructor;
@@ -19,8 +18,6 @@ public class CareRelationshipValidator {
     private static final int MAX_CAREGIVER_COUNT = 5;
 
     private final CareRelationshipRepository careRelationshipRepository;
-    private final MemberValidator memberValidator;
-
 
     /**
      * 한도는 두 축이다.
@@ -29,8 +26,6 @@ public class CareRelationshipValidator {
      * 대상자 추가 요청은 이미 보호자가 있는 대상자에게도 보낼 수 있으므로 두 축을 모두 본다.
      */
     public void validateCanAddWard(String caregiverMemberKey, String wardMemberKey) {
-        memberValidator.validateSubscription(caregiverMemberKey);
-
         List<CareRelationship> caregiverRelationships = careRelationshipRepository.findAllByCaregiverMemberKey(caregiverMemberKey);
         checkGuardianLimit(caregiverRelationships);
         validateNotDuplicated(caregiverRelationships, CareRelationship::getWardMemberKey, wardMemberKey);
@@ -40,7 +35,6 @@ public class CareRelationshipValidator {
     public void validateCanAddCaregiver(String requesterKey, String wardMemberKey, String newCaregiverKey) {
         validateCaregiver(requesterKey, wardMemberKey);
 
-        // memberValidator.validatePremium(requesterKey);
         List<CareRelationship> careRelationships = careRelationshipRepository.findAllByWardMemberKey(wardMemberKey);
         checkCaregiverLimit(careRelationships);
         validateNotDuplicated(careRelationships, CareRelationship::getCaregiverMemberKey, newCaregiverKey);
