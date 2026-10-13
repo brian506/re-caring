@@ -48,19 +48,6 @@ public class CareController {
     }
 
     @Operation(
-            summary = "관계자(Manager) 추가 요청",
-            description = "보호자(GUARDIAN)가 보호 대상자를 대신해 다른 관리자를 추가 요청합니다. [GUARDIAN 전용]"
-    )
-    @PostMapping("/requests/manager")
-    public ResponseEntity<ApiResponse<Void>> requestAddManager(
-            @AuthMember String memberKey,
-            @Valid @RequestBody AddCaregiverRequest request
-    ) {
-        careInvitationService.sendManagerInvitation(memberKey, request.phoneNumber(), request.wardMemberKey());
-        return ResponseEntity.ok(ApiResponse.success());
-    }
-
-    @Operation(
             summary = "보호자(Guardian) 추가 요청",
             description = "대상자의 기존 보호자가 신규 보호자에게 추가 요청을 보냅니다. 신규 보호자가 수락하면 GUARDIAN으로 연결됩니다. "
                     + "해당 대상자의 보호자라면 누구나 보낼 수 있습니다. [GUARDIAN 전용]"
@@ -160,7 +147,7 @@ public class CareController {
 
     @Operation(
             summary = "내 보호 대상자 목록 조회",
-            description = "내가 보호자/관리자인 보호 대상자(Ward) 목록을 반환합니다. [GUARDIAN 전용]"
+            description = "내가 보호자인 보호 대상자(Ward) 목록을 반환합니다. [GUARDIAN 전용]"
     )
     @GetMapping("/wards")
     public ResponseEntity<ApiResponse<List<WardResponse>>> getMyWards(
@@ -174,8 +161,8 @@ public class CareController {
     }
 
     @Operation(
-            summary = "특정 보호 대상자의 보호자/관리자 목록 조회",
-            description = "특정 보호 대상자(wardKey)에 연결된 보호자 및 관리자 목록을 반환합니다. [GUARDIAN, WARD 공통]"
+            summary = "특정 보호 대상자의 보호자 목록 조회",
+            description = "특정 보호 대상자(wardKey)에 연결된 보호자 목록을 반환합니다. [GUARDIAN, WARD 공통]"
     )
     @GetMapping("/wards/{wardKey}/caregivers")
     public ResponseEntity<ApiResponse<List<CaregiverResponse>>> getCaregivers(
@@ -192,7 +179,7 @@ public class CareController {
     @Operation(
             summary = "보호 대상자(Ward) 케어 관계 삭제",
             description = """
-                    보호자/관계자가 자신과 특정 보호 대상자 사이의 케어 관계를 삭제합니다(본인 이탈).
+                    보호자가 자신과 특정 보호 대상자 사이의 케어 관계를 삭제합니다(본인 이탈).
                     남은 보호자의 케어 관계는 유지되며, 내가 보낸 대기 중인 보호자 추가 요청은 함께 삭제됩니다.
                     다른 보호자를 내보내는 기능은 없습니다.
                     [케어 관계가 있는 회원 전용]
@@ -210,7 +197,7 @@ public class CareController {
     @Operation(
             summary = "보호 대상자(Ward) 별명 수정",
             description = """
-                    보호자/관계자가 자신에게만 보이는 보호 대상자의 별명을 설정합니다.
+                    보호자가 자신에게만 보이는 보호 대상자의 별명을 설정합니다.
                     대상자의 실명은 그대로 유지되며, 조회 응답의 wardName(실명)과 wardNickname(별명)은 분리되어 내려갑니다.
                     nickname을 비우거나 생략하면 별명이 해제되어 실명이 표시됩니다. [보호 대상자와 케어 관계가 있는 회원 전용]
                     """
@@ -246,9 +233,9 @@ public class CareController {
     }
 
     @Operation(
-            summary = "보호자/관계자 프로필 아바타 지정",
+            summary = "보호자 프로필 아바타 지정",
             description = """
-                    보호 대상자 화면에서 내가 보는 특정 보호자·관계자의 얼굴을 지정합니다. 나에게만 보이며,
+                    보호 대상자 화면에서 내가 보는 특정 보호자의 얼굴을 지정합니다. 나에게만 보이며,
                     그 사람이 직접 고른 얼굴(profileAvatarCode)이나 다른 회원의 화면은 바뀌지 않습니다.
                     허용 코드 외 값은 400(E3008)이며, 빈 문자열이나 생략은 지정 해제입니다.
                     [보호자 목록을 볼 수 있는 회원 전용: 대상자 본인 또는 GUARDIAN 계열]
@@ -258,7 +245,7 @@ public class CareController {
     public ResponseEntity<ApiResponse<Void>> designateCaregiverAvatar(
             @AuthMember String memberKey,
             @Parameter(description = "보호 대상자 memberKey") @PathVariable String wardKey,
-            @Parameter(description = "얼굴을 지정할 보호자/관계자 memberKey") @PathVariable String caregiverKey,
+            @Parameter(description = "얼굴을 지정할 보호자 memberKey") @PathVariable String caregiverKey,
             @Valid @RequestBody DesignateAvatarRequest request
     ) {
         careRelationshipService.designateCaregiverAvatar(memberKey, wardKey, caregiverKey, request.profileAvatarCode());

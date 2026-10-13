@@ -1,6 +1,5 @@
 package com.recaring.notification.implement.listener;
 
-import com.recaring.care.vo.CareRole;
 import com.recaring.care.implement.CareRelationshipReader;
 import com.recaring.care.vo.CaregiverInfo;
 import com.recaring.location.event.BatteryThresholdAlertEvent;
@@ -41,18 +40,12 @@ public class BatteryThresholdNotificationListener {
         if (caregivers.isEmpty()) {
             return;
         }
-        List<String> guardianKeys = caregivers.stream()
-                .filter(caregiver -> caregiver.careRole().isGuardian())
-                .map(CaregiverInfo::memberKey)
-                .toList();
-        List<String> managerKeys = caregivers.stream()
-                .filter(caregiver -> caregiver.careRole() == CareRole.MANAGER)
+        List<String> recipientKeys = caregivers.stream()
                 .map(CaregiverInfo::memberKey)
                 .toList();
 
-        notificationSendManager.sendToCareParties(
-                guardianKeys,
-                managerKeys,
+        notificationSendManager.sendToCaregivers(
+                recipientKeys,
                 EVENT_TYPE_BATTERY_THRESHOLD,
                 TITLE,
                 memberReader.findNameByMemberKey(memberKey) + "님의 배터리 잔량이 " + thresholdPercent + "%에 도달했어요.",

@@ -28,7 +28,7 @@ public class CareRelationship extends BaseEntity {
     private String wardMemberKey; // 보호 대상자
 
     @Column(nullable = false)
-    private String caregiverMemberKey; // 보호자 or 관계자
+    private String caregiverMemberKey; // 보호자
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -54,9 +54,5 @@ public class CareRelationship extends BaseEntity {
 
     public void changeWardNickname(String wardNickname) {
         this.wardNickname = wardNickname;
-    }
-
-    public void changeCareRole(CareRole careRole) {
-        this.careRole = careRole;
     }
 }

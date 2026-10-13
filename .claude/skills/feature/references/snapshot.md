@@ -40,8 +40,7 @@
 | Auth | POST | `/api/v1/auth/token/refresh` | 토큰 갱신 |
 | Auth | PATCH | `/api/v1/auth/password` | 비밀번호 변경. `verificationToken`은 1회용(성공·실패 무관하게 소비) |
 | Care | POST | `/api/v1/care/requests/ward` | 보호대상자 추가 요청 (GUARDIAN). 이미 보호자가 있는 대상자에게도 가능, 수락 시 GUARDIAN. 같은 (요청자, 대상자) 대기 요청이 있으면 E5009 |
-| Care | POST | `/api/v1/care/requests/manager` | 관리자 추가 요청 |
-| Care | POST | `/api/v1/care/requests/guardian` | 보호자 추가 요청 (그 대상자의 보호자 누구나, 아니면 E5002). 같은 (받는 회원, 대상자) 대기 요청이 있으면 E5009 |
+| Care | POST | `/api/v1/care/requests/guardian` | 보호자 추가 요청 (그 대상자의 보호자 누구나, 아니면 E5011). 같은 (받는 회원, 대상자) 대기 요청이 있으면 E5009 |
 | Care | GET | `/api/v1/care/requests/received` | 받은 케어 요청 목록 |
 | Care | GET | `/api/v1/care/requests/sent` | 보낸 케어 요청 목록 (GUARDIAN). `?status=` 기본 PENDING. `phoneNumber`는 받는 회원의 현재 번호, 대상자 추가 요청은 수락 후에만 `wardKey`·`wardName` 공개 |
 | Care | POST | `/api/v1/care/requests/{key}/resend` | 보낸 대기 요청 푸시 재전송 (GUARDIAN). 요청당 5분 간격, 위반 시 429 E5019 + `error.data.seconds` |
@@ -49,22 +48,22 @@
 | Care | PATCH | `/api/v1/care/requests/{key}/accept` | 케어 요청 수락 |
 | Care | PATCH | `/api/v1/care/requests/{key}/reject` | 케어 요청 거절 |
 | Care | GET | `/api/v1/care/wards` | 내 보호대상자 목록. `wardJoinedAt`(대상자 가입 시각 = members.created_at, 위치기록 달력의 하한. 연동일이 아님 — 보호자는 연동 이전 기록도 조회 가능) |
-| Care | GET | `/api/v1/care/wards/{wardKey}/caregivers` | 보호자/관리자 목록 |
+| Care | GET | `/api/v1/care/wards/{wardKey}/caregivers` | 보호자 목록 |
 | Care | DELETE | `/api/v1/care/wards/{wardKey}` | 보호 대상자 케어 관계 삭제 (본인 이탈. 내가 보낸 해당 대상자의 대기 초대도 삭제) |
 | Care | PATCH | `/api/v1/care/wards/{wardKey}/nickname` | 보호 대상자 별명 수정 (케어 관계가 있는 회원 전원, 보호자별로 따로 보임. 빈 값이면 해제) |
 | Care | PATCH | `/api/v1/care/wards/{wardKey}/avatar` | 내가 보는 보호 대상자 아바타 지정 (케어 관계가 있는 회원 전원, 호출자에게만 보임. 빈 값이면 해제, 허용 코드 외 E3008) |
-| Care | PATCH | `/api/v1/care/wards/{wardKey}/caregivers/{caregiverKey}/avatar` | 내가 보는 보호자/관계자 아바타 지정 (대상자 본인 또는 GUARDIAN 계열, 호출자에게만 보임. 빈 값이면 해제) |
+| Care | PATCH | `/api/v1/care/wards/{wardKey}/caregivers/{caregiverKey}/avatar` | 내가 보는 보호자 아바타 지정 (대상자 본인 또는 그 대상자의 보호자, 호출자에게만 보임. 빈 값이면 해제) |
 | Device | POST | `/api/v1/device/token` | Device Token 발급 (WARD, JWT 인증) |
 | Location | POST | `/api/v1/location/gps` | GPS 좌표 전송 (WARD, Device Token 인증) |
 | Location | GET | `/api/v1/location/stream/{wardKey}` | SSE 실시간 위치 스트림 (GUARDIAN). 요청 보호자 본인의 수신 주기로 솎아서 전송. `gps:display`만 읽어 부정확(accuracy > 100m)·튀는 좌표(직전 표시 좌표 대비 50m/s 초과)는 보내지 않는다(#243) |
 | Location | GET | `/api/v1/location/history/{wardKey}` | 날짜별 이동 경로 히스토리. 시간순으로 훑으며 부정확·튀는 좌표를 제외해 응답(#243, `Gps.isDisplayableAfter`). 앞(마지막 표시 좌표)·뒤(다음 좌표)와 대조해 혼자 튀었다 돌아온 좌표도 제외(#266, `Gps.isSpikeBetween` — 양쪽 200m 이상·앞뒤 100m 이내·왕복 속도 3m/s 초과). 마지막 좌표는 다음 좌표가 없어 이 판정을 받지 않는다. DB 원본은 그대로 |
-| Location | GET | `/api/v1/location/anomaly-events/{wardKey}/route?eventId=` | 이상탐지 사건 경로 (#252, GUARDIAN/MANAGER — 케어 관계 없으면 E5011). 엔진이 경로 좌표를 보내지 않으므로 `anomaly_detections`에서 같은 `eventId` 행의 `min(event_started_at)`~EVENT_END 행의 `recorded_at`(엔진 `detected_at`)을 구간으로 잡아 `gps_histories`를 조회한다(날짜 경계 무관, 날짜별 이력과 같은 튐 좌표 필터). 종료 행(EVENT_END)이 없으면 진행 중으로 보고 그 사건의 마지막 알림 `recorded_at`까지(#257) — 앱이 이상 구간만 색칠하므로 마지막 알림 이후는 넣지 않는다. 응답 `{ eventId, startedAt, endedAt(진행 중이면 null), ongoing, route: [{latitude, longitude, recordedAt}] }`. 사건 없음 E6003(404) |
+| Location | GET | `/api/v1/location/anomaly-events/{wardKey}/route?eventId=` | 이상탐지 사건 경로 (#252, GUARDIAN — 케어 관계 없으면 E5011). 엔진이 경로 좌표를 보내지 않으므로 `anomaly_detections`에서 같은 `eventId` 행의 `min(event_started_at)`~EVENT_END 행의 `recorded_at`(엔진 `detected_at`)을 구간으로 잡아 `gps_histories`를 조회한다(날짜 경계 무관, 날짜별 이력과 같은 튐 좌표 필터). 종료 행(EVENT_END)이 없으면 진행 중으로 보고 그 사건의 마지막 알림 `recorded_at`까지(#257) — 앱이 이상 구간만 색칠하므로 마지막 알림 이후는 넣지 않는다. 응답 `{ eventId, startedAt, endedAt(진행 중이면 null), ongoing, route: [{latitude, longitude, recordedAt}] }`. 사건 없음 E6003(404) |
 | Location | GET | `/api/v1/location/settings/{wardKey}/collection-interval` | 요청 보호자 본인의 위치 수신 주기 조회 (GUARDIAN, 옵션 30/60/180초 포함, 미설정 시 30) |
 | Location | PATCH | `/api/v1/location/settings/{wardKey}/collection-interval` | 요청 보호자 본인의 위치 수신 주기 수정 (GUARDIAN only, 다른 보호자에 영향 없음) |
 | Location | GET | `/api/v1/location/settings/collection-interval/me` | 기기 수집 주기 조회 (WARD, Device Token 인증). 보호자 계열 설정 중 최솟값(미설정 보호자는 30) |
 | Notification | GET | `/api/v1/notifications?cursor&size` | 내 알림함 목록 조회 (WARD, GUARDIAN — recipient 기준). notification_id DESC 커서 페이징. `cursor`=직전 응답 `nextCursor`(첫 페이지는 생략), `size`=1~50(기본 10). 응답 `{ items, nextCursor, hasNext }`. 이상탐지 알림의 `dataPayload`는 `type/wardKey/score/recordedAt/latitude/longitude` + 사건 형식 메시지면 `eventId/alertKind/reasonCode`(#248 — 앱은 `eventId`로 한 사건의 알림을 묶는다), 안심존·위험존 진입·이탈 알림은 `type/wardKey/safeZoneKey/recordedAt/latitude/longitude`(type: SAFE_ZONE_ENTERED/EXITED, DANGER_ZONE_ENTERED/EXITED), 위치 수집 중단 알림(`LOCATION_SIGNAL_LOST`)은 `type/wardKey/lastReceivedAt/recordedAt/latitude/longitude`(마지막 위치, 값 전부 문자열) — 앱은 이걸로 위치 이력 탭에 핀을 찍는다. 이 알림은 FCM을 **data 전용**으로 보낸다(#246, notification 블록 없음, Android priority HIGH, data에 `title`/`body` 추가) — 백그라운드에서도 앱이 직접 알림을 그려 전화 버튼을 붙이기 위함. iOS 앱은 아직 없어 APNs는 고려하지 않았다. 그 외 알림 유형에는 좌표가 없다(#231 이전 안심존 알림도 없음). 각 item에 `feedbackEligible`(이상탐지 5종·안심존/위험존 진입/이탈이면 true)·`feedbackSubmitted`가 붙는다 — 평가 UI는 `eligible && !submitted`일 때만 노출 |
 | Notification | POST | `/api/v1/notifications/{notificationKey}/feedback` | 이상탐지·안심존 알림 정확도 피드백 제출 (WARD, GUARDIAN — 수신자 본인만). `{ accuracy: ACCURATE\|INACCURATE\|UNSURE, reason?, comment? }`. `reason`(USUAL_ROUTINE/BRIEF_STOPOVER/GPS_INACCURATE/OTHER)은 `INACCURATE`일 때만 필수이자 허용, 안심존·위험존 알림은 GPS_INACCURATE/OTHER만 허용(그 외 E9010), `comment`는 선택·최대 100자. 알림 1건당 1회(E9007). 대상 아님 E9006, 타인 알림 E9005, 없음 E9004, 연결된 탐지 기록 소실 E9009 |
-| Notification | POST | `/api/v1/notifications/anomaly-events/acknowledge` | 이상탐지 사건 보호자 확인 (#248). `{ wardKey, eventId }` — 푸시 data·알림 목록 dataPayload의 값을 그대로 보낸다(FCM은 수신자별 행을 만들기 전 한 번에 발송해 `notificationKey`가 푸시에 없으므로 사건 키로 받는다). 요청자-대상자 케어 관계 필수(보호자·관계자 모두, 없으면 E5011). 한 명이라도 확인하면 그 사건은 끝날 때까지 재알림(REMIND)이 가지 않는다. `eventId`가 현재 사건과 다르면(지난 사건) 200이지만 아무것도 바뀌지 않는다 |
+| Notification | POST | `/api/v1/notifications/anomaly-events/acknowledge` | 이상탐지 사건 보호자 확인 (#248). `{ wardKey, eventId }` — 푸시 data·알림 목록 dataPayload의 값을 그대로 보낸다(FCM은 수신자별 행을 만들기 전 한 번에 발송해 `notificationKey`가 푸시에 없으므로 사건 키로 받는다). 요청자-대상자 케어 관계 필수(보호자, 없으면 E5011). 한 명이라도 확인하면 그 사건은 끝날 때까지 재알림(REMIND)이 가지 않는다. `eventId`가 현재 사건과 다르면(지난 사건) 200이지만 아무것도 바뀌지 않는다 |
 | Notification | GET | `/api/v1/notifications/settings/{wardKey}` | 요청 보호자 본인의 알림 설정 조회 (안심존·위험존·이상탐지·응급호출·배터리). 케어 관계 필수(없으면 E5011) — WARD 본인 접근 불가 |
 | Notification | PATCH | `/api/v1/notifications/settings/{wardKey}/safe-zone` | 안심존 진입·이탈 알림 토글 |
 | Notification | PATCH | `/api/v1/notifications/settings/{wardKey}/danger-zone` | 위험존 진입·이탈 알림 토글 `{ entryEnabled, exitEnabled }` (#238) |
@@ -89,8 +88,8 @@
 | Admin | DELETE | `/api/v1/admin/site-inquiries/{inquiryKey}` | [운영] 문의 hard-delete |
 | Place | GET | `/api/v1/places/search?query=&latitude=&longitude=&radiusMeters=` | 장소 검색 (GUARDIAN·WARD, 카카오 로컬 키워드 검색 프록시, 최대 5건, 편향 결과가 3건 미만이거나 키워드 불일치면 전국 재검색 후 전국 결과를 앞에 두고 placeId로 병합, 결과 없음은 빈 배열 200) |
 | SafeZone | POST | `/api/v1/care/wards/{wardKey}/safe-zones` | 안심존·위험존 추가 (GUARDIAN only). `type`(SAFE/DANGER) 필수, `radiusMeters`(정수 100~2000 — #260에서 300으로 올렸다가 #266에서 진입·이탈 히스테리시스를 넣고 100으로 되돌렸다. 범위 밖 E8003) |
-| SafeZone | GET | `/api/v1/care/wards/{wardKey}/safe-zones` | 안심존·위험존 목록 조회 (GUARDIAN, MANAGER). 평면 리스트, 항목별 `type`으로 구분 |
-| SafeZone | GET | `/api/v1/care/wards/{wardKey}/safe-zones/{safeZoneKey}` | 안심존 상세 조회 (GUARDIAN, MANAGER) |
+| SafeZone | GET | `/api/v1/care/wards/{wardKey}/safe-zones` | 안심존·위험존 목록 조회 (GUARDIAN). 평면 리스트, 항목별 `type`으로 구분 |
+| SafeZone | GET | `/api/v1/care/wards/{wardKey}/safe-zones/{safeZoneKey}` | 안심존 상세 조회 (GUARDIAN) |
 | SafeZone | PATCH | `/api/v1/care/wards/{wardKey}/safe-zones/{safeZoneKey}` | 안심존·위험존 수정 (GUARDIAN only). `type` 변경 가능, `radiusMeters` 규칙은 추가와 동일 |
 | SafeZone | DELETE | `/api/v1/care/wards/{wardKey}/safe-zones/{safeZoneKey}` | 안심존 삭제 (GUARDIAN only) |
 | SMS | POST | `/api/v1/auth/phone/send-code` | SMS 인증코드 발송. 번호당 10분 5회(고정 창). 초과 시 429(E4005) + `error.data.seconds`(재요청 가능까지 남은 초) |
@@ -104,7 +103,7 @@
 | LocalAuth | local_auth | memberKey, password (로그인 ID는 `members.phone`) |
 | OAuth | oauths | provider(KAKAO/NAVER), providerId, memberKey |
 | LoginHistory | login_histories | memberKey, ip, loginAt |
-| CareRelationship | care_relationships | caregiverKey, wardKey, role(GUARDIAN/MANAGER — MANAGER는 MVP 미사용), wardNickname(nullable, 보호자별 별명. null이면 대상자 실명 사용) |
+| CareRelationship | care_relationships | caregiverKey, wardKey, role(GUARDIAN 단일 값 — MANAGER는 #254에서 제거), wardNickname(nullable, 보호자별 별명. null이면 대상자 실명 사용) |
 | DesignatedAvatar | designated_avatars | ownerMemberKey(지정한 사람), wardMemberKey(케어 범위), targetMemberKey(얼굴이 붙는 사람), profileAvatarCode. `(owner, ward, target)` UNIQUE. 관계 삭제·탈퇴 시 함께 hard-delete |
 | CareInvitation | care_invitation | inviterKey, receiverKey, wardKey, careRole(수락 시 부여될 역할. 대상자 추가 요청은 GUARDIAN), status(PENDING/ACCEPTED/REJECTED/EXPIRED), createdAt |
 | GpsHistory | gps_histories | wardMemberKey, latitude, longitude, recordedAt(서버 수신 시각), accuracy, battery, speed(m/s, nullable), measuredAt(기기 측정 시각, nullable — null이면 시간 간격 신뢰 불가). 시각 컬럼은 모두 KST 저장 |
@@ -125,8 +124,8 @@
 ## 케어 역할(CareRole) — 보호자-대상자 (#242)
 
 주보호자(`PRIMARY_GUARDIAN`) 개념은 #242에서 없앴다. MVP에서는 **보호자(`GUARDIAN`)-대상자** 관계만 쓴다.
-`MANAGER`(관계자) 값과 `POST /requests/manager` 코드는 남아 있지만 1차 배포에서는 쓰지 않는다.
-보호자끼리는 권한이 같다.
+`MANAGER`(관계자) 역할은 #254에서 코드·API·데이터까지 제거했다(`CareRole`·`CarePartyRole`에 값 없음, `POST /requests/manager` 삭제).
+보호자끼리는 권한이 같으므로 역할 검증도 없다 — "보호자 전용" API도 **케어 관계 존재 여부만** 본다(`CareRelationshipValidator.validateCaregiver`, 없으면 E5011).
 
 관계는 두 방향으로만 맺어진다. 신규 보호자가 기존 보호자에게 합류를 요청하거나 기존 보호자가 승인하는 절차는 없다.
 1. **대상자 추가**(`POST /requests/ward`): 보호자 → 대상자, 대상자가 수락. **이미 보호자가 있는 대상자에게도 보낼 수 있다.**
@@ -134,20 +133,11 @@
 2. **보호자 추가**(`POST /requests/guardian`): 그 대상자의 기존 보호자 누구나 → 신규 보호자, 신규 보호자가 수락.
    대기 요청 중복은 **(받는 회원, 대상자)** 기준 — 두 보호자가 같은 사람을 초대하면 하나만 남는다.
 
-| 기능 | GUARDIAN | MANAGER(미사용) |
-|------|------|------|
-| 보호자/관계자 추가 요청 | O | X |
-| 케어관계 삭제 | 본인 이탈만 | 본인 이탈만 |
-| 안심존 등록·수정·삭제 | O | X |
-| 위치 수집주기 변경 | O | X |
-| 위치 조회·SSE | O | O |
-| 알림 수신·설정 | O | O |
-| 별명 설정 | O | O |
 
 **타인 내보내기·역할 변경 API는 없다**(#242에서 제거). 동등한 보호자끼리 서로 내보낼 수 있게 하면 분쟁이 생긴다.
-관계를 끊는 방법은 본인 이탈(`DELETE /wards/{wardKey}`)과 탈퇴뿐이다. 관계자를 도입할 때 권한 규칙과 함께 다시 만든다.
+관계를 끊는 방법은 본인 이탈(`DELETE /wards/{wardKey}`)과 탈퇴뿐이다.
 
-한도는 두 축이다. 대상자 1명에 붙는 케어 관계는 **역할과 무관하게 총 5명**, 보호자 1명이 맡을 수 있는 대상자는 5명.
+한도는 두 축이다. 대상자 1명에 붙는 보호자는 **총 5명**, 보호자 1명이 맡을 수 있는 대상자는 5명.
 대상자 추가가 열렸으므로 **두 축 모두 발급과 수락 양쪽에서 검사한다**(`validateCanAddWard`). 수락(`CareRelationshipWriter.register`)은
 대상자·보호자 두 회원 행을 **memberKey 정렬 순서로** `SELECT ... FOR UPDATE` 한 뒤 검사한다 — 대상자 수락과 보호자 초대 수락이 동시에
 들어와도 한도를 넘지 않고, 잠금 순서가 같아 교착이 생기지 않는다.
@@ -162,8 +152,8 @@ JPA 연관관계·cascade는 쓰지 않는다.
 `(ward_member_key, caregiver_member_key)` 키라 한 보호자가 바꾼 값이 다른 보호자에게 퍼지지 않는다.
 알림 리스너는 대상자의 설정 행을 한 번에 읽고 `NotificationSettingReader.filterRecipients`로 수신자를 거른다(행 없으면 전부 켜짐).
 배터리는 판정 자체가 보호자별이다 — 고른 잔량·억제 상태가 다르므로 도달 잔량마다 `BatteryThresholdAlertEvent(recipientKeys)`를 따로 낸다.
-기기는 하나라 수집 주기는 하나뿐이다: 기기는 **보호자 계열 설정의 최솟값**으로 수집하고, 더 긴 주기를 고른 보호자에게는
-SSE에서 `recordedAt` 간격으로 솎아 보낸다(허용 오차 10초). 관계자는 주기를 못 고르므로 계산에서 빠지고 기기 주기를 그대로 받는다.
+기기는 하나라 수집 주기는 하나뿐이다: 기기는 **보호자 설정의 최솟값**으로 수집하고, 더 긴 주기를 고른 보호자에게는
+SSE에서 `recordedAt` 간격으로 솎아 보낸다(허용 오차 10초).
 설정은 관계에 딸린 데이터라 **관계가 끊기면 함께 지운다** — 본인 이탈(`CareRelationshipManager.leaveCare`)이
 `deleteByRelationship`으로 설정 행과 배터리 억제 필드를 지운다.
 탈퇴 시에는 대상자·보호자 어느 쪽 키든 `deleteByMemberKey`로 지운다.
@@ -182,8 +172,8 @@ SSE에서 `recordedAt` 간격으로 솎아 보낸다(허용 오차 10초). 관�
 조회가 한 번 더 들어간다.
 
 프로필 아바타는 이미지가 아니라 앱 번들 일러스트 16종의 코드 문자열(`ProfileAvatarCode` VO, 예: `senior_female_1`)만 저장한다.
-본인이 고른 얼굴은 `members.profile_avatar_code`(전역), 보호자가 대상자·관계자에게 붙인 얼굴은 `designated_avatars`(호출자 범위)로 나눈다.
-별명과 달리 별도 테이블인 이유는 "보호자가 관계자에게 붙인 얼굴"이 `(보호자, 관계자)` 쌍이라 `care_relationships` 행에 자리가 없기 때문이다.
+본인이 고른 얼굴은 `members.profile_avatar_code`(전역), 보호자가 대상자·다른 보호자에게 붙인 얼굴은 `designated_avatars`(호출자 범위)로 나눈다.
+별명과 달리 별도 테이블인 이유는 "보호자가 다른 보호자에게 붙인 얼굴"이 `(보는 보호자, 보이는 보호자)` 쌍이라 `care_relationships` 행에 자리가 없기 때문이다.
 응답은 본인 값과 내가 지정한 값(`designatedProfileAvatarCode`)을 둘 다 내리고, 앱이 지정 > 본인 순으로 고른다. 본인 값은 가입 시 서버가 기본 배정하므로 항상 채워져 있다(#235).
 서버는 기본값을 채우지 않는다 — null이어야 앱이 "직접 고른 값 없음"을 구분해 자동 배정한다. 빈 문자열은 해제 신호다
 (앱 JSON 직렬화가 null 필드를 생략해 null로는 해제를 못 보낸다).

@@ -22,7 +22,7 @@ public class SafeZoneService {
 
     @Transactional
     public void addSafeZone(String requesterKey, SafeZoneCreation command) {
-        careRelationshipValidator.validateGuardian(requesterKey, command.wardMemberKey());
+        careRelationshipValidator.validateCaregiver(requesterKey, command.wardMemberKey());
         safeZoneWriter.register(command);
     }
 
@@ -40,13 +40,13 @@ public class SafeZoneService {
 
     @Transactional
     public void updateSafeZone(String requesterKey, String wardKey, String safeZoneKey, SafeZoneUpdate command) {
-        careRelationshipValidator.validateGuardian(requesterKey, wardKey);
+        careRelationshipValidator.validateCaregiver(requesterKey, wardKey);
         safeZoneWriter.update(safeZoneKey, wardKey, command);
     }
 
     @Transactional
     public void deleteSafeZone(String requesterKey, String wardKey, String safeZoneKey) {
-        careRelationshipValidator.validateGuardian(requesterKey, wardKey);
+        careRelationshipValidator.validateCaregiver(requesterKey, wardKey);
         safeZoneWriter.delete(safeZoneKey, wardKey);
     }
 }

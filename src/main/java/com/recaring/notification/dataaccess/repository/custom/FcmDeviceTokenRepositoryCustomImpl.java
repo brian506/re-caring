@@ -39,19 +39,13 @@ public class FcmDeviceTokenRepositoryCustomImpl extends QuerydslRepositorySuppor
     }
 
     @Override
-    public List<FcmDeviceToken> findTokensByCareRoles(
-            Collection<String> guardianMemberKeys,
-            Collection<String> managerMemberKeys
-    ) {
-        BooleanBuilder predicate = new BooleanBuilder();
-        if (guardianMemberKeys != null && !guardianMemberKeys.isEmpty()) {
-            predicate.or(fcmDeviceToken.memberKey.in(guardianMemberKeys)
-                    .and(fcmDeviceToken.careRole.eq(CarePartyRole.GUARDIAN)));
+    public List<FcmDeviceToken> findGuardianTokens(Collection<String> memberKeys) {
+        if (memberKeys == null || memberKeys.isEmpty()) {
+            return List.of();
         }
-        if (managerMemberKeys != null && !managerMemberKeys.isEmpty()) {
-            predicate.or(fcmDeviceToken.memberKey.in(managerMemberKeys)
-                    .and(fcmDeviceToken.careRole.eq(CarePartyRole.MANAGER)));
-        }
-        return selectFrom(fcmDeviceToken).where(predicate).fetch();
+        return selectFrom(fcmDeviceToken)
+                .where(fcmDeviceToken.memberKey.in(memberKeys),
+                        fcmDeviceToken.careRole.eq(CarePartyRole.GUARDIAN))
+                .fetch();
     }
 }

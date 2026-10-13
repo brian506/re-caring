@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 /**
  * 케어 관계 안에서 한 회원이 다른 회원에게 붙인 프로필 아바타. 붙인 사람에게만 보인다.
  * 회원 전역 필드(Member.profileAvatarCode)에 쓰면 본인이 고른 얼굴을 덮어쓰고 다른 보호자에게도 보이므로 따로 둔다.
- * 대상자 얼굴은 target = ward, 보호자·관계자 얼굴은 target = 그 사람이며 둘 다 ward 범위 안에서만 유효하다.
+ * 대상자 얼굴은 target = ward, 보호자 얼굴은 target = 그 사람이며 둘 다 ward 범위 안에서만 유효하다.
  */
 @Getter
 @Entity

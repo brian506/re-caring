@@ -1,6 +1,5 @@
 package com.recaring.location.implement;
 
-import com.recaring.care.vo.CareRole;
 import com.recaring.care.dataaccess.repository.CareRelationshipRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
@@ -15,10 +14,5 @@ public class CareRelationshipCacheReader {
     @Cacheable(value = "careRelationship", key = "#wardKey + ':' + #caregiverKey + ':CAREGIVER'")
     public boolean hasCaregiverAccess(String wardKey, String caregiverKey) {
         return careRelationshipRepository.existsCareRelationship(wardKey, caregiverKey);
-    }
-
-    @Cacheable(value = "careRelationship", key = "#wardKey + ':' + #caregiverKey + ':GUARDIAN'")
-    public boolean hasGuardianAccess(String wardKey, String caregiverKey) {
-        return careRelationshipRepository.existsCareRelationship(wardKey, caregiverKey, CareRole.GUARDIAN);
     }
 }

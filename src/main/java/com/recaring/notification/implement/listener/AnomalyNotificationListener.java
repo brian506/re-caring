@@ -1,6 +1,5 @@
 package com.recaring.notification.implement.listener;
 
-import com.recaring.care.vo.CareRole;
 import com.recaring.care.implement.CareRelationshipReader;
 import com.recaring.care.vo.CaregiverInfo;
 import com.recaring.location.event.AnomalyDetectedEvent;
@@ -17,7 +16,6 @@ import org.springframework.stereotype.Component;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.function.Predicate;
 import java.util.Map;
 
 @Slf4j
@@ -58,9 +56,8 @@ public class AnomalyNotificationListener {
 
         String wardName = memberReader.findNameByMemberKey(wardMemberKey);
         String eventType = detection.detectionType().name();
-        notificationSendManager.sendToCareParties(
-                memberKeysOf(caregivers, caregiver -> caregiver.careRole().isGuardian()),
-                memberKeysOf(caregivers, caregiver -> caregiver.careRole() == CareRole.MANAGER),
+        notificationSendManager.sendToCaregivers(
+                caregivers.stream().map(CaregiverInfo::memberKey).toList(),
                 eventType,
                 detection.notificationTitle(),
                 AnomalyNotificationBody.of(detection, wardName).value(),
@@ -89,10 +86,4 @@ public class AnomalyNotificationListener {
         return payload;
     }
 
-    private List<String> memberKeysOf(List<CaregiverInfo> caregivers, Predicate<CaregiverInfo> filter) {
-        return caregivers.stream()
-                .filter(filter)
-                .map(CaregiverInfo::memberKey)
-                .toList();
-    }
 }

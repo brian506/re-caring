@@ -14,13 +14,13 @@ public class LocationSettingService {
     private final LocationValidator locationValidator;
 
     public LocationCollectionInterval getCollectionInterval(String requesterKey, String wardKey) {
-        locationValidator.validateGuardianAccess(requesterKey, wardKey);
+        locationValidator.validateCaregiverAccess(requesterKey, wardKey);
 
         return locationSettingManager.findCollectionInterval(wardKey, requesterKey);
     }
 
     public void updateCollectionInterval(String requesterKey, String wardKey, LocationCollectionInterval interval) {
-        locationValidator.validateGuardianAccess(requesterKey, wardKey);
+        locationValidator.validateCaregiverAccess(requesterKey, wardKey);
 
         locationSettingManager.updateCollectionInterval(wardKey, requesterKey, interval);
     }

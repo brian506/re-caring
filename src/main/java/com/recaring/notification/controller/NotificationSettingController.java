@@ -32,7 +32,7 @@ public class NotificationSettingController {
 
     @Operation(
             summary = "알림 설정 조회",
-            description = "wardKey에 대해 요청한 보호자 본인이 설정한 알림 설정을 반환합니다. 설정은 보호자마다 독립적입니다. [케어 관계가 있는 보호자·관계자 전용]"
+            description = "wardKey에 대해 요청한 보호자 본인이 설정한 알림 설정을 반환합니다. 설정은 보호자마다 독립적입니다. [케어 관계가 있는 보호자 전용]"
     )
     @GetMapping("/{wardKey}")
     public ResponseEntity<ApiResponse<NotificationSettingResponse>> getSetting(

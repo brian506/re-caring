@@ -21,10 +21,6 @@ public class CareInvitationService {
         careInvitationManager.sendWardInvitation(requesterKey, phoneNumber);
     }
 
-    public void sendManagerInvitation(String requesterKey, String phoneNumber, String wardMemberKey) {
-        careInvitationManager.sendManagerInvitation(requesterKey, phoneNumber, wardMemberKey);
-    }
-
     public void sendGuardianInvitation(String requesterKey, String phoneNumber, String wardMemberKey) {
         careInvitationManager.sendGuardianInvitation(requesterKey, phoneNumber, wardMemberKey);
     }

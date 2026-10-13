@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 
 @Slf4j
 @Component
@@ -24,37 +23,31 @@ public class NotificationSendManager {
     private final NotificationWriter notificationWriter;
     private final FcmClient fcmClient;
 
-    public void sendToCareParties(
-            Collection<String> guardianMemberKeys,
-            Collection<String> managerMemberKeys,
+    public void sendToCaregivers(
+            Collection<String> recipientMemberKeys,
             String eventType,
             String title,
             String body,
             Map<String, String> dataPayload
     ) {
-        List<String> recipientMemberKeys = Stream.concat(guardianMemberKeys.stream(), managerMemberKeys.stream())
-                .distinct()
-                .toList();
-        notificationWriter.addAll(recipientMemberKeys, eventType, title, body, dataPayload);
+        List<String> recipients = recipientMemberKeys.stream().distinct().toList();
+        notificationWriter.addAll(recipients, eventType, title, body, dataPayload);
 
-        List<FcmDeviceTokenInfo> tokens = fcmDeviceTokenReader.findTokensByCareRoles(guardianMemberKeys, managerMemberKeys);
+        List<FcmDeviceTokenInfo> tokens = fcmDeviceTokenReader.findGuardianTokens(recipients);
         dispatch(tokens, FcmPushMessage.notification(title, body, dataPayload));
     }
 
-    public void sendDataOnlyToCareParties(
-            Collection<String> guardianMemberKeys,
-            Collection<String> managerMemberKeys,
+    public void sendDataOnlyToCaregivers(
+            Collection<String> recipientMemberKeys,
             String eventType,
             String title,
             String body,
             Map<String, String> dataPayload
     ) {
-        List<String> recipientMemberKeys = Stream.concat(guardianMemberKeys.stream(), managerMemberKeys.stream())
-                .distinct()
-                .toList();
-        notificationWriter.addAll(recipientMemberKeys, eventType, title, body, dataPayload);
+        List<String> recipients = recipientMemberKeys.stream().distinct().toList();
+        notificationWriter.addAll(recipients, eventType, title, body, dataPayload);
 
-        List<FcmDeviceTokenInfo> tokens = fcmDeviceTokenReader.findTokensByCareRoles(guardianMemberKeys, managerMemberKeys);
+        List<FcmDeviceTokenInfo> tokens = fcmDeviceTokenReader.findGuardianTokens(recipients);
         dispatch(tokens, FcmPushMessage.dataOnly(title, body, dataPayload));
     }
 

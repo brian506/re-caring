@@ -57,15 +57,14 @@ public enum ErrorType {
     SMS_SEND_QUOTA_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, ErrorCode.E4005, "인증번호 요청 한도를 초과했습니다.", LogLevel.WARN),
 
     // Care (E5xxx)
-    CARE_CAREGIVER_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, ErrorCode.E5000, "보호 대상자에 연결할 수 있는 보호자·관계자는 최대 5명입니다.", LogLevel.WARN),
-    ALREADY_CARE_RELATIONSHIP(HttpStatus.BAD_REQUEST, ErrorCode.E5001, "이미 등록된 보호자/관리자입니다.", LogLevel.WARN),
-    NOT_GUARDIAN_OF_WARD(HttpStatus.FORBIDDEN, ErrorCode.E5002, "해당 보호 대상자의 보호자가 아닙니다.", LogLevel.WARN),
+    CARE_CAREGIVER_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, ErrorCode.E5000, "보호 대상자에 연결할 수 있는 보호자는 최대 5명입니다.", LogLevel.WARN),
+    ALREADY_CARE_RELATIONSHIP(HttpStatus.BAD_REQUEST, ErrorCode.E5001, "이미 등록된 보호자입니다.", LogLevel.WARN),
     NOT_FOUND_CARE_REQUEST(HttpStatus.BAD_REQUEST, ErrorCode.E5003, "존재하지 않는 케어 요청입니다.", LogLevel.WARN),
     NOT_CARE_REQUEST_TARGET(HttpStatus.FORBIDDEN, ErrorCode.E5004, "해당 케어 요청의 수신자가 아닙니다.", LogLevel.WARN),
     EXPIRED_CARE_REQUEST(HttpStatus.BAD_REQUEST, ErrorCode.E5005, "만료된 케어 요청입니다.", LogLevel.WARN),
     ALREADY_PROCESSED_CARE_REQUEST(HttpStatus.BAD_REQUEST, ErrorCode.E5006, "이미 처리된 케어 요청입니다.", LogLevel.WARN),
     INVALID_WARD_ROLE(HttpStatus.BAD_REQUEST, ErrorCode.E5007, "보호 대상자로 가입한 회원만 대상자로 추가할 수 있습니다.", LogLevel.WARN),
-    INVALID_CAREGIVER_ROLE(HttpStatus.BAD_REQUEST, ErrorCode.E5008, "보호자로 가입한 회원만 보호자/관리자로 추가할 수 있습니다.", LogLevel.WARN),
+    INVALID_CAREGIVER_ROLE(HttpStatus.BAD_REQUEST, ErrorCode.E5008, "보호자로 가입한 회원만 보호자로 추가할 수 있습니다.", LogLevel.WARN),
     ALREADY_PENDING_CARE_REQUEST(HttpStatus.BAD_REQUEST, ErrorCode.E5009, "이미 대기 중인 케어 요청이 존재합니다.", LogLevel.WARN),
     WARD_KEY_REQUIRED(HttpStatus.BAD_REQUEST, ErrorCode.E5010, "보호자를 추가하려면 보호 대상자 키가 필요합니다.", LogLevel.WARN),
     NOT_FOUND_CARE_RELATIONSHIP(HttpStatus.BAD_REQUEST, ErrorCode.E5011, "존재하지 않는 케어 관계입니다.", LogLevel.WARN),
