@@ -10,6 +10,10 @@ import com.recaring.device.dataaccess.repository.WardDeviceTokenRepository;
 import com.recaring.location.dataaccess.repository.AnomalyDetectionRepository;
 import com.recaring.location.dataaccess.repository.GpsHistoryRepository;
 import com.recaring.location.fixture.LocationFixture;
+import com.recaring.location.vo.AnomalyAlertKind;
+import com.recaring.location.vo.AnomalyReasonCode;
+import com.recaring.location.vo.DetectionType;
+import org.springframework.transaction.support.TransactionTemplate;
 import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.dataaccess.repository.MemberRepository;
 import com.recaring.support.AbstractIntegrationTest;
@@ -40,6 +44,7 @@ class LocationControllerTest extends AbstractIntegrationTest {
     @Autowired private WardDeviceTokenRepository wardDeviceTokenRepository;
     @Autowired private GpsHistoryRepository gpsHistoryRepository;
     @Autowired private AnomalyDetectionRepository anomalyDetectionRepository;
+    @Autowired private TransactionTemplate transactionTemplate;
     @Autowired private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
     private Member ward;
@@ -353,6 +358,23 @@ class LocationControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @DisplayName("GET /api/v1/location/anomaly-events/{wardKey}/route - 같은 좌표에서 나간 알림과 사건 종료가 모두 저장돼 경로가 종료 시각에서 끝난다")
+    void getAnomalyEventRoute_ends_at_event_end_received_on_same_point_as_alert() {
+        String wardKey = ward.getMemberKey();
+        LocalDateTime start = LocationFixture.ROUTE_EVENT_STARTED_AT;
+        LocalDateTime end = LocationFixture.ROUTE_EVENT_ENDED_AT;
+        insertSpeedDetection(wardKey, AnomalyAlertKind.EVENT_START, start, start, null);
+        insertSpeedDetection(wardKey, AnomalyAlertKind.CATEGORY_ADDED, start, end, null);
+        insertSpeedDetection(wardKey, AnomalyAlertKind.EVENT_END, start, end, end);
+
+        getAnomalyEventRoute(guardianJwtToken, wardKey, LocationFixture.anomalyEventId(wardKey, start))
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.data.ongoing").isEqualTo(false)
+                .jsonPath("$.data.endedAt").isEqualTo(LocationFixture.ROUTE_EVENT_ENDED_AT_INSTANT_TEXT);
+    }
+
+    @Test
     @DisplayName("GET /api/v1/location/anomaly-events/{wardKey}/route - 없는 사건을 조회하면 404 E6003이 반환된다")
     void getAnomalyEventRoute_returns_404_for_unknown_event() {
         String wardKey = ward.getMemberKey();
@@ -407,6 +429,16 @@ class LocationControllerTest extends AbstractIntegrationTest {
                 .uri("/api/v1/location/stream/{wardKey}", ward.getMemberKey())
                 .exchange()
                 .expectStatus().isUnauthorized();
+    }
+
+    private void insertSpeedDetection(String wardKey, AnomalyAlertKind alertKind, LocalDateTime startedAt,
+                                      LocalDateTime recordedAt, LocalDateTime endedAt) {
+        transactionTemplate.executeWithoutResult(status -> anomalyDetectionRepository.insertIfAbsent(
+                wardKey, DetectionType.SPEED_ANOMALY.name(), LocationFixture.ANOMALY_SCORE, recordedAt,
+                LocationFixture.LATITUDE, LocationFixture.LONGITUDE, null,
+                alertKind.name(), LocationFixture.anomalyEventId(wardKey, startedAt), startedAt, endedAt,
+                DetectionType.SPEED_ANOMALY.name(), AnomalyReasonCode.VEHICLE.name(),
+                null, null, null, null, null));
     }
 
     private RestTestClient.ResponseSpec sendGps(double latitude, double longitude) {

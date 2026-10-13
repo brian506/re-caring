@@ -16,6 +16,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -145,6 +147,31 @@ class AnomalyNotificationListenerTest {
                 .containsEntry("reasonCode", "DWELL_AFTER_VEHICLE");
     }
 
+    @ParameterizedTest
+    @EnumSource(value = AnomalyReasonCode.class, names = {"DWELL_KNOWN_LONG", "DWELL_SAFEZONE_LONG"})
+    @DisplayName("아는 장소·안심존에 오래 머무는 알림은 장시간 정지와 구분되는 제목으로 보낸다")
+    void sends_long_stay_title_for_known_place_and_safe_zone(AnomalyReasonCode reasonCode) {
+        givenCaregiversAndWardName();
+
+        anomalyNotificationListener.onAnomalyDetected(LocationFixture.createAnomalyDetectedEvent(LocationFixture.createEventAnomalyAlert(
+                DetectionType.ABNORMAL_DWELLING, AnomalyAlertKind.EVENT_START, reasonCode,
+                LocationFixture.anomalyMeasures(LocationFixture.DWELL_DURATION_MIN, null, null, null))));
+
+        assertThat(capturedTitle()).isEqualTo("오래 머무름 확인");
+    }
+
+    @Test
+    @DisplayName("낯선 곳에서 움직임이 없는 알림은 장시간 정지 제목을 유지한다")
+    void keeps_dwelling_title_for_unknown_place() {
+        givenCaregiversAndWardName();
+
+        anomalyNotificationListener.onAnomalyDetected(LocationFixture.createAnomalyDetectedEvent(LocationFixture.createEventAnomalyAlert(
+                DetectionType.ABNORMAL_DWELLING, AnomalyAlertKind.EVENT_START, AnomalyReasonCode.DWELL_UNKNOWN,
+                LocationFixture.anomalyMeasures(LocationFixture.DWELL_DURATION_MIN, null, null, null))));
+
+        assertThat(capturedTitle()).isEqualTo("장시간 정지 알림");
+    }
+
     private void givenCaregiversAndWardName() {
         given(careRelationshipReader.findCaregiverInfos(NotificationFixture.WARD_KEY))
                 .willReturn(List.of(
@@ -152,6 +179,13 @@ class AnomalyNotificationListenerTest {
                         CareFixture.createCaregiverInfo(NotificationFixture.MANAGER_KEY, CareRole.MANAGER)));
         given(memberReader.findNameByMemberKey(NotificationFixture.WARD_KEY))
                 .willReturn(NotificationFixture.WARD_NAME);
+    }
+
+    private String capturedTitle() {
+        ArgumentCaptor<String> titleCaptor = ArgumentCaptor.forClass(String.class);
+        then(notificationSendManager).should().sendToCareParties(
+                any(), any(), anyString(), titleCaptor.capture(), anyString(), any());
+        return titleCaptor.getValue();
     }
 
     private String capturedBody() {

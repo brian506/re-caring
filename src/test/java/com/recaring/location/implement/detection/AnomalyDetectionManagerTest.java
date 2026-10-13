@@ -10,6 +10,8 @@ import com.recaring.location.vo.DetectionType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -111,6 +113,48 @@ class AnomalyDetectionManagerTest {
         then(anomalyAcknowledgementManager).should(never()).reset(anyString(), anyString());
     }
 
+    @ParameterizedTest
+    @EnumSource(value = AnomalyReasonCode.class, names = {"DWELL_KNOWN_LONG", "DWELL_SAFEZONE_LONG"})
+    @DisplayName("아는 장소·안심존 체류의 재알림은 저장만 하고 알림을 보내지 않는다")
+    void does_not_publish_remind_for_long_stay(AnomalyReasonCode reasonCode) {
+        givenStored(AnomalyAlertKind.REMIND, reasonCode, 1);
+
+        anomalyDetectionManager.record(dwellingAlert(AnomalyAlertKind.REMIND, reasonCode));
+
+        then(eventPublisher).should(never()).publishEvent(any(AnomalyDetectedEvent.class));
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = AnomalyReasonCode.class, names = {"DWELL_KNOWN_LONG", "DWELL_SAFEZONE_LONG"})
+    @DisplayName("아는 장소·안심존 체류의 재알림은 보호자 확인 상태를 미확인으로 되돌리지 않는다")
+    void does_not_reset_acknowledgement_on_long_stay_remind(AnomalyReasonCode reasonCode) {
+        givenStored(AnomalyAlertKind.REMIND, reasonCode, 1);
+
+        anomalyDetectionManager.record(dwellingAlert(AnomalyAlertKind.REMIND, reasonCode));
+
+        then(anomalyAcknowledgementManager).should(never()).reset(anyString(), anyString());
+    }
+
+    @Test
+    @DisplayName("아는 장소 체류도 사건의 첫 알림은 보낸다")
+    void publishes_first_alert_for_long_stay() {
+        givenStored(AnomalyAlertKind.EVENT_START, AnomalyReasonCode.DWELL_KNOWN_LONG, null);
+
+        anomalyDetectionManager.record(dwellingAlert(AnomalyAlertKind.EVENT_START, AnomalyReasonCode.DWELL_KNOWN_LONG));
+
+        then(eventPublisher).should().publishEvent(any(AnomalyDetectedEvent.class));
+    }
+
+    @Test
+    @DisplayName("낯선 곳 체류의 재알림은 그대로 보낸다")
+    void publishes_remind_for_unknown_place_dwelling() {
+        givenStored(AnomalyAlertKind.REMIND, AnomalyReasonCode.DWELL_UNKNOWN, 1);
+
+        anomalyDetectionManager.record(dwellingAlert(AnomalyAlertKind.REMIND, AnomalyReasonCode.DWELL_UNKNOWN));
+
+        then(eventPublisher).should().publishEvent(any(AnomalyDetectedEvent.class));
+    }
+
     @Test
     @DisplayName("재배달된 사건 알림은 이미 확인한 사건을 미확인으로 되돌리지 않는다")
     void does_not_reset_acknowledgement_on_redelivery() {
@@ -127,5 +171,21 @@ class AnomalyDetectionManagerTest {
                 LocationFixture.anomalyMeasures(null, null, null, 3)));
 
         then(anomalyAcknowledgementManager).should(never()).reset(anyString(), anyString());
+    }
+
+    private AnomalyAlert dwellingAlert(AnomalyAlertKind alertKind, AnomalyReasonCode reasonCode) {
+        return LocationFixture.createEventAnomalyAlert(
+                DetectionType.ABNORMAL_DWELLING, alertKind, reasonCode,
+                LocationFixture.anomalyMeasures(LocationFixture.DWELL_DURATION_MIN, null, null, null));
+    }
+
+    private void givenStored(AnomalyAlertKind alertKind, AnomalyReasonCode reasonCode, Integer remindSeq) {
+        given(anomalyDetectionRepository.insertIfAbsent(
+                LocationFixture.WARD_KEY, DetectionType.ABNORMAL_DWELLING.name(), LocationFixture.ANOMALY_SCORE,
+                LocationFixture.DETECTED_AT, LocationFixture.LATITUDE, LocationFixture.LONGITUDE, null,
+                alertKind.name(), LocationFixture.EVENT_ID, LocationFixture.EVENT_STARTED_AT,
+                null, DetectionType.ABNORMAL_DWELLING.name(), reasonCode.name(),
+                LocationFixture.DWELL_DURATION_MIN, null, null, null, remindSeq))
+                .willReturn(1);
     }
 }
