@@ -80,6 +80,6 @@ gh run view {run-id} --repo brian506/re-caring --log-failed
 | Docker 이미지 push 실패 | Docker Hub 인증 만료 | GitHub secrets 갱신 필요 (수동) |
 | SSH 연결 실패 | 서버 상태 이상 | 서버 직접 확인 필요 (수동) |
 | AWS Parameter Store 조회 실패 | IAM 권한 만료 | AWS 설정 확인 필요 (수동) |
-| 헬스체크 실패 | 앱 기동 실패 | 서버 로그 확인 필요 (수동) |
+| 헬스체크 실패 | 앱 기동 실패·롤아웃 미완료·이미지 태그 불일치 | 스크립트 출력의 단계별 상태 확인 후 CloudWatch 로그 확인 (수동) |
 
 > 배포 실패는 인프라 레벨 이슈가 많아 자동 수정이 어렵다. 원인 분석 후 사용자에게 보고한다.

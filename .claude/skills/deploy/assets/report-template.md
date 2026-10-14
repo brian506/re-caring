@@ -18,7 +18,7 @@
 - CI 체크: 통과
 - PR 머지: 완료
 - 배포: 성공
-- 헬스체크: UP (re-caring.com)
+- 헬스체크: UP (ECS HEALTHY, image {머지 SHA 8자리})
 - 브랜치 정리: feature/{N} 삭제 완료
 ```
 

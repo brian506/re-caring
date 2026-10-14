@@ -62,6 +62,7 @@ public class LocationFixture {
     public static final String ANOMALY_ACK_KEY = "anomaly:ack:" + WARD_KEY;
     public static final String ANOMALY_CATEGORIES = "ABNORMAL_DWELLING,ROUTE_DEVIATION";
     public static final int DWELL_DURATION_MIN = 40;
+    public static final int VEHICLE_SPEED_KMH = 92;
     public static final String SAFE_ZONE_KEY = SafeZoneFixture.SAFE_ZONE_KEY;
     public static final String SAFE_ZONE_NAME = "안심존 1";
     public static final String DANGER_ZONE_KEY = "danger-zone-key-001";
