@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -46,10 +45,10 @@ public class LocationService {
         return gpsHistoryManager.findDailyGpsHistory(wardKey, date);
     }
 
-    public AnomalyEventRoute getAnomalyEventRoute(String caregiverKey, String wardKey, String eventId, LocalDateTime now) {
+    public AnomalyEventRoute getAnomalyEventRoute(String caregiverKey, String wardKey, String eventId) {
         locationValidator.validateCaregiverAccess(caregiverKey, wardKey);
         AnomalyEventPeriod period = anomalyDetectionManager.findEventPeriod(wardKey, eventId);
-        List<Gps> route = gpsHistoryManager.findGpsHistoryBetween(wardKey, period.startedAt(), period.routeEndAt(now));
+        List<Gps> route = gpsHistoryManager.findGpsHistoryBetween(wardKey, period.startedAt(), period.routeEndAt());
         return new AnomalyEventRoute(period, route);
     }
 }

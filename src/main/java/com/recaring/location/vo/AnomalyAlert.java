@@ -28,7 +28,7 @@ public record AnomalyAlert(
 
     public String notificationTitle() {
         return Optional.ofNullable(reasonCode)
-                .flatMap(AnomalyReasonCode::notificationTitle)
+                .flatMap(code -> code.notificationTitle(isRemind()))
                 .orElseGet(detectionType::notificationTitle);
     }
 

@@ -75,7 +75,7 @@ public class LocationController {
             summary = "이상탐지 사건 경로 조회",
             description = "보호자(GUARDIAN/MANAGER)가 이상탐지 사건의 시작부터 종료까지 이동 경로를 조회합니다. "
                     + "eventId는 푸시 data 또는 알림 목록 dataPayload의 값을 그대로 보냅니다. "
-                    + "진행 중인 사건은 현재 시각까지(최대 시작 후 24시간) 조회하며 ongoing=true, endedAt=null입니다."
+                    + "종료된 사건은 종료 알림 수신 시각까지, 진행 중인 사건은 마지막 알림 시각까지 조회하며 진행 중이면 ongoing=true, endedAt=null입니다."
     )
     @GetMapping("/anomaly-events/{wardKey}/route")
     public ResponseEntity<ApiResponse<AnomalyEventRouteResponse>> getAnomalyEventRoute(
@@ -84,7 +84,7 @@ public class LocationController {
             @RequestParam String eventId
     ) {
         AnomalyEventRouteResponse response = AnomalyEventRouteResponse.from(
-                locationService.getAnomalyEventRoute(memberKey, wardKey, eventId, LocalDateTime.now()));
+                locationService.getAnomalyEventRoute(memberKey, wardKey, eventId));
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 }

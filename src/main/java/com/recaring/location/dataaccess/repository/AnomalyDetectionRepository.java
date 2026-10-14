@@ -70,7 +70,11 @@ public interface AnomalyDetectionRepository extends JpaRepository<AnomalyDetecti
     );
 
     @Query("""
-            select new com.recaring.location.vo.AnomalyEventPeriod(a.eventId, min(a.eventStartedAt), max(a.eventEndedAt))
+            select new com.recaring.location.vo.AnomalyEventPeriod(
+                a.eventId,
+                min(a.eventStartedAt),
+                max(case when a.alertKind = com.recaring.location.vo.AnomalyAlertKind.EVENT_END then a.recordedAt end),
+                max(a.recordedAt))
             from AnomalyDetection a
             where a.wardMemberKey = :wardMemberKey
               and a.eventId = :eventId

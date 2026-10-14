@@ -154,6 +154,17 @@ bash .claude/skills/deploy/scripts/merge-and-deploy.sh {PR번호}
 
 배포 실패 시 인프라 레벨 이슈가 많으므로 원인을 분석해 사용자에게 보고하고 중단한다.
 
+### 헬스체크
+
+```bash
+bash .claude/skills/deploy/scripts/health-check.sh $(gh pr view {PR번호} --json mergeCommit --jq '.mergeCommit.oid' | cut -c1-8)
+```
+
+외부 `/actuator`는 nginx가 403으로 막으므로 ECS로 확인한다 — 서비스 롤아웃 완료, `recaring` 컨테이너 HEALTHY,
+이미지 태그가 머지 커밋과 일치, nginx 경유 인증 API가 401. 다른 PR의 배포가 뒤이어 진행돼 태그가 달라지면
+실패로 나오므로, 그 경우 `gh run list --workflow=deploy.yml`로 최신 배포를 확인하고 인자 없이 다시 실행한다.
+실패 시 원인을 분석해 사용자에게 보고한다.
+
 ## Step 6: 브랜치 정리
 
 ```bash
@@ -167,6 +178,7 @@ bash .claude/skills/deploy/scripts/cleanup-branch.sh {N}
 PR: #{PR번호}
 리뷰 게이트: prompt로 전달받은 요약을 그대로 옮긴다 (없으면 "스킬에서 확인")
 배포: 성공
+헬스체크: UP (ECS HEALTHY, image {머지 SHA 8자리})
 브랜치: {배포 브랜치} 삭제 완료
 현재 브랜치: develop
 ```

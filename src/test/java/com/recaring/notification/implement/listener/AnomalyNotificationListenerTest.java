@@ -172,6 +172,30 @@ class AnomalyNotificationListenerTest {
         assertThat(capturedTitle()).isEqualTo("장시간 정지 알림");
     }
 
+    @Test
+    @DisplayName("차량 이동 재알림은 이동이 계속되고 있다는 제목으로 보낸다")
+    void sends_continuing_vehicle_title_for_vehicle_remind() {
+        givenCaregiversAndWardName();
+
+        anomalyNotificationListener.onAnomalyDetected(LocationFixture.createAnomalyDetectedEvent(LocationFixture.createEventAnomalyAlert(
+                DetectionType.SPEED_ANOMALY, AnomalyAlertKind.REMIND, AnomalyReasonCode.VEHICLE,
+                LocationFixture.anomalyMeasures(null, null, LocationFixture.VEHICLE_SPEED_KMH, null))));
+
+        assertThat(capturedTitle()).isEqualTo("차량 이동 계속 중");
+    }
+
+    @Test
+    @DisplayName("차량 이동 첫 알림은 빠른 이동 제목을 유지한다")
+    void keeps_speed_title_for_first_vehicle_alert() {
+        givenCaregiversAndWardName();
+
+        anomalyNotificationListener.onAnomalyDetected(LocationFixture.createAnomalyDetectedEvent(LocationFixture.createEventAnomalyAlert(
+                DetectionType.SPEED_ANOMALY, AnomalyAlertKind.EVENT_START, AnomalyReasonCode.VEHICLE,
+                LocationFixture.anomalyMeasures(null, null, LocationFixture.VEHICLE_SPEED_KMH, null))));
+
+        assertThat(capturedTitle()).isEqualTo("빠른 이동 알림");
+    }
+
     private void givenCaregiversAndWardName() {
         given(careRelationshipReader.findCaregiverInfos(NotificationFixture.WARD_KEY))
                 .willReturn(List.of(

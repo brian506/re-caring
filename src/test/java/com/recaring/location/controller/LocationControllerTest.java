@@ -333,19 +333,21 @@ class LocationControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("GET /api/v1/location/anomaly-events/{wardKey}/route - 종료 기록이 없는 사건은 시작 후 정확히 24시간까지만 포함하고 진행 중으로 응답한다")
-    void getAnomalyEventRoute_caps_ongoing_event_at_24_hours() {
+    @DisplayName("GET /api/v1/location/anomaly-events/{wardKey}/route - 종료 기록이 없는 사건은 마지막 알림 수신 시각까지만 포함하고 진행 중으로 응답한다")
+    void getAnomalyEventRoute_ends_ongoing_event_at_last_alert() {
         String wardKey = ward.getMemberKey();
         LocalDateTime start = LocationFixture.ROUTE_EVENT_STARTED_AT;
+        LocalDateTime lastAlertAt = start.plusHours(2);
         double early = LocationFixture.LATITUDE;
-        double atCap = LocationFixture.LATITUDE + LocationFixture.WALK_50M_LATITUDE_DELTA;
-        double afterCap = LocationFixture.LATITUDE + LocationFixture.WALK_50M_LATITUDE_DELTA * 2;
-        anomalyDetectionRepository.save(LocationFixture.createEventStartDetection(wardKey, start));
+        double atLastAlert = LocationFixture.LATITUDE + LocationFixture.WALK_50M_LATITUDE_DELTA;
+        double afterLastAlert = LocationFixture.LATITUDE + LocationFixture.WALK_50M_LATITUDE_DELTA * 2;
+        insertSpeedDetection(wardKey, AnomalyAlertKind.EVENT_START, start, start, null);
+        insertSpeedDetection(wardKey, AnomalyAlertKind.REMIND, start, lastAlertAt, null);
         gpsHistoryRepository.saveAll(List.of(
                 LocationFixture.createGpsHistoryRecordedAt(wardKey, early, LocationFixture.TRACK_ACCURACY, start.plusHours(1)),
-                LocationFixture.createGpsHistoryRecordedAt(wardKey, atCap, LocationFixture.TRACK_ACCURACY, start.plusHours(24)),
-                LocationFixture.createGpsHistoryRecordedAt(wardKey, afterCap, LocationFixture.TRACK_ACCURACY,
-                        start.plusHours(24).plusSeconds(1))));
+                LocationFixture.createGpsHistoryRecordedAt(wardKey, atLastAlert, LocationFixture.TRACK_ACCURACY, lastAlertAt),
+                LocationFixture.createGpsHistoryRecordedAt(wardKey, afterLastAlert, LocationFixture.TRACK_ACCURACY,
+                        lastAlertAt.plusSeconds(1))));
 
         getAnomalyEventRoute(guardianJwtToken, wardKey, LocationFixture.anomalyEventId(wardKey, start))
                 .expectStatus().isOk()
@@ -354,7 +356,34 @@ class LocationControllerTest extends AbstractIntegrationTest {
                 .jsonPath("$.data.endedAt").doesNotExist()
                 .jsonPath("$.data.route.length()").isEqualTo(2)
                 .jsonPath("$.data.route[0].latitude").isEqualTo(early)
-                .jsonPath("$.data.route[1].latitude").isEqualTo(atCap);
+                .jsonPath("$.data.route[1].latitude").isEqualTo(atLastAlert);
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/location/anomaly-events/{wardKey}/route - 종료 알림은 엔진의 종료 시각이 아니라 수신 시각까지 경로를 돌려준다")
+    void getAnomalyEventRoute_ends_at_event_end_received_time() {
+        String wardKey = ward.getMemberKey();
+        LocalDateTime start = LocationFixture.ROUTE_EVENT_STARTED_AT;
+        LocalDateTime receivedAt = LocationFixture.ROUTE_EVENT_ENDED_AT;
+        LocalDateTime engineEndedAt = receivedAt.minusMinutes(10);
+        double beforeEngineEnd = LocationFixture.LATITUDE;
+        double betweenEnds = LocationFixture.LATITUDE + LocationFixture.WALK_50M_LATITUDE_DELTA;
+        insertSpeedDetection(wardKey, AnomalyAlertKind.EVENT_START, start, start, null);
+        insertSpeedDetection(wardKey, AnomalyAlertKind.EVENT_END, start, receivedAt, engineEndedAt);
+        gpsHistoryRepository.saveAll(List.of(
+                LocationFixture.createGpsHistoryRecordedAt(wardKey, beforeEngineEnd, LocationFixture.TRACK_ACCURACY,
+                        engineEndedAt.minusMinutes(1)),
+                LocationFixture.createGpsHistoryRecordedAt(wardKey, betweenEnds, LocationFixture.TRACK_ACCURACY,
+                        receivedAt.minusMinutes(1))));
+
+        getAnomalyEventRoute(guardianJwtToken, wardKey, LocationFixture.anomalyEventId(wardKey, start))
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.data.ongoing").isEqualTo(false)
+                .jsonPath("$.data.endedAt").isEqualTo(LocationFixture.ROUTE_EVENT_ENDED_AT_INSTANT_TEXT)
+                .jsonPath("$.data.route.length()").isEqualTo(2)
+                .jsonPath("$.data.route[0].latitude").isEqualTo(beforeEngineEnd)
+                .jsonPath("$.data.route[1].latitude").isEqualTo(betweenEnds);
     }
 
     @Test
