@@ -1,87 +1,87 @@
 {
-  "__inputs": [
-    {
-      "name": "DS_PROMETHEUS",
-      "label": "Prometheus",
-      "type": "datasource",
-      "pluginId": "prometheus",
-      "pluginName": "Prometheus"
-    },
-    {
-      "name": "DS_CLOUDWATCH",
-      "label": "CloudWatch",
-      "type": "datasource",
-      "pluginId": "cloudwatch",
-      "pluginName": "CloudWatch"
-    }
+  "uid": "recaring-obs-v1",
+  "title": "re-caring 운영",
+  "tags": [
+    "recaring",
+    "dev"
   ],
-  "title": "re-caring Observability",
-  "uid": "recaring-obs-v2",
-  "editable": true,
-  "refresh": "30s",
-  "schemaVersion": 42,
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "1m",
   "time": {
     "from": "now-6h",
     "to": "now"
   },
-  "timepicker": {},
-  "timezone": "browser",
-  "tags": [
-    "re-caring",
-    "spring-boot"
-  ],
+  "editable": true,
+  "graphTooltip": 1,
+  "templating": {
+    "list": [
+      {
+        "type": "textbox",
+        "name": "requestId",
+        "label": "requestId",
+        "query": "",
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "hide": 0,
+        "description": "응답 헤더 X-Request-Id 값"
+      }
+    ]
+  },
   "annotations": {
     "list": [
       {
-        "builtIn": 1,
-        "datasource": {
-          "type": "datasource",
-          "uid": "grafana"
-        },
+        "name": "앱 재시작",
         "enable": true,
-        "hide": true,
-        "iconColor": "rgba(0, 211, 255, 1)",
-        "name": "Annotations & Alerts",
-        "type": "dashboard"
+        "iconColor": "orange",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "expr": "changes(process_start_time_seconds{job=\"recaring\"}[2m]) > 0",
+        "step": "60s",
+        "titleFormat": "앱 재시작(배포)"
       }
     ]
   },
   "panels": [
     {
       "type": "row",
-      "title": "📊 Overview",
+      "id": 1,
+      "title": "🚦 지금 상태 — 초록이면 정상, 빨강이면 확인",
+      "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
         "y": 0
       },
-      "id": 100,
-      "collapsed": false
+      "panels": []
     },
     {
-      "id": 1,
       "type": "stat",
-      "title": "Total Requests (24h)",
+      "title": "앱",
+      "description": "Prometheus가 앱 지표를 수집할 수 있는지",
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
-      "gridPos": {
-        "h": 5,
-        "w": 6,
-        "x": 0,
-        "y": 1
-      },
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "max(up{job=\"recaring\"}) or vector(0)",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
-      },
+      ],
       "fieldConfig": {
         "defaults": {
           "unit": "short",
@@ -89,99 +89,76 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": 0
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "expr": "sum(http_server_requests_seconds_count{job=\"recaring\", uri!=\"/actuator/prometheus\"})",
-          "instant": true,
-          "refId": "A"
-        }
-      ]
-    },
-    {
-      "id": 2,
-      "type": "stat",
-      "title": "Request Per Second (현재)",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 6,
-        "x": 6,
-        "y": 1
-      },
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
-        }
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "reqps",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
+                "color": "red",
+                "value": null
+              },
               {
                 "color": "green",
-                "value": 0
+                "value": 1
               }
             ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "다운",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "정상",
+                  "color": "green"
+                }
+              }
+            }
+          ],
+          "color": {
+            "mode": "thresholds"
           }
         },
         "overrides": []
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "expr": "sum(rate(http_server_requests_seconds_count{job=\"recaring\", uri!=\"/actuator/prometheus\"}[1m]))",
-          "instant": true,
-          "refId": "A"
-        }
-      ]
-    },
-    {
-      "id": 3,
-      "type": "stat",
-      "title": "Total 5xx Errors (24h)",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 6,
-        "x": 12,
-        "y": 1
       },
       "options": {
         "colorMode": "background",
-        "graphMode": "area",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
           ]
         }
       },
+      "id": 2,
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 0,
+        "y": 1
+      }
+    },
+    {
+      "type": "stat",
+      "title": "ERROR 로그 (1시간)",
+      "description": "사람이 바로 조치해야 하는 오류. 0이 아니면 아래 📋 로그에서 내용 확인",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "round(sum(increase(logback_events_total{job=\"recaring\", level=\"error\"}[1h]))) or vector(0)",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true,
+          "range": false
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "unit": "short",
@@ -190,52 +167,462 @@
             "steps": [
               {
                 "color": "green",
-                "value": 0
+                "value": null
               },
               {
                 "color": "red",
                 "value": 1
               }
             ]
+          },
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
           }
         },
         "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "id": 3,
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 3,
+        "y": 1
+      }
+    },
+    {
+      "type": "stat",
+      "title": "WARN 로그 (1시간)",
+      "description": "재시도·일시 장애 등 복구 가능한 실패. 급증할 때만 확인",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
       },
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
-          "expr": "sum(http_server_requests_seconds_count{job=\"recaring\", status=~\"5..\"})",
+          "expr": "round(sum(increase(logback_events_total{job=\"recaring\", level=\"warn\"}[1h]))) or vector(0)",
+          "legendFormat": "",
+          "refId": "A",
           "instant": true,
-          "refId": "A"
+          "range": false
         }
-      ]
-    },
-    {
-      "id": 4,
-      "type": "gauge",
-      "title": "JVM Heap 사용률",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 6,
-        "x": 18,
-        "y": 1
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 20
+              },
+              {
+                "color": "orange",
+                "value": 100
+              }
+            ]
+          },
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
       },
       "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
           ]
-        },
-        "showThresholdLabels": false,
-        "showThresholdMarkers": true
+        }
       },
+      "id": 4,
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 6,
+        "y": 1
+      }
+    },
+    {
+      "type": "stat",
+      "title": "5xx 비율 (5분)",
+      "description": "서버 오류로 끝난 요청 비율 (SSE 스트림 제외)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "(sum(rate(http_server_requests_seconds_count{job=\"recaring\", uri!~\"/actuator.*|/api/v1/location/stream/.*|UNKNOWN\", status=~\"5..\"}[5m])) or vector(0)) / clamp_min(sum(rate(http_server_requests_seconds_count{job=\"recaring\", uri!~\"/actuator.*|/api/v1/location/stream/.*|UNKNOWN\"}[5m])), 1e-9)",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.01
+              },
+              {
+                "color": "red",
+                "value": 0.05
+              }
+            ]
+          },
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 1
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "id": 5,
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 9,
+        "y": 1
+      }
+    },
+    {
+      "type": "stat",
+      "title": "API 응답 P95 (5분)",
+      "description": "요청 95%가 이 시간 안에 끝남. 1초 넘으면 빨강",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(http_server_requests_seconds_bucket{job=\"recaring\", uri!~\"/actuator.*|/api/v1/location/stream/.*|UNKNOWN\"}[5m])))",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.5
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "id": 6,
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 12,
+        "y": 1
+      }
+    },
+    {
+      "type": "stat",
+      "title": "이상탐지 컨슈머",
+      "description": "이상탐지 결과를 받아 보호자 알림을 보내는 컨슈머가 동작 중인지",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "max(anomaly_stream_subscription_active{job=\"recaring\"}) or vector(0)",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "중단",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "정상",
+                  "color": "green"
+                }
+              }
+            }
+          ],
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "id": 7,
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 15,
+        "y": 1
+      }
+    },
+    {
+      "type": "stat",
+      "title": "SSE 연결 수",
+      "description": "지금 실시간 위치 화면을 보고 있는 연결 수",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(sse_active_connections{job=\"recaring\"}) or vector(0)",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "id": 8,
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 18,
+        "y": 1
+      }
+    },
+    {
+      "type": "stat",
+      "title": "DB 커넥션 대기",
+      "description": "커넥션을 못 얻고 기다리는 스레드 수. 0이 아니면 풀 고갈 의심",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(hikaricp_connections_pending{job=\"recaring\"}) or vector(0)",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "id": 9,
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 21,
+        "y": 1
+      }
+    },
+    {
+      "type": "gauge",
+      "title": "JVM Heap 사용률",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(jvm_memory_used_bytes{job=\"recaring\", area=\"heap\"}) / sum(jvm_memory_max_bytes{job=\"recaring\", area=\"heap\"})",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true,
+          "range": false
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "unit": "percentunit",
@@ -246,7 +633,7 @@
             "steps": [
               {
                 "color": "green",
-                "value": 0
+                "value": null
               },
               {
                 "color": "yellow",
@@ -261,117 +648,440 @@
         },
         "overrides": []
       },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "showThresholdMarkers": true
+      },
+      "id": 10,
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 0,
+        "y": 5
+      }
+    },
+    {
+      "type": "gauge",
+      "title": "EC2 메모리 사용률",
+      "description": "앱·탐지 엔진·모니터링이 한 대(t3.medium)를 같이 씀",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
-          "expr": "sum(jvm_memory_used_bytes{job=\"recaring\", area=\"heap\"}) / sum(jvm_memory_max_bytes{job=\"recaring\", area=\"heap\"})",
+          "expr": "1 - node_memory_MemAvailable_bytes{job=\"node\"} / node_memory_MemTotal_bytes{job=\"node\"}",
+          "legendFormat": "",
+          "refId": "A",
           "instant": true,
-          "refId": "A"
+          "range": false
         }
-      ]
-    },
-    {
-      "type": "row",
-      "title": "🌐 HTTP 요청 분석",
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 6
-      },
-      "id": 101,
-      "collapsed": false
-    },
-    {
-      "id": 5,
-      "type": "timeseries",
-      "title": "Request Per Second (URI별)",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 7
-      },
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single"
-        }
-      },
+      ],
       "fieldConfig": {
         "defaults": {
-          "unit": "reqps",
-          "custom": {
-            "drawStyle": "line",
-            "lineWidth": 1,
-            "fillOpacity": 10,
-            "showPoints": "auto"
-          }
-        },
-        "overrides": []
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "expr": "sum by(uri, method) (rate(http_server_requests_seconds_count{job=\"recaring\", uri!=\"/actuator/prometheus\"}[1m]))",
-          "legendFormat": "[{{method}}] {{uri}}",
-          "refId": "A"
-        }
-      ]
-    },
-    {
-      "id": 6,
-      "type": "timeseries",
-      "title": "P95 응답시간",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 7
-      },
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single"
-        }
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "s",
-          "custom": {
-            "drawStyle": "line",
-            "lineWidth": 1,
-            "fillOpacity": 0,
-            "showPoints": "auto"
-          },
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
                 "color": "green",
-                "value": 0
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.8
+              },
+              {
+                "color": "red",
+                "value": 0.9
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "showThresholdMarkers": true
+      },
+      "id": 11,
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 6,
+        "y": 5
+      }
+    },
+    {
+      "type": "gauge",
+      "title": "EC2 디스크 사용률",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "1 - node_filesystem_avail_bytes{job=\"node\", mountpoint=\"/\"} / node_filesystem_size_bytes{job=\"node\", mountpoint=\"/\"}",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.75
+              },
+              {
+                "color": "red",
+                "value": 0.9
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "showThresholdMarkers": true
+      },
+      "id": 12,
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 12,
+        "y": 5
+      }
+    },
+    {
+      "type": "stat",
+      "title": "앱 가동 시간",
+      "description": "재시작(배포·크래시) 후 경과 시간. 배포하지 않았는데 짧으면 재시작 의심",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "max(process_uptime_seconds{job=\"recaring\"})",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "orange",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 600
+              }
+            ]
+          },
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "id": 13,
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 18,
+        "y": 5
+      }
+    },
+    {
+      "type": "row",
+      "id": 14,
+      "title": "🌐 API",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 10
+      },
+      "panels": []
+    },
+    {
+      "type": "timeseries",
+      "title": "초당 요청 수 (API별)",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (method, uri) (rate(http_server_requests_seconds_count{job=\"recaring\", uri!~\"/actuator.*|/api/v1/location/stream/.*|UNKNOWN\"}[1m]))",
+          "legendFormat": "{{method}} {{uri}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "sortBy": "Max",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "id": 15,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 11
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "에러 응답 (API·상태코드별, 분당)",
+      "description": "4xx는 대부분 클라이언트 원인(401 만료 토큰 등). 5xx가 보이면 확인",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (status, uri) (rate(http_server_requests_seconds_count{job=\"recaring\", uri!~\"/actuator.*|/api/v1/location/stream/.*|UNKNOWN\", status=~\"4..|5..\"}[5m])) * 60",
+          "legendFormat": "{{status}} {{uri}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "sortBy": "Max",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "id": 16,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 11
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "응답시간 P95 (API별)",
+      "description": "빨간 선 = 1초 기준",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "histogram_quantile(0.95, sum by (uri, le) (rate(http_server_requests_seconds_bucket{job=\"recaring\", uri!~\"/actuator.*|/api/v1/location/stream/.*|UNKNOWN\"}[5m])))",
+          "legendFormat": "{{uri}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": true,
+            "thresholdsStyle": {
+              "mode": "line"
+            }
+          },
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "transparent",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "sortBy": "Max",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "id": 17,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 19
+      }
+    },
+    {
+      "type": "bargauge",
+      "title": "느린 API 순위 (최근 1시간 P95)",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sort_desc(histogram_quantile(0.95, sum by (uri, le) (rate(http_server_requests_seconds_bucket{job=\"recaring\", uri!~\"/actuator.*|/api/v1/location/stream/.*|UNKNOWN\"}[1h]))))",
+          "legendFormat": "{{uri}}",
+          "refId": "A",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
               },
               {
                 "color": "yellow",
@@ -382,1708 +1092,2388 @@
                 "value": 1
               }
             ]
+          },
+          "color": {
+            "mode": "thresholds"
           }
         },
         "overrides": []
       },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "expr": "histogram_quantile(0.95, sum by(uri, le) (rate(http_server_requests_seconds_bucket{job=\"recaring\", uri!=\"/actuator/prometheus\"}[1m])))",
-          "legendFormat": "{{uri}}",
-          "refId": "A"
-        }
-      ]
-    },
-    {
-      "id": 7,
-      "type": "timeseries",
-      "title": "P99 응답시간",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 8,
-        "x": 0,
-        "y": 15
-      },
       "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single"
-        }
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "s",
-          "custom": {
-            "drawStyle": "line",
-            "lineWidth": 1,
-            "fillOpacity": 0,
-            "showPoints": "auto"
-          }
-        },
-        "overrides": []
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "expr": "histogram_quantile(0.99, sum by(uri, le) (rate(http_server_requests_seconds_bucket{job=\"recaring\", uri!=\"/actuator/prometheus\"}[1m])))",
-          "legendFormat": "{{uri}}",
-          "refId": "A"
-        }
-      ]
-    },
-    {
-      "id": 8,
-      "type": "timeseries",
-      "title": "5xx 에러율 (%)",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 8,
-        "x": 8,
-        "y": 15
-      },
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single"
-        }
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "percentunit",
-          "min": 0,
-          "max": 1,
-          "custom": {
-            "drawStyle": "line",
-            "lineWidth": 1,
-            "thresholdsStyle": {
-              "mode": "area"
-            }
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "red",
-                "value": 0.01
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "expr": "sum by(uri) (rate(http_server_requests_seconds_count{job=\"recaring\", status=~\"5..\", uri!=\"/actuator/prometheus\"}[1m])) / sum by(uri) (rate(http_server_requests_seconds_count{job=\"recaring\", uri!=\"/actuator/prometheus\"}[1m]))",
-          "legendFormat": "{{uri}}",
-          "refId": "A"
-        }
-      ]
-    },
-    {
-      "id": 9,
-      "type": "bargauge",
-      "title": "URI별 평균 응답시간",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 8,
-        "x": 16,
-        "y": 15
-      },
-      "options": {
-        "displayMode": "lcd",
         "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true,
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
           ]
-        },
-        "showUnfilled": true
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "s",
-          "color": {
-            "mode": "continuous-GrYlRd"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "yellow",
-                "value": 0.3
-              },
-              {
-                "color": "red",
-                "value": 1
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "expr": "sum by(uri, method) (http_server_requests_seconds_sum{job=\"recaring\", uri!=\"/actuator/prometheus\"}) / sum by(uri, method) (http_server_requests_seconds_count{job=\"recaring\", uri!=\"/actuator/prometheus\"})",
-          "legendFormat": "[{{method}}] {{uri}}",
-          "instant": true,
-          "refId": "A"
         }
-      ]
-    },
-    {
-      "id": 24,
-      "type": "bargauge",
-      "title": "경로당 총 요청 수",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
       },
+      "id": 18,
       "gridPos": {
         "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 19
+      }
+    },
+    {
+      "type": "row",
+      "id": 19,
+      "title": "📍 GPS 수신",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
         "w": 24,
         "x": 0,
-        "y": 23
+        "y": 27
       },
-      "options": {
-        "displayMode": "gradient",
-        "orientation": "horizontal",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
-        },
-        "showUnfilled": true
+      "panels": []
+    },
+    {
+      "type": "stat",
+      "title": "GPS 수신 (분당)",
+      "description": "보호 대상자 앱이 보내는 위치 수신 건수",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
       },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(rate(http_server_requests_seconds_count{job=\"recaring\", uri=\"/api/v1/location/gps\"}[5m])) * 60 or vector(0)",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true,
+          "range": false
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "unit": "short",
-          "color": {
-            "mode": "continuous-BlPu"
-          },
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
                 "color": "blue",
-                "value": 0
+                "value": null
               }
             ]
-          }
+          },
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 1
         },
         "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "id": 20,
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 0,
+        "y": 28
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "GPS 수신 추이 (상태코드별, 분당)",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
       },
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
-          "expr": "sort_desc(sum by(uri, method) (http_server_requests_seconds_count{job=\"recaring\", uri!=\"/actuator/prometheus\"}))",
-          "legendFormat": "[{{method}}] {{uri}}",
-          "instant": true,
+          "expr": "sum by (status) (rate(http_server_requests_seconds_count{job=\"recaring\", uri=\"/api/v1/location/gps\"}[5m])) * 60",
+          "legendFormat": "{{status}}",
           "refId": "A"
         }
-      ]
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "normal"
+            }
+          },
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "sortBy": "Max",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "id": 21,
+      "gridPos": {
+        "h": 7,
+        "w": 16,
+        "x": 8,
+        "y": 28
+      }
     },
     {
       "type": "row",
-      "title": "⚙️ JVM / 시스템 리소스",
+      "id": 22,
+      "title": "🔌 외부 API (Kakao·Slack·SMS)",
+      "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 31
+        "y": 35
       },
-      "id": 102,
-      "collapsed": false
+      "panels": []
     },
     {
-      "id": 10,
       "type": "timeseries",
-      "title": "CPU 사용률",
+      "title": "호출 결과 (분당)",
+      "description": "첫 호출 전에는 지표가 없어 No data로 보임",
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus"
       },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (client_name, outcome) (rate(http_client_requests_seconds_count[5m])) * 60",
+          "legendFormat": "{{client_name}} {{outcome}}",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (outcome) (rate(sms_send_seconds_count[5m])) * 60",
+          "legendFormat": "CoolSMS {{outcome}}",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "sortBy": "Max",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "id": 23,
       "gridPos": {
         "h": 8,
         "w": 8,
         "x": 0,
-        "y": 32
+        "y": 36
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "실패율 (15분)",
+      "description": "빨간 선 = 10%",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
       },
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (client_name) (rate(http_client_requests_seconds_count{outcome!=\"SUCCESS\"}[15m])) / sum by (client_name) (rate(http_client_requests_seconds_count[15m]))",
+          "legendFormat": "{{client_name}}",
+          "refId": "A"
         },
-        "tooltip": {
-          "mode": "single"
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(rate(sms_send_seconds_count{outcome=\"FAILURE\"}[15m])) / sum(rate(sms_send_seconds_count[15m]))",
+          "legendFormat": "CoolSMS",
+          "refId": "B"
         }
-      },
+      ],
       "fieldConfig": {
         "defaults": {
           "unit": "percentunit",
-          "min": 0,
-          "max": 1,
           "custom": {
             "drawStyle": "line",
-            "lineWidth": 1,
-            "fillOpacity": 20
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": true,
+            "thresholdsStyle": {
+              "mode": "line"
+            }
           },
+          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "yellow",
-                "value": 0.6
+                "color": "transparent",
+                "value": null
               },
               {
                 "color": "red",
-                "value": 0.8
+                "value": 0.1
               }
             ]
           }
         },
         "overrides": []
       },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "expr": "process_cpu_usage{job=\"recaring\"}",
-          "legendFormat": "Process CPU",
-          "refId": "A"
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "sortBy": "Max",
+          "sortDesc": true
         },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "expr": "system_cpu_usage{job=\"recaring\"}",
-          "legendFormat": "System CPU",
-          "refId": "B"
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
         }
-      ]
-    },
-    {
-      "id": 11,
-      "type": "timeseries",
-      "title": "JVM Heap 메모리",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
       },
+      "id": 24,
       "gridPos": {
         "h": 8,
         "w": 8,
         "x": 8,
-        "y": 32
-      },
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single"
-        }
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "bytes",
-          "custom": {
-            "drawStyle": "line",
-            "lineWidth": 1,
-            "fillOpacity": 20
-          }
-        },
-        "overrides": []
+        "y": 36
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "응답시간 P95",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
       },
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
-          "expr": "sum(jvm_memory_used_bytes{job=\"recaring\", area=\"heap\"})",
-          "legendFormat": "Heap Used",
+          "expr": "histogram_quantile(0.95, sum by (client_name, le) (rate(http_client_requests_seconds_bucket[5m])))",
+          "legendFormat": "{{client_name}}",
           "refId": "A"
         },
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
-          "expr": "sum(jvm_memory_max_bytes{job=\"recaring\", area=\"heap\"})",
-          "legendFormat": "Heap Max",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(sms_send_seconds_bucket[5m])))",
+          "legendFormat": "CoolSMS",
           "refId": "B"
         }
-      ]
-    },
-    {
-      "id": 12,
-      "type": "timeseries",
-      "title": "GC Pause 시간",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": true,
+            "thresholdsStyle": {
+              "mode": "line"
+            }
+          },
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "transparent",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 2
+              }
+            ]
+          }
+        },
+        "overrides": []
       },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "sortBy": "Max",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "id": 25,
       "gridPos": {
         "h": 8,
         "w": 8,
         "x": 16,
-        "y": 32
-      },
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single"
-        }
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "s",
-          "custom": {
-            "drawStyle": "bars",
-            "lineWidth": 1,
-            "fillOpacity": 80
-          }
-        },
-        "overrides": []
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "expr": "rate(jvm_gc_pause_seconds_sum{job=\"recaring\"}[1m])",
-          "legendFormat": "{{action}} {{cause}}",
-          "refId": "A"
-        }
-      ]
+        "y": 36
+      }
     },
     {
       "type": "row",
-      "title": "🚨 이상탐지 스트림",
+      "id": 26,
+      "title": "🚨 이상탐지 · 실시간 위치(SSE)",
+      "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 40
+        "y": 44
       },
-      "id": 107,
-      "collapsed": false
+      "panels": []
     },
     {
-      "id": 28,
       "type": "stat",
-      "title": "컨슈머 구독 상태",
-      "description": "0이면 Redis Stream 구독이 끊겨 이상탐지 알림이 전혀 발송되지 않는 상태다.",
+      "title": "미배달 백로그",
+      "description": "엔진이 발행했지만 아직 앱이 가져가지 않은 결과 수",
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 5,
-        "x": 0,
-        "y": 41
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
-        },
-        "colorMode": "background",
-        "graphMode": "none",
-        "textMode": "auto"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "0": {
-                  "text": "중단",
-                  "color": "red",
-                  "index": 0
-                },
-                "1": {
-                  "text": "정상",
-                  "color": "green",
-                  "index": 1
-                }
-              }
-            }
-          ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "red",
-                "value": 0
-              },
-              {
-                "color": "green",
-                "value": 1
-              }
-            ]
-          }
-        },
-        "overrides": []
+        "uid": "prometheus"
       },
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
-          "expr": "anomaly_stream_subscription_active{job=\"recaring\"}",
+          "expr": "max(anomaly_stream_lag{job=\"recaring\"})",
+          "legendFormat": "",
+          "refId": "A",
           "instant": true,
-          "refId": "A"
+          "range": false
         }
-      ]
-    },
-    {
-      "id": 29,
-      "type": "stat",
-      "title": "미배달 백로그 (lag)",
-      "description": "엔진이 발행했지만 컨슈머 그룹에 아직 배달되지 않은 알림 수. -1은 Redis가 lag을 제공하지 않아 측정 불가.",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 5,
-        "x": 5,
-        "y": 41
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
-        },
-        "colorMode": "background",
-        "graphMode": "area",
-        "textMode": "auto"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "-1": {
-                  "text": "측정 불가",
-                  "color": "text",
-                  "index": 0
-                }
-              }
-            }
-          ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "yellow",
-                "value": 1
-              },
-              {
-                "color": "red",
-                "value": 10
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "expr": "anomaly_stream_lag{job=\"recaring\"}",
-          "instant": true,
-          "refId": "A"
-        }
-      ]
-    },
-    {
-      "id": 30,
-      "type": "timeseries",
-      "title": "배달 지연 (마지막 발행 − 마지막 배달)",
-      "description": "구독이 죽으면 발행은 계속되고 배달만 멈추므로 이 값이 단조 증가한다.",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 7,
-        "x": 10,
-        "y": 41
-      },
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single"
-        }
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "s",
-          "min": 0,
-          "custom": {
-            "drawStyle": "line",
-            "lineWidth": 1,
-            "fillOpacity": 20
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "yellow",
-                "value": 300
-              },
-              {
-                "color": "red",
-                "value": 1800
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "expr": "anomaly_stream_delivery_delay_seconds{job=\"recaring\"}",
-          "legendFormat": "배달 지연",
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "expr": "anomaly_stream_pending{job=\"recaring\"}",
-          "legendFormat": "PEL(미ACK)",
-          "refId": "B"
-        }
-      ]
-    },
-    {
-      "id": 31,
-      "type": "timeseries",
-      "title": "스트림 폴링 에러",
-      "description": "연속 실패 수가 0으로 떨어지지 않으면 Redis 연결이 계속 끊겨 있는 것이다.",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 7,
-        "x": 17,
-        "y": 41
-      },
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single"
-        }
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "min": 0,
-          "custom": {
-            "drawStyle": "line",
-            "lineWidth": 1,
-            "fillOpacity": 20
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "red",
-                "value": 1
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "expr": "rate(anomaly_stream_poll_errors_total{job=\"recaring\"}[5m])",
-          "legendFormat": "에러 발생률 (/s)",
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "expr": "anomaly_stream_poll_consecutive_errors{job=\"recaring\"}",
-          "legendFormat": "연속 실패 수",
-          "refId": "B"
-        }
-      ]
-    },
-    {
-      "type": "row",
-      "title": "🐳 ECS 컨테이너",
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 49
-      },
-      "id": 104,
-      "collapsed": false
-    },
-    {
-      "id": 17,
-      "type": "timeseries",
-      "title": "ECS CPU 사용률 (%)",
-      "datasource": {
-        "type": "cloudwatch",
-        "uid": "${DS_CLOUDWATCH}"
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 50
-      },
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single"
-        }
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "percent",
-          "min": 0,
-          "max": 100,
-          "custom": {
-            "drawStyle": "line",
-            "lineWidth": 1,
-            "fillOpacity": 20
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "yellow",
-                "value": 60
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "cloudwatch",
-            "uid": "${DS_CLOUDWATCH}"
-          },
-          "queryMode": "Metrics",
-          "metricQueryType": 0,
-          "metricEditorMode": 0,
-          "namespace": "AWS/ECS",
-          "metricName": "CPUUtilization",
-          "dimensions": {
-            "ClusterName": [
-              "recaring-cluster"
-            ],
-            "ServiceName": [
-              "recaring-service"
-            ]
-          },
-          "matchExact": true,
-          "statistic": "Average",
-          "period": "",
-          "region": "default",
-          "legendFormat": "Spring App CPU",
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "cloudwatch",
-            "uid": "${DS_CLOUDWATCH}"
-          },
-          "queryMode": "Metrics",
-          "metricQueryType": 0,
-          "metricEditorMode": 0,
-          "namespace": "AWS/ECS",
-          "metricName": "CPUUtilization",
-          "dimensions": {
-            "ClusterName": [
-              "recaring-cluster"
-            ],
-            "ServiceName": [
-              "recaring-monitoring-service"
-            ]
-          },
-          "matchExact": true,
-          "statistic": "Average",
-          "period": "",
-          "region": "default",
-          "legendFormat": "Monitoring CPU",
-          "refId": "B"
-        }
-      ]
-    },
-    {
-      "id": 18,
-      "type": "timeseries",
-      "title": "ECS 메모리 사용률 (%)",
-      "datasource": {
-        "type": "cloudwatch",
-        "uid": "${DS_CLOUDWATCH}"
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 50
-      },
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single"
-        }
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "percent",
-          "min": 0,
-          "max": 100,
-          "custom": {
-            "drawStyle": "line",
-            "lineWidth": 1,
-            "fillOpacity": 20
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "yellow",
-                "value": 70
-              },
-              {
-                "color": "red",
-                "value": 85
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "cloudwatch",
-            "uid": "${DS_CLOUDWATCH}"
-          },
-          "queryMode": "Metrics",
-          "metricQueryType": 0,
-          "metricEditorMode": 0,
-          "namespace": "AWS/ECS",
-          "metricName": "MemoryUtilization",
-          "dimensions": {
-            "ClusterName": [
-              "recaring-cluster"
-            ],
-            "ServiceName": [
-              "recaring-service"
-            ]
-          },
-          "matchExact": true,
-          "statistic": "Average",
-          "period": "",
-          "region": "default",
-          "legendFormat": "Spring App Memory",
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "cloudwatch",
-            "uid": "${DS_CLOUDWATCH}"
-          },
-          "queryMode": "Metrics",
-          "metricQueryType": 0,
-          "metricEditorMode": 0,
-          "namespace": "AWS/ECS",
-          "metricName": "MemoryUtilization",
-          "dimensions": {
-            "ClusterName": [
-              "recaring-cluster"
-            ],
-            "ServiceName": [
-              "recaring-monitoring-service"
-            ]
-          },
-          "matchExact": true,
-          "statistic": "Average",
-          "period": "",
-          "region": "default",
-          "legendFormat": "Monitoring Memory",
-          "refId": "B"
-        }
-      ]
-    },
-    {
-      "id": 27,
-      "type": "stat",
-      "title": "ECS 서비스 구동 상태 (Running Tasks)",
-      "datasource": {
-        "type": "cloudwatch",
-        "uid": "${DS_CLOUDWATCH}"
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 24,
-        "x": 0,
-        "y": 58
-      },
-      "options": {
-        "colorMode": "background",
-        "graphMode": "none",
-        "orientation": "horizontal",
-        "textMode": "value_and_name",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
-        }
-      },
+      ],
       "fieldConfig": {
         "defaults": {
           "unit": "short",
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "red",
-                "value": 0
-              },
-              {
-                "color": "green",
-                "value": 1
-              }
-            ]
-          },
-          "mappings": []
-        },
-        "overrides": []
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "cloudwatch",
-            "uid": "${DS_CLOUDWATCH}"
-          },
-          "queryMode": "Metrics",
-          "metricQueryType": 0,
-          "metricEditorMode": 0,
-          "namespace": "AWS/ECS",
-          "metricName": "RunningTaskCount",
-          "dimensions": {
-            "ClusterName": [
-              "recaring-cluster"
-            ],
-            "ServiceName": [
-              "recaring-service"
-            ]
-          },
-          "matchExact": true,
-          "statistic": "Maximum",
-          "period": "60",
-          "region": "default",
-          "legendFormat": "recaring-service",
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "cloudwatch",
-            "uid": "${DS_CLOUDWATCH}"
-          },
-          "queryMode": "Metrics",
-          "metricQueryType": 0,
-          "metricEditorMode": 0,
-          "namespace": "AWS/ECS",
-          "metricName": "RunningTaskCount",
-          "dimensions": {
-            "ClusterName": [
-              "recaring-cluster"
-            ],
-            "ServiceName": [
-              "recaring-monitoring-service"
-            ]
-          },
-          "matchExact": true,
-          "statistic": "Maximum",
-          "period": "60",
-          "region": "default",
-          "legendFormat": "recaring-monitoring-service",
-          "refId": "B"
-        }
-      ]
-    },
-    {
-      "type": "row",
-      "title": "🖥️ EC2 호스트",
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 63
-      },
-      "id": 105,
-      "collapsed": false
-    },
-    {
-      "id": 19,
-      "type": "timeseries",
-      "title": "EC2 메모리 사용률 (%)",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 16,
-        "x": 0,
-        "y": 64
-      },
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single"
-        }
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "percent",
-          "min": 0,
-          "max": 100,
-          "custom": {
-            "drawStyle": "line",
-            "lineWidth": 1,
-            "fillOpacity": 20
-          },
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
                 "color": "green",
-                "value": 0
+                "value": null
               },
               {
                 "color": "yellow",
-                "value": 70
+                "value": 10
               },
               {
                 "color": "red",
-                "value": 85
+                "value": 100
               }
             ]
+          },
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
           }
         },
         "overrides": []
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "expr": "(1 - node_memory_MemAvailable_bytes{job=\"node\"} / node_memory_MemTotal_bytes{job=\"node\"}) * 100",
-          "legendFormat": "{{instance}}",
-          "refId": "A"
-        }
-      ]
-    },
-    {
-      "id": 20,
-      "type": "stat",
-      "title": "EC2 가용 메모리",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 8,
-        "x": 16,
-        "y": 64
       },
       "options": {
         "colorMode": "background",
         "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
           ]
-        },
-        "orientation": "vertical"
+        }
       },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "bytes",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "red",
-                "value": 0
-              },
-              {
-                "color": "yellow",
-                "value": 200000000
-              },
-              {
-                "color": "green",
-                "value": 500000000
-              }
-            ]
-          }
-        },
-        "overrides": []
+      "id": 27,
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 45
+      }
+    },
+    {
+      "type": "stat",
+      "title": "처리 중(미확인) 메시지",
+      "description": "가져갔지만 ACK 못 한 메시지. 계속 쌓이면 처리 실패 반복",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
       },
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus"
           },
-          "expr": "node_memory_MemAvailable_bytes{job=\"node\"}",
-          "legendFormat": "{{instance}}",
+          "expr": "max(anomaly_stream_pending{job=\"recaring\"})",
+          "legendFormat": "",
+          "refId": "A",
           "instant": true,
-          "refId": "A"
+          "range": false
         }
-      ]
-    },
-    {
-      "type": "row",
-      "title": "🔴 ElastiCache (Valkey)",
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 72
-      },
-      "id": 106,
-      "collapsed": false
-    },
-    {
-      "id": 21,
-      "type": "timeseries",
-      "title": "ElastiCache 메모리 사용량",
-      "datasource": {
-        "type": "cloudwatch",
-        "uid": "${DS_CLOUDWATCH}"
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 73
-      },
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single"
-        }
-      },
+      ],
       "fieldConfig": {
         "defaults": {
-          "unit": "bytes",
-          "custom": {
-            "drawStyle": "line",
-            "lineWidth": 1,
-            "fillOpacity": 20
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 5
+              },
+              {
+                "color": "red",
+                "value": 50
+              }
+            ]
+          },
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
           }
         },
         "overrides": []
       },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "id": 28,
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 45
+      }
+    },
+    {
+      "type": "stat",
+      "title": "배달 지연",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
       "targets": [
         {
           "datasource": {
-            "type": "cloudwatch",
-            "uid": "${DS_CLOUDWATCH}"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "queryMode": "Metrics",
-          "metricQueryType": 0,
-          "metricEditorMode": 0,
-          "namespace": "AWS/ElastiCache",
-          "metricName": "BytesUsedForCache",
-          "dimensions": {
-            "CacheClusterId": [
-              "recaring-redis-001",
-              "recaring-redis-002",
-              "recaring-redis-003"
-            ]
-          },
-          "matchExact": true,
-          "statistic": "Average",
-          "period": "",
-          "region": "default",
-          "legendFormat": "{{CacheClusterId}} - Used",
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "cloudwatch",
-            "uid": "${DS_CLOUDWATCH}"
-          },
-          "queryMode": "Metrics",
-          "metricQueryType": 0,
-          "metricEditorMode": 0,
-          "namespace": "AWS/ElastiCache",
-          "metricName": "FreeableMemory",
-          "dimensions": {
-            "CacheClusterId": [
-              "recaring-redis-001",
-              "recaring-redis-002",
-              "recaring-redis-003"
-            ]
-          },
-          "matchExact": true,
-          "statistic": "Average",
-          "period": "",
-          "region": "default",
-          "legendFormat": "{{CacheClusterId}} - Freeable",
-          "refId": "B"
+          "expr": "max(anomaly_stream_delivery_delay_seconds{job=\"recaring\"})",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
-      ]
-    },
-    {
-      "id": 22,
-      "type": "timeseries",
-      "title": "ElastiCache Cache Hits / Misses",
-      "datasource": {
-        "type": "cloudwatch",
-        "uid": "${DS_CLOUDWATCH}"
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 30
+              },
+              {
+                "color": "red",
+                "value": 120
+              }
+            ]
+          },
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
       },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "id": 29,
       "gridPos": {
-        "h": 8,
+        "h": 4,
         "w": 6,
         "x": 12,
-        "y": 73
-      },
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single"
-        }
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "custom": {
-            "drawStyle": "line",
-            "lineWidth": 1,
-            "fillOpacity": 10
-          }
-        },
-        "overrides": []
+        "y": 45
+      }
+    },
+    {
+      "type": "stat",
+      "title": "폴링 연속 실패",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
       },
       "targets": [
         {
           "datasource": {
-            "type": "cloudwatch",
-            "uid": "${DS_CLOUDWATCH}"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "queryMode": "Metrics",
-          "metricQueryType": 0,
-          "metricEditorMode": 0,
-          "namespace": "AWS/ElastiCache",
-          "metricName": "CacheHits",
-          "dimensions": {
-            "CacheClusterId": [
-              "recaring-redis-001",
-              "recaring-redis-002",
-              "recaring-redis-003"
-            ]
-          },
-          "matchExact": true,
-          "statistic": "Sum",
-          "period": "",
-          "region": "default",
-          "legendFormat": "{{CacheClusterId}} - Hits",
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "cloudwatch",
-            "uid": "${DS_CLOUDWATCH}"
-          },
-          "queryMode": "Metrics",
-          "metricQueryType": 0,
-          "metricEditorMode": 0,
-          "namespace": "AWS/ElastiCache",
-          "metricName": "CacheMisses",
-          "dimensions": {
-            "CacheClusterId": [
-              "recaring-redis-001",
-              "recaring-redis-002",
-              "recaring-redis-003"
-            ]
-          },
-          "matchExact": true,
-          "statistic": "Sum",
-          "period": "",
-          "region": "default",
-          "legendFormat": "{{CacheClusterId}} - Misses",
-          "refId": "B"
+          "expr": "max(anomaly_stream_poll_consecutive_errors{job=\"recaring\"})",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
-      ]
-    },
-    {
-      "id": 23,
-      "type": "timeseries",
-      "title": "ElastiCache 연결 수 / Evictions",
-      "datasource": {
-        "type": "cloudwatch",
-        "uid": "${DS_CLOUDWATCH}"
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 5
+              }
+            ]
+          },
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
       },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "id": 30,
       "gridPos": {
-        "h": 8,
+        "h": 4,
         "w": 6,
         "x": 18,
-        "y": 73
+        "y": 45
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "이상탐지 스트림 추이",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
       },
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "max(anomaly_stream_lag{job=\"recaring\"})",
+          "legendFormat": "백로그",
+          "refId": "A"
         },
-        "tooltip": {
-          "mode": "single"
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "max(anomaly_stream_pending{job=\"recaring\"})",
+          "legendFormat": "미확인",
+          "refId": "B"
         }
-      },
+      ],
       "fieldConfig": {
         "defaults": {
           "unit": "short",
           "custom": {
             "drawStyle": "line",
-            "lineWidth": 1,
-            "fillOpacity": 10
-          }
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "min": 0
         },
         "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "sortBy": "Max",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "id": 31,
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 0,
+        "y": 49
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "SSE 연결 수",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(sse_active_connections{job=\"recaring\"})",
+          "legendFormat": "연결",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "sortBy": "Max",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "id": 32,
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 8,
+        "y": 49
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "SSE 종료·전송 실패 (분당)",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (reason) (rate(sse_emitter_removed_total{job=\"recaring\"}[5m])) * 60",
+          "legendFormat": "종료: {{reason}}",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(rate(sse_emitter_send_failures_total{job=\"recaring\"}[5m])) * 60",
+          "legendFormat": "전송 실패",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "sortBy": "Max",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "id": 33,
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 16,
+        "y": 49
+      }
+    },
+    {
+      "type": "row",
+      "id": 34,
+      "title": "🚪 Nginx (외부 진입점)",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 56
+      },
+      "panels": []
+    },
+    {
+      "type": "timeseries",
+      "title": "Nginx 오류 응답 (5분 단위)",
+      "description": "499 = 응답 전에 앱이 요청을 끊음, 502/504 = 앱(upstream)에 연결 실패·시간 초과",
+      "datasource": {
+        "type": "cloudwatch",
+        "uid": "cloudwatch"
       },
       "targets": [
         {
           "datasource": {
             "type": "cloudwatch",
-            "uid": "${DS_CLOUDWATCH}"
+            "uid": "cloudwatch"
           },
-          "queryMode": "Metrics",
-          "metricQueryType": 0,
-          "metricEditorMode": 0,
-          "namespace": "AWS/ElastiCache",
-          "metricName": "CurrConnections",
-          "dimensions": {
-            "CacheClusterId": [
-              "recaring-redis-001",
-              "recaring-redis-002",
-              "recaring-redis-003"
-            ]
-          },
-          "matchExact": true,
-          "statistic": "Average",
-          "period": "",
+          "queryMode": "Logs",
           "region": "default",
-          "legendFormat": "{{CacheClusterId}} - Connections",
+          "logGroups": [
+            {
+              "name": "/ecs/nginx"
+            }
+          ],
+          "expression": "parse @message /\\] \"(?<method>[A-Z]+) (?<path>[^ ?\"]+)[^\"]*\" (?<status>\\d{3}) (?<bytes>\\d+)/ | filter ispresent(status) | filter status >= 499 | stats count(*) as count by bin(5m), status",
           "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "cloudwatch",
-            "uid": "${DS_CLOUDWATCH}"
-          },
-          "queryMode": "Metrics",
-          "metricQueryType": 0,
-          "metricEditorMode": 0,
-          "namespace": "AWS/ElastiCache",
-          "metricName": "Evictions",
-          "dimensions": {
-            "CacheClusterId": [
-              "recaring-redis-001",
-              "recaring-redis-002",
-              "recaring-redis-003"
-            ]
-          },
-          "matchExact": true,
-          "statistic": "Sum",
-          "period": "",
-          "region": "default",
-          "legendFormat": "{{CacheClusterId}} - Evictions",
-          "refId": "B"
         }
-      ]
-    },
-    {
-      "type": "row",
-      "title": "📋 로그 (CloudWatch)",
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 81
-      },
-      "id": 103,
-      "collapsed": false
-    },
-    {
-      "id": 13,
-      "type": "timeseries",
-      "title": "로그 레벨 발생 빈도",
-      "datasource": {
-        "type": "cloudwatch",
-        "uid": "${DS_CLOUDWATCH}"
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 6,
-        "x": 0,
-        "y": 82
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 60,
+            "lineWidth": 1,
+            "stacking": {
+              "mode": "normal"
+            }
+          }
+        },
+        "overrides": []
       },
       "options": {
         "legend": {
           "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
+          "placement": "bottom"
         },
         "tooltip": {
-          "mode": "single"
+          "mode": "multi"
         }
       },
+      "id": 35,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 57
+      }
+    },
+    {
+      "type": "table",
+      "title": "Nginx 오류 로그 (upstream 연결 실패 등)",
+      "description": "배포 중 새 컨테이너가 뜨기 전 connect() failed가 몇 건 찍히는 것은 알려진 현상",
+      "datasource": {
+        "type": "cloudwatch",
+        "uid": "cloudwatch"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "cloudwatch"
+          },
+          "queryMode": "Logs",
+          "region": "default",
+          "logGroups": [
+            {
+              "name": "/ecs/nginx"
+            }
+          ],
+          "expression": "filter @message like /\\[(error|crit|alert|emerg)\\]/ | parse @message /\\[(?<severity>[a-z]+)\\] [^:]*: \\*\\d+ (?<reason>[^,]+), client: [^,]+, server: [^,]+, request: \"(?<request>[^\"]+)\"/ | sort @timestamp desc | limit 100 | display @timestamp, severity, reason, request",
+          "refId": "A"
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "custom": {
-            "drawStyle": "bars",
-            "fillOpacity": 80,
-            "stacking": {
-              "mode": "normal",
-              "group": "A"
-            }
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": true
           }
         },
         "overrides": [
           {
             "matcher": {
               "id": "byName",
-              "options": "ERROR"
+              "options": "last_seen"
             },
             "properties": [
               {
-                "id": "color",
-                "value": {
-                  "fixedColor": "red",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "WARN"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "orange",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "INFO"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "green",
-                  "mode": "fixed"
-                }
+                "id": "unit",
+                "value": "dateTimeAsLocal"
               }
             ]
           }
         ]
       },
-      "targets": [
-        {
-          "datasource": {
-            "type": "cloudwatch",
-            "uid": "${DS_CLOUDWATCH}"
-          },
-          "queryMode": "Logs",
-          "logGroups": [
-            {
-              "name": "/ecs/recaring"
-            }
-          ],
-          "expression": "fields @timestamp, @message | parse @message /\\s{2}(?<level>ERROR|WARN|INFO)\\s/ | stats count(*) as count by level, bin(5m) | sort bin(5m) asc",
-          "region": "default",
-          "refId": "A"
-        }
-      ]
-    },
-    {
-      "id": 14,
-      "type": "logs",
-      "title": "전체 로그 (INFO / WARN / ERROR)",
-      "datasource": {
-        "type": "cloudwatch",
-        "uid": "${DS_CLOUDWATCH}"
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 18,
-        "x": 6,
-        "y": 82
-      },
       "options": {
-        "dedupStrategy": "none",
-        "enableLogDetails": true,
-        "fontSize": "small",
-        "showTime": true,
-        "sortOrder": "Descending",
-        "wrapLogMessage": true
+        "showHeader": true,
+        "cellHeight": "sm"
       },
-      "targets": [
-        {
-          "datasource": {
-            "type": "cloudwatch",
-            "uid": "${DS_CLOUDWATCH}"
-          },
-          "queryMode": "Logs",
-          "logGroups": [
-            {
-              "name": "/ecs/recaring"
-            }
-          ],
-          "expression": "fields @timestamp, @message | sort @timestamp desc | limit 200",
-          "region": "default",
-          "refId": "A"
-        }
-      ]
-    },
-    {
-      "id": 15,
-      "type": "logs",
-      "title": "ERROR 로그",
-      "datasource": {
-        "type": "cloudwatch",
-        "uid": "${DS_CLOUDWATCH}"
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 90
-      },
-      "options": {
-        "dedupStrategy": "none",
-        "enableLogDetails": true,
-        "fontSize": "small",
-        "showTime": true,
-        "sortOrder": "Descending",
-        "wrapLogMessage": false
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "cloudwatch",
-            "uid": "${DS_CLOUDWATCH}"
-          },
-          "queryMode": "Logs",
-          "logGroups": [
-            {
-              "name": "/ecs/recaring"
-            }
-          ],
-          "expression": "fields @timestamp, @message | filter @message like /\\sERROR\\s/ | sort @timestamp desc | limit 200",
-          "region": "default",
-          "refId": "A"
-        }
-      ]
-    },
-    {
-      "id": 16,
-      "type": "logs",
-      "title": "WARN 로그",
-      "datasource": {
-        "type": "cloudwatch",
-        "uid": "${DS_CLOUDWATCH}"
-      },
+      "id": 36,
       "gridPos": {
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 90
-      },
-      "options": {
-        "dedupStrategy": "none",
-        "enableLogDetails": true,
-        "fontSize": "small",
-        "showTime": true,
-        "sortOrder": "Descending",
-        "wrapLogMessage": false
+        "y": 57
+      }
+    },
+    {
+      "type": "table",
+      "title": "응답 크기 큰 API (평균, 바이트)",
+      "description": "gzip 적용 후에는 압축된 전송 크기. path의 UUID는 그대로 보임",
+      "datasource": {
+        "type": "cloudwatch",
+        "uid": "cloudwatch"
       },
       "targets": [
         {
           "datasource": {
             "type": "cloudwatch",
-            "uid": "${DS_CLOUDWATCH}"
+            "uid": "cloudwatch"
           },
           "queryMode": "Logs",
+          "region": "default",
+          "logGroups": [
+            {
+              "name": "/ecs/nginx"
+            }
+          ],
+          "expression": "parse @message /\\] \"(?<method>[A-Z]+) (?<path>[^ ?\"]+)[^\"]*\" (?<status>\\d{3}) (?<bytes>\\d+)/ | filter ispresent(status) | filter status = 200 and path like /^\\/api\\// | stats count(*) as count, avg(bytes) as avg_bytes, max(bytes) as max_bytes by method, path | sort avg_bytes desc | limit 15",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "last_seen"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeAsLocal"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "id": 37,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 65
+      }
+    },
+    {
+      "type": "table",
+      "title": "Nginx 상태코드 분포",
+      "description": "",
+      "datasource": {
+        "type": "cloudwatch",
+        "uid": "cloudwatch"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "cloudwatch"
+          },
+          "queryMode": "Logs",
+          "region": "default",
+          "logGroups": [
+            {
+              "name": "/ecs/nginx"
+            }
+          ],
+          "expression": "parse @message /\\] \"(?<method>[A-Z]+) (?<path>[^ ?\"]+)[^\"]*\" (?<status>\\d{3}) (?<bytes>\\d+)/ | filter ispresent(status) | filter path like /^\\/api\\// | stats count(*) as count by status | sort count desc",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "last_seen"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeAsLocal"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "id": 38,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 65
+      }
+    },
+    {
+      "type": "row",
+      "id": 39,
+      "title": "🗄 DB 슬로우 쿼리 (500ms 이상)",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 73
+      },
+      "panels": []
+    },
+    {
+      "type": "table",
+      "title": "슬로우 쿼리 집계",
+      "description": "앱(Hibernate)이 실행한 쿼리만 집계. 이상탐지 엔진이 직접 읽는 쿼리는 포함되지 않음. SQL은 ? 자리표시자로만 기록",
+      "datasource": {
+        "type": "cloudwatch",
+        "uid": "cloudwatch"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "cloudwatch"
+          },
+          "queryMode": "Logs",
+          "region": "default",
           "logGroups": [
             {
               "name": "/ecs/recaring"
             }
           ],
-          "expression": "fields @timestamp, @message | filter @message like /\\sWARN\\s/ | sort @timestamp desc | limit 200",
-          "region": "default",
+          "expression": "filter @logStream like /^spring-app/ and `log.logger` = \"org.hibernate.SQL_SLOW\" | parse message /took (?<ms>\\d+) milliseconds \\[(?<sql>.*)\\]/ | stats count(*) as count, max(ms) as max_ms, avg(ms) as avg_ms, latest(@timestamp) as last_seen by sql | sort max_ms desc | limit 30",
           "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "last_seen"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeAsLocal"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "id": 40,
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 74
+      }
+    },
+    {
+      "type": "row",
+      "id": 41,
+      "title": "📋 로그 (CloudWatch)",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 83
+      },
+      "panels": []
+    },
+    {
+      "type": "timeseries",
+      "title": "ERROR · WARN 발생 추이 (5분 단위)",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (level) (increase(logback_events_total{job=\"recaring\", level=~\"error|warn\"}[5m]))",
+          "legendFormat": "{{level}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 2,
+            "fillOpacity": 60,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "normal"
+            }
+          },
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "sortBy": "Max",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "id": 42,
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 84
+      }
+    },
+    {
+      "type": "table",
+      "title": "ERROR 종류별 집계",
+      "description": "같은 [카테고리 : 상세] 메시지끼리 묶은 건수. 대시보드 시간 범위 기준",
+      "datasource": {
+        "type": "cloudwatch",
+        "uid": "cloudwatch"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "cloudwatch"
+          },
+          "queryMode": "Logs",
+          "region": "default",
+          "logGroups": [
+            {
+              "name": "/ecs/recaring"
+            }
+          ],
+          "expression": "filter @logStream like /^spring-app/ and `log.level` = \"ERROR\" | parse message /^(?<category>\\[[^\\]]+\\])/ | fields coalesce(category, substr(message, 0, 80)) as kind | stats count(*) as count, latest(@timestamp) as last_seen by kind, `log.logger` | sort count desc | limit 20",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "last_seen"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeAsLocal"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "id": 43,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 91
+      }
+    },
+    {
+      "type": "table",
+      "title": "WARN 종류별 집계",
+      "description": "",
+      "datasource": {
+        "type": "cloudwatch",
+        "uid": "cloudwatch"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "cloudwatch"
+          },
+          "queryMode": "Logs",
+          "region": "default",
+          "logGroups": [
+            {
+              "name": "/ecs/recaring"
+            }
+          ],
+          "expression": "filter @logStream like /^spring-app/ and `log.level` = \"WARN\" | parse message /^(?<category>\\[[^\\]]+\\])/ | fields coalesce(category, substr(message, 0, 80)) as kind | stats count(*) as count, latest(@timestamp) as last_seen by kind, `log.logger` | sort count desc | limit 20",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "last_seen"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeAsLocal"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "id": 44,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 91
+      }
+    },
+    {
+      "type": "table",
+      "title": "최근 ERROR · WARN",
+      "description": "requestId를 복사해 위쪽 'requestId' 입력칸에 넣으면 그 요청의 전체 로그를 볼 수 있음",
+      "datasource": {
+        "type": "cloudwatch",
+        "uid": "cloudwatch"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "cloudwatch"
+          },
+          "queryMode": "Logs",
+          "region": "default",
+          "logGroups": [
+            {
+              "name": "/ecs/recaring"
+            }
+          ],
+          "expression": "filter @logStream like /^spring-app/ and `log.level` in [\"ERROR\", \"WARN\"] | fields @timestamp, `log.level` as level, message, requestId, `error.type` as error_type, `error.message` as error_message, `process.thread.name` as thread | sort @timestamp desc | limit 100",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "last_seen"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeAsLocal"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "id": 45,
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 99
+      }
+    },
+    {
+      "type": "table",
+      "title": "요청 추적 (상단 requestId 입력)",
+      "description": "앱 응답 헤더 X-Request-Id 값으로 한 요청의 로그(비동기 스레드 포함)를 시간순으로 표시",
+      "datasource": {
+        "type": "cloudwatch",
+        "uid": "cloudwatch"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "cloudwatch"
+          },
+          "queryMode": "Logs",
+          "region": "default",
+          "logGroups": [
+            {
+              "name": "/ecs/recaring"
+            }
+          ],
+          "expression": "filter @logStream like /^spring-app/ and requestId = \"${requestId}\" | fields @timestamp, `log.level` as level, message, `process.thread.name` as thread, `error.type` as error_type, `error.stack_trace` as stack_trace | sort @timestamp asc | limit 200",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "last_seen"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeAsLocal"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "id": 46,
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 109
+      }
+    },
+    {
+      "type": "row",
+      "id": 47,
+      "title": "⚙️ 인프라 상세 — JVM · DB 커넥션 · ECS · ElastiCache",
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 119
+      },
+      "panels": [
+        {
+          "type": "timeseries",
+          "title": "JVM Heap",
+          "description": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum(jvm_memory_used_bytes{job=\"recaring\", area=\"heap\"})",
+              "legendFormat": "사용",
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum(jvm_memory_max_bytes{job=\"recaring\", area=\"heap\"})",
+              "legendFormat": "최대",
+              "refId": "B"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes",
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 2,
+                "fillOpacity": 10,
+                "showPoints": "never",
+                "spanNulls": true
+              },
+              "min": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "right",
+              "calcs": [
+                "lastNotNull",
+                "max"
+              ],
+              "sortBy": "Max",
+              "sortDesc": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "id": 48,
+          "gridPos": {
+            "h": 7,
+            "w": 8,
+            "x": 0,
+            "y": 120
+          }
+        },
+        {
+          "type": "timeseries",
+          "title": "GC 일시정지 (초당 누적)",
+          "description": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum by (gc) (rate(jvm_gc_pause_seconds_sum{job=\"recaring\"}[5m]))",
+              "legendFormat": "{{gc}}",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 2,
+                "fillOpacity": 10,
+                "showPoints": "never",
+                "spanNulls": true
+              },
+              "min": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "right",
+              "calcs": [
+                "lastNotNull",
+                "max"
+              ],
+              "sortBy": "Max",
+              "sortDesc": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "id": 49,
+          "gridPos": {
+            "h": 7,
+            "w": 8,
+            "x": 8,
+            "y": 120
+          }
+        },
+        {
+          "type": "timeseries",
+          "title": "CPU",
+          "description": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "process_cpu_usage{job=\"recaring\"}",
+              "legendFormat": "앱 프로세스",
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "system_cpu_usage{job=\"recaring\"}",
+              "legendFormat": "호스트 전체",
+              "refId": "B"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 2,
+                "fillOpacity": 10,
+                "showPoints": "never",
+                "spanNulls": true
+              },
+              "min": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "right",
+              "calcs": [
+                "lastNotNull",
+                "max"
+              ],
+              "sortBy": "Max",
+              "sortDesc": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "id": 50,
+          "gridPos": {
+            "h": 7,
+            "w": 8,
+            "x": 16,
+            "y": 120
+          }
+        },
+        {
+          "type": "timeseries",
+          "title": "DB 커넥션 풀",
+          "description": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum(hikaricp_connections_active{job=\"recaring\"})",
+              "legendFormat": "사용 중",
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum(hikaricp_connections_idle{job=\"recaring\"})",
+              "legendFormat": "유휴",
+              "refId": "B"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum(hikaricp_connections_pending{job=\"recaring\"})",
+              "legendFormat": "대기",
+              "refId": "C"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum(hikaricp_connections_max{job=\"recaring\"})",
+              "legendFormat": "최대",
+              "refId": "D"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 2,
+                "fillOpacity": 10,
+                "showPoints": "never",
+                "spanNulls": true
+              },
+              "min": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "right",
+              "calcs": [
+                "lastNotNull",
+                "max"
+              ],
+              "sortBy": "Max",
+              "sortDesc": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "id": 51,
+          "gridPos": {
+            "h": 7,
+            "w": 8,
+            "x": 0,
+            "y": 127
+          }
+        },
+        {
+          "type": "timeseries",
+          "title": "DB 커넥션 획득 시간 (평균)",
+          "description": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum(rate(hikaricp_connections_acquire_seconds_sum{job=\"recaring\"}[5m])) / sum(rate(hikaricp_connections_acquire_seconds_count{job=\"recaring\"}[5m]))",
+              "legendFormat": "평균",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 2,
+                "fillOpacity": 10,
+                "showPoints": "never",
+                "spanNulls": true
+              },
+              "min": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "right",
+              "calcs": [
+                "lastNotNull",
+                "max"
+              ],
+              "sortBy": "Max",
+              "sortDesc": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "id": 52,
+          "gridPos": {
+            "h": 7,
+            "w": 8,
+            "x": 8,
+            "y": 127
+          }
+        },
+        {
+          "type": "timeseries",
+          "title": "DB 커넥션 타임아웃 (5분)",
+          "description": "",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "sum(increase(hikaricp_connections_timeout_total{job=\"recaring\"}[5m]))",
+              "legendFormat": "타임아웃",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "custom": {
+                "drawStyle": "bars",
+                "lineWidth": 2,
+                "fillOpacity": 60,
+                "showPoints": "never",
+                "spanNulls": true
+              },
+              "min": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "right",
+              "calcs": [
+                "lastNotNull",
+                "max"
+              ],
+              "sortBy": "Max",
+              "sortDesc": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "id": 53,
+          "gridPos": {
+            "h": 7,
+            "w": 8,
+            "x": 16,
+            "y": 127
+          }
+        },
+        {
+          "type": "timeseries",
+          "title": "ECS CPU (%)",
+          "description": "",
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "cloudwatch"
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "queryMode": "Metrics",
+              "metricQueryType": 0,
+              "metricEditorMode": 0,
+              "namespace": "AWS/ECS",
+              "metricName": "CPUUtilization",
+              "dimensions": {
+                "ClusterName": [
+                  "recaring-cluster"
+                ],
+                "ServiceName": [
+                  "recaring-service"
+                ]
+              },
+              "matchExact": true,
+              "statistic": "Average",
+              "period": "",
+              "region": "default",
+              "legendFormat": "recaring-service",
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "queryMode": "Metrics",
+              "metricQueryType": 0,
+              "metricEditorMode": 0,
+              "namespace": "AWS/ECS",
+              "metricName": "CPUUtilization",
+              "dimensions": {
+                "ClusterName": [
+                  "recaring-cluster"
+                ],
+                "ServiceName": [
+                  "recaring-detection-service"
+                ]
+              },
+              "matchExact": true,
+              "statistic": "Average",
+              "period": "",
+              "region": "default",
+              "legendFormat": "recaring-detection-service",
+              "refId": "B"
+            },
+            {
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "queryMode": "Metrics",
+              "metricQueryType": 0,
+              "metricEditorMode": 0,
+              "namespace": "AWS/ECS",
+              "metricName": "CPUUtilization",
+              "dimensions": {
+                "ClusterName": [
+                  "recaring-cluster"
+                ],
+                "ServiceName": [
+                  "recaring-monitoring-service"
+                ]
+              },
+              "matchExact": true,
+              "statistic": "Average",
+              "period": "",
+              "region": "default",
+              "legendFormat": "recaring-monitoring-service",
+              "refId": "C"
+            },
+            {
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "queryMode": "Metrics",
+              "metricQueryType": 0,
+              "metricEditorMode": 0,
+              "namespace": "AWS/ECS",
+              "metricName": "CPUUtilization",
+              "dimensions": {
+                "ClusterName": [
+                  "recaring-cluster"
+                ],
+                "ServiceName": [
+                  "nginx-service"
+                ]
+              },
+              "matchExact": true,
+              "statistic": "Average",
+              "period": "",
+              "region": "default",
+              "legendFormat": "nginx-service",
+              "refId": "D"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 2,
+                "fillOpacity": 10,
+                "showPoints": "never",
+                "spanNulls": true
+              },
+              "min": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "right",
+              "calcs": [
+                "lastNotNull",
+                "max"
+              ],
+              "sortBy": "Max",
+              "sortDesc": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "id": 54,
+          "gridPos": {
+            "h": 7,
+            "w": 8,
+            "x": 0,
+            "y": 134
+          }
+        },
+        {
+          "type": "timeseries",
+          "title": "ECS 메모리 (%)",
+          "description": "",
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "cloudwatch"
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "queryMode": "Metrics",
+              "metricQueryType": 0,
+              "metricEditorMode": 0,
+              "namespace": "AWS/ECS",
+              "metricName": "MemoryUtilization",
+              "dimensions": {
+                "ClusterName": [
+                  "recaring-cluster"
+                ],
+                "ServiceName": [
+                  "recaring-service"
+                ]
+              },
+              "matchExact": true,
+              "statistic": "Average",
+              "period": "",
+              "region": "default",
+              "legendFormat": "recaring-service",
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "queryMode": "Metrics",
+              "metricQueryType": 0,
+              "metricEditorMode": 0,
+              "namespace": "AWS/ECS",
+              "metricName": "MemoryUtilization",
+              "dimensions": {
+                "ClusterName": [
+                  "recaring-cluster"
+                ],
+                "ServiceName": [
+                  "recaring-detection-service"
+                ]
+              },
+              "matchExact": true,
+              "statistic": "Average",
+              "period": "",
+              "region": "default",
+              "legendFormat": "recaring-detection-service",
+              "refId": "B"
+            },
+            {
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "queryMode": "Metrics",
+              "metricQueryType": 0,
+              "metricEditorMode": 0,
+              "namespace": "AWS/ECS",
+              "metricName": "MemoryUtilization",
+              "dimensions": {
+                "ClusterName": [
+                  "recaring-cluster"
+                ],
+                "ServiceName": [
+                  "recaring-monitoring-service"
+                ]
+              },
+              "matchExact": true,
+              "statistic": "Average",
+              "period": "",
+              "region": "default",
+              "legendFormat": "recaring-monitoring-service",
+              "refId": "C"
+            },
+            {
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "queryMode": "Metrics",
+              "metricQueryType": 0,
+              "metricEditorMode": 0,
+              "namespace": "AWS/ECS",
+              "metricName": "MemoryUtilization",
+              "dimensions": {
+                "ClusterName": [
+                  "recaring-cluster"
+                ],
+                "ServiceName": [
+                  "nginx-service"
+                ]
+              },
+              "matchExact": true,
+              "statistic": "Average",
+              "period": "",
+              "region": "default",
+              "legendFormat": "nginx-service",
+              "refId": "D"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 2,
+                "fillOpacity": 10,
+                "showPoints": "never",
+                "spanNulls": true
+              },
+              "min": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "right",
+              "calcs": [
+                "lastNotNull",
+                "max"
+              ],
+              "sortBy": "Max",
+              "sortDesc": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "id": 55,
+          "gridPos": {
+            "h": 7,
+            "w": 8,
+            "x": 8,
+            "y": 134
+          }
+        },
+        {
+          "type": "timeseries",
+          "title": "ElastiCache 메모리 · 연결",
+          "description": "",
+          "datasource": {
+            "type": "cloudwatch",
+            "uid": "cloudwatch"
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "queryMode": "Metrics",
+              "metricQueryType": 0,
+              "metricEditorMode": 0,
+              "namespace": "AWS/ElastiCache",
+              "metricName": "DatabaseMemoryUsagePercentage",
+              "dimensions": {
+                "CacheClusterId": [
+                  "recaring-redis-001",
+                  "recaring-redis-002",
+                  "recaring-redis-003"
+                ]
+              },
+              "matchExact": true,
+              "statistic": "Average",
+              "period": "",
+              "region": "default",
+              "legendFormat": "{{CacheClusterId}} 메모리 %",
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "cloudwatch",
+                "uid": "cloudwatch"
+              },
+              "queryMode": "Metrics",
+              "metricQueryType": 0,
+              "metricEditorMode": 0,
+              "namespace": "AWS/ElastiCache",
+              "metricName": "CurrConnections",
+              "dimensions": {
+                "CacheClusterId": [
+                  "recaring-redis-001",
+                  "recaring-redis-002",
+                  "recaring-redis-003"
+                ]
+              },
+              "matchExact": true,
+              "statistic": "Average",
+              "period": "",
+              "region": "default",
+              "legendFormat": "{{CacheClusterId}} 연결",
+              "refId": "B"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "custom": {
+                "drawStyle": "line",
+                "lineWidth": 2,
+                "fillOpacity": 10,
+                "showPoints": "never",
+                "spanNulls": true
+              },
+              "min": 0
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "right",
+              "calcs": [
+                "lastNotNull",
+                "max"
+              ],
+              "sortBy": "Max",
+              "sortDesc": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "id": 56,
+          "gridPos": {
+            "h": 7,
+            "w": 8,
+            "x": 16,
+            "y": 134
+          }
+        },
+        {
+          "type": "stat",
+          "title": "수집 대상 상태 (Prometheus up)",
+          "description": "recaring=앱, node=EC2 호스트, redis=redis-exporter. ECS 서비스별 실행 태스크 수는 Container Insights가 꺼져 있어 수집되지 않음",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "expr": "up",
+              "legendFormat": "{{job}}",
+              "refId": "A",
+              "instant": true,
+              "range": false
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "green",
+                    "value": 1
+                  }
+                ]
+              },
+              "mappings": [
+                {
+                  "type": "value",
+                  "options": {
+                    "0": {
+                      "text": "다운",
+                      "color": "red"
+                    },
+                    "1": {
+                      "text": "정상",
+                      "color": "green"
+                    }
+                  }
+                }
+              ],
+              "color": {
+                "mode": "thresholds"
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "colorMode": "background",
+            "graphMode": "none",
+            "textMode": "value_and_name",
+            "justifyMode": "center",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ]
+            }
+          },
+          "id": 57,
+          "gridPos": {
+            "h": 4,
+            "w": 24,
+            "x": 0,
+            "y": 141
+          }
         }
       ]
     }

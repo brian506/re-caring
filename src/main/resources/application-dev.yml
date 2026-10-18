@@ -30,6 +30,7 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        log_slow_query: 500
 
   data:
     redis:

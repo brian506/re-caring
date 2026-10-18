@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.async.AsyncRequestNotUsableException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.util.DisconnectedClientHelper;
 
 @Slf4j
 @RestControllerAdvice
@@ -108,7 +109,11 @@ public class ApiControllerAdvice {
 
     @NullMarked
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiResponse<@Nullable Object>> handleException(Exception e) {
+    public @Nullable ResponseEntity<ApiResponse<@Nullable Object>> handleException(Exception e) {
+        if (DisconnectedClientHelper.isClientDisconnectedException(e)) {
+            log.warn("[응답 전송 : 클라이언트 연결 끊김]: type={} | message={}", e.getClass().getName(), e.getMessage());
+            return null;
+        }
         printExceptionLog(e);
         return new ResponseEntity<>(ApiResponse.error(ErrorType.DEFAULT_ERROR, null), HttpStatus.INTERNAL_SERVER_ERROR);
     }
