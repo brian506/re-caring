@@ -2,33 +2,37 @@ package com.recaring.config.infra;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.scheduling.annotation.EnableAsync;
 
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 @Configuration
 @EnableAsync
 public class AsyncConfig {
 
+    private static final long TASK_TERMINATION_TIMEOUT_MILLIS = 20_000L;
+
     @Bean("broadcastExecutor")
     public Executor broadcastExecutor() {
-        return Executors.newThreadPerTaskExecutor(
-                Thread.ofVirtual().name("broadcast-", 0).factory()
-        );
+        return virtualThreadExecutor("broadcast-");
     }
 
     @Bean("detectionRetryExecutor")
     public Executor detectionRetryExecutor() {
-        return Executors.newThreadPerTaskExecutor(
-                Thread.ofVirtual().name("detection-retry-", 0).factory()
-        );
+        return virtualThreadExecutor("detection-retry-");
     }
 
     @Bean("ssePollExecutor")
     public Executor ssePollExecutor() {
-        return Executors.newThreadPerTaskExecutor(
-                Thread.ofVirtual().name("sse-poll-", 0).factory()
-        );
+        return virtualThreadExecutor("sse-poll-");
+    }
+
+    private Executor virtualThreadExecutor(String threadNamePrefix) {
+        SimpleAsyncTaskExecutor executor = new SimpleAsyncTaskExecutor(threadNamePrefix);
+        executor.setVirtualThreads(true);
+        executor.setTaskDecorator(new MdcTaskDecorator());
+        executor.setTaskTerminationTimeout(TASK_TERMINATION_TIMEOUT_MILLIS);
+        return executor;
     }
 }
