@@ -43,13 +43,14 @@ class SiteInquiryAuthenticatorTest {
     }
 
     @Test
-    @DisplayName("공개글은 비밀번호 없이 통과한다")
-    void public_inquiry_passes_without_password() {
+    @DisplayName("공개글은 비밀번호 없이 통과하고 시도 횟수를 쓰지 않는다")
+    void public_inquiry_passes_without_password_or_attempt() {
         given(siteInquiryRepository.findByInquiryKey(SiteInquiryFixture.INQUIRY_KEY))
                 .willReturn(Optional.of(SiteInquiryFixture.createPublicInquiry(SiteInquiryFixture.TITLE)));
 
         assertThatCode(() -> authenticator.authenticate(SiteInquiryFixture.INQUIRY_KEY, null))
                 .doesNotThrowAnyException();
+        then(rateLimitValidator).shouldHaveNoInteractions();
     }
 
     @Test

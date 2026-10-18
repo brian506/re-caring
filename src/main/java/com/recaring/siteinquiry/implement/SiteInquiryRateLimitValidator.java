@@ -50,8 +50,15 @@ public class SiteInquiryRateLimitValidator {
     }
 
     public void releaseViewAttempt(String inquiryKey) {
-        redisTemplate.opsForValue().decrement(VIEW_FAILURE_KEY_PREFIX + inquiryKey);
-        redisTemplate.opsForValue().decrement(DAILY_VIEW_FAILURE_KEY_PREFIX + inquiryKey);
+        release(VIEW_FAILURE_KEY_PREFIX + inquiryKey);
+        release(DAILY_VIEW_FAILURE_KEY_PREFIX + inquiryKey);
+    }
+
+    private void release(String key) {
+        Long count = redisTemplate.opsForValue().decrement(key);
+        if (count != null && count <= 0) {
+            redisTemplate.delete(key);
+        }
     }
 
     private void reserve(String key, Duration window, long quota, String inquiryKey) {

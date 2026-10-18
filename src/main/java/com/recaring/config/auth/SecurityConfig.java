@@ -24,7 +24,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.List;
 import java.util.stream.Stream;
 
 import static org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher.withDefaults;
@@ -160,7 +159,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of(clientUrl));
+        config.setAllowedOrigins(Stream.of(clientUrl).filter(url -> !url.isBlank()).toList());
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
         config.setAllowCredentials(true);

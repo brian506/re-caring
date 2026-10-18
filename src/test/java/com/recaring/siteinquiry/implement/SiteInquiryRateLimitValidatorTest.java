@@ -94,6 +94,15 @@ class SiteInquiryRateLimitValidatorTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @DisplayName("24시간 누적 실패가 19회인 상태에서 20번째 시도는 허용한다")
+    void twentieth_daily_attempt_is_allowed() {
+        redisTemplate.opsForValue().set(DAILY_VIEW_FAILURE_KEY, "19", SEEDED_TTL_SECONDS, TimeUnit.SECONDS);
+
+        assertThatCode(() -> rateLimitValidator.reserveViewAttempt(SiteInquiryFixture.INQUIRY_KEY))
+                .doesNotThrowAnyException();
+    }
+
+    @Test
     @DisplayName("10분 창이 비어 있어도 24시간 누적 실패가 20회면 잠긴다")
     void attempt_after_twenty_daily_failures_is_locked() {
         redisTemplate.opsForValue().set(DAILY_VIEW_FAILURE_KEY, "20", SEEDED_TTL_SECONDS, TimeUnit.SECONDS);
