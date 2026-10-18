@@ -1,5 +1,6 @@
 package com.recaring.sms.implement;
 
+import com.recaring.common.utils.MaskingUtils;
 import com.recaring.support.exception.AppException;
 import com.recaring.support.exception.ErrorType;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +30,7 @@ public class SmsClient {
         try {
             messageService.sendOne(new SingleMessageSendingRequest(message));
         } catch (Exception e) {
-            log.error("[SMS 발송 : 실패]: phone={}", phone, e);
+            log.error("[SMS 발송 : 실패]: phone={}", MaskingUtils.maskPhone(phone), e);
             throw new AppException(ErrorType.SMS_SEND_FAILED);
         }
     }

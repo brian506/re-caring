@@ -54,6 +54,8 @@ log.error("[Redis 캐시 : 직렬화 실패]: wardKey={}", wardKey, e);
 log.error("[이상탐지 결과 : 처리 실패]: wardMemberKey={} | attempt={}", wardMemberKey, attempt, e);
 ```
 
+- 개인정보는 로그에 평문으로 남기지 않는다. 전화번호는 `MaskingUtils.maskPhone`, 장소 검색어는 길이만, GPS 좌표·토큰은 기록하지 않는다
+- 외부 HTTP 호출 예외(`ResourceAccessException` 등)는 메시지에 요청 URL(쿼리 파라미터 포함)이 담기므로 `e.getMostSpecificCause()`를 넘긴다
 - `requestId`는 `RequestIdFilter`가 MDC에 넣으므로 메시지에 직접 적지 않는다. dev는 ECS JSON 필드, local은 평문 `[requestId]`로 자동 출력된다
 - 비동기 executor는 `AsyncConfig`에서 `MdcTaskDecorator`를 적용해 만든다. 데코레이터가 없는 executor·`CompletableFuture` 공용 풀에서는 `requestId`가 끊긴다
 
