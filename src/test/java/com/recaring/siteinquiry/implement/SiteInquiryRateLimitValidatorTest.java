@@ -11,7 +11,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -22,6 +29,7 @@ class SiteInquiryRateLimitValidatorTest extends AbstractIntegrationTest {
 
     private static final String SUBMIT_KEY = "site-inquiry:submit:" + SiteInquiryFixture.CLIENT_IP;
     private static final String VIEW_FAILURE_KEY = "site-inquiry:view-failure:" + SiteInquiryFixture.INQUIRY_KEY;
+    private static final String DAILY_VIEW_FAILURE_KEY = "site-inquiry:view-failure-daily:" + SiteInquiryFixture.INQUIRY_KEY;
     private static final long WINDOW_SECONDS = 600;
     private static final long SEEDED_TTL_SECONDS = 300;
 
@@ -67,21 +75,59 @@ class SiteInquiryRateLimitValidatorTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("비밀번호 실패가 4회일 때까지는 조회를 막지 않는다")
-    void four_view_failures_do_not_lock() {
+    @DisplayName("비밀번호 시도가 4회 쌓인 상태에서 5번째 시도는 허용한다")
+    void fifth_view_attempt_is_allowed() {
         redisTemplate.opsForValue().set(VIEW_FAILURE_KEY, "4", SEEDED_TTL_SECONDS, TimeUnit.SECONDS);
 
-        assertThatCode(() -> rateLimitValidator.validateViewNotLocked(SiteInquiryFixture.INQUIRY_KEY))
+        assertThatCode(() -> rateLimitValidator.reserveViewAttempt(SiteInquiryFixture.INQUIRY_KEY))
                 .doesNotThrowAnyException();
     }
 
     @Test
-    @DisplayName("비밀번호 실패가 5회가 되면 조회가 잠긴다")
-    void five_view_failures_lock_the_inquiry() {
+    @DisplayName("비밀번호 실패가 5회 쌓이면 6번째 시도부터 잠긴다")
+    void sixth_view_attempt_after_five_failures_is_locked() {
         redisTemplate.opsForValue().set(VIEW_FAILURE_KEY, "5", SEEDED_TTL_SECONDS, TimeUnit.SECONDS);
 
-        assertThatThrownBy(() -> rateLimitValidator.validateViewNotLocked(SiteInquiryFixture.INQUIRY_KEY))
+        assertThatThrownBy(() -> rateLimitValidator.reserveViewAttempt(SiteInquiryFixture.INQUIRY_KEY))
                 .isInstanceOf(AppException.class)
                 .hasFieldOrPropertyWithValue("errorType", ErrorType.SITE_INQUIRY_VIEW_LOCKED);
+    }
+
+    @Test
+    @DisplayName("10분 창이 비어 있어도 24시간 누적 실패가 20회면 잠긴다")
+    void attempt_after_twenty_daily_failures_is_locked() {
+        redisTemplate.opsForValue().set(DAILY_VIEW_FAILURE_KEY, "20", SEEDED_TTL_SECONDS, TimeUnit.SECONDS);
+
+        assertThatThrownBy(() -> rateLimitValidator.reserveViewAttempt(SiteInquiryFixture.INQUIRY_KEY))
+                .isInstanceOf(AppException.class)
+                .hasFieldOrPropertyWithValue("errorType", ErrorType.SITE_INQUIRY_VIEW_LOCKED);
+    }
+
+    @Test
+    @DisplayName("동시에 몰린 비밀번호 시도도 창마다 5회까지만 통과한다")
+    void concurrent_view_attempts_pass_only_up_to_quota() throws Exception {
+        int requests = 20;
+        ExecutorService executor = Executors.newFixedThreadPool(requests);
+        CountDownLatch start = new CountDownLatch(1);
+        AtomicInteger passed = new AtomicInteger();
+        List<Future<?>> futures = new ArrayList<>();
+        for (int i = 0; i < requests; i++) {
+            futures.add(executor.submit(() -> {
+                start.await();
+                try {
+                    rateLimitValidator.reserveViewAttempt(SiteInquiryFixture.INQUIRY_KEY);
+                    passed.incrementAndGet();
+                } catch (AppException ignored) {
+                }
+                return null;
+            }));
+        }
+        start.countDown();
+        for (Future<?> future : futures) {
+            future.get(10, TimeUnit.SECONDS);
+        }
+        executor.shutdown();
+
+        assertThat(passed.get()).isEqualTo(5);
     }
 }

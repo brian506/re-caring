@@ -21,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.willThrow;
+import static org.mockito.Mockito.never;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("SiteInquiryAuthenticator 단위 테스트")
@@ -52,34 +53,37 @@ class SiteInquiryAuthenticatorTest {
     }
 
     @Test
-    @DisplayName("비밀글은 등록할 때의 비밀번호와 같으면 통과한다")
-    void secret_inquiry_passes_with_registered_password() {
+    @DisplayName("비밀글은 등록할 때의 비밀번호와 같으면 통과하고 시도 횟수를 되돌린다")
+    void secret_inquiry_passes_with_registered_password_and_releases_attempt() {
         givenSecretInquiryRegisteredWith(SiteInquiryFixture.PASSWORD);
 
         assertThatCode(() -> authenticator.authenticate(SiteInquiryFixture.INQUIRY_KEY, SiteInquiryFixture.PASSWORD))
                 .doesNotThrowAnyException();
+        then(rateLimitValidator).should().releaseViewAttempt(SiteInquiryFixture.INQUIRY_KEY);
     }
 
     @Test
-    @DisplayName("비밀글을 틀린 비밀번호로 조회하면 거부되고 실패가 기록된다")
+    @DisplayName("비밀글을 틀린 비밀번호로 조회하면 거부되고 시도가 실패로 남는다")
     void secret_inquiry_rejects_wrong_password_and_records_failure() {
         givenSecretInquiryRegisteredWith(SiteInquiryFixture.PASSWORD);
 
         assertThatThrownBy(() -> authenticator.authenticate(SiteInquiryFixture.INQUIRY_KEY, SiteInquiryFixture.WRONG_PASSWORD))
                 .isInstanceOf(AppException.class)
                 .hasFieldOrPropertyWithValue("errorType", ErrorType.SITE_INQUIRY_PASSWORD_MISMATCH);
-        then(rateLimitValidator).should().recordViewFailure(SiteInquiryFixture.INQUIRY_KEY);
+        then(rateLimitValidator).should().reserveViewAttempt(SiteInquiryFixture.INQUIRY_KEY);
+        then(rateLimitValidator).should(never()).releaseViewAttempt(SiteInquiryFixture.INQUIRY_KEY);
     }
 
     @Test
-    @DisplayName("비밀글을 비밀번호 없이 조회하면 거부되고 실패가 기록된다")
+    @DisplayName("비밀글을 비밀번호 없이 조회하면 거부되고 시도가 실패로 남는다")
     void secret_inquiry_rejects_missing_password_and_records_failure() {
         givenSecretInquiryRegisteredWith(SiteInquiryFixture.PASSWORD);
 
         assertThatThrownBy(() -> authenticator.authenticate(SiteInquiryFixture.INQUIRY_KEY, null))
                 .isInstanceOf(AppException.class)
                 .hasFieldOrPropertyWithValue("errorType", ErrorType.SITE_INQUIRY_PASSWORD_MISMATCH);
-        then(rateLimitValidator).should().recordViewFailure(SiteInquiryFixture.INQUIRY_KEY);
+        then(rateLimitValidator).should().reserveViewAttempt(SiteInquiryFixture.INQUIRY_KEY);
+        then(rateLimitValidator).should(never()).releaseViewAttempt(SiteInquiryFixture.INQUIRY_KEY);
     }
 
     @Test
@@ -87,7 +91,7 @@ class SiteInquiryAuthenticatorTest {
     void locked_inquiry_rejects_correct_password() {
         givenSecretInquiryRegisteredWith(SiteInquiryFixture.PASSWORD);
         willThrow(new AppException(ErrorType.SITE_INQUIRY_VIEW_LOCKED))
-                .given(rateLimitValidator).validateViewNotLocked(SiteInquiryFixture.INQUIRY_KEY);
+                .given(rateLimitValidator).reserveViewAttempt(SiteInquiryFixture.INQUIRY_KEY);
 
         assertThatThrownBy(() -> authenticator.authenticate(SiteInquiryFixture.INQUIRY_KEY, SiteInquiryFixture.PASSWORD))
                 .isInstanceOf(AppException.class)

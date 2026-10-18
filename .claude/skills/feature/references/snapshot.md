@@ -200,7 +200,8 @@ anomaly:ack:{wardKey}          이상탐지 사건 보호자 확인(hash) TTL: 1
 careRelationship::*            케어관계 캐시           TTL: 10분
 care:invitation:resend:{requestKey}  케어 요청 재전송 간격 제한(SETNX)  TTL: 5분
 site-inquiry:submit:{ip}       웹 문의 등록 IP 한도   TTL: 10분 (고정 창, 한도 5). IP는 X-Real-IP
-site-inquiry:view-failure:{inquiryKey}  비밀글 비밀번호 실패 횟수  TTL: 10분, 5회 이상이면 조회 잠금
+site-inquiry:view-failure:{inquiryKey}  비밀글 비밀번호 시도 횟수  TTL: 10분, 비교 전에 INCR(원자적 예약), 6번째부터 잠금, 성공 시 DECR
+site-inquiry:view-failure-daily:{inquiryKey}  비밀글 24시간 누적 시도  TTL: 24시간, 21번째부터 잠금
 ```
 
 안심존 상태는 Redis(`safezone:state:{wardKey}`)에서 `safe_zone_states` 테이블로 이전했다. 유실되면 복구 불가능한
