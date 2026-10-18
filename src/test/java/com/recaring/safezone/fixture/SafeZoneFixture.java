@@ -71,6 +71,11 @@ public class SafeZoneFixture {
         return new SafeZoneInfo(safeZoneKey, name, ADDRESS, latitude, longitude, RADIUS_METERS, SafeZoneType.DANGER);
     }
 
+    public static SafeZoneInfo createSafeZoneInfoAt(
+            String safeZoneKey, double latitude, double longitude, int radiusMeters) {
+        return new SafeZoneInfo(safeZoneKey, NAME, ADDRESS, latitude, longitude, radiusMeters, TYPE);
+    }
+
     public static SafeZoneInfo createSafeZoneInfoWithRadius(String safeZoneKey, int radiusMeters) {
         return new SafeZoneInfo(safeZoneKey, NAME, ADDRESS, LATITUDE, LONGITUDE, radiusMeters, TYPE);
     }

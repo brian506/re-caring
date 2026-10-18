@@ -80,6 +80,8 @@ public class LocationFixture {
     public static final double WALK_50M_LATITUDE_DELTA = 0.00045;
     public static final double JUMP_15KM_LATITUDE_DELTA = 0.135;
     public static final double JUMP_45KM_LATITUDE_DELTA = 0.405;
+    public static final double SPIKE_1KM_LATITUDE_DELTA = 0.009;
+    public static final int ZONE_RADIUS_300M = 300;
 
     public static final LocalDateTime ROUTE_EVENT_STARTED_AT = LocalDateTime.of(2026, 9, 24, 7, 4, 12);
     public static final LocalDateTime ROUTE_EVENT_ENDED_AT = LocalDateTime.of(2026, 9, 24, 10, 55, 0);

@@ -4,6 +4,8 @@ import com.recaring.location.event.GpsSavedEvent;
 import com.recaring.location.event.SafeZoneEnteredEvent;
 import com.recaring.location.event.SafeZoneExitedEvent;
 import com.recaring.location.vo.Gps;
+import com.recaring.location.vo.SafeZoneObservation;
+import com.recaring.location.vo.SafeZoneTransition;
 import com.recaring.safezone.implement.SafeZoneReader;
 import com.recaring.safezone.vo.SafeZoneInfo;
 import lombok.RequiredArgsConstructor;
@@ -13,14 +15,12 @@ import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Function;
 
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.toMap;
 
 @Slf4j
 @Component
@@ -49,36 +49,28 @@ public class SafeZoneDetectionListener {
             return;
         }
 
-        // 실시간으로 들어온 위치값에 대해서 어떤 안심존에 위치해 있는지 찾아서 안심존값 Set에 저장 - 현재값
-        Set<String> currentKeys = zones.stream()
-                .filter(zone -> zone.contains(gps.latitude(), gps.longitude()))
-                .map(SafeZoneInfo::safeZoneKey)
-                .collect(toCollection(LinkedHashSet::new));
-
-        // 직전 GPS 때 계산했던 안심존값을 반환하면서 현재값으로 교체 - 과거값
-        Optional<Set<String>> previousKeys =
-                safeZoneStateManager.replaceAndGetPrevious(wardMemberKey, currentKeys);
+        Optional<SafeZoneTransition> transition =
+                safeZoneStateManager.transition(wardMemberKey, SafeZoneObservation.of(zones, gps));
 
         // 최초 관측은 비교 대상이 없다. 기준선만 세우고 알리지 않는다.
-        if (previousKeys.isEmpty()) {
+        if (transition.isEmpty()) {
             return;
         }
-        publishTransitions(wardMemberKey, zones, previousKeys.get(), currentKeys, gps);
+        publishTransitions(wardMemberKey, zones, transition.get(), gps);
     }
 
     // 이상탐지 진입 및 이탈 감지
     private void publishTransitions(
             String wardMemberKey,
             List<SafeZoneInfo> zones,
-            Set<String> previousKeys,
-            Set<String> currentKeys,
+            SafeZoneTransition transition,
             Gps gps
     ) {
         Map<String, SafeZoneInfo> zonesByKey = zones.stream()
                 .collect(toMap(SafeZoneInfo::safeZoneKey, Function.identity()));
 
         // 안심존 진입 알림
-        for (String enteredKey : difference(currentKeys, previousKeys)) {
+        for (String enteredKey : transition.enteredKeys()) {
             SafeZoneInfo zone = zonesByKey.get(enteredKey);
             log.info("[안심존 : 진입]: wardMemberKey={} | safeZoneKey={} | zoneType={}", wardMemberKey, enteredKey, zone.type());
             eventPublisher.publishEvent(new SafeZoneEnteredEvent(
@@ -86,7 +78,7 @@ public class SafeZoneDetectionListener {
         }
 
         // 안심존 이탈 알림
-        for (String exitedKey : difference(previousKeys, currentKeys)) {
+        for (String exitedKey : transition.exitedKeys()) {
             SafeZoneInfo zone = zonesByKey.get(exitedKey);
             // 존이 삭제되어 사라진 경우는 이탈이 아니다.
             if (zone == null) {
@@ -96,11 +88,5 @@ public class SafeZoneDetectionListener {
             eventPublisher.publishEvent(new SafeZoneExitedEvent(
                     wardMemberKey, exitedKey, zone.name(), zone.type(), gps.latitude(), gps.longitude(), gps.occurredAt()));
         }
-    }
-
-    private Set<String> difference(Set<String> source, Set<String> exclude) {
-        Set<String> result = new LinkedHashSet<>(source);
-        result.removeAll(exclude);
-        return result;
     }
 }

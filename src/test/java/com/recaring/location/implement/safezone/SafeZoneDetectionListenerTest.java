@@ -5,6 +5,8 @@ import com.recaring.location.event.SafeZoneEnteredEvent;
 import com.recaring.location.event.SafeZoneExitedEvent;
 import com.recaring.location.fixture.LocationFixture;
 import com.recaring.location.vo.Gps;
+import com.recaring.location.vo.SafeZoneObservation;
+import com.recaring.location.vo.SafeZoneTransition;
 import com.recaring.safezone.dataaccess.entity.SafeZoneType;
 import com.recaring.safezone.fixture.SafeZoneFixture;
 import com.recaring.safezone.implement.SafeZoneReader;
@@ -63,6 +65,8 @@ class SafeZoneDetectionListenerTest {
     @Captor
     private ArgumentCaptor<Object> eventCaptor;
 
+    private List<SafeZoneInfo> givenZones;
+
     @Test
     @DisplayName("오차가 큰 좌표는 존 조회도 상태 갱신도 하지 않는다")
     void onGpsSaved_skips_when_accuracy_unreliable() {
@@ -83,7 +87,7 @@ class SafeZoneDetectionListenerTest {
         safeZoneDetectionListener.onGpsSaved(gpsSavedEvent());
 
         then(safeZoneStateManager).should(times(1)).delete(LocationFixture.WARD_KEY);
-        then(safeZoneStateManager).should(never()).replaceAndGetPrevious(anyString(), any());
+        then(safeZoneStateManager).should(never()).transition(anyString(), any());
         then(eventPublisher).shouldHaveNoInteractions();
     }
 
@@ -91,7 +95,7 @@ class SafeZoneDetectionListenerTest {
     @DisplayName("최초 관측은 기준선만 세우고 알리지 않는다")
     void onGpsSaved_does_not_publish_on_first_observation() {
         givenZones(nearZone(HOME_KEY, HOME_NAME));
-        given(safeZoneStateManager.replaceAndGetPrevious(LocationFixture.WARD_KEY, Set.of(HOME_KEY)))
+        given(safeZoneStateManager.transition(LocationFixture.WARD_KEY, observationOfGivenZones()))
                 .willReturn(Optional.empty());
 
         safeZoneDetectionListener.onGpsSaved(gpsSavedEvent());
@@ -208,7 +212,7 @@ class SafeZoneDetectionListenerTest {
         assertThat(eventCaptor.getAllValues())
                 .allMatch(SafeZoneEnteredEvent.class::isInstance)
                 .extracting(event -> ((SafeZoneEnteredEvent) event).safeZoneKey())
-                .containsExactly(HOME_KEY, HOSPITAL_KEY);
+                .containsExactlyInAnyOrder(HOME_KEY, HOSPITAL_KEY);
     }
 
     @Test
@@ -236,12 +240,17 @@ class SafeZoneDetectionListenerTest {
     }
 
     private void givenZones(SafeZoneInfo... zones) {
-        given(safeZoneReader.findAllByWardMemberKey(LocationFixture.WARD_KEY)).willReturn(List.of(zones));
+        givenZones = List.of(zones);
+        given(safeZoneReader.findAllByWardMemberKey(LocationFixture.WARD_KEY)).willReturn(givenZones);
     }
 
-    private void givenPreviousKeys(Set<String> expectedCurrentKeys, Set<String> previousKeys) {
-        given(safeZoneStateManager.replaceAndGetPrevious(LocationFixture.WARD_KEY, expectedCurrentKeys))
-                .willReturn(Optional.of(previousKeys));
+    private void givenPreviousKeys(Set<String> currentKeys, Set<String> previousKeys) {
+        given(safeZoneStateManager.transition(LocationFixture.WARD_KEY, observationOfGivenZones()))
+                .willReturn(Optional.of(new SafeZoneTransition(previousKeys, currentKeys)));
+    }
+
+    private SafeZoneObservation observationOfGivenZones() {
+        return SafeZoneObservation.of(givenZones, LocationFixture.createGps());
     }
 
     private SafeZoneInfo nearZone(String safeZoneKey, String name) {

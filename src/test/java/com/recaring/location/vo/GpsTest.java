@@ -11,16 +11,21 @@ import java.time.LocalDateTime;
 import static com.recaring.location.fixture.LocationFixture.JUMP_15KM_LATITUDE_DELTA;
 import static com.recaring.location.fixture.LocationFixture.JUMP_45KM_LATITUDE_DELTA;
 import static com.recaring.location.fixture.LocationFixture.LATITUDE;
+import static com.recaring.location.fixture.LocationFixture.SPIKE_1KM_LATITUDE_DELTA;
 import static com.recaring.location.fixture.LocationFixture.TRACK_ACCURACY;
 import static com.recaring.location.fixture.LocationFixture.TRACK_START;
 import static com.recaring.location.fixture.LocationFixture.WALK_50M_LATITUDE_DELTA;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@DisplayName("Gps 표시 가능 판정 단위 테스트")
+@DisplayName("Gps 표시 가능·튐 판정 단위 테스트")
 class GpsTest {
 
     private static final Gps ANCHOR = LocationFixture.createTrackPoint(LATITUDE, TRACK_ACCURACY, TRACK_START);
     private static final LocalDateTime THIRTY_SECONDS_LATER = TRACK_START.plusSeconds(30);
+    private static final LocalDateTime ONE_MINUTE_LATER = TRACK_START.plusSeconds(60);
+    private static final double JUMP_260M_LATITUDE_DELTA = 0.0023382;
+    private static final double VISIT_300M_LATITUDE_DELTA = 0.002698;
+    private static final double RETURN_61M_LATITUDE_DELTA = 0.0005486;
 
     @Test
     @DisplayName("기준점이 없으면 정확한 좌표는 표시한다")
@@ -123,5 +128,110 @@ class GpsTest {
         boolean displayable = moved.isDisplayableAfter(anchor);
 
         assertThat(displayable).isEqualTo(expected);
+    }
+
+    @Test
+    @DisplayName("1km 튀었다가 30초 뒤 원위치로 돌아온 좌표는 튐이다")
+    void point_jumping_away_and_back_is_spike() {
+        Gps jumped = LocationFixture.createTrackPoint(
+                LATITUDE + SPIKE_1KM_LATITUDE_DELTA, TRACK_ACCURACY, THIRTY_SECONDS_LATER);
+        Gps returned = LocationFixture.createTrackPoint(LATITUDE, TRACK_ACCURACY, ONE_MINUTE_LATER);
+
+        boolean spike = jumped.isSpikeBetween(ANCHOR, returned);
+
+        assertThat(spike).isTrue();
+    }
+
+    @ParameterizedTest(name = "위도 차 {0}도(≈{1}m) 튀었다 원위치 → 튐 {2}")
+    @CsvSource({
+            "0.0017896, 199, false",
+            "0.0018076, 201, true"
+    })
+    @DisplayName("앞뒤 좌표에서 200m 이상 떨어져야 튐이다")
+    void spike_requires_200m_from_both_neighbors(double latitudeDelta, int approxMeters, boolean expected) {
+        Gps jumped = LocationFixture.createTrackPoint(LATITUDE + latitudeDelta, TRACK_ACCURACY, THIRTY_SECONDS_LATER);
+        Gps returned = LocationFixture.createTrackPoint(LATITUDE, TRACK_ACCURACY, ONE_MINUTE_LATER);
+
+        boolean spike = jumped.isSpikeBetween(ANCHOR, returned);
+
+        assertThat(spike).isEqualTo(expected);
+    }
+
+    @ParameterizedTest(name = "260m 튄 좌표에서 뒤 좌표까지 ≈{1}m → 튐 {2}")
+    @CsvSource({
+            "0.0005486, 199, false",
+            "0.0005306, 201, true"
+    })
+    @DisplayName("뒤 좌표와의 거리만 200m 미만이어도 튐이 아니다")
+    void spike_requires_200m_from_next_neighbor(double returnedLatitudeDelta, int approxInboundMeters, boolean expected) {
+        Gps jumped = LocationFixture.createTrackPoint(LATITUDE + JUMP_260M_LATITUDE_DELTA, TRACK_ACCURACY, THIRTY_SECONDS_LATER);
+        Gps returned = LocationFixture.createTrackPoint(
+                LATITUDE + returnedLatitudeDelta, TRACK_ACCURACY, ONE_MINUTE_LATER);
+
+        boolean spike = jumped.isSpikeBetween(ANCHOR, returned);
+
+        assertThat(spike).isEqualTo(expected);
+    }
+
+    @ParameterizedTest(name = "앞 좌표에서 ≈{1}m, 뒤 좌표는 앞 좌표 반대편 61m → 튐 {2}")
+    @CsvSource({
+            "0.0017896, 199, false",
+            "0.0018076, 201, true"
+    })
+    @DisplayName("앞 좌표와의 거리만 200m 미만이어도 튐이 아니다")
+    void spike_requires_200m_from_previous_neighbor(double latitudeDelta, int approxOutboundMeters, boolean expected) {
+        Gps jumped = LocationFixture.createTrackPoint(LATITUDE + latitudeDelta, TRACK_ACCURACY, THIRTY_SECONDS_LATER);
+        Gps returned = LocationFixture.createTrackPoint(
+                LATITUDE - RETURN_61M_LATITUDE_DELTA, TRACK_ACCURACY, ONE_MINUTE_LATER);
+
+        boolean spike = jumped.isSpikeBetween(ANCHOR, returned);
+
+        assertThat(spike).isEqualTo(expected);
+    }
+
+    @ParameterizedTest(name = "앞뒤 좌표 간격 ≈{1}m → 튐 {2}")
+    @CsvSource({
+            "0.0008903, 99, true",
+            "0.0009083, 101, false"
+    })
+    @DisplayName("뒤 좌표가 앞 좌표의 100m 이내로 돌아와야 튐이다")
+    void spike_requires_return_within_100m(double returnedLatitudeDelta, int approxReturnGapMeters, boolean expected) {
+        Gps jumped = LocationFixture.createTrackPoint(
+                LATITUDE + SPIKE_1KM_LATITUDE_DELTA, TRACK_ACCURACY, THIRTY_SECONDS_LATER);
+        Gps returned = LocationFixture.createTrackPoint(
+                LATITUDE + returnedLatitudeDelta, TRACK_ACCURACY, ONE_MINUTE_LATER);
+
+        boolean spike = jumped.isSpikeBetween(ANCHOR, returned);
+
+        assertThat(spike).isEqualTo(expected);
+    }
+
+    @ParameterizedTest(name = "300m 왕복에 {0}초 → 튐 {1}")
+    @CsvSource({
+            "210, false",
+            "190, true"
+    })
+    @DisplayName("300m를 다녀오는 데 걸린 시간으로 낸 왕복 속도가 3m/s를 넘어야 튐이다")
+    void spike_requires_round_trip_faster_than_3mps(long roundTripSeconds, boolean expected) {
+        Gps visited = LocationFixture.createTrackPoint(
+                LATITUDE + VISIT_300M_LATITUDE_DELTA, TRACK_ACCURACY, TRACK_START.plusSeconds(roundTripSeconds / 2));
+        Gps returned = LocationFixture.createTrackPoint(
+                LATITUDE, TRACK_ACCURACY, TRACK_START.plusSeconds(roundTripSeconds));
+
+        boolean spike = visited.isSpikeBetween(ANCHOR, returned);
+
+        assertThat(spike).isEqualTo(expected);
+    }
+
+    @Test
+    @DisplayName("뒤 좌표의 측정 시각이 앞 좌표와 같으면 튐으로 보지 않는다")
+    void spike_is_not_judged_without_elapsed_time() {
+        Gps jumped = LocationFixture.createTrackPoint(
+                LATITUDE + SPIKE_1KM_LATITUDE_DELTA, TRACK_ACCURACY, THIRTY_SECONDS_LATER);
+        Gps returned = LocationFixture.createTrackPoint(LATITUDE, TRACK_ACCURACY, TRACK_START);
+
+        boolean spike = jumped.isSpikeBetween(ANCHOR, returned);
+
+        assertThat(spike).isFalse();
     }
 }

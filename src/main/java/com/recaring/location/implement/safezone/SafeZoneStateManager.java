@@ -2,6 +2,8 @@ package com.recaring.location.implement.safezone;
 
 import com.recaring.location.dataaccess.entity.SafeZoneState;
 import com.recaring.location.dataaccess.repository.SafeZoneStateRepository;
+import com.recaring.location.vo.SafeZoneObservation;
+import com.recaring.location.vo.SafeZoneTransition;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -27,24 +29,25 @@ public class SafeZoneStateManager {
     private final SafeZoneStateRepository safeZoneStateRepository;
 
     /**
-     * 현재 상태를 저장하고 직전 상태를 반환한다. 저장이 실패하면 트랜잭션이 롤백되어
+     * 직전 상태를 기준으로 현재 상태를 정해 저장하고, 그 전이를 반환한다. 저장이 실패하면 트랜잭션이 롤백되어
      * 호출부가 알림을 발행하지 않으므로, 저장 없이 알림만 나가는 상태가 생기지 않는다.
      */
     @Transactional
-    public Optional<Set<String>> replaceAndGetPrevious(String wardMemberKey, Set<String> safeZoneKeys) {
+    public Optional<SafeZoneTransition> transition(String wardMemberKey, SafeZoneObservation observation) {
         Optional<SafeZoneState> found = safeZoneStateRepository.findByWardMemberKey(wardMemberKey);
         if (found.isEmpty()) {
             safeZoneStateRepository.save(SafeZoneState.builder()
                     .wardMemberKey(wardMemberKey)
-                    .safeZoneKeys(join(safeZoneKeys))
+                    .safeZoneKeys(join(observation.insideKeys()))
                     .build());
             return Optional.empty();
         }
 
         SafeZoneState state = found.get();
         Set<String> previousKeys = parse(state.getSafeZoneKeys());
-        state.replace(join(safeZoneKeys));
-        return Optional.of(previousKeys);
+        Set<String> currentKeys = observation.resolve(previousKeys);
+        state.replace(join(currentKeys));
+        return Optional.of(new SafeZoneTransition(previousKeys, currentKeys));
     }
 
     @Transactional

@@ -34,7 +34,7 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
     private static final double NEW_LATITUDE = 37.55;
     private static final double NEW_LONGITUDE = 126.92;
     private static final int NEW_RADIUS_METERS = 350;
-    private static final int TOO_SMALL_RADIUS_METERS = 160;
+    private static final int TOO_SMALL_RADIUS_METERS = 99;
 
     private static final String CREATE_BODY = """
             {"name": "%s", "address": "%s", "latitude": %s, "longitude": %s, "radiusMeters": %s, "type": "SAFE"}
@@ -174,7 +174,7 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("반경이 300m 미만이면 400 E8003이 반환되고 저장되지 않는다")
+    @DisplayName("반경이 100m 미만이면 400 E8003이 반환되고 저장되지 않는다")
     void addSafeZone_returns_400_when_radius_too_small() {
         client.post()
                 .uri(zonesUri())
@@ -390,7 +390,7 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("반경 300m 미만으로 수정하면 400 E8003이 반환되고 값이 그대로 남는다")
+    @DisplayName("반경 100m 미만으로 수정하면 400 E8003이 반환되고 값이 그대로 남는다")
     void updateSafeZone_returns_400_when_radius_too_small() {
         client.patch()
                 .uri(zoneUri(savedZone.getSafeZoneKey()))

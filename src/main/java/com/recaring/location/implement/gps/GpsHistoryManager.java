@@ -61,9 +61,17 @@ public class GpsHistoryManager {
     }
 
     private List<Gps> keepDisplayable(List<Gps> chronological) {
+        List<Gps> accurate = chronological.stream()
+                .filter(Gps::isAccurate)
+                .toList();
         List<Gps> kept = new ArrayList<>();
         Gps anchor = null;
-        for (Gps gps : chronological) {
+        for (int i = 0; i < accurate.size(); i++) {
+            Gps gps = accurate.get(i);
+            Gps next = i + 1 < accurate.size() ? accurate.get(i + 1) : null;
+            if (anchor != null && next != null && gps.isSpikeBetween(anchor, next)) {
+                continue;
+            }
             if (gps.isDisplayableAfter(anchor)) {
                 kept.add(gps);
                 anchor = gps;

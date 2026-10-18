@@ -20,6 +20,9 @@ public record Gps(
     private static final double MAX_SPEED_METERS_PER_SECOND = 50.0;
     private static final Duration ANCHOR_EXPIRY = Duration.ofMinutes(10);
     private static final double EARTH_RADIUS_METERS = 6_371_008.8;
+    private static final double SPIKE_MIN_DISTANCE_METERS = 200.0;
+    private static final double SPIKE_RETURN_RADIUS_METERS = 100.0;
+    private static final double SPIKE_MIN_ROUND_TRIP_SPEED_METERS_PER_SECOND = 3.0;
 
     public static Gps from(GpsHistory entity) {
         return new Gps(
@@ -52,6 +55,23 @@ public record Gps(
         double elapsedSeconds = Math.max(elapsedMillis, 1_000) / 1_000.0;
         double travelledMeters = Math.max(0, distanceTo(anchor) - uncertaintyMeters() - anchor.uncertaintyMeters());
         return travelledMeters / elapsedSeconds <= MAX_SPEED_METERS_PER_SECOND;
+    }
+
+    public boolean isSpikeBetween(Gps previous, Gps next) {
+        long elapsedMillis = Duration.between(previous.occurredAt(), next.occurredAt()).toMillis();
+        if (elapsedMillis <= 0) {
+            return false;
+        }
+        double outboundMeters = previous.distanceTo(this);
+        double inboundMeters = distanceTo(next);
+        if (outboundMeters < SPIKE_MIN_DISTANCE_METERS || inboundMeters < SPIKE_MIN_DISTANCE_METERS) {
+            return false;
+        }
+        if (previous.distanceTo(next) > SPIKE_RETURN_RADIUS_METERS) {
+            return false;
+        }
+        double elapsedSeconds = Math.max(elapsedMillis, 1_000) / 1_000.0;
+        return (outboundMeters + inboundMeters) / elapsedSeconds > SPIKE_MIN_ROUND_TRIP_SPEED_METERS_PER_SECOND;
     }
 
     private double uncertaintyMeters() {
