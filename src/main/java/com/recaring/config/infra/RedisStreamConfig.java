@@ -78,17 +78,9 @@ public class RedisStreamConfig {
                 log.info("[이상탐지 스트림 : 컨슈머 그룹 존재]: group={}", AnomalyStreamProperties.GROUP_NAME);
                 return;
             }
-            log.error("[이상탐지 스트림 : 컨슈머 그룹 생성 실패]: group={} | error={}",
-                    AnomalyStreamProperties.GROUP_NAME, rootMessage(e));
+            log.error("[이상탐지 스트림 : 컨슈머 그룹 생성 실패]: group={}",
+                    AnomalyStreamProperties.GROUP_NAME, e);
         }
-    }
-
-    private String rootMessage(Throwable e) {
-        Throwable root = e;
-        while (root.getCause() != null) {
-            root = root.getCause();
-        }
-        return root.getMessage();
     }
 
     private boolean isGroupAlreadyExists(DataAccessException e) {

@@ -108,8 +108,8 @@ public class FirebaseFcmClient implements FcmClient {
                     errorCode(exception), tokens.size(), attempt, exception.getMessage());
             return null;
         } catch (RuntimeException exception) {
-            log.error("[알림 전송 : 예외]: tokens={} | attempt={} | error={}",
-                    tokens.size(), attempt, exception.getMessage());
+            log.error("[알림 전송 : 예외]: tokens={} | attempt={}",
+                    tokens.size(), attempt, exception);
             return null;
         }
     }

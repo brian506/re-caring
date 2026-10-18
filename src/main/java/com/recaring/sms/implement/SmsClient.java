@@ -29,7 +29,7 @@ public class SmsClient {
         try {
             messageService.sendOne(new SingleMessageSendingRequest(message));
         } catch (Exception e) {
-            log.error("[SMS 발송 : 실패]: phone={} | type={} | error={}", phone, e.getClass().getSimpleName(), e.getMessage());
+            log.error("[SMS 발송 : 실패]: phone={}", phone, e);
             throw new AppException(ErrorType.SMS_SEND_FAILED);
         }
     }

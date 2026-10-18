@@ -76,7 +76,7 @@ public class KakaoPlaceSearchClient {
                     query, e.getStatusCode(), e.getResponseBodyAsString());
             throw new AppException(ErrorType.PLACE_SEARCH_UNAVAILABLE);
         } catch (ResourceAccessException e) {
-            log.error("[장소 검색 : 연결 실패]: query={} | error={}", query, e.getMessage());
+            log.error("[장소 검색 : 연결 실패]: query={}", query, e);
             throw new AppException(ErrorType.PLACE_SEARCH_UNAVAILABLE);
         }
     }
