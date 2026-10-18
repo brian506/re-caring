@@ -202,6 +202,29 @@ class SiteInquiryControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @DisplayName("4번 틀린 뒤 맞는 비밀번호로 조회하면 내용을 돌려주고, 그 성공은 잠금 횟수에 들어가지 않는다")
+    void view_secret_inquiry_success_does_not_count_toward_lock() {
+        SiteInquiry secret = saveSecretInquiry();
+        viewWithWrongPassword(secret);
+        viewWithWrongPassword(secret);
+        viewWithWrongPassword(secret);
+        viewWithWrongPassword(secret);
+
+        client.post()
+                .uri(viewUri(secret.getInquiryKey()))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(passwordBody(SiteInquiryFixture.PASSWORD))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.data.content").isEqualTo(SiteInquiryFixture.CONTENT)
+                .jsonPath("$.data.email").doesNotExist()
+                .jsonPath("$.data.phone").doesNotExist();
+
+        viewWithWrongPassword(secret);
+    }
+
+    @Test
     @DisplayName("없는 문의를 조회하면 E11006이 반환된다")
     void view_rejects_unknown_inquiry() {
         client.post()

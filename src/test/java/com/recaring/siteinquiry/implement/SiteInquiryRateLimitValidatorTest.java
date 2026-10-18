@@ -113,6 +113,29 @@ class SiteInquiryRateLimitValidatorTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @DisplayName("성공한 시도를 되돌리면 두 카운터가 1씩 줄어든다")
+    void release_decrements_both_counters() {
+        redisTemplate.opsForValue().set(VIEW_FAILURE_KEY, "3", SEEDED_TTL_SECONDS, TimeUnit.SECONDS);
+        redisTemplate.opsForValue().set(DAILY_VIEW_FAILURE_KEY, "7", SEEDED_TTL_SECONDS, TimeUnit.SECONDS);
+
+        rateLimitValidator.releaseViewAttempt(SiteInquiryFixture.INQUIRY_KEY);
+
+        assertThat(redisTemplate.opsForValue().get(VIEW_FAILURE_KEY)).isEqualTo("2");
+        assertThat(redisTemplate.opsForValue().get(DAILY_VIEW_FAILURE_KEY)).isEqualTo("6");
+    }
+
+    @Test
+    @DisplayName("되돌린 결과가 0이 되거나 키가 이미 만료됐으면 카운터 키를 남기지 않는다")
+    void release_to_zero_or_after_expiry_leaves_no_key() {
+        redisTemplate.opsForValue().set(VIEW_FAILURE_KEY, "1", SEEDED_TTL_SECONDS, TimeUnit.SECONDS);
+
+        rateLimitValidator.releaseViewAttempt(SiteInquiryFixture.INQUIRY_KEY);
+
+        assertThat(redisTemplate.hasKey(VIEW_FAILURE_KEY)).isFalse();
+        assertThat(redisTemplate.hasKey(DAILY_VIEW_FAILURE_KEY)).isFalse();
+    }
+
+    @Test
     @DisplayName("동시에 몰린 비밀번호 시도도 창마다 5회까지만 통과한다")
     void concurrent_view_attempts_pass_only_up_to_quota() throws Exception {
         int requests = 20;
