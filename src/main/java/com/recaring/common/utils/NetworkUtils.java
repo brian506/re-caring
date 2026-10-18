@@ -21,6 +21,11 @@ public class NetworkUtils {
         return request.getRemoteAddr();
     }
 
+    public static String getProxiedClientIp(HttpServletRequest request) {
+        String ip = request.getHeader(IpHeader.X_REAL_IP.getValue());
+        return isValidIp(ip) ? ip.trim() : request.getRemoteAddr();
+    }
+
     private static String getFirstIp(String ip) {
         return ip.split(",")[0].trim();
     }

@@ -12,7 +12,8 @@
 | `location` | LocationService, LocationSettingService | GpsHistoryManager, GpsLatestCacheManager/Listener, LocationSignalMonitor/AlertManager(signal), SseEmitterManager, LocationValidator, CareRelationshipCacheReader, BatteryThresholdEvaluator/BatteryDetectionListener/BatteryAlertStateManager/AnomalyAcknowledgementManager/DetectionPublisher/DetectionListener/AnomalyDetectionConsumer/AnomalyDetectionParser/AnomalyDetectionManager(detection), SafeZoneStateManager/SafeZoneDetectionListener(safezone), LocationSettingManager |
 | `member` | MemberService | MemberReader/Writer/Validator, MembersTermsAgreementWriter, MemberWithdrawalManager |
 | `notification` | NotificationService, NotificationSettingService, FcmDeviceTokenService | NotificationReader/Writer, NotificationSendManager, NotificationFeedbackManager/Validator(feedback), NotificationAcknowledgementManager(acknowledgement), NotificationSettingReader/Manager/Validator, FcmDeviceTokenReader/Manager, FcmClient(Firebase/NoOp), CareInvitationNotificationListener, BatteryThresholdNotificationListener, SafeZoneNotificationListener, AnomalyNotificationListener, LocationSignalNotificationListener |
-| `inquiry` | InquiryService | InquiryReader, InquiryManager(접수·답변·탈퇴 삭제, 답변 시 InquiryAnsweredEvent), InquiryOperatorNotifier(신규 접수 운영자 알림 — 현재 로그만) |
+| `inquiry` | InquiryService | InquiryReader, InquiryManager(접수·답변·탈퇴 삭제, 답변 시 InquiryAnsweredEvent), InquiryOperatorNotifier(신규 접수 운영자 Slack 알림) |
+| `siteinquiry` | SiteInquiryService | SiteInquiryReader, SiteInquiryManager(등록·답변·답변 삭제·삭제), SiteInquiryAuthenticator(비밀글 비밀번호 BCrypt 인코딩·검증), SiteInquiryRateLimitValidator(등록 IP 한도·비밀번호 실패 잠금), SiteInquiryOperatorNotifier(신규 접수 Slack). 소개 웹사이트 비회원 문의 게시판 (#271). 길이 VO는 `inquiry.vo`의 InquiryTitle/Content/Answer 재사용 |
 | `place` | PlaceService | KakaoPlaceSearchClient (카카오 로컬 키워드 검색 프록시, 엔티티 없음) |
 | `safezone` | SafeZoneService | SafeZoneReader, SafeZoneWriter |
 | `sms` | PhoneVerificationService | SmsClient, SmsCodeGenerator, PhoneVerificationReader/Writer, SmsRateLimitValidator |
@@ -75,6 +76,13 @@
 | Inquiry | GET | `/api/v1/inquiries/me` | 내 문의 전체 최신순 (페이징 없음). `inquiryKey, category, title, content, status(WAITING/ANSWERED), createdAt, answer, answeredAt` |
 | Admin | GET | `/api/v1/admin/inquiries?status=` | [운영] 문의 목록 (`X-Admin-Key` = `ADMIN_API_KEY`). WAITING이면 오래된 순, 생략하면 전체 최신순. 응답에 memberKey 포함 |
 | Admin | PATCH | `/api/v1/admin/inquiries/{inquiryKey}/answer` | [운영] 답변 등록·덮어쓰기 `{ answer }` (1~2000자, E11002, 없음 E11003). ANSWERED + answeredAt 갱신, 커밋 후 작성자에게 `INQUIRY_ANSWERED` 푸시+알림함(`dataPayload: type/inquiryKey`). 재등록 시 푸시 재발송 |
+| SiteInquiry | POST | `/api/v1/site/inquiries` | [비로그인] 웹사이트 문의 등록 `{ category: FEATURE\|USAGE\|ACCOUNT_DELETION\|OTHER, title, content, email, phone?, isSecret, password? }`. title 1~50(E11000), content 1~1000(E11001), 비밀글 password 숫자 4~6자리(E11004, BCrypt 저장). X-Real-IP당 10분 5건(E11007, 429). 201 + 요약. 접수 시 Slack 알림 |
+| SiteInquiry | GET | `/api/v1/site/inquiries` | [비로그인] 전체 최신순 (페이징 없음). `inquiryKey, category, title, status, isSecret, createdAt`만 — 내용·연락처 제외 |
+| SiteInquiry | POST | `/api/v1/site/inquiries/{inquiryKey}/view` | [비로그인] 상세 `{ password? }`. 비밀글이면 불일치 E11005(403), 문의당 10분 5회 실패 시 잠금 E11008(429). 내용·답변 포함, 연락처 제외. 없음 E11006 |
+| Admin | GET | `/api/v1/admin/site-inquiries?status=` | [운영] 웹사이트 문의 목록 (X-Admin-Key). email·phone 포함. WAITING이면 오래된 순 |
+| Admin | PATCH | `/api/v1/admin/site-inquiries/{inquiryKey}/answer` | [운영] 답변 등록·덮어쓰기 `{ answer }` (1~2000자, E11002). ANSWERED |
+| Admin | DELETE | `/api/v1/admin/site-inquiries/{inquiryKey}/answer` | [운영] 답변 삭제 → WAITING |
+| Admin | DELETE | `/api/v1/admin/site-inquiries/{inquiryKey}` | [운영] 문의 hard-delete |
 | Place | GET | `/api/v1/places/search?query=&latitude=&longitude=&radiusMeters=` | 장소 검색 (GUARDIAN·WARD, 카카오 로컬 키워드 검색 프록시, 최대 5건, 편향 결과가 3건 미만이거나 키워드 불일치면 전국 재검색 후 전국 결과를 앞에 두고 placeId로 병합, 결과 없음은 빈 배열 200) |
 | SafeZone | POST | `/api/v1/care/wards/{wardKey}/safe-zones` | 안심존·위험존 추가 (GUARDIAN only). `type`(SAFE/DANGER) 필수, `radiusMeters`(정수 100~2000 — #260에서 300으로 올렸다가 #266에서 진입·이탈 히스테리시스를 넣고 100으로 되돌렸다. 범위 밖 E8003) |
 | SafeZone | GET | `/api/v1/care/wards/{wardKey}/safe-zones` | 안심존·위험존 목록 조회 (GUARDIAN, MANAGER). 평면 리스트, 항목별 `type`으로 구분 |
@@ -106,6 +114,7 @@
 | NotificationFeedback | notification_feedbacks | notificationId(UNIQUE — 1알림 1회), anomalyDetectionId(이상탐지 알림만 채움, 안심존 알림 평가는 NULL — 안심존 키·좌표는 notification_id로 알림 payload에서 찾는다), accuracy(ACCURATE/INACCURATE/UNSURE), reason(nullable, INACCURATE 전용), comment(100자, nullable). FK 제약은 걸지 않는다(이 프로젝트는 JPA 연관관계를 쓰지 않음). 이상탐지 알림의 `anomalyDetectionId`는 제출 시 `dataPayload`의 wardKey+type+recordedAt으로 `anomaly_detections`를 역조회해 채우며, **찾지 못하면 저장하지 않고 E9009로 거부한다** — 탐지 행과 조인되지 않는 라벨은 학습에 쓸 수 없고, 키 불일치 버그가 로그가 아니라 에러율로 드러나야 한다 |
 | NotificationSetting | notification_settings | (wardMemberKey, caregiverMemberKey) UNIQUE — 보호자별 설정, 안심존·위험존(진입/이탈)·응급호출 토글, 이상탐지 토글 5종(speed/wandering/abnormalDwelling/routeDeviation/timeAnomaly), lowBatteryEnabled, batteryThresholdPercents(CSV, 기본 '' = 선택 없음 → 알림 없음) |
 | Inquiry | inquiries | inquiryKey(UUID, UNIQUE), memberKey, category(4종), title(50), content(1000), status(WAITING/ANSWERED), answer(2000, nullable), answeredAt(nullable). 탈퇴 시 hard-delete. 인덱스 `(member_key, inquiry_id DESC)` |
+| SiteInquiry | site_inquiries | inquiryKey(UUID, UNIQUE), category(4종), title(50), content(1000), email(100), phone(20, nullable), isSecret, passwordHash(BCrypt, nullable), status(WAITING/ANSWERED), answer(2000, nullable), answeredAt(nullable). 회원과 무관. 인덱스 TODO `(status, site_inquiry_id)` |
 | AlertRunbook | alert_runbooks | errorSignature, commands(jsonb), resolutionContext, successCount, isValid |
 | AlertInvestigation | alert_investigations | fingerprint, alertName, severity, threadTs, status, fixCommands(jsonb) |
 
@@ -190,6 +199,8 @@ device:battery:{wardKey}       배터리 재알림 억제(hash) TTL: 1일, 억�
 anomaly:ack:{wardKey}          이상탐지 사건 보호자 확인(hash) TTL: 1일(알림마다 갱신), EVENT_END·탈퇴 시 삭제  { eventId, acknowledged }
 careRelationship::*            케어관계 캐시           TTL: 10분
 care:invitation:resend:{requestKey}  케어 요청 재전송 간격 제한(SETNX)  TTL: 5분
+site-inquiry:submit:{ip}       웹 문의 등록 IP 한도   TTL: 10분 (고정 창, 한도 5). IP는 X-Real-IP
+site-inquiry:view-failure:{inquiryKey}  비밀글 비밀번호 실패 횟수  TTL: 10분, 5회 이상이면 조회 잠금
 ```
 
 안심존 상태는 Redis(`safezone:state:{wardKey}`)에서 `safe_zone_states` 테이블로 이전했다. 유실되면 복구 불가능한
@@ -432,4 +443,5 @@ AnomalyDetectionConsumer(수동 ACK)
 | 15 | 번호 재할당 계정 탈취 | `LocalAuthService.resetPassword` | 로그인 ID·비밀번호 재설정이 모두 전화번호 기반이라, 해지 후 재할당된 번호의 새 주인이 SMS 재설정으로 이전 계정에 접근 가능. 새 주인은 가입도 E3006으로 막힘. 장기 미접속 계정 정리나 추가 본인확인 필요 |
 | 16 | 응급호출 알림 토글이 아무 효과 없음 | `NotificationSetting.emergencyCallEnabled` | 보호자별로 저장·조회만 되고 발송 경로 어디에서도 읽지 않는다. 응급호출 발송 기능이 붙을 때 `filterRecipients(settings -> settings.emergencyCall().enabled())`로 연결해야 한다 |
 | 17 | 운영 API 인증이 공유 키 하나 | `AdminApiKeyFilter` | `/api/v1/admin/**`는 `X-Admin-Key` == `ADMIN_API_KEY` 상수 시간 비교만 한다. 운영자 식별·감사 로그·키 회전이 없고, 키가 비어 있으면 전부 401. 운영자 계정·권한이 필요해지면 교체 |
-| 18 | 새 문의 운영자 알림이 로그뿐 | `InquiryOperatorNotifier` | 슬랙·메일 미연동이라 `[1:1 문의 : 신규 접수]` INFO 로그만 남긴다. 운영자가 CloudWatch를 보거나 `GET /admin/inquiries?status=WAITING`을 직접 확인해야 한다 |
+| 18 | `NetworkUtils.getClientIp`가 조작 가능한 IP를 믿음 | `NetworkUtils` | X-Forwarded-For 첫 값을 우선한다. nginx는 `$proxy_add_x_forwarded_for`로 덧붙이기만 해서 첫 값은 클라이언트가 정한다. IP 기반 제한에는 `getProxiedClientIp`(X-Real-IP)를 쓴다 |
+| 19 | 웹 문의 목록 페이징 없음 | `GET /api/v1/site/inquiries` | 전체를 내려주고 프론트가 6개씩 나눈다. 건수가 늘면 커서 페이징으로 바꿔야 한다 |
