@@ -24,7 +24,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.List;
+import java.util.stream.Stream;
 
 import static org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher.withDefaults;
 
@@ -34,6 +34,9 @@ public class SecurityConfig {
 
     @Value("${client.url}")
     private String clientUrl;
+
+    @Value("${client.site-url:}")
+    private String siteUrl;
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
@@ -68,6 +71,10 @@ public class SecurityConfig {
                                 mvc.matcher("/api/v1/auth/phone/verify"),
                                 // 로그인할 수 없는 사용자가 쓰는 복구 경로 — SMS 인증이 본인 확인을 대신한다
                                 mvc.matcher("/api/v1/auth/password"),
+                                // 소개 웹사이트 문의 게시판 — 비회원이 쓴다. 비밀글은 문의별 비밀번호로 보호한다
+                                mvc.matcher(HttpMethod.POST, "/api/v1/site/inquiries"),
+                                mvc.matcher(HttpMethod.GET,  "/api/v1/site/inquiries"),
+                                mvc.matcher(HttpMethod.POST, "/api/v1/site/inquiries/{inquiryKey}/view"),
                                 // Swagger UI
                                 mvc.matcher("/swagger-ui/**"),
                                 mvc.matcher("/swagger-ui.html"),
@@ -152,13 +159,22 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of(clientUrl));
+        config.setAllowedOrigins(Stream.of(clientUrl).filter(url -> !url.isBlank()).toList());
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
         config.setAllowCredentials(true);
         config.setMaxAge(3600L);
 
+        CorsConfiguration siteConfig = new CorsConfiguration();
+        siteConfig.setAllowedOrigins(Stream.of(clientUrl, siteUrl).filter(url -> !url.isBlank()).toList());
+        siteConfig.addAllowedHeader("*");
+        siteConfig.addAllowedMethod("*");
+        siteConfig.setAllowCredentials(false);
+        siteConfig.setMaxAge(3600L);
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/api/v1/site/**", siteConfig);
+        source.registerCorsConfiguration("/api/v1/admin/site-inquiries/**", siteConfig);
         source.registerCorsConfiguration("/**", config);
         return source;
     }

@@ -109,7 +109,12 @@ public enum ErrorType {
     INVALID_INQUIRY_TITLE(HttpStatus.BAD_REQUEST, ErrorCode.E11000, "문의 제목은 공백을 제외하고 1~50자여야 합니다.", LogLevel.WARN),
     INVALID_INQUIRY_CONTENT(HttpStatus.BAD_REQUEST, ErrorCode.E11001, "문의 내용은 공백을 제외하고 1~1000자여야 합니다.", LogLevel.WARN),
     INVALID_INQUIRY_ANSWER(HttpStatus.BAD_REQUEST, ErrorCode.E11002, "답변은 공백을 제외하고 1~2000자여야 합니다.", LogLevel.WARN),
-    INQUIRY_NOT_FOUND(HttpStatus.NOT_FOUND, ErrorCode.E11003, "문의를 찾을 수 없습니다.", LogLevel.WARN);
+    INQUIRY_NOT_FOUND(HttpStatus.NOT_FOUND, ErrorCode.E11003, "문의를 찾을 수 없습니다.", LogLevel.WARN),
+    INVALID_SITE_INQUIRY_PASSWORD(HttpStatus.BAD_REQUEST, ErrorCode.E11004, "비밀글 비밀번호는 숫자 4~6자리여야 합니다.", LogLevel.WARN),
+    SITE_INQUIRY_PASSWORD_MISMATCH(HttpStatus.FORBIDDEN, ErrorCode.E11005, "비밀번호가 일치하지 않습니다.", LogLevel.INFO),
+    SITE_INQUIRY_NOT_FOUND(HttpStatus.NOT_FOUND, ErrorCode.E11006, "문의글을 찾을 수 없습니다.", LogLevel.WARN),
+    SITE_INQUIRY_SUBMIT_RATE_LIMITED(HttpStatus.TOO_MANY_REQUESTS, ErrorCode.E11007, "문의 등록 요청이 많습니다. 잠시 후 다시 시도해주세요.", LogLevel.WARN),
+    SITE_INQUIRY_VIEW_LOCKED(HttpStatus.TOO_MANY_REQUESTS, ErrorCode.E11008, "비밀번호를 여러 번 틀렸습니다. 잠시 후 다시 시도해주세요.", LogLevel.WARN);
 
     private final HttpStatus status;
     private final ErrorCode errorCode;
