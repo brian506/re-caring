@@ -18,6 +18,8 @@ public class RestClientConfig {
     private static final String KAKAO_AUTHORIZATION_PREFIX = "KakaoAK ";
     private static final Duration KAKAO_CONNECT_TIMEOUT = Duration.ofSeconds(1);
     private static final Duration KAKAO_READ_TIMEOUT = Duration.ofSeconds(3);
+    private static final Duration SLACK_CONNECT_TIMEOUT = Duration.ofSeconds(2);
+    private static final Duration SLACK_READ_TIMEOUT = Duration.ofSeconds(3);
 
     @Bean
     @Primary
@@ -34,13 +36,24 @@ public class RestClientConfig {
                 .build();
     }
 
+    @Bean
+    public RestClient slackWebhookRestClient() {
+        return RestClient.builder()
+                .requestFactory(requestFactory(SLACK_CONNECT_TIMEOUT, SLACK_READ_TIMEOUT))
+                .build();
+    }
+
     private JdkClientHttpRequestFactory kakaoLocalRequestFactory() {
+        return requestFactory(KAKAO_CONNECT_TIMEOUT, KAKAO_READ_TIMEOUT);
+    }
+
+    private JdkClientHttpRequestFactory requestFactory(Duration connectTimeout, Duration readTimeout) {
         HttpClient httpClient = HttpClient.newBuilder()
-                .connectTimeout(KAKAO_CONNECT_TIMEOUT)
+                .connectTimeout(connectTimeout)
                 .build();
 
         JdkClientHttpRequestFactory requestFactory = new JdkClientHttpRequestFactory(httpClient);
-        requestFactory.setReadTimeout(KAKAO_READ_TIMEOUT);
+        requestFactory.setReadTimeout(readTimeout);
         return requestFactory;
     }
 }

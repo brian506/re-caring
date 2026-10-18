@@ -65,7 +65,7 @@
 | Member | POST | `/api/v1/members/phones` | 연락처 기반 가입 회원 조회 (GUARDIAN) |
 | Member | PATCH | `/api/v1/members/me/phone` | 전화번호(로그인 ID) 변경. Request `{ smsToken, password }` — 새 번호 SMS 인증 토큰 + 현재 비밀번호. 비밀번호 불일치 시 토큰 미소비. 새 번호 중복 E3006(409) |
 | Member | DELETE | `/api/v1/members/me` | 회원 탈퇴 |
-| Inquiry | POST | `/api/v1/inquiries` | 1:1 문의 접수 (GUARDIAN·WARD). `{ category: LOCATION_SAFE_ZONE\|ALERT_EMERGENCY\|CONNECTION_ACCOUNT\|ERROR_OTHER, title, content }`. 앞뒤 공백 제거 후 title 1~50자(E11000), content 1~1000자(E11001). 201 + InquiryResponse. 연속 접수 제한 없음 |
+| Inquiry | POST | `/api/v1/inquiries` | 1:1 문의 접수 (GUARDIAN·WARD). `{ category: LOCATION_SAFE_ZONE\|ALERT_EMERGENCY\|CONNECTION_ACCOUNT\|ERROR_OTHER, title, content }`. 앞뒤 공백 제거 후 title 1~50자(E11000), content 1~1000자(E11001). 201 + InquiryResponse. 연속 접수 제한 없음. 접수 후 운영자 Slack 채널에 비동기 알림(#264, `InquiryOperatorNotifier` — 분류·제목·접수 시각·문의 키만, 본문 제외. 웹훅은 `slack.inquiry-webhook-url`=SSM `/recaring/SLACK_WEBHOOK_SECRET`, 미설정이면 생략. Slack 실패는 로그만 남기고 접수는 성공) |
 | Inquiry | GET | `/api/v1/inquiries/me` | 내 문의 전체 최신순 (페이징 없음). `inquiryKey, category, title, content, status(WAITING/ANSWERED), createdAt, answer, answeredAt` |
 | Admin | GET | `/api/v1/admin/inquiries?status=` | [운영] 문의 목록 (`X-Admin-Key` = `ADMIN_API_KEY`). WAITING이면 오래된 순, 생략하면 전체 최신순. 응답에 memberKey 포함 |
 | Admin | PATCH | `/api/v1/admin/inquiries/{inquiryKey}/answer` | [운영] 답변 등록·덮어쓰기 `{ answer }` (1~2000자, E11002, 없음 E11003). ANSWERED + answeredAt 갱신, 커밋 후 작성자에게 `INQUIRY_ANSWERED` 푸시+알림함(`dataPayload: type/inquiryKey`). 재등록 시 푸시 재발송 |
