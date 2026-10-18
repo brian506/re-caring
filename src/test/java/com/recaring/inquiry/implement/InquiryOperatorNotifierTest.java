@@ -14,6 +14,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 
+import java.net.URI;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -38,10 +39,10 @@ class InquiryOperatorNotifierTest {
         notifier.notifySubmitted(InquiryFixture.createSubmittedInfo(InquiryFixture.TITLE));
 
         assertThat(sentText())
-                .contains(InquiryFixture.CATEGORY_DESCRIPTION)
-                .contains(InquiryFixture.TITLE)
-                .contains(InquiryFixture.SUBMITTED_AT_TEXT)
-                .contains(InquiryFixture.INQUIRY_KEY);
+                .contains("분류: " + InquiryFixture.CATEGORY_DESCRIPTION)
+                .contains("제목: " + InquiryFixture.TITLE)
+                .contains("접수 시각: " + InquiryFixture.SUBMITTED_AT_TEXT)
+                .contains("문의 키: `" + InquiryFixture.INQUIRY_KEY + "`");
     }
 
     @Test
@@ -104,7 +105,7 @@ class InquiryOperatorNotifierTest {
 
     private RestClient.RequestBodySpec requestBody() {
         return slackWebhookRestClient.post()
-                .uri(InquiryFixture.SLACK_WEBHOOK_URL)
+                .uri(URI.create(InquiryFixture.SLACK_WEBHOOK_URL))
                 .contentType(MediaType.APPLICATION_JSON);
     }
 
