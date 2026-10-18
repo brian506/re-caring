@@ -48,6 +48,7 @@ management:
     distribution:
       percentiles-histogram:
         http.server.requests: true
+        http.client.requests: true
 
 jwt:
   secret-key: ${JWT_KEY}

@@ -11,6 +11,7 @@ import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
 
+import java.net.URI;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
 
@@ -41,7 +42,7 @@ public class InquiryOperatorNotifier {
         }
         try {
             slackWebhookRestClient.post()
-                    .uri(webhookUrl)
+                    .uri(URI.create(webhookUrl))
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(Map.of("text", message(inquiry)))
                     .retrieve()

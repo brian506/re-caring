@@ -1,5 +1,6 @@
 package com.recaring.config.infra;
 
+import io.micrometer.observation.ObservationRegistry;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,13 +24,17 @@ public class RestClientConfig {
 
     @Bean
     @Primary
-    public RestClient restClient() {
-        return RestClient.create();
+    public RestClient restClient(ObservationRegistry observationRegistry) {
+        return RestClient.builder()
+                .observationRegistry(observationRegistry)
+                .build();
     }
 
     @Bean
-    public RestClient kakaoLocalRestClient(@Value("${kakao.rest-api-key}") String restApiKey) {
+    public RestClient kakaoLocalRestClient(@Value("${kakao.rest-api-key}") String restApiKey,
+                                           ObservationRegistry observationRegistry) {
         return RestClient.builder()
+                .observationRegistry(observationRegistry)
                 .baseUrl(KAKAO_LOCAL_BASE_URL)
                 .requestFactory(kakaoLocalRequestFactory())
                 .defaultHeader(HttpHeaders.AUTHORIZATION, KAKAO_AUTHORIZATION_PREFIX + restApiKey)
@@ -37,8 +42,9 @@ public class RestClientConfig {
     }
 
     @Bean
-    public RestClient slackWebhookRestClient() {
+    public RestClient slackWebhookRestClient(ObservationRegistry observationRegistry) {
         return RestClient.builder()
+                .observationRegistry(observationRegistry)
                 .requestFactory(requestFactory(SLACK_CONNECT_TIMEOUT, SLACK_READ_TIMEOUT))
                 .build();
     }
