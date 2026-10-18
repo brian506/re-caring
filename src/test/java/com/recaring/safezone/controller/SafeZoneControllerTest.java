@@ -390,6 +390,22 @@ class SafeZoneControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @DisplayName("반경 300m 미만으로 수정하면 400 E8003이 반환되고 값이 그대로 남는다")
+    void updateSafeZone_returns_400_when_radius_too_small() {
+        client.patch()
+                .uri(zoneUri(savedZone.getSafeZoneKey()))
+                .header(HttpHeaders.AUTHORIZATION, guardianAuth)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(TOO_SMALL_RADIUS_BODY)
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.error.errorCode").isEqualTo("E8003");
+
+        assertThat(reloadSavedZone().getRadiusMeters()).isEqualTo(SafeZoneFixture.RADIUS_METERS);
+    }
+
+    @Test
     @DisplayName("케어 관계가 없는 보호자가 안심존을 수정하면 403이 반환되고 값이 그대로 남는다")
     void updateSafeZone_returns_403_when_not_caregiver() {
         client.patch()
