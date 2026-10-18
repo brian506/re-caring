@@ -86,7 +86,7 @@ class LocationSettingControllerTest extends AbstractIntegrationTest {
                 .jsonPath("$.data.options[0]").isEqualTo(30)
                 .jsonPath("$.data.options[1]").isEqualTo(60)
                 .jsonPath("$.data.options[2]").isEqualTo(180)
-                .jsonPath("$.data.options[3]").isEqualTo(300);
+                .jsonPath("$.data.options.length()").isEqualTo(3);
     }
 
     @Test
@@ -206,7 +206,7 @@ class LocationSettingControllerTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("GET /api/v1/location/settings/collection-interval/me - 기기는 보호자들이 설정한 주기 중 가장 짧은 주기를 받는다")
     void getMyCollectionInterval_returns_shortest_interval_among_guardians() {
-        patchInterval(guardian, 300);
+        patchInterval(guardian, 180);
         patchInterval(coGuardian, 60);
 
         client.get()
