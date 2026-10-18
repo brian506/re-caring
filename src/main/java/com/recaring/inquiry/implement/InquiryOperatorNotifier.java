@@ -51,7 +51,8 @@ public class InquiryOperatorNotifier {
             log.error("[1:1 문의 : Slack 응답 오류]: inquiryKey={} | status={} | body={}",
                     inquiry.inquiryKey(), e.getStatusCode(), e.getResponseBodyAsString());
         } catch (ResourceAccessException e) {
-            log.error("[1:1 문의 : Slack 연결 실패]: inquiryKey={} | error={}", inquiry.inquiryKey(), e.getMessage());
+            log.error("[1:1 문의 : Slack 연결 실패]: inquiryKey={} | cause={}",
+                    inquiry.inquiryKey(), e.getMostSpecificCause().getClass().getSimpleName());
         }
     }
 
@@ -69,6 +70,7 @@ public class InquiryOperatorNotifier {
     }
 
     private String escape(String text) {
-        return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+        return text.replaceAll("\\R", " ")
+                .replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
     }
 }

@@ -67,7 +67,7 @@ kakao:
   rest-api-key: ${KAKAO_REST_API_KEY}
 
 slack:
-  inquiry-webhook-url: ${SLACK_WEBHOOK_SECRET}
+  inquiry-webhook-url: ${SLACK_WEBHOOK_SECRET:}
 
 client:
   url: re-caring.com
