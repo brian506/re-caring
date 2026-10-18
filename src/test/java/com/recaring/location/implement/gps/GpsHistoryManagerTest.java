@@ -17,6 +17,7 @@ import java.util.Optional;
 import static com.recaring.location.fixture.LocationFixture.INACCURATE_ACCURACY;
 import static com.recaring.location.fixture.LocationFixture.JUMP_15KM_LATITUDE_DELTA;
 import static com.recaring.location.fixture.LocationFixture.LATITUDE;
+import static com.recaring.location.fixture.LocationFixture.SPIKE_1KM_LATITUDE_DELTA;
 import static com.recaring.location.fixture.LocationFixture.TRACK_ACCURACY;
 import static com.recaring.location.fixture.LocationFixture.TRACK_START;
 import static com.recaring.location.fixture.LocationFixture.WALK_50M_LATITUDE_DELTA;
@@ -62,6 +63,34 @@ class GpsHistoryManagerTest {
         List<Gps> history = gpsHistoryManager.findDailyGpsHistory(WARD_KEY, TRACK_DATE);
 
         assertThat(history).extracting(Gps::latitude).containsExactly(LATITUDE);
+    }
+
+    @Test
+    @DisplayName("속도 기준으로는 갈 수 있는 1km라도 혼자 튀었다 돌아온 좌표는 경로에서 빠진다")
+    void daily_history_drops_point_that_jumps_away_and_back() {
+        given(gpsHistoryRepository.findDailyGpsHistory(WARD_KEY, TRACK_DATE)).willReturn(List.of(
+                LocationFixture.createGpsHistory(WARD_KEY, LATITUDE, TRACK_ACCURACY, TRACK_START),
+                LocationFixture.createGpsHistory(WARD_KEY, LATITUDE + SPIKE_1KM_LATITUDE_DELTA, TRACK_ACCURACY, TRACK_START.plusSeconds(30)),
+                LocationFixture.createGpsHistory(WARD_KEY, LATITUDE + WALK_50M_LATITUDE_DELTA, TRACK_ACCURACY, TRACK_START.plusSeconds(60))));
+
+        List<Gps> history = gpsHistoryManager.findDailyGpsHistory(WARD_KEY, TRACK_DATE);
+
+        assertThat(history).extracting(Gps::latitude)
+                .containsExactly(LATITUDE, LATITUDE + WALK_50M_LATITUDE_DELTA);
+    }
+
+    @Test
+    @DisplayName("하루의 마지막 좌표는 비교할 다음 좌표가 없어 튀었더라도 남는다")
+    void daily_history_keeps_last_point_without_next() {
+        given(gpsHistoryRepository.findDailyGpsHistory(WARD_KEY, TRACK_DATE)).willReturn(List.of(
+                LocationFixture.createGpsHistory(WARD_KEY, LATITUDE, TRACK_ACCURACY, TRACK_START),
+                LocationFixture.createGpsHistory(WARD_KEY, LATITUDE + WALK_50M_LATITUDE_DELTA, TRACK_ACCURACY, TRACK_START.plusSeconds(30)),
+                LocationFixture.createGpsHistory(WARD_KEY, LATITUDE + WALK_50M_LATITUDE_DELTA + SPIKE_1KM_LATITUDE_DELTA, TRACK_ACCURACY, TRACK_START.plusSeconds(60))));
+
+        List<Gps> history = gpsHistoryManager.findDailyGpsHistory(WARD_KEY, TRACK_DATE);
+
+        assertThat(history).extracting(Gps::latitude).containsExactly(
+                LATITUDE, LATITUDE + WALK_50M_LATITUDE_DELTA, LATITUDE + WALK_50M_LATITUDE_DELTA + SPIKE_1KM_LATITUDE_DELTA);
     }
 
     @Test

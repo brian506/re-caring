@@ -46,7 +46,7 @@
 | Device | POST | `/api/v1/device/token` | Device Token 발급 (WARD, JWT 인증) |
 | Location | POST | `/api/v1/location/gps` | GPS 좌표 전송 (WARD, Device Token 인증) |
 | Location | GET | `/api/v1/location/stream/{wardKey}` | SSE 실시간 위치 스트림 (GUARDIAN). 요청 보호자 본인의 수신 주기로 솎아서 전송. `gps:display`만 읽어 부정확(accuracy > 100m)·튀는 좌표(직전 표시 좌표 대비 50m/s 초과)는 보내지 않는다(#243) |
-| Location | GET | `/api/v1/location/history/{wardKey}` | 날짜별 이동 경로 히스토리. 시간순으로 훑으며 부정확·튀는 좌표를 제외해 응답(#243, `Gps.isDisplayableAfter`). DB 원본은 그대로 |
+| Location | GET | `/api/v1/location/history/{wardKey}` | 날짜별 이동 경로 히스토리. 시간순으로 훑으며 부정확·튀는 좌표를 제외해 응답(#243, `Gps.isDisplayableAfter`). 앞(마지막 표시 좌표)·뒤(다음 좌표)와 대조해 혼자 튀었다 돌아온 좌표도 제외(#266, `Gps.isSpikeBetween` — 양쪽 200m 이상·앞뒤 100m 이내·왕복 속도 3m/s 초과). 마지막 좌표는 다음 좌표가 없어 이 판정을 받지 않는다. DB 원본은 그대로 |
 | Location | GET | `/api/v1/location/anomaly-events/{wardKey}/route?eventId=` | 이상탐지 사건 경로 (#252, GUARDIAN/MANAGER — 케어 관계 없으면 E6001). 엔진이 경로 좌표를 보내지 않으므로 `anomaly_detections`에서 같은 `eventId` 행의 `min(event_started_at)`~EVENT_END 행의 `recorded_at`(엔진 `detected_at`)을 구간으로 잡아 `gps_histories`를 조회한다(날짜 경계 무관, 날짜별 이력과 같은 튐 좌표 필터). 종료 행(EVENT_END)이 없으면 진행 중으로 보고 그 사건의 마지막 알림 `recorded_at`까지(#257) — 앱이 이상 구간만 색칠하므로 마지막 알림 이후는 넣지 않는다. 응답 `{ eventId, startedAt, endedAt(진행 중이면 null), ongoing, route: [{latitude, longitude, recordedAt}] }`. 사건 없음 E6003(404) |
 | Location | GET | `/api/v1/location/settings/{wardKey}/collection-interval` | 요청 보호자 본인의 위치 수신 주기 조회 (GUARDIAN, 옵션 30/60/180/300초 포함, 미설정 시 30) |
 | Location | PATCH | `/api/v1/location/settings/{wardKey}/collection-interval` | 요청 보호자 본인의 위치 수신 주기 수정 (GUARDIAN only, 다른 보호자에 영향 없음) |
@@ -70,7 +70,7 @@
 | Admin | GET | `/api/v1/admin/inquiries?status=` | [운영] 문의 목록 (`X-Admin-Key` = `ADMIN_API_KEY`). WAITING이면 오래된 순, 생략하면 전체 최신순. 응답에 memberKey 포함 |
 | Admin | PATCH | `/api/v1/admin/inquiries/{inquiryKey}/answer` | [운영] 답변 등록·덮어쓰기 `{ answer }` (1~2000자, E11002, 없음 E11003). ANSWERED + answeredAt 갱신, 커밋 후 작성자에게 `INQUIRY_ANSWERED` 푸시+알림함(`dataPayload: type/inquiryKey`). 재등록 시 푸시 재발송 |
 | Place | GET | `/api/v1/places/search?query=&latitude=&longitude=&radiusMeters=` | 장소 검색 (GUARDIAN·WARD, 카카오 로컬 키워드 검색 프록시, 최대 5건, 편향 결과가 3건 미만이거나 키워드 불일치면 전국 재검색 후 전국 결과를 앞에 두고 placeId로 병합, 결과 없음은 빈 배열 200) |
-| SafeZone | POST | `/api/v1/care/wards/{wardKey}/safe-zones` | 안심존·위험존 추가 (GUARDIAN only). `type`(SAFE/DANGER) 필수, `radiusMeters`(정수 300~2000 — 실내 GPS가 100~200m 튀어 작은 반경에서 진입·이탈이 반복돼 하한을 올렸다(#260). 범위 밖 E8003) |
+| SafeZone | POST | `/api/v1/care/wards/{wardKey}/safe-zones` | 안심존·위험존 추가 (GUARDIAN only). `type`(SAFE/DANGER) 필수, `radiusMeters`(정수 100~2000 — #260에서 300으로 올렸다가 #266에서 진입·이탈 히스테리시스를 넣고 100으로 되돌렸다. 범위 밖 E8003) |
 | SafeZone | GET | `/api/v1/care/wards/{wardKey}/safe-zones` | 안심존·위험존 목록 조회 (GUARDIAN, MANAGER). 평면 리스트, 항목별 `type`으로 구분 |
 | SafeZone | GET | `/api/v1/care/wards/{wardKey}/safe-zones/{safeZoneKey}` | 안심존 상세 조회 (GUARDIAN, MANAGER) |
 | SafeZone | PATCH | `/api/v1/care/wards/{wardKey}/safe-zones/{safeZoneKey}` | 안심존·위험존 수정 (GUARDIAN only). `type` 변경 가능, `radiusMeters` 규칙은 추가와 동일 |
@@ -93,7 +93,7 @@
 | LocationSetting | location_settings | (wardMemberKey, caregiverMemberKey) UNIQUE — 보호자별 수신 주기, collectionIntervalSeconds(30/60/180/300, 기본 30) |
 | WardDeviceToken | ward_device_tokens | wardKey(UUID, UNIQUE), token(UUID, UNIQUE), createdAt, expiresAt |
 | MembersTermsAgreement | members_terms_agreements | memberKey, agreedAt |
-| SafeZone | safe_zones | safeZoneKey(UUID), wardMemberKey, name, address, latitude, longitude, radiusMeters(int, 300~2000m — 앱 슬라이더 값을 그대로 저장. #260 이전 300 미만 값은 배포 시 300으로 보정), type(SAFE/DANGER — 위험존도 같은 테이블, #238) |
+| SafeZone | safe_zones | safeZoneKey(UUID), wardMemberKey, name, address, latitude, longitude, radiusMeters(int, 100~2000m — 앱 슬라이더 값을 그대로 저장. #260 배포 때 300 미만 값을 300으로 보정했고, #266에서 하한을 100으로 되돌렸지만 보정된 값은 복원하지 않았다), type(SAFE/DANGER — 위험존도 같은 테이블, #238) |
 | SafeZoneState | safe_zone_states | wardMemberKey(UNIQUE), safeZoneKeys(CSV, 현재 속한 안심존). 행 없음=최초 관측(알림 안 함), 빈 문자열=존 밖 |
 | Notification | notifications | notificationKey(UUID, UNIQUE), recipientMemberKey, eventType, title, body, dataPayload(jsonb, 리다이렉트용), createdAt. 수신자별 개별 row. 읽음 필드 없음. 목록 조회 정렬·커서는 notification_id DESC (created_at은 fan-out 시 동시각 행이 생겨 정렬 불안정) |
 | AnomalyDetection | anomaly_detections | wardMemberKey, detectionType(5종), score, recordedAt, latitude, longitude, evidence(1000자, nullable — 엔진 2차 배포 후 안 옴), alertKind/eventId/eventStartedAt/eventEndedAt/categories/reasonCode/durationMin/usualMin/speedKmh/eventHour/remindSeq(#248, 전부 nullable — 이전 형식 메시지는 비어 있음). 사건(eventId) 하나에 알림 여러 행(START·CATEGORY_ADDED·REMIND·END). `(wardMemberKey, detectionType, recordedAt, alertKind)` UNIQUE NULLS NOT DISTINCT = 재배달 멱등 키(#255). 알림 토글과 무관하게 항상 저장되는 탐지 사건 원본 (1건 = 1 row) |
@@ -189,6 +189,8 @@ care:invitation:resend:{requestKey}  케어 요청 재전송 간격 제한(SETNX
 안심존 상태는 Redis(`safezone:state:{wardKey}`)에서 `safe_zone_states` 테이블로 이전했다. 유실되면 복구 불가능한
 알림 이력이라 TTL이 있는 저장소와 성격이 맞지 않았고, 저장 실패 시 알림만 나가는 경로가 있었다.
 안심존 목록은 캐싱하지 않고 GPS 지점마다 DB를 조회한다(핫패스 아님 + 존 수정 시 오알림 방지).
+
+진입·이탈은 직전 상태 기준 여유 폭(히스테리시스)으로 판정한다(#266, `SafeZoneObservation`). 여유 폭 `m = max(30m, accuracy)`. 직전에 존 안이면 `r + m`을 넘어야 이탈, 밖이면 `max(r - m, r/2)` 이내로 들어와야 진입, 그 사이는 직전 상태 유지. 최초 관측(행 없음)은 여유 폭 없이 `r` 기준으로 기준선만 세운다. 반경 하한은 이 판정을 전제로 300m → 100m로 되돌렸다. 대가: 이탈 알림이 최대 `m`(실내 기준 최대 100m)만큼 늦게 울린다
 
 ## Redis 인프라 (ECS+EFS → ElastiCache 전환)
 
@@ -414,7 +416,7 @@ AnomalyDetectionConsumer(수동 ACK)
 | 5 | CareInvitation 만료 정리 배치 없음 | `CareInvitation` | PENDING 만료건 DB에 잔류, 주기적 정리 미구현 |
 | 6 | Device Token 검증 DB 직조회 | `DeviceTokenAuthFilter` | GPS 수신마다 `WardDeviceTokenRepository.findByToken()` DB 조회. Redis 캐싱(`device-token:{token}` → wardMemberKey, TTL 24h)으로 개선 가능. 단, 재발급(`reissue()`) 시 구 토큰 캐시 명시적 삭제 필요 — 트러블슈팅 비교 후 적용 결정 |
 | 7 | 안심존 설정 변경 시 가짜 진입·이탈 알림 | `SafeZoneDetectionListener` | `previousKeys`는 옛 존 설정 기준, `currentKeys`는 새 설정 기준이라 차집합의 전제가 깨진다. 존 신규 등록·반경 확대/축소·위치 이동 시 이동 없이 알림 발생. `zone == null` 체크는 삭제만 방어. 해결안: `SafeZoneChangedEvent` 발행 → 상태 리셋 |
-| 8 | 겹친 안심존 동시 알림 | `SafeZoneDetectionListener` | 반경 300~2000m라 도심에서 존이 겹치면 교집합 진입·이탈 시 알림이 존 개수만큼 발송된다. 해결안: 판정 1회당 이벤트 1건으로 병합("집, 병원에 도착했어요"). FCM data payload의 `safeZoneKey` 복수화가 필요해 앱 팀 확인 선행 |
+| 8 | 겹친 안심존 동시 알림 | `SafeZoneDetectionListener` | 반경 100~2000m라 도심에서 존이 겹치면 교집합 진입·이탈 시 알림이 존 개수만큼 발송된다. 해결안: 판정 1회당 이벤트 1건으로 병합("집, 병원에 도착했어요"). FCM data payload의 `safeZoneKey` 복수화가 필요해 앱 팀 확인 선행 |
 | 9 | 안심존 상태 동시 갱신 미방어 | `SafeZoneStateManager` | `findByWardMemberKey` → `replace`가 원자적이지 않다. GPS 최소 주기 30초라 정상 흐름에선 겹치지 않으나, 앱이 오프라인 버퍼링 후 일괄 전송하거나 재시도하면 중복 알림 가능. 실제 도착 간격 확인 후 필요 시 비관적 락 + `observed_at` 도입 |
 | 10 | 장소 검색 캐시·호출 제한 없음 | `KakaoPlaceSearchClient` | 프록시에 캐시도 회원별 제한도 없다. 앱이 타이핑마다 호출하면 카카오 일일 쿼터가 소진되고 그 시점부터 429 → `PLACE_SEARCH_RATE_LIMITED`로 검색 기능 전체 정지. 개선안: `query` + 반올림 좌표 Redis 캐시(10분) → 회원별 분당 호출 제한 |
 | 11 | 편향 폴백이 카카오 호출을 2배로 만든다 | `PlaceService` | 카카오의 `x/y/radius`는 우선순위가 아니라 필터라, 편향 반경 밖 장소는 검색이 안 되거나 엉뚱한 결과가 1~2건 섞여 온다(`해운대역` + 서울 편향 → '해운대연탄생갈비 부평갈산역점'). 그래서 "결과 0건"이 아니라 "검색어 토큰이 결과 이름에 하나도 안 걸림"을 폴백 조건으로 쓴다. 대신 편향 밖 검색마다 호출 2회 + 지연 최대 2배(읽기 타임아웃 3초 × 2). 이름 기반 휴리스틱이라 주소 문자열 검색(`서울 마포구 …`)은 항상 폴백을 탄다 |

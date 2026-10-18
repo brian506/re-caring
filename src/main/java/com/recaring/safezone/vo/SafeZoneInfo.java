@@ -34,6 +34,15 @@ public record SafeZoneInfo(
         return distanceMetersTo(targetLatitude, targetLongitude) <= radiusMeters;
     }
 
+    public boolean isClearlyInside(double targetLatitude, double targetLongitude, double marginMeters) {
+        double entryRadius = Math.max(radiusMeters - marginMeters, radiusMeters / 2.0);
+        return distanceMetersTo(targetLatitude, targetLongitude) <= entryRadius;
+    }
+
+    public boolean isClearlyOutside(double targetLatitude, double targetLongitude, double marginMeters) {
+        return distanceMetersTo(targetLatitude, targetLongitude) > radiusMeters + marginMeters;
+    }
+
     private double distanceMetersTo(double targetLatitude, double targetLongitude) {
         double centerLatRad = Math.toRadians(latitude);
         double targetLatRad = Math.toRadians(targetLatitude);
