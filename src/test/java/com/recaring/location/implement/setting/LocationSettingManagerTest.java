@@ -85,19 +85,19 @@ class LocationSettingManagerTest {
     @DisplayName("그 보호자의 설정이 있으면 그 주기를 돌려준다")
     void findCollectionInterval_returns_saved_interval_of_the_caregiver() {
         given(locationSettingRepository.findByWardMemberKeyAndCaregiverMemberKey(LocationFixture.WARD_KEY, GUARDIAN_KEY))
-                .willReturn(Optional.of(LocationFixture.createLocationSetting(GUARDIAN_KEY, 300)));
+                .willReturn(Optional.of(LocationFixture.createLocationSetting(GUARDIAN_KEY, 180)));
 
         LocationCollectionInterval result =
                 locationSettingManager.findCollectionInterval(LocationFixture.WARD_KEY, GUARDIAN_KEY);
 
-        assertThat(result).isEqualTo(LocationCollectionInterval.FIVE_MINUTES);
+        assertThat(result).isEqualTo(LocationCollectionInterval.THREE_MINUTES);
     }
 
     @Test
     @DisplayName("기기 수집 주기는 보호자 계열 설정 중 가장 짧은 주기다")
     void findDeviceCollectionInterval_returns_shortest_among_guardians() {
         given(locationSettingRepository.findAllByWardMemberKey(LocationFixture.WARD_KEY)).willReturn(List.of(
-                LocationFixture.createLocationSetting(GUARDIAN_KEY, 300),
+                LocationFixture.createLocationSetting(GUARDIAN_KEY, 180),
                 LocationFixture.createLocationSetting(OTHER_GUARDIAN_KEY, 60)));
         given(careRelationshipReader.findCaregiverInfos(LocationFixture.WARD_KEY)).willReturn(List.of(
                 CareFixture.createCaregiverInfo(GUARDIAN_KEY, CareRole.GUARDIAN),
@@ -112,7 +112,7 @@ class LocationSettingManagerTest {
     @DisplayName("설정하지 않은 보호자가 한 명이라도 있으면 기기 수집 주기는 30초다")
     void findDeviceCollectionInterval_returns_thirty_seconds_when_a_guardian_never_configured() {
         given(locationSettingRepository.findAllByWardMemberKey(LocationFixture.WARD_KEY)).willReturn(List.of(
-                LocationFixture.createLocationSetting(GUARDIAN_KEY, 300)));
+                LocationFixture.createLocationSetting(GUARDIAN_KEY, 180)));
         given(careRelationshipReader.findCaregiverInfos(LocationFixture.WARD_KEY)).willReturn(List.of(
                 CareFixture.createCaregiverInfo(GUARDIAN_KEY, CareRole.GUARDIAN),
                 CareFixture.createCaregiverInfo(OTHER_GUARDIAN_KEY, CareRole.GUARDIAN)));
@@ -126,28 +126,28 @@ class LocationSettingManagerTest {
     @DisplayName("관계자는 주기를 고르지 않으므로 기기 수집 주기 계산에서 빠진다")
     void findDeviceCollectionInterval_ignores_manager() {
         given(locationSettingRepository.findAllByWardMemberKey(LocationFixture.WARD_KEY)).willReturn(List.of(
-                LocationFixture.createLocationSetting(GUARDIAN_KEY, 300)));
+                LocationFixture.createLocationSetting(GUARDIAN_KEY, 180)));
         given(careRelationshipReader.findCaregiverInfos(LocationFixture.WARD_KEY)).willReturn(List.of(
                 CareFixture.createCaregiverInfo(GUARDIAN_KEY, CareRole.GUARDIAN),
                 CareFixture.createCaregiverInfo(MANAGER_KEY, CareRole.MANAGER)));
 
         LocationCollectionInterval result = locationSettingManager.findDeviceCollectionInterval(LocationFixture.WARD_KEY);
 
-        assertThat(result).isEqualTo(LocationCollectionInterval.FIVE_MINUTES);
+        assertThat(result).isEqualTo(LocationCollectionInterval.THREE_MINUTES);
     }
 
     @Test
     @DisplayName("케어 관계가 끊긴 보호자의 설정은 기기 수집 주기 계산에 들어가지 않는다")
     void findDeviceCollectionInterval_ignores_setting_of_former_caregiver() {
         given(locationSettingRepository.findAllByWardMemberKey(LocationFixture.WARD_KEY)).willReturn(List.of(
-                LocationFixture.createLocationSetting(GUARDIAN_KEY, 300),
+                LocationFixture.createLocationSetting(GUARDIAN_KEY, 180),
                 LocationFixture.createLocationSetting(OTHER_GUARDIAN_KEY, 30)));
         given(careRelationshipReader.findCaregiverInfos(LocationFixture.WARD_KEY)).willReturn(List.of(
                 CareFixture.createCaregiverInfo(GUARDIAN_KEY, CareRole.GUARDIAN)));
 
         LocationCollectionInterval result = locationSettingManager.findDeviceCollectionInterval(LocationFixture.WARD_KEY);
 
-        assertThat(result).isEqualTo(LocationCollectionInterval.FIVE_MINUTES);
+        assertThat(result).isEqualTo(LocationCollectionInterval.THREE_MINUTES);
     }
 
     @Test

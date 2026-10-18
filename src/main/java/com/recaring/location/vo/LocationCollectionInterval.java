@@ -9,8 +9,7 @@ import java.util.List;
 public enum LocationCollectionInterval {
     THIRTY_SECONDS(30),
     ONE_MINUTE(60),
-    THREE_MINUTES(180),
-    FIVE_MINUTES(300);
+    THREE_MINUTES(180);
 
     public static final LocationCollectionInterval DEFAULT = THIRTY_SECONDS;
 
