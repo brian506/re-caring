@@ -65,7 +65,7 @@ public class FirebaseFcmClient implements FcmClient {
         }
 
         if (!pendingTokens.isEmpty()) {
-            log.warn("[알림 전송 : 재시도 소진]: tokens={} | attempts={}", pendingTokens.size(), MAX_ATTEMPTS);
+            log.error("[알림 전송 : 재시도 소진]: tokens={} | attempts={}", pendingTokens.size(), MAX_ATTEMPTS);
         }
         return invalidTokens;
     }
@@ -104,12 +104,12 @@ public class FirebaseFcmClient implements FcmClient {
         try {
             return firebaseMessaging.sendEachForMulticast(multicastMessage);
         } catch (FirebaseMessagingException exception) {
-            log.warn("[알림 전송 : 일괄 전송 실패]: errorCode={} | tokens={} | attempt={} | error={}",
-                    errorCode(exception), tokens.size(), attempt, exception.getMessage());
+            log.error("[알림 전송 : 일괄 전송 실패]: errorCode={} | tokens={} | attempt={}",
+                    errorCode(exception), tokens.size(), attempt, exception);
             return null;
         } catch (RuntimeException exception) {
-            log.error("[알림 전송 : 예외]: tokens={} | attempt={} | error={}",
-                    tokens.size(), attempt, exception.getMessage());
+            log.error("[알림 전송 : 예외]: tokens={} | attempt={}",
+                    tokens.size(), attempt, exception);
             return null;
         }
     }

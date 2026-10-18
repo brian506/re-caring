@@ -80,10 +80,10 @@ public class AnomalyStreamMetrics {
             anomalyStreamErrorHandler.markHealthy();
         } catch (RedisConnectionFailureException e) {
             markUnknown();
-            log.warn("[이상탐지 스트림 : 지표 수집 연결 실패]: error={}", e.getMessage());
+            log.warn("[이상탐지 스트림 : 지표 수집 연결 실패]", e);
         } catch (DataAccessException e) {
             markUnknown();
-            log.warn("[이상탐지 스트림 : 지표 수집 실패]: error={}", e.getMessage());
+            log.warn("[이상탐지 스트림 : 지표 수집 실패]", e);
         }
     }
 

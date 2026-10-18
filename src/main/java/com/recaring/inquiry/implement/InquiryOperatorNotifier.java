@@ -11,6 +11,7 @@ import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
 
+import java.net.URI;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
 
@@ -41,17 +42,17 @@ public class InquiryOperatorNotifier {
         }
         try {
             slackWebhookRestClient.post()
-                    .uri(webhookUrl)
+                    .uri(URI.create(webhookUrl))
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(Map.of("text", message(inquiry)))
                     .retrieve()
                     .toBodilessEntity();
             log.info("[1:1 문의 : Slack 발송 완료]: inquiryKey={}", inquiry.inquiryKey());
         } catch (RestClientResponseException e) {
-            log.error("[1:1 문의 : Slack 응답 오류]: inquiryKey={} | status={} | body={}",
+            log.warn("[1:1 문의 : Slack 응답 오류]: inquiryKey={} | status={} | body={}",
                     inquiry.inquiryKey(), e.getStatusCode(), e.getResponseBodyAsString());
         } catch (ResourceAccessException e) {
-            log.error("[1:1 문의 : Slack 연결 실패]: inquiryKey={} | cause={}",
+            log.warn("[1:1 문의 : Slack 연결 실패]: inquiryKey={} | cause={}",
                     inquiry.inquiryKey(), e.getMostSpecificCause().getClass().getSimpleName());
         }
     }

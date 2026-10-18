@@ -18,6 +18,12 @@
 | `sms` | PhoneVerificationService | SmsClient, SmsCodeGenerator, PhoneVerificationReader/Writer, SmsRateLimitValidator |
 | `alert` | AlertService, AlertResolutionService | AlertInvestigationOrchestrator, AlertInvestigationAgent(Tool Use Loop), SsmContextFetcher, PrometheusContextFetcher, ErrorHistoryFetcher, RunbookService, SlackAlertNotifier, GitHubPrCreator, AlertRetryHandler |
 
+> 공통 필터: `common/filter/RequestIdFilter` — 최우선 순위 서블릿 필터. 요청의 `X-Request-Id`(영숫자·하이픈 8~64자)를 재사용하거나 UUID를 생성해 MDC `requestId`에 넣고 응답 헤더로 반환. `AsyncConfig`의 executor(broadcast·detection-retry·sse-poll)는 `MdcTaskDecorator`로 MDC를 복사해 비동기 스레드에도 `requestId`가 남는다. 로그 출력: dev는 ECS JSON(`requestId` 필드), local은 평문 `[requestId]` (#259)
+
+> 외부 API 지표: 카카오·Slack·OAuth RestClient는 `ObservationRegistry`를 연결해 `http_client_requests`(client.name·status·outcome)를 남긴다. `uri(String)`으로 호출하면 경로 전체가 uri 태그에 들어가므로 비밀값이 담긴 URL(Slack 웹훅)은 `URI` 객체로 호출한다. CoolSMS는 `sms.send` Timer(outcome·exception). FCM은 Firebase 콘솔 지표를 쓴다 (#259)
+
+> 활성 회원(DAU/MAU): 별도 수집 없이 `refresh_tokens.created_at`으로 SQL 집계한다. 로그인·토큰 갱신마다 새 행이 저장되므로 `count(DISTINCT member_key) WHERE created_at >= current_date`(DAU)·`>= now() - 30 days`(MAU). 근사치이며 과거 일자는 재계산 불가 — Grafana Postgres 데이터소스로 주기 조회 (#259)
+
 ## API 엔드포인트
 
 | 도메인 | Method | Path | 설명 |

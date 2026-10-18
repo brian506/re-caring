@@ -54,7 +54,7 @@ public class LocationSignalMonitor {
             eventPublisher.publishEvent(new LocationSignalLostEvent(wardMemberKey, gps));
         } catch (RuntimeException e) {
             locationSignalAlertManager.release(wardMemberKey, gps.recordedAt());
-            log.error("[위치 수집 중단 : 알림 처리 실패]: wardMemberKey={} | error={}", wardMemberKey, e.getMessage());
+            log.warn("[위치 수집 중단 : 알림 처리 실패]: wardMemberKey={}", wardMemberKey, e);
         }
     }
 }

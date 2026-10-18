@@ -48,6 +48,7 @@ management:
     distribution:
       percentiles-histogram:
         http.server.requests: true
+        http.client.requests: true
 
 jwt:
   secret-key: ${JWT_KEY}
@@ -85,3 +86,11 @@ alert:
   aws:
     ssm:
       instance-tag: recaring-app-server
+
+logging:
+  structured:
+    format:
+      console: ecs
+    ecs:
+      service:
+        environment: dev

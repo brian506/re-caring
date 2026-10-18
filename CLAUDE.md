@@ -41,13 +41,26 @@ Spring Boot 4.0.3 · Java 21 · PostgreSQL 16 · Redis 7 · QueryDSL 7 · JWT (j
 // 형식: [카테고리 : 상세내용]: 추가 정보
 log.info("[GPS 수신 : 저장 완료]: wardKey={}", wardKey);
 log.warn("[SSE 이벤트 : 전송 실패]: wardKey={} | error={}", wardKey, e.getMessage());
-log.error("[Redis 캐시 : 직렬화 실패]: wardKey={} | error={}", wardKey, e.getMessage());
+log.error("[Redis 캐시 : 직렬화 실패]: wardKey={}", wardKey, e);
 ```
 
 - 카테고리: 도메인 또는 컴포넌트명 (예: `GPS 수신`, `SSE 이벤트`, `Redis 캐시`)
 - 상세내용: 동작 결과 (예: `저장 완료`, `전송 실패`, `연결 종료`)
 - 추가 정보: `key=value | key=value` 형식으로 컨텍스트 추가
-- 레벨 선택: 정상 흐름 → `info`, 비즈니스 예외 → `warn`, 시스템 오류 → `error`, 디버그 → `debug`
+- 레벨 선택 (ERROR는 즉시 알림 대상이므로 엄격히 제한한다)
+  - `error`: **사람이 지금 조치해야 하는 상태**. 자동 복구(재시도·다음 주기·PEL 회수)가 끝났거나 없고, 핵심 기능(보호자 알림·이상탐지)·데이터 손실로 이어지는 경우, 또는 예상치 못한 버그(500)
+  - `warn`: 실패했지만 재시도·다음 주기·사용자 재시도로 복구 가능한 경우, 외부 의존성 일시 장애·단건 실패. 지속 여부는 지표 비율로 감시한다
+  - `info`: 정상 흐름, `debug`: 디버그 (정상적인 SSE 연결 종료 포함)
+- 예외를 로깅할 때는 `e.getMessage()` 대신 **예외 객체를 마지막 인자**로 넘긴다 (스택 트레이스·원인 체인 보존). 단, 예외 메시지에 비밀값(웹훅 URL 등)이 담기는 경우는 예외 타입만 남긴다. 잘못된 클라이언트 요청(검증·바인딩 실패)이나 입력 데이터 형식 오류는 스택이 쓸모없으므로 `e.getMessage()`만 남긴다
+
+```java
+log.error("[이상탐지 결과 : 처리 실패]: wardMemberKey={} | attempt={}", wardMemberKey, attempt, e);
+```
+
+- 개인정보는 로그에 평문으로 남기지 않는다. 전화번호는 `MaskingUtils.maskPhone`, 장소 검색어는 길이만, GPS 좌표·토큰은 기록하지 않는다
+- 외부 HTTP 호출 예외(`ResourceAccessException` 등)는 메시지에 요청 URL(쿼리 파라미터 포함)이 담기므로 `e.getMostSpecificCause()`를 넘긴다
+- `requestId`는 `RequestIdFilter`가 MDC에 넣으므로 메시지에 직접 적지 않는다. dev는 ECS JSON 필드, local은 평문 `[requestId]`로 자동 출력된다
+- 비동기 executor는 `AsyncConfig`에서 `MdcTaskDecorator`를 적용해 만든다. 데코레이터가 없는 executor·`CompletableFuture` 공용 풀에서는 `requestId`가 끊긴다
 
 ## 인프라 접근 규칙
 
