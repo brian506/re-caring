@@ -2,7 +2,9 @@ package com.recaring.inquiry.fixture;
 
 import com.recaring.inquiry.dataaccess.entity.Inquiry;
 import com.recaring.inquiry.dataaccess.entity.InquiryCategory;
+import com.recaring.inquiry.dataaccess.entity.InquiryStatus;
 import com.recaring.inquiry.event.InquiryAnsweredEvent;
+import com.recaring.inquiry.vo.InquiryInfo;
 
 import java.time.LocalDateTime;
 
@@ -30,6 +32,13 @@ public class InquiryFixture {
     public static final String ANSWER_2000_CHARS = "다".repeat(2000);
     public static final String ANSWER_2001_CHARS = "다".repeat(2001);
 
+    public static final String SLACK_WEBHOOK_URL = "https://hooks.slack.com/services/T000/B000/test";
+    public static final LocalDateTime SUBMITTED_AT = LocalDateTime.of(2026, 10, 17, 8, 24, 31);
+    public static final String SUBMITTED_AT_TEXT = "2026-10-17 08:24";
+    public static final String CATEGORY_DESCRIPTION = "알림·응급";
+    public static final String MENTION_TITLE = "<!channel> 급해요 & 확인 부탁";
+    public static final String ESCAPED_MENTION_TITLE = "&lt;!channel&gt; 급해요 &amp; 확인 부탁";
+
     public static Inquiry createInquiry(String memberKey) {
         return createInquiry(memberKey, TITLE);
     }
@@ -47,6 +56,11 @@ public class InquiryFixture {
         Inquiry inquiry = createInquiry(memberKey, title);
         inquiry.answer(ANSWER, ANSWERED_AT);
         return inquiry;
+    }
+
+    public static InquiryInfo createSubmittedInfo(String title) {
+        return new InquiryInfo(INQUIRY_KEY, MEMBER_KEY, CATEGORY, title, CONTENT,
+                InquiryStatus.WAITING, SUBMITTED_AT, null, null);
     }
 
     public static InquiryAnsweredEvent createAnsweredEvent() {
