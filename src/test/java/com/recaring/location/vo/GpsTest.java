@@ -25,6 +25,7 @@ class GpsTest {
     private static final LocalDateTime ONE_MINUTE_LATER = TRACK_START.plusSeconds(60);
     private static final double JUMP_260M_LATITUDE_DELTA = 0.0023382;
     private static final double VISIT_300M_LATITUDE_DELTA = 0.002698;
+    private static final double RETURN_61M_LATITUDE_DELTA = 0.0005486;
 
     @Test
     @DisplayName("기준점이 없으면 정확한 좌표는 표시한다")
@@ -166,6 +167,22 @@ class GpsTest {
         Gps jumped = LocationFixture.createTrackPoint(LATITUDE + JUMP_260M_LATITUDE_DELTA, TRACK_ACCURACY, THIRTY_SECONDS_LATER);
         Gps returned = LocationFixture.createTrackPoint(
                 LATITUDE + returnedLatitudeDelta, TRACK_ACCURACY, ONE_MINUTE_LATER);
+
+        boolean spike = jumped.isSpikeBetween(ANCHOR, returned);
+
+        assertThat(spike).isEqualTo(expected);
+    }
+
+    @ParameterizedTest(name = "앞 좌표에서 ≈{1}m, 뒤 좌표는 앞 좌표 반대편 61m → 튐 {2}")
+    @CsvSource({
+            "0.0017896, 199, false",
+            "0.0018076, 201, true"
+    })
+    @DisplayName("앞 좌표와의 거리만 200m 미만이어도 튐이 아니다")
+    void spike_requires_200m_from_previous_neighbor(double latitudeDelta, int approxOutboundMeters, boolean expected) {
+        Gps jumped = LocationFixture.createTrackPoint(LATITUDE + latitudeDelta, TRACK_ACCURACY, THIRTY_SECONDS_LATER);
+        Gps returned = LocationFixture.createTrackPoint(
+                LATITUDE - RETURN_61M_LATITUDE_DELTA, TRACK_ACCURACY, ONE_MINUTE_LATER);
 
         boolean spike = jumped.isSpikeBetween(ANCHOR, returned);
 
