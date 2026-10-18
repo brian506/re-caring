@@ -41,13 +41,21 @@ Spring Boot 4.0.3 · Java 21 · PostgreSQL 16 · Redis 7 · QueryDSL 7 · JWT (j
 // 형식: [카테고리 : 상세내용]: 추가 정보
 log.info("[GPS 수신 : 저장 완료]: wardKey={}", wardKey);
 log.warn("[SSE 이벤트 : 전송 실패]: wardKey={} | error={}", wardKey, e.getMessage());
-log.error("[Redis 캐시 : 직렬화 실패]: wardKey={} | error={}", wardKey, e.getMessage());
+log.error("[Redis 캐시 : 직렬화 실패]: wardKey={}", wardKey, e);
 ```
 
 - 카테고리: 도메인 또는 컴포넌트명 (예: `GPS 수신`, `SSE 이벤트`, `Redis 캐시`)
 - 상세내용: 동작 결과 (예: `저장 완료`, `전송 실패`, `연결 종료`)
 - 추가 정보: `key=value | key=value` 형식으로 컨텍스트 추가
 - 레벨 선택: 정상 흐름 → `info`, 비즈니스 예외 → `warn`, 시스템 오류 → `error`, 디버그 → `debug`
+- 예외를 로깅할 때는 `e.getMessage()` 대신 **예외 객체를 마지막 인자**로 넘긴다 (스택 트레이스·원인 체인 보존). 단, 예외 메시지에 비밀값(웹훅 URL 등)이 담기는 경우는 예외 타입만 남긴다
+
+```java
+log.error("[이상탐지 결과 : 처리 실패]: wardMemberKey={} | attempt={}", wardMemberKey, attempt, e);
+```
+
+- `requestId`는 `RequestIdFilter`가 MDC에 넣으므로 메시지에 직접 적지 않는다. dev는 ECS JSON 필드, local은 평문 `[requestId]`로 자동 출력된다
+- 비동기 executor는 `AsyncConfig`에서 `MdcTaskDecorator`를 적용해 만든다. 데코레이터가 없는 executor·`CompletableFuture` 공용 풀에서는 `requestId`가 끊긴다
 
 ## 인프라 접근 규칙
 

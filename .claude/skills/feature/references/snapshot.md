@@ -18,6 +18,8 @@
 | `sms` | PhoneVerificationService | SmsClient, SmsCodeGenerator, PhoneVerificationReader/Writer, SmsRateLimitValidator |
 | `alert` | AlertService, AlertResolutionService | AlertInvestigationOrchestrator, AlertInvestigationAgent(Tool Use Loop), SsmContextFetcher, PrometheusContextFetcher, ErrorHistoryFetcher, RunbookService, SlackAlertNotifier, GitHubPrCreator, AlertRetryHandler |
 
+> 공통 필터: `common/filter/RequestIdFilter` — 최우선 순위 서블릿 필터. 요청의 `X-Request-Id`(영숫자·하이픈 8~64자)를 재사용하거나 UUID를 생성해 MDC `requestId`에 넣고 응답 헤더로 반환. `AsyncConfig`의 executor(broadcast·detection-retry·sse-poll)는 `MdcTaskDecorator`로 MDC를 복사해 비동기 스레드에도 `requestId`가 남는다. 로그 출력: dev는 ECS JSON(`requestId` 필드), local은 평문 `[requestId]` (#259)
+
 ## API 엔드포인트
 
 | 도메인 | Method | Path | 설명 |
