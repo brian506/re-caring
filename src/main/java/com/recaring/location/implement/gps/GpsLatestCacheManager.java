@@ -91,7 +91,7 @@ public class GpsLatestCacheManager {
                     TimeUnit.HOURS
             );
         } catch (JsonProcessingException | DataAccessException e) {
-            log.warn("[GPS 캐시 : 저장 실패]: wardMemberKey={} | error={}", wardMemberKey, e.getMessage());
+            log.warn("[GPS 캐시 : 저장 실패]: wardMemberKey={}", wardMemberKey, e);
         }
     }
 
