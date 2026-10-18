@@ -91,7 +91,7 @@ public class AnomalyPendingReclaimer {
                     BATCH_SIZE,
                     minIdle);
         } catch (DataAccessException e) {
-            log.error("[이상탐지 스트림 : PEL 조회 실패]", e);
+            log.warn("[이상탐지 스트림 : PEL 조회 실패]", e);
             return null;
         }
     }
@@ -106,7 +106,7 @@ public class AnomalyPendingReclaimer {
             log.info("[이상탐지 스트림 : PEL 회수]: requested={} | claimed={}", recordIds.size(), records.size());
             return records;
         } catch (DataAccessException e) {
-            log.error("[이상탐지 스트림 : PEL 회수 실패]: requested={}", recordIds.size(), e);
+            log.warn("[이상탐지 스트림 : PEL 회수 실패]: requested={}", recordIds.size(), e);
             return List.of();
         }
     }

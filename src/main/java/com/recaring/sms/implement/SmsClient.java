@@ -30,7 +30,7 @@ public class SmsClient {
         try {
             messageService.sendOne(new SingleMessageSendingRequest(message));
         } catch (Exception e) {
-            log.error("[SMS 발송 : 실패]: phone={}", MaskingUtils.maskPhone(phone), e);
+            log.warn("[SMS 발송 : 실패]: phone={}", MaskingUtils.maskPhone(phone), e);
             throw new AppException(ErrorType.SMS_SEND_FAILED);
         }
     }

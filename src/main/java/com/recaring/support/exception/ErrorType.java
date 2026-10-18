@@ -52,7 +52,7 @@ public enum ErrorType {
     EXPIRED_VERIFICATION_CODE(HttpStatus.BAD_REQUEST, ErrorCode.E4000, "인증번호가 만료되었습니다.", LogLevel.WARN),
     INVALID_VERIFICATION_CODE(HttpStatus.BAD_REQUEST, ErrorCode.E4001, "인증번호가 일치하지 않습니다.", LogLevel.WARN),
     NOT_VERIFIED_PHONE(HttpStatus.BAD_REQUEST, ErrorCode.E4002, "휴대폰 인증이 완료되지 않았습니다.", LogLevel.WARN),
-    SMS_SEND_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, ErrorCode.E4003, "SMS 발송에 실패했습니다.", LogLevel.ERROR),
+    SMS_SEND_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, ErrorCode.E4003, "SMS 발송에 실패했습니다.", LogLevel.WARN),
     INVALID_PHONE_FORMAT(HttpStatus.BAD_REQUEST, ErrorCode.E4004, "올바른 휴대폰 번호 형식이 아닙니다.", LogLevel.WARN),
     SMS_SEND_QUOTA_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, ErrorCode.E4005, "인증번호 요청 한도를 초과했습니다.", LogLevel.WARN),
 
@@ -102,7 +102,7 @@ public enum ErrorType {
 
     // Place (E10xxx)
     INVALID_PLACE_QUERY(HttpStatus.BAD_REQUEST, ErrorCode.E10000, "검색어를 입력해주세요.", LogLevel.WARN),
-    PLACE_SEARCH_UNAVAILABLE(HttpStatus.BAD_GATEWAY, ErrorCode.E10001, "장소 검색을 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도해주세요.", LogLevel.ERROR),
+    PLACE_SEARCH_UNAVAILABLE(HttpStatus.BAD_GATEWAY, ErrorCode.E10001, "장소 검색을 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도해주세요.", LogLevel.WARN),
     PLACE_SEARCH_RATE_LIMITED(HttpStatus.TOO_MANY_REQUESTS, ErrorCode.E10002, "장소 검색 요청이 많습니다. 잠시 후 다시 시도해주세요.", LogLevel.WARN),
 
     // Inquiry (E11xxx)

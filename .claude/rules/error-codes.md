@@ -41,4 +41,4 @@ NEW_ERROR_TYPE(HttpStatus.BAD_REQUEST, ErrorCode.E5011, "에러 메시지", LogL
 LogLevel 선택:
 - `INFO`: 정상 흐름의 일부 (예: 로그인 실패)
 - `WARN`: 비즈니스 규칙 위반 (예: 중복, 한도 초과)
-- `ERROR`: 예상치 못한 시스템 오류
+- `ERROR`: 사람이 지금 조치해야 하는 시스템 오류 (외부 의존성 일시 장애는 `WARN` — CLAUDE.md 로깅 규칙 참고)

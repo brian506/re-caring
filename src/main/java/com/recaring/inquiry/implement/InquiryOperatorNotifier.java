@@ -48,10 +48,10 @@ public class InquiryOperatorNotifier {
                     .toBodilessEntity();
             log.info("[1:1 문의 : Slack 발송 완료]: inquiryKey={}", inquiry.inquiryKey());
         } catch (RestClientResponseException e) {
-            log.error("[1:1 문의 : Slack 응답 오류]: inquiryKey={} | status={} | body={}",
+            log.warn("[1:1 문의 : Slack 응답 오류]: inquiryKey={} | status={} | body={}",
                     inquiry.inquiryKey(), e.getStatusCode(), e.getResponseBodyAsString());
         } catch (ResourceAccessException e) {
-            log.error("[1:1 문의 : Slack 연결 실패]: inquiryKey={} | cause={}",
+            log.warn("[1:1 문의 : Slack 연결 실패]: inquiryKey={} | cause={}",
                     inquiry.inquiryKey(), e.getMostSpecificCause().getClass().getSimpleName());
         }
     }

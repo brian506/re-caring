@@ -68,15 +68,15 @@ public class KakaoPlaceSearchClient {
             log.error("[장소 검색 : 키 인증 실패]: queryLength={} | status={}", query.length(), e.getStatusCode());
             throw new AppException(ErrorType.PLACE_SEARCH_UNAVAILABLE);
         } catch (HttpClientErrorException.BadRequest e) {
-            log.error("[장소 검색 : 잘못된 요청]: queryLength={} | biased={} | radius={} | body={}",
+            log.warn("[장소 검색 : 잘못된 요청]: queryLength={} | biased={} | radius={} | body={}",
                     query.length(), condition.hasBias(), condition.radiusMeters(), e.getResponseBodyAsString());
             throw new AppException(ErrorType.PLACE_SEARCH_UNAVAILABLE);
         } catch (RestClientResponseException e) {
-            log.error("[장소 검색 : 응답 오류]: queryLength={} | status={} | body={}",
+            log.warn("[장소 검색 : 응답 오류]: queryLength={} | status={} | body={}",
                     query.length(), e.getStatusCode(), e.getResponseBodyAsString());
             throw new AppException(ErrorType.PLACE_SEARCH_UNAVAILABLE);
         } catch (ResourceAccessException e) {
-            log.error("[장소 검색 : 연결 실패]: queryLength={}", query.length(), e.getMostSpecificCause());
+            log.warn("[장소 검색 : 연결 실패]: queryLength={}", query.length(), e.getMostSpecificCause());
             throw new AppException(ErrorType.PLACE_SEARCH_UNAVAILABLE);
         }
     }

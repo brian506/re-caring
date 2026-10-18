@@ -50,7 +50,7 @@ public class AnomalyStreamErrorHandler implements ErrorHandler {
         long now = System.currentTimeMillis();
         if (failures == 1) {
             lastLoggedAtMillis = now;
-            log.error("[이상탐지 스트림 : 폴링 실패]: failures={} | error={}", failures, rootMessage(throwable));
+            log.warn("[이상탐지 스트림 : 폴링 실패]: failures={}", failures, throwable);
             return;
         }
         if (now - lastLoggedAtMillis < LOG_INTERVAL.toMillis()) {
