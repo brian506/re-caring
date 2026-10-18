@@ -85,3 +85,7 @@ alert:
   aws:
     ssm:
       instance-tag: recaring-app-server
+
+logging:
+  pattern:
+    correlation: "[%X{requestId:-}] "

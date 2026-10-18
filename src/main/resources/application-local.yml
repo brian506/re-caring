@@ -63,3 +63,7 @@ springdoc:
     enabled: true
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
+
+logging:
+  pattern:
+    correlation: "[%X{requestId:-}] "
