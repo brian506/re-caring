@@ -87,5 +87,9 @@ alert:
       instance-tag: recaring-app-server
 
 logging:
-  pattern:
-    correlation: "[%X{requestId:-}] "
+  structured:
+    format:
+      console: ecs
+    ecs:
+      service:
+        environment: dev
