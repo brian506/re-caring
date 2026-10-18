@@ -13,8 +13,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class SafeZoneRadiusTest {
 
     @ParameterizedTest
-    @ValueSource(ints = {100, 2000})
-    @DisplayName("반경 100m와 2000m는 허용 범위 경계라 생성된다")
+    @ValueSource(ints = {300, 2000})
+    @DisplayName("반경 300m와 2000m는 허용 범위 경계라 생성된다")
     void create_success_at_boundaries(int meters) {
         SafeZoneRadius radius = new SafeZoneRadius(meters);
 
@@ -22,8 +22,8 @@ class SafeZoneRadiusTest {
     }
 
     @ParameterizedTest
-    @ValueSource(ints = {99, 2001})
-    @DisplayName("반경이 100m 미만이거나 2000m 초과면 INVALID_SAFE_ZONE_RADIUS 예외가 발생한다")
+    @ValueSource(ints = {299, 2001})
+    @DisplayName("반경이 300m 미만이거나 2000m 초과면 INVALID_SAFE_ZONE_RADIUS 예외가 발생한다")
     void create_fail_outside_boundaries(int meters) {
         assertThatThrownBy(() -> new SafeZoneRadius(meters))
                 .isInstanceOf(AppException.class)
