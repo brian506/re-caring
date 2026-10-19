@@ -1,7 +1,7 @@
 # 로그 Category 고정 어휘
 
 `[Category : Detail]`의 Category는 아래 값만 쓴다. 새 기능에 필요하면 이 표에 먼저 추가한다 (CLAUDE.md 로깅 규칙).
-도메인은 logger 패키지에서 따로 뽑히므로 Category에 도메인명을 넣지 않는다.
+도메인은 logger 패키지에서 따로 뽑히므로 도메인명만으로 된 Category(`Location`, `Care`)나 도메인 접두어(`LocationGpsCache`)는 쓰지 않는다. `CareInvitationAlert`, `MemberWithdrawal`처럼 기능 자체의 이름은 허용한다.
 
 | Category | 의미 | 주요 위치 |
 |---|---|---|

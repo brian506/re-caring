@@ -40,12 +40,12 @@ Spring Boot 4.0.3 · Java 21 · PostgreSQL 16 · Redis 7 · QueryDSL 7 · JWT (j
 ```java
 // 형식: [Category : Detail]: 추가 정보
 log.info("[GpsCache : Saved]: wardKey={}", wardKey);
-log.warn("[SseEvent : SendFailed]: wardKey={} | error={}", wardKey, e.getMessage());
+log.warn("[SseEvent : SendClosed]: wardKey={} | error={}", wardKey, e.getMessage());
 log.error("[AnomalyResult : ProcessFailed]: wardKey={}", wardKey, e);
 ```
 
 - Category·Detail은 **영문 PascalCase**만 쓴다 (한국어·공백·대문자 약어 나열 금지). 정규식 `^\[[A-Z][A-Za-z0-9]+ : [A-Z][A-Za-z0-9]+\]`에 맞아야 한다
-- Category: 기능·컴포넌트를 가리키는 명사. **고정 어휘 `.claude/rules/log-vocabulary.md`에 있는 값만** 쓰고, 새 기능이면 그 파일에 먼저 추가한다. 도메인(패키지)명은 logger 패키지에서 따로 뽑히므로 Category에 붙이지 않는다. 동의어를 새로 만들지 않는다 (`AnomalyStream` 하나, `AnomalyStreamEvent` 등 금지)
+- Category: 기능·컴포넌트를 가리키는 명사. **고정 어휘 `.claude/rules/log-vocabulary.md`에 있는 값만** 쓰고, 새 기능이면 그 파일에 먼저 추가한다. 도메인(패키지)명은 logger 패키지에서 따로 뽑히므로 도메인명만으로 된 Category(`Location`, `Care`)나 도메인 접두어(`LocationGpsCache`)는 쓰지 않는다. `CareInvitationAlert`처럼 기능 자체의 이름은 허용한다. 동의어를 새로 만들지 않는다 (`AnomalyStream` 하나, `AnomalyStreamEvent` 등 금지)
 - Detail: 동작 결과를 나타내는 과거형·결과 구 (예: `Saved`, `SendFailed`, `ConnectionClosed`, `RateLimitExceeded`)
 - 추가 정보: `key=value | key=value` 형식으로 컨텍스트 추가
 - 레벨 선택 (ERROR는 즉시 알림 대상이므로 엄격히 제한한다)
