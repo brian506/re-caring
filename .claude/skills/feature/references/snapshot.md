@@ -1,6 +1,6 @@
 # 프로젝트 스냅샷
 
-> 마지막 업데이트: 2026-10-18. 기능 추가·수정 시 해당 섹션을 갱신한다.
+> 마지막 업데이트: 2026-10-19. 기능 추가·수정 시 해당 섹션을 갱신한다.
 
 ## 도메인별 패키지 현황
 
@@ -20,6 +20,8 @@
 | `alert` | AlertService, AlertResolutionService | AlertInvestigationOrchestrator, AlertInvestigationAgent(Tool Use Loop), SsmContextFetcher, PrometheusContextFetcher, ErrorHistoryFetcher, RunbookService, SlackAlertNotifier, GitHubPrCreator, AlertRetryHandler |
 
 > 공통 필터: `common/filter/RequestIdFilter` — 최우선 순위 서블릿 필터. 요청의 `X-Request-Id`(영숫자·하이픈 8~64자)를 재사용하거나 UUID를 생성해 MDC `requestId`에 넣고 응답 헤더로 반환. `AsyncConfig`의 executor(broadcast·detection-retry·sse-poll)는 `MdcTaskDecorator`로 MDC를 복사해 비동기 스레드에도 `requestId`가 남는다. 로그 출력: dev는 ECS JSON(`requestId` 필드), local은 평문 `[requestId]` (#259)
+
+> 로그 필드(dev ECS JSON): `config/logging/LogFieldsJsonMembersCustomizer`(`logging.structured.json.customizer`)가 `domain`(앱 로거는 `com.recaring.` 다음 패키지, 외부는 라이브러리명·`springframework`→`spring`), `category`·`detail`(메시지 선두 `[카테고리 : 상세]`)을 추가. `service.version`은 deploy.yml이 `LOGGING_STRUCTURED_ECS_SERVICE_VERSION=SHORT_SHA`로 주입 (#281)
 
 > 외부 API 지표: 카카오·Slack·OAuth RestClient는 `ObservationRegistry`를 연결해 `http_client_requests`(client.name·status·outcome)를 남긴다. `uri(String)`으로 호출하면 경로 전체가 uri 태그에 들어가므로 비밀값이 담긴 URL(Slack 웹훅)은 `URI` 객체로 호출한다. CoolSMS는 `sms.send` Timer(outcome·exception). FCM은 Firebase 콘솔 지표를 쓴다 (#259)
 
