@@ -1,13 +1,13 @@
 package com.recaring.care.implement;
 
-import com.recaring.care.dataaccess.entity.CareInvitation;
+import com.recaring.care.vo.CareInvitationInfo;
+import com.recaring.member.vo.MemberInfo;
 import com.recaring.care.dataaccess.entity.CareInvitationStatus;
-import com.recaring.care.dataaccess.entity.CarePartyRole;
+import com.recaring.care.vo.CarePartyRole;
 import com.recaring.care.event.CareInvitationAcceptedEvent;
 import com.recaring.care.event.CareInvitationSentEvent;
 import com.recaring.care.fixture.CareFixture;
 import com.recaring.care.vo.CareRelationshipRegistration;
-import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.implement.MemberReader;
 import com.recaring.sms.vo.PhoneNumber;
 import com.recaring.support.exception.AppException;
@@ -57,15 +57,15 @@ class CareInvitationManagerTest {
     @Test
     @DisplayName("보호 대상자 초대 - 전화번호로 WARD 회원을 찾아 초대장을 등록한다")
     void sendWardInvitation_success() {
-        Member ward = CareFixture.createWardMember();
-        CareInvitation saved = CareFixture.createWardInvitation(CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY);
+        MemberInfo ward = MemberInfo.from(CareFixture.createWardMember());
+        CareInvitationInfo saved = CareInvitationInfo.from(CareFixture.createWardInvitation(CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY));
         given(memberReader.findByPhone(new PhoneNumber(CareFixture.WARD_PHONE))).willReturn(ward);
         given(careInvitationWriter.register(any())).willReturn(saved);
 
         careInvitationManager.sendWardInvitation(CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_PHONE);
 
         then(careRelationshipValidator).should(times(1))
-                .validateCanAddWard(eq(CareFixture.GUARDIAN_MEMBER_KEY), eq(ward.getMemberKey()));
+                .validateCanAddWard(eq(CareFixture.GUARDIAN_MEMBER_KEY), eq(ward.memberKey()));
         then(careInvitationWriter).should(times(1)).register(any());
         then(eventPublisher).should(times(1)).publishEvent(any(CareInvitationSentEvent.class));
     }
@@ -73,7 +73,7 @@ class CareInvitationManagerTest {
     @Test
     @DisplayName("보호 대상자 초대 - WARD 역할이 아닌 회원을 추가하면 예외가 발생한다")
     void sendWardInvitation_fails_when_not_ward_role() {
-        Member guardian = CareFixture.createGuardianMember(CareFixture.WARD_PHONE);
+        MemberInfo guardian = MemberInfo.from(CareFixture.createGuardianMember(CareFixture.WARD_PHONE));
         given(memberReader.findByPhone(new PhoneNumber(CareFixture.WARD_PHONE))).willReturn(guardian);
 
         assertThatThrownBy(() ->
@@ -87,9 +87,9 @@ class CareInvitationManagerTest {
     @Test
     @DisplayName("보호 대상자 초대 - 같은 요청자가 같은 대상자에게 보낸 대기 요청이 있으면 ALREADY_PENDING_CARE_REQUEST이고 등록하지 않는다")
     void sendWardInvitation_fails_when_same_requester_has_pending_request() {
-        Member ward = CareFixture.createWardMember();
+        MemberInfo ward = MemberInfo.from(CareFixture.createWardMember());
         given(memberReader.findByPhone(new PhoneNumber(CareFixture.WARD_PHONE))).willReturn(ward);
-        given(careInvitationReader.existsPendingWardRequest(CareFixture.GUARDIAN_MEMBER_KEY, ward.getMemberKey()))
+        given(careInvitationReader.existsPendingWardRequest(CareFixture.GUARDIAN_MEMBER_KEY, ward.memberKey()))
                 .willReturn(true);
 
         assertThatThrownBy(() ->
@@ -103,8 +103,8 @@ class CareInvitationManagerTest {
     @Test
     @DisplayName("관리자 초대 - 전화번호로 GUARDIAN 회원을 찾아 초대장을 등록한다")
     void sendManagerInvitation_success() {
-        Member manager = CareFixture.createGuardianMember(CareFixture.MANAGER_PHONE);
-        CareInvitation saved = CareFixture.createManagerInvitation(CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY);
+        MemberInfo manager = MemberInfo.from(CareFixture.createGuardianMember(CareFixture.MANAGER_PHONE));
+        CareInvitationInfo saved = CareInvitationInfo.from(CareFixture.createManagerInvitation(CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY));
         given(memberReader.findByPhone(new PhoneNumber(CareFixture.MANAGER_PHONE))).willReturn(manager);
         given(careInvitationWriter.register(any())).willReturn(saved);
 
@@ -115,7 +115,7 @@ class CareInvitationManagerTest {
                 .validateCanAddCaregiver(
                         eq(CareFixture.GUARDIAN_MEMBER_KEY),
                         eq(CareFixture.WARD_MEMBER_KEY),
-                        eq(manager.getMemberKey()));
+                        eq(manager.memberKey()));
         then(careInvitationWriter).should(times(1)).register(any());
         then(eventPublisher).should(times(1)).publishEvent(any(CareInvitationSentEvent.class));
     }
@@ -123,7 +123,7 @@ class CareInvitationManagerTest {
     @Test
     @DisplayName("관리자 초대 - GUARDIAN 역할이 아닌 회원을 추가하면 예외가 발생한다")
     void sendManagerInvitation_fails_when_not_guardian_role() {
-        Member ward = CareFixture.createWardMember(CareFixture.MANAGER_PHONE);
+        MemberInfo ward = MemberInfo.from(CareFixture.createWardMember(CareFixture.MANAGER_PHONE));
         given(memberReader.findByPhone(new PhoneNumber(CareFixture.MANAGER_PHONE))).willReturn(ward);
 
         assertThatThrownBy(() ->
@@ -138,8 +138,8 @@ class CareInvitationManagerTest {
     @Test
     @DisplayName("초대 수락 - 케어 관계를 생성하고 초대장 상태를 수락으로 변경하며 이벤트를 발행한다")
     void accept_creates_relationship_and_updates_status() {
-        CareInvitation invitation = CareFixture.createWardInvitation(
-                CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY);
+        CareInvitationInfo invitation = CareInvitationInfo.from(CareFixture.createWardInvitation(
+                CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY));
         given(careInvitationReader.findInvitationForRecipient(
                 CareFixture.REQUEST_KEY, CareFixture.WARD_MEMBER_KEY)).willReturn(invitation);
 
@@ -153,8 +153,8 @@ class CareInvitationManagerTest {
     @Test
     @DisplayName("초대 거절 - 초대장 상태를 거절로 변경한다")
     void reject_updates_status_to_rejected() {
-        CareInvitation invitation = CareFixture.createWardInvitation(
-                CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY);
+        CareInvitationInfo invitation = CareInvitationInfo.from(CareFixture.createWardInvitation(
+                CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY));
         given(careInvitationReader.findInvitationForRecipient(
                 CareFixture.REQUEST_KEY, CareFixture.WARD_MEMBER_KEY)).willReturn(invitation);
 
@@ -167,9 +167,8 @@ class CareInvitationManagerTest {
     @Test
     @DisplayName("초대 수락 - 이미 처리된(수락/거절) 초대장이면 예외가 발생한다")
     void accept_fails_when_invitation_already_processed() {
-        CareInvitation invitation = CareFixture.createWardInvitation(
-                CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY);
-        invitation.accept();
+        CareInvitationInfo invitation = CareInvitationInfo.from(CareFixture.createAcceptedWardInvitation(
+                CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY));
         given(careInvitationReader.findInvitationForRecipient(
                 CareFixture.REQUEST_KEY, CareFixture.WARD_MEMBER_KEY)).willReturn(invitation);
 
@@ -185,9 +184,8 @@ class CareInvitationManagerTest {
     @Test
     @DisplayName("초대 거절 - 이미 처리된(수락/거절) 초대장이면 예외가 발생한다")
     void reject_fails_when_invitation_already_processed() {
-        CareInvitation invitation = CareFixture.createWardInvitation(
-                CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY);
-        invitation.reject();
+        CareInvitationInfo invitation = CareInvitationInfo.from(CareFixture.createRejectedWardInvitation(
+                CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY));
         given(careInvitationReader.findInvitationForRecipient(
                 CareFixture.REQUEST_KEY, CareFixture.WARD_MEMBER_KEY)).willReturn(invitation);
 
@@ -202,15 +200,15 @@ class CareInvitationManagerTest {
     @Test
     @DisplayName("재전송 - 대기 중인 요청이면 처음 보낸 요청의 키·수신자·역할로 발송 이벤트를 다시 발행한다")
     void resend_republishes_sent_event_for_pending_invitation() {
-        CareInvitation invitation = CareFixture.createManagerInvitation(
-                CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY);
+        CareInvitationInfo invitation = CareInvitationInfo.from(CareFixture.createManagerInvitation(
+                CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY));
         given(careInvitationReader.findInvitationForRequester(
                 CareFixture.REQUEST_KEY, CareFixture.GUARDIAN_MEMBER_KEY)).willReturn(invitation);
 
         careInvitationManager.resend(CareFixture.REQUEST_KEY, CareFixture.GUARDIAN_MEMBER_KEY);
 
         then(eventPublisher).should(times(1)).publishEvent(new CareInvitationSentEvent(
-                invitation.getRequestKey(),
+                invitation.requestKey(),
                 CareFixture.MANAGER_MEMBER_KEY,
                 CareFixture.GUARDIAN_MEMBER_KEY,
                 CarePartyRole.MANAGER));
@@ -219,12 +217,12 @@ class CareInvitationManagerTest {
     @Test
     @DisplayName("재전송 - 간격 제한에 걸리면 발송 이벤트를 발행하지 않는다")
     void resend_does_not_publish_when_interval_limit_rejects() {
-        CareInvitation invitation = CareFixture.createWardInvitation(
-                CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY);
+        CareInvitationInfo invitation = CareInvitationInfo.from(CareFixture.createWardInvitation(
+                CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY));
         given(careInvitationReader.findInvitationForRequester(
                 CareFixture.REQUEST_KEY, CareFixture.GUARDIAN_MEMBER_KEY)).willReturn(invitation);
         willThrow(new AppException(ErrorType.CARE_REQUEST_RESEND_TOO_SOON))
-                .given(careInvitationResendLimiter).acquire(invitation.getRequestKey());
+                .given(careInvitationResendLimiter).acquire(invitation.requestKey());
 
         assertThatThrownBy(() ->
                 careInvitationManager.resend(CareFixture.REQUEST_KEY, CareFixture.GUARDIAN_MEMBER_KEY))

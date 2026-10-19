@@ -4,8 +4,8 @@ import com.recaring.auth.dataaccess.entity.LocalAuth;
 import com.recaring.auth.dataaccess.repository.LocalAuthRepository;
 import com.recaring.auth.fixture.AuthFixture;
 import com.recaring.auth.vo.NewLocalMember;
-import com.recaring.member.dataaccess.entity.Gender;
-import com.recaring.member.dataaccess.entity.MemberRole;
+import com.recaring.member.vo.Gender;
+import com.recaring.member.vo.MemberRole;
 import com.recaring.member.implement.MemberReader;
 import com.recaring.member.implement.MemberWriter;
 import com.recaring.member.implement.MembersTermsAgreementWriter;
@@ -21,6 +21,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -40,9 +41,6 @@ class LocalAuthManagerTest {
 
     @InjectMocks
     private LocalAuthManager localAuthManager;
-
-    @Mock
-    private LocalAuthReader localAuthReader;
 
     @Mock
     private LocalAuthRepository localAuthRepository;
@@ -111,7 +109,7 @@ class LocalAuthManagerTest {
     void changePassword_replaces_stored_password() {
         // Given
         LocalAuth existingAuth = AuthFixture.createLocalAuth(AuthFixture.MEMBER_KEY);
-        given(localAuthReader.findByMemberKey(AuthFixture.MEMBER_KEY)).willReturn(existingAuth);
+        given(localAuthRepository.findByMemberKey(AuthFixture.MEMBER_KEY)).willReturn(Optional.of(existingAuth));
 
         // When
         localAuthManager.changePassword(AuthFixture.MEMBER_KEY, NEW_ENCODED_PASSWORD);

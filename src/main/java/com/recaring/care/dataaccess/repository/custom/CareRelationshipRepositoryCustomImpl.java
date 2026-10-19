@@ -1,7 +1,7 @@
 package com.recaring.care.dataaccess.repository.custom;
 
 import com.recaring.care.dataaccess.entity.CareRelationship;
-import com.recaring.care.dataaccess.entity.CareRole;
+import com.recaring.care.vo.CareRole;
 import com.recaring.support.repository.QuerydslRepositorySupport;
 
 import java.util.List;

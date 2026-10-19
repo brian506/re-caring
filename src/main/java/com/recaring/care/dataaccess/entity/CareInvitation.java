@@ -1,5 +1,7 @@
 package com.recaring.care.dataaccess.entity;
 
+import com.recaring.care.vo.CarePartyRole;
+import com.recaring.care.vo.CareRole;
 import com.recaring.care.vo.NewCareInvitation;
 import com.recaring.common.entity.BaseEntity;
 import jakarta.persistence.*;

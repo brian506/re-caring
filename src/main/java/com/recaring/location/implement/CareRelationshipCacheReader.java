@@ -1,6 +1,6 @@
 package com.recaring.location.implement;
 
-import com.recaring.care.dataaccess.entity.CareRole;
+import com.recaring.care.vo.CareRole;
 import com.recaring.care.dataaccess.repository.CareRelationshipRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;

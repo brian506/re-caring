@@ -1,6 +1,6 @@
 package com.recaring.notification.implement.listener;
 
-import com.recaring.care.dataaccess.entity.CareRole;
+import com.recaring.care.vo.CareRole;
 import com.recaring.care.fixture.CareFixture;
 import com.recaring.care.implement.CareRelationshipReader;
 import com.recaring.location.fixture.LocationFixture;

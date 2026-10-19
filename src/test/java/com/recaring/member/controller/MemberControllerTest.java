@@ -8,7 +8,7 @@ import com.recaring.care.fixture.CareFixture;
 import com.recaring.inquiry.dataaccess.repository.InquiryRepository;
 import com.recaring.inquiry.fixture.InquiryFixture;
 import com.recaring.member.dataaccess.entity.Member;
-import com.recaring.member.dataaccess.entity.MemberRole;
+import com.recaring.member.vo.MemberRole;
 import com.recaring.member.dataaccess.repository.MemberRepository;
 import com.recaring.member.dataaccess.repository.MemberWithdrawalRepository;
 import com.recaring.member.dataaccess.repository.MembersTermsAgreementRepository;

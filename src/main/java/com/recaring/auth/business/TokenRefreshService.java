@@ -3,8 +3,8 @@ package com.recaring.auth.business;
 import com.recaring.auth.implement.RefreshTokenReader;
 import com.recaring.auth.implement.RefreshTokenWriter;
 import com.recaring.auth.implement.TokenIssuer;
-import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.implement.MemberReader;
+import com.recaring.member.vo.MemberInfo;
 import com.recaring.security.jwt.JwtValidator;
 import com.recaring.security.vo.Jwt;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +25,7 @@ public class TokenRefreshService {
     public Jwt refresh(String refreshToken) {
         jwtValidator.validate(refreshToken);
         String memberKey = refreshTokenReader.findMemberKey(refreshToken);
-        Member member = memberReader.findByMemberKey(memberKey);
+        MemberInfo member = memberReader.findByMemberKey(memberKey);
         refreshTokenWriter.delete(refreshToken);
         return tokenIssuer.issue(member);
     }

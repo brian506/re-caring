@@ -1,4 +1,4 @@
-package com.recaring.location.vo;
+package com.recaring.safezone.vo;
 
 import java.util.LinkedHashSet;
 import java.util.Set;

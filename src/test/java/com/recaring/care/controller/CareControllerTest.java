@@ -3,7 +3,7 @@ package com.recaring.care.controller;
 import com.recaring.care.dataaccess.entity.CareInvitation;
 import com.recaring.care.dataaccess.entity.CareInvitationStatus;
 import com.recaring.care.dataaccess.entity.CareRelationship;
-import com.recaring.care.dataaccess.entity.CareRole;
+import com.recaring.care.vo.CareRole;
 import com.recaring.care.dataaccess.repository.CareInvitationRepository;
 import com.recaring.care.dataaccess.repository.CareRelationshipRepository;
 import com.recaring.care.dataaccess.repository.DesignatedAvatarRepository;

@@ -1,10 +1,10 @@
 package com.recaring.notification.implement;
 
-import com.recaring.notification.dataaccess.entity.FcmDeviceToken;
 import com.recaring.notification.implement.fcm.FcmClient;
 import com.recaring.notification.implement.fcm.FcmDeviceTokenManager;
 import com.recaring.notification.implement.fcm.FcmDeviceTokenReader;
 import com.recaring.notification.implement.fcm.FcmPushMessage;
+import com.recaring.notification.vo.FcmDeviceTokenInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -37,7 +37,7 @@ public class NotificationSendManager {
                 .toList();
         notificationWriter.addAll(recipientMemberKeys, eventType, title, body, dataPayload);
 
-        List<FcmDeviceToken> tokens = fcmDeviceTokenReader.findTokensByCareRoles(guardianMemberKeys, managerMemberKeys);
+        List<FcmDeviceTokenInfo> tokens = fcmDeviceTokenReader.findTokensByCareRoles(guardianMemberKeys, managerMemberKeys);
         dispatch(tokens, FcmPushMessage.notification(title, body, dataPayload));
     }
 
@@ -54,25 +54,25 @@ public class NotificationSendManager {
                 .toList();
         notificationWriter.addAll(recipientMemberKeys, eventType, title, body, dataPayload);
 
-        List<FcmDeviceToken> tokens = fcmDeviceTokenReader.findTokensByCareRoles(guardianMemberKeys, managerMemberKeys);
+        List<FcmDeviceTokenInfo> tokens = fcmDeviceTokenReader.findTokensByCareRoles(guardianMemberKeys, managerMemberKeys);
         dispatch(tokens, FcmPushMessage.dataOnly(title, body, dataPayload));
     }
 
     public void sendToMember(String memberKey, String eventType, String title, String body, Map<String, String> dataPayload) {
         notificationWriter.addAll(List.of(memberKey), eventType, title, body, dataPayload);
 
-        List<FcmDeviceToken> tokens = fcmDeviceTokenReader.findTokensByMemberKey(memberKey);
+        List<FcmDeviceTokenInfo> tokens = fcmDeviceTokenReader.findTokensByMemberKey(memberKey);
         dispatch(tokens, FcmPushMessage.notification(title, body, dataPayload));
     }
 
-    private void dispatch(List<FcmDeviceToken> tokens, FcmPushMessage message) {
+    private void dispatch(List<FcmDeviceTokenInfo> tokens, FcmPushMessage message) {
         if (tokens.isEmpty()) {
             return;
         }
 
         List<String> invalidTokens = fcmClient.sendAndCollectInvalidTokens(
                 message,
-                tokens.stream().map(FcmDeviceToken::getToken).toList()
+                tokens.stream().map(FcmDeviceTokenInfo::token).toList()
         );
         fcmDeviceTokenManager.deleteInvalidTokens(invalidTokens);
     }

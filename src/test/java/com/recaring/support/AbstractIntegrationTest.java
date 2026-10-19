@@ -1,6 +1,6 @@
 package com.recaring.support;
 
-import com.recaring.member.dataaccess.entity.MemberRole;
+import com.recaring.member.vo.MemberRole;
 import com.recaring.security.jwt.JwtGenerator;
 import com.recaring.security.vo.TokenPayload;
 import org.junit.jupiter.api.BeforeEach;

@@ -1,6 +1,8 @@
 package com.recaring.member.dataaccess.entity;
 
 import com.recaring.common.entity.BaseEntity;
+import com.recaring.member.vo.Gender;
+import com.recaring.member.vo.MemberRole;
 import com.recaring.member.vo.ProfileAvatarCode;
 import jakarta.persistence.*;
 import lombok.AccessLevel;

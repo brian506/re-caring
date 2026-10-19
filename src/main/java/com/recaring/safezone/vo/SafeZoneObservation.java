@@ -1,6 +1,6 @@
-package com.recaring.location.vo;
+package com.recaring.safezone.vo;
 
-import com.recaring.safezone.vo.SafeZoneInfo;
+import com.recaring.location.vo.Gps;
 
 import java.util.LinkedHashSet;
 import java.util.List;

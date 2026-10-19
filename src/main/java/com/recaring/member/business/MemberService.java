@@ -6,13 +6,13 @@ import com.recaring.auth.vo.EncodedPassword;
 import com.recaring.auth.vo.Password;
 import com.recaring.member.controller.response.ContactMemberResponse;
 import com.recaring.member.controller.response.MyInfoResponse;
-import com.recaring.member.dataaccess.entity.Member;
-import com.recaring.member.dataaccess.entity.MembersTermsAgreement;
 import com.recaring.member.implement.MemberReader;
 import com.recaring.member.implement.MemberWriter;
 import com.recaring.member.implement.MembersTermsAgreementReader;
 import com.recaring.member.implement.MemberWithdrawalManager;
+import com.recaring.member.vo.MemberInfo;
 import com.recaring.member.vo.ProfileAvatarCode;
+import com.recaring.member.vo.TermsAgreementInfo;
 import com.recaring.safezone.implement.SafeZoneReader;
 import com.recaring.safezone.vo.SafeZoneInfo;
 import com.recaring.sms.implement.PhoneVerificationWriter;
@@ -39,7 +39,7 @@ public class MemberService {
     private final PhoneVerificationWriter phoneVerificationWriter;
 
     public List<ContactMemberResponse> findByPhones(List<String> phoneNumbers) {
-        List<Member> members = memberReader.findByPhones(phoneNumbers);
+        List<MemberInfo> members = memberReader.findByPhones(phoneNumbers);
 
         return members.stream()
                 .map(ContactMemberResponse::from)
@@ -48,8 +48,8 @@ public class MemberService {
 
     @Transactional(readOnly = true)
     public MyInfoResponse getMyInfo(String memberKey) {
-        Member member = memberReader.findByMemberKey(memberKey);
-        MembersTermsAgreement termsAgreement = membersTermsAgreementReader.findByMemberKey(memberKey);
+        MemberInfo member = memberReader.findByMemberKey(memberKey);
+        TermsAgreementInfo termsAgreement = membersTermsAgreementReader.findByMemberKey(memberKey);
         List<SafeZoneInfo> safeZones = safeZoneReader.findAllByWardMemberKey(memberKey);
         return MyInfoResponse.of(member, termsAgreement, safeZones);
     }

@@ -1,8 +1,8 @@
-package com.recaring.location.vo;
+package com.recaring.safezone.vo;
 
 import com.recaring.location.fixture.LocationFixture;
 import com.recaring.safezone.fixture.SafeZoneFixture;
-import com.recaring.safezone.vo.SafeZoneInfo;
+import com.recaring.location.vo.Gps;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;

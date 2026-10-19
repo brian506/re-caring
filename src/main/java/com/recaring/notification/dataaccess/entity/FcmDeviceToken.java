@@ -1,6 +1,6 @@
 package com.recaring.notification.dataaccess.entity;
 
-import com.recaring.care.dataaccess.entity.CarePartyRole;
+import com.recaring.care.vo.CarePartyRole;
 import com.recaring.common.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

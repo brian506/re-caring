@@ -1,7 +1,7 @@
 package com.recaring.safezone.controller.request;
 
 import com.recaring.safezone.vo.SafeZoneRadius;
-import com.recaring.safezone.dataaccess.entity.SafeZoneType;
+import com.recaring.safezone.vo.SafeZoneType;
 import com.recaring.safezone.vo.SafeZoneCreation;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

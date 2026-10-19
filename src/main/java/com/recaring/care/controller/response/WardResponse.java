@@ -1,8 +1,8 @@
 package com.recaring.care.controller.response;
 
 import com.recaring.care.vo.WardInfo;
-import com.recaring.care.dataaccess.entity.CareRole;
-import com.recaring.member.dataaccess.entity.Gender;
+import com.recaring.care.vo.CareRole;
+import com.recaring.member.vo.Gender;
 
 import java.time.LocalDateTime;
 

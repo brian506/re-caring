@@ -1,14 +1,13 @@
 package com.recaring.auth.business;
 
-import com.recaring.auth.dataaccess.entity.OAuth;
 import com.recaring.auth.implement.oauth.OAuthAuthenticator;
 import com.recaring.auth.implement.oauth.OAuthManager;
 import com.recaring.auth.implement.oauth.OAuthReader;
 import com.recaring.auth.implement.TokenIssuer;
 import com.recaring.auth.vo.OAuthProvider;
 import com.recaring.auth.vo.OAuthUser;
-import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.implement.MemberReader;
+import com.recaring.member.vo.MemberInfo;
 import com.recaring.security.vo.Jwt;
 import com.recaring.support.exception.AppException;
 import com.recaring.support.exception.ErrorType;
@@ -29,10 +28,10 @@ public class OAuthService {
 
     public Jwt signIn(String accessToken, OAuthProvider provider) {
         OAuthUser oAuthUser = authenticate(accessToken, provider);
-        OAuth oAuth = oAuthReader.find(provider, oAuthUser.providerMemberId())
+        String memberKey = oAuthReader.findMemberKey(provider, oAuthUser.providerMemberId())
                 .orElseThrow(() -> new AppException(ErrorType.OAUTH_NOT_LINKED));
 
-        Member member = memberReader.findByMemberKey(oAuth.getMemberKey());
+        MemberInfo member = memberReader.findByMemberKey(memberKey);
         return tokenIssuer.issue(member);
     }
 

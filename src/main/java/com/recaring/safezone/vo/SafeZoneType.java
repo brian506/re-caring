@@ -1,4 +1,4 @@
-package com.recaring.safezone.dataaccess.entity;
+package com.recaring.safezone.vo;
 
 public enum SafeZoneType {
     SAFE,

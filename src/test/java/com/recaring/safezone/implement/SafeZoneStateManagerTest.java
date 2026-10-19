@@ -1,11 +1,11 @@
-package com.recaring.location.implement.safezone;
+package com.recaring.safezone.implement;
 
-import com.recaring.location.dataaccess.entity.SafeZoneState;
-import com.recaring.location.dataaccess.repository.SafeZoneStateRepository;
+import com.recaring.safezone.dataaccess.entity.SafeZoneState;
+import com.recaring.safezone.dataaccess.repository.SafeZoneStateRepository;
 import com.recaring.location.fixture.LocationFixture;
 import com.recaring.location.vo.Gps;
-import com.recaring.location.vo.SafeZoneObservation;
-import com.recaring.location.vo.SafeZoneTransition;
+import com.recaring.safezone.vo.SafeZoneObservation;
+import com.recaring.safezone.vo.SafeZoneTransition;
 import com.recaring.safezone.fixture.SafeZoneFixture;
 import com.recaring.safezone.vo.SafeZoneInfo;
 import org.junit.jupiter.api.DisplayName;
@@ -76,7 +76,7 @@ class SafeZoneStateManagerTest {
     @Test
     @DisplayName("존 안이던 대상자가 경계 밖으로 조금 흔들리면 안으로 유지되고 진입·이탈이 없다")
     void small_jitter_across_boundary_keeps_previous_state() {
-        SafeZoneState stored = LocationFixture.createSafeZoneState(HOME_KEY);
+        SafeZoneState stored = SafeZoneFixture.createSafeZoneState(HOME_KEY);
         given(safeZoneStateRepository.findByWardMemberKey(LocationFixture.WARD_KEY))
                 .willReturn(Optional.of(stored));
 
@@ -93,7 +93,7 @@ class SafeZoneStateManagerTest {
     @Test
     @DisplayName("존 안이던 대상자가 여유 폭 바깥으로 나가면 이탈하고 밖 상태로 저장한다")
     void clear_exit_returns_exited_and_stores_outside() {
-        SafeZoneState stored = LocationFixture.createSafeZoneState(HOME_KEY);
+        SafeZoneState stored = SafeZoneFixture.createSafeZoneState(HOME_KEY);
         given(safeZoneStateRepository.findByWardMemberKey(LocationFixture.WARD_KEY))
                 .willReturn(Optional.of(stored));
 
@@ -107,7 +107,7 @@ class SafeZoneStateManagerTest {
     @Test
     @DisplayName("존 밖이었던 상태는 빈 집합으로 복원되어 중심에 들어오면 진입으로 판정한다")
     void outside_state_is_restored_as_empty_set() {
-        SafeZoneState stored = LocationFixture.createSafeZoneState("");
+        SafeZoneState stored = SafeZoneFixture.createSafeZoneState("");
         given(safeZoneStateRepository.findByWardMemberKey(LocationFixture.WARD_KEY))
                 .willReturn(Optional.of(stored));
 
@@ -121,7 +121,7 @@ class SafeZoneStateManagerTest {
     @Test
     @DisplayName("여러 존에 속해 있던 상태를 모두 복원해 함께 벗어나면 모두 이탈로 판정한다")
     void multiple_stored_keys_are_all_restored() {
-        SafeZoneState stored = LocationFixture.createSafeZoneState(HOME_KEY + "," + HOSPITAL_KEY);
+        SafeZoneState stored = SafeZoneFixture.createSafeZoneState(HOME_KEY + "," + HOSPITAL_KEY);
         given(safeZoneStateRepository.findByWardMemberKey(LocationFixture.WARD_KEY))
                 .willReturn(Optional.of(stored));
 

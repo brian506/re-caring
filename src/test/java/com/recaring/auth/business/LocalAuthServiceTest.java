@@ -1,5 +1,7 @@
 package com.recaring.auth.business;
 
+import com.recaring.notification.implement.fcm.FcmDeviceTokenManager;
+import com.recaring.member.vo.MemberInfo;
 import com.recaring.auth.business.command.SignUpCommand;
 import com.recaring.auth.fixture.AuthFixture;
 import com.recaring.auth.implement.RefreshTokenWriter;
@@ -8,10 +10,8 @@ import com.recaring.auth.implement.local.LocalAuthManager;
 import com.recaring.auth.vo.EncodedPassword;
 import com.recaring.auth.vo.NewLocalMember;
 import com.recaring.auth.vo.Password;
-import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.fixture.MemberFixture;
 import com.recaring.member.implement.MemberReader;
-import com.recaring.notification.business.FcmDeviceTokenService;
 import com.recaring.sms.fixture.SmsFixture;
 import com.recaring.sms.implement.PhoneVerificationWriter;
 import com.recaring.sms.vo.PhoneNumber;
@@ -55,7 +55,7 @@ class LocalAuthServiceTest {
     private PhoneVerificationWriter phoneVerificationWriter;
 
     @Mock
-    private FcmDeviceTokenService fcmDeviceTokenService;
+    private FcmDeviceTokenManager fcmDeviceTokenManager;
 
     @Test
     @DisplayName("회원가입 시 인증된 전화번호와 인코딩된 비밀번호로 멤버가 등록된다")
@@ -88,7 +88,7 @@ class LocalAuthServiceTest {
         PhoneNumber phone = SmsFixture.createPhoneNumber();
         Password newPassword = new Password("newPass12");
         EncodedPassword encodedPassword = new EncodedPassword("$2a$10$newEncoded");
-        Member member = MemberFixture.createMember();
+        MemberInfo member = MemberFixture.createMemberInfo();
 
         given(phoneVerificationWriter.consumePhoneByToken(smsToken)).willReturn(phone);
         given(memberReader.findByPhone(new PhoneNumber(SmsFixture.PHONE))).willReturn(member);
@@ -99,7 +99,7 @@ class LocalAuthServiceTest {
 
         // then
         then(localAuthManager).should(times(1))
-                .changePassword(member.getMemberKey(), encodedPassword.value());
+                .changePassword(member.memberKey(), encodedPassword.value());
     }
 
     @Test
@@ -110,7 +110,7 @@ class LocalAuthServiceTest {
         localAuthService.signOut(refreshToken, null);
 
         then(refreshTokenWriter).should(times(1)).delete(refreshToken);
-        then(fcmDeviceTokenService).should(never()).delete(any());
+        then(fcmDeviceTokenManager).should(never()).deleteByToken(any());
     }
 
     @Test
@@ -122,7 +122,7 @@ class LocalAuthServiceTest {
         localAuthService.signOut(refreshToken, fcmToken);
 
         then(refreshTokenWriter).should(times(1)).delete(refreshToken);
-        then(fcmDeviceTokenService).should(times(1)).delete(fcmToken);
+        then(fcmDeviceTokenManager).should(times(1)).deleteByToken(fcmToken);
     }
 
     @Test
@@ -133,6 +133,6 @@ class LocalAuthServiceTest {
         localAuthService.signOut(refreshToken, "  ");
 
         then(refreshTokenWriter).should(times(1)).delete(refreshToken);
-        then(fcmDeviceTokenService).should(never()).delete(any());
+        then(fcmDeviceTokenManager).should(never()).deleteByToken(any());
     }
 }

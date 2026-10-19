@@ -1,7 +1,7 @@
 package com.recaring.member.controller.response;
 
-import com.recaring.member.dataaccess.entity.Member;
-import com.recaring.member.dataaccess.entity.MemberRole;
+import com.recaring.member.vo.MemberInfo;
+import com.recaring.member.vo.MemberRole;
 
 public record ContactMemberResponse(
         String memberKey,
@@ -9,12 +9,12 @@ public record ContactMemberResponse(
         String phone,
         MemberRole role
 ) {
-    public static ContactMemberResponse from(Member member) {
+    public static ContactMemberResponse from(MemberInfo member) {
         return new ContactMemberResponse(
-                member.getMemberKey(),
-                member.getName(),
-                member.getPhone(),
-                member.getRole()
+                member.memberKey(),
+                member.name(),
+                member.phone(),
+                member.role()
         );
     }
 }

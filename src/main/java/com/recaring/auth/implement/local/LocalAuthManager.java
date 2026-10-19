@@ -16,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class LocalAuthManager {
 
-    private final LocalAuthReader localAuthReader;
     private final LocalAuthRepository localAuthRepository;
     private final MemberReader memberReader;
     private final MemberWriter memberWriter;
@@ -34,7 +33,8 @@ public class LocalAuthManager {
 
     @Transactional
     public void changePassword(String memberKey, String encodedPassword) {
-        LocalAuth localAuth = localAuthReader.findByMemberKey(memberKey);
+        LocalAuth localAuth = localAuthRepository.findByMemberKey(memberKey)
+                .orElseThrow(() -> new AppException(ErrorType.NOT_FOUND_ACCOUNT));
         localAuth.updatePassword(encodedPassword);
     }
 }

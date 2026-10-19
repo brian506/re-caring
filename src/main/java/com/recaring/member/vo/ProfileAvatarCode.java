@@ -1,7 +1,5 @@
 package com.recaring.member.vo;
 
-import com.recaring.member.dataaccess.entity.Gender;
-import com.recaring.member.dataaccess.entity.MemberRole;
 import com.recaring.support.exception.AppException;
 import com.recaring.support.exception.ErrorType;
 

@@ -1,6 +1,5 @@
 package com.recaring.location.fixture;
 
-import com.recaring.location.dataaccess.entity.SafeZoneState;
 import com.recaring.location.dataaccess.entity.LocationSetting;
 import com.recaring.location.dataaccess.entity.AnomalyDetection;
 import com.recaring.location.dataaccess.entity.GpsHistory;
@@ -8,8 +7,6 @@ import com.recaring.location.event.AnomalyDetectedEvent;
 import com.recaring.location.event.BatteryThresholdAlertEvent;
 import com.recaring.location.vo.BatteryAlertState;
 import com.recaring.location.event.LocationSignalLostEvent;
-import com.recaring.location.event.SafeZoneEnteredEvent;
-import com.recaring.location.event.SafeZoneExitedEvent;
 import com.recaring.location.vo.AnomalyAlert;
 import com.recaring.location.vo.AnomalyAlertKind;
 import com.recaring.location.vo.AnomalyEvent;
@@ -17,11 +14,10 @@ import com.recaring.location.vo.AnomalyMeasures;
 import com.recaring.location.vo.AnomalyReasonCode;
 import com.recaring.location.vo.DetectionType;
 import com.recaring.location.vo.Gps;
-import com.recaring.member.dataaccess.entity.Gender;
+import com.recaring.member.vo.Gender;
 import com.recaring.member.dataaccess.entity.Member;
-import com.recaring.member.dataaccess.entity.MemberRole;
+import com.recaring.member.vo.MemberRole;
 import com.recaring.member.dataaccess.entity.SignUpType;
-import com.recaring.safezone.dataaccess.entity.SafeZoneType;
 import com.recaring.safezone.fixture.SafeZoneFixture;
 
 import java.time.LocalDate;
@@ -190,26 +186,6 @@ public class LocationFixture {
                 .build();
     }
 
-    public static SafeZoneEnteredEvent createSafeZoneEnteredEvent() {
-        return new SafeZoneEnteredEvent(
-                WARD_KEY, SAFE_ZONE_KEY, SAFE_ZONE_NAME, SafeZoneType.SAFE, LATITUDE, LONGITUDE, DETECTED_AT);
-    }
-
-    public static SafeZoneEnteredEvent createDangerZoneEnteredEvent() {
-        return new SafeZoneEnteredEvent(
-                WARD_KEY, DANGER_ZONE_KEY, DANGER_ZONE_NAME, SafeZoneType.DANGER, LATITUDE, LONGITUDE, DETECTED_AT);
-    }
-
-    public static SafeZoneExitedEvent createSafeZoneExitedEvent() {
-        return new SafeZoneExitedEvent(
-                WARD_KEY, SAFE_ZONE_KEY, SAFE_ZONE_NAME, SafeZoneType.SAFE, LATITUDE, LONGITUDE, DETECTED_AT);
-    }
-
-    public static SafeZoneExitedEvent createDangerZoneExitedEvent() {
-        return new SafeZoneExitedEvent(
-                WARD_KEY, DANGER_ZONE_KEY, DANGER_ZONE_NAME, SafeZoneType.DANGER, LATITUDE, LONGITUDE, DETECTED_AT);
-    }
-
     public static LocationSignalLostEvent createLocationSignalLostEvent() {
         return new LocationSignalLostEvent(WARD_KEY, createGps());
     }
@@ -364,13 +340,6 @@ public class LocationFixture {
     public static String gpsCacheJson() {
         return "{\"latitude\":%s,\"longitude\":%s,\"recordedAt\":\"2024-01-01T00:00:00\"}"
                 .formatted(LATITUDE, LONGITUDE);
-    }
-
-    public static SafeZoneState createSafeZoneState(String safeZoneKeysCsv) {
-        return SafeZoneState.builder()
-                .wardMemberKey(WARD_KEY)
-                .safeZoneKeys(safeZoneKeysCsv)
-                .build();
     }
 
     public static LocationSetting createLocationSetting(String caregiverKey, int collectionIntervalSeconds) {

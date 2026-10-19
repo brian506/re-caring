@@ -1,7 +1,7 @@
 package com.recaring.care.implement;
 
 import com.recaring.care.dataaccess.entity.CareRelationship;
-import com.recaring.care.dataaccess.entity.CareRole;
+import com.recaring.care.vo.CareRole;
 import com.recaring.care.dataaccess.repository.CareRelationshipRepository;
 import com.recaring.member.implement.MemberValidator;
 import com.recaring.support.exception.AppException;

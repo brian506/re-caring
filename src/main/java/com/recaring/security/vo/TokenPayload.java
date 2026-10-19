@@ -1,6 +1,6 @@
 package com.recaring.security.vo;
 
-import com.recaring.member.dataaccess.entity.MemberRole;
+import com.recaring.member.vo.MemberRole;
 
 import java.util.Date;
 

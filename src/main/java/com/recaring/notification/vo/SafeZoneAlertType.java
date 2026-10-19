@@ -1,6 +1,6 @@
 package com.recaring.notification.vo;
 
-import com.recaring.safezone.dataaccess.entity.SafeZoneType;
+import com.recaring.safezone.vo.SafeZoneType;
 
 import java.util.Arrays;
 import java.util.Optional;

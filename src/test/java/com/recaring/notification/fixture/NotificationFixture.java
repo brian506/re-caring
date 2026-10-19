@@ -1,11 +1,12 @@
 package com.recaring.notification.fixture;
 
-import com.recaring.care.dataaccess.entity.CarePartyRole;
+import com.recaring.notification.vo.FcmDeviceTokenInfo;
+import com.recaring.care.vo.CarePartyRole;
 import com.recaring.location.fixture.LocationFixture;
 import com.recaring.location.vo.DetectionType;
-import com.recaring.member.dataaccess.entity.Gender;
+import com.recaring.member.vo.Gender;
 import com.recaring.member.dataaccess.entity.Member;
-import com.recaring.member.dataaccess.entity.MemberRole;
+import com.recaring.member.vo.MemberRole;
 import com.recaring.member.dataaccess.entity.SignUpType;
 import com.recaring.notification.dataaccess.entity.FcmDevicePlatform;
 import com.recaring.notification.dataaccess.entity.FeedbackAccuracy;
@@ -179,6 +180,14 @@ public class NotificationFixture {
                 .token(token)
                 .platform(FcmDevicePlatform.IOS)
                 .build();
+    }
+
+    public static FcmDeviceTokenInfo guardianFcmDeviceTokenInfo(String token) {
+        return FcmDeviceTokenInfo.from(guardianFcmDeviceToken(token));
+    }
+
+    public static FcmDeviceTokenInfo managerFcmDeviceTokenInfo(String token) {
+        return FcmDeviceTokenInfo.from(managerFcmDeviceToken(token));
     }
 
     public static Notification notification(String recipientMemberKey, String eventType, String title, String body) {

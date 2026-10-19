@@ -1,5 +1,6 @@
 package com.recaring.care.dataaccess.entity;
 
+import com.recaring.care.vo.CareRole;
 import com.recaring.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;

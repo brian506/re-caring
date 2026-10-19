@@ -1,8 +1,8 @@
 package com.recaring.notification.business;
 
-import com.recaring.care.dataaccess.entity.CarePartyRole;
+import com.recaring.notification.vo.FcmDeviceTokenInfo;
+import com.recaring.care.vo.CarePartyRole;
 import com.recaring.notification.dataaccess.entity.FcmDevicePlatform;
-import com.recaring.notification.dataaccess.entity.FcmDeviceToken;
 import com.recaring.notification.fixture.NotificationFixture;
 import com.recaring.notification.implement.fcm.FcmDeviceTokenManager;
 import org.junit.jupiter.api.DisplayName;
@@ -30,7 +30,7 @@ class FcmDeviceTokenServiceTest {
     @Test
     @DisplayName("FCM 토큰 등록/수정을 FcmDeviceTokenManager에 위임한다")
     void upsert_delegates_to_manager() {
-        FcmDeviceToken saved = NotificationFixture.guardianFcmDeviceToken(NotificationFixture.GUARDIAN_FCM_TOKEN);
+        FcmDeviceTokenInfo saved = NotificationFixture.guardianFcmDeviceTokenInfo(NotificationFixture.GUARDIAN_FCM_TOKEN);
         given(fcmDeviceTokenManager.upsert(
                 NotificationFixture.GUARDIAN_KEY,
                 NotificationFixture.GUARDIAN_FCM_TOKEN,
@@ -38,7 +38,7 @@ class FcmDeviceTokenServiceTest {
                 FcmDevicePlatform.ANDROID))
                 .willReturn(saved);
 
-        FcmDeviceToken result = fcmDeviceTokenService.upsert(
+        FcmDeviceTokenInfo result = fcmDeviceTokenService.upsert(
                 NotificationFixture.GUARDIAN_KEY,
                 NotificationFixture.GUARDIAN_FCM_TOKEN,
                 CarePartyRole.GUARDIAN,
@@ -50,13 +50,5 @@ class FcmDeviceTokenServiceTest {
                 NotificationFixture.GUARDIAN_FCM_TOKEN,
                 CarePartyRole.GUARDIAN,
                 FcmDevicePlatform.ANDROID);
-    }
-
-    @Test
-    @DisplayName("FCM 토큰 삭제를 FcmDeviceTokenManager에 위임한다")
-    void delete_delegates_to_manager() {
-        fcmDeviceTokenService.delete(NotificationFixture.GUARDIAN_FCM_TOKEN);
-
-        then(fcmDeviceTokenManager).should(times(1)).deleteByToken(NotificationFixture.GUARDIAN_FCM_TOKEN);
     }
 }

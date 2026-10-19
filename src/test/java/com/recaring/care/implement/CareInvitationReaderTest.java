@@ -1,11 +1,11 @@
 package com.recaring.care.implement;
 
+import com.recaring.member.vo.MemberInfo;
 import com.recaring.care.dataaccess.entity.CareInvitation;
-import com.recaring.care.dataaccess.entity.CareRole;
+import com.recaring.care.vo.CareRole;
 import com.recaring.care.dataaccess.repository.CareInvitationRepository;
 import com.recaring.care.fixture.CareFixture;
 import com.recaring.care.vo.ReceivedRequestInfo;
-import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.implement.MemberReader;
 import com.recaring.support.exception.AppException;
 import com.recaring.support.exception.ErrorType;
@@ -43,8 +43,8 @@ class CareInvitationReaderTest {
     @DisplayName("받은 요청 목록에는 요청자와 보호 대상자 정보가 함께 담긴다")
     void findReceivedRequestInfos_combines_requester_and_ward() {
         // given
-        Member requester = CareFixture.createGuardianMember();
-        Member ward = CareFixture.createWardMember();
+        MemberInfo requester = MemberInfo.from(CareFixture.createGuardianMember());
+        MemberInfo ward = MemberInfo.from(CareFixture.createWardMember());
         CareInvitation invitation = CareFixture.createManagerInvitation(
                 CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY);
         given(careInvitationRepository.findReceivedPendingRequests(CareFixture.MANAGER_MEMBER_KEY))
@@ -61,8 +61,8 @@ class CareInvitationReaderTest {
         // then
         assertThat(result).containsExactly(CareFixture.createReceivedRequestInfo(
                 invitation.getRequestKey(),
-                requester.getMemberKey(),
-                ward.getMemberKey(),
+                requester.memberKey(),
+                ward.memberKey(),
                 CareRole.MANAGER,
                 invitation.getCreatedAt()
         ));
@@ -72,7 +72,7 @@ class CareInvitationReaderTest {
     @DisplayName("요청자가 곧 보호 대상자인 요청은 회원 조회 키를 중복 없이 한 번만 넘긴다")
     void findReceivedRequestInfos_deduplicates_member_keys() {
         // given
-        Member ward = CareFixture.createWardMember();
+        MemberInfo ward = MemberInfo.from(CareFixture.createWardMember());
         CareInvitation invitation = CareFixture.createWardInvitation(
                 CareFixture.WARD_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY);
         given(careInvitationRepository.findReceivedPendingRequests(CareFixture.WARD_MEMBER_KEY))

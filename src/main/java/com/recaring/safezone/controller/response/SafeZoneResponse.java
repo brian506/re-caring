@@ -1,6 +1,6 @@
 package com.recaring.safezone.controller.response;
 
-import com.recaring.safezone.dataaccess.entity.SafeZoneType;
+import com.recaring.safezone.vo.SafeZoneType;
 import com.recaring.safezone.vo.SafeZoneInfo;
 
 public record SafeZoneResponse(

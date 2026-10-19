@@ -1,6 +1,6 @@
 package com.recaring.notification.implement.setting;
 
-import com.recaring.care.dataaccess.entity.CareRole;
+import com.recaring.care.vo.CareRole;
 import com.recaring.care.fixture.CareFixture;
 import com.recaring.care.vo.CaregiverInfo;
 import com.recaring.location.vo.DetectionType;

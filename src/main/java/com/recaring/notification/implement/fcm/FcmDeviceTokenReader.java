@@ -2,6 +2,7 @@ package com.recaring.notification.implement.fcm;
 
 import com.recaring.notification.dataaccess.entity.FcmDeviceToken;
 import com.recaring.notification.dataaccess.repository.FcmDeviceTokenRepository;
+import com.recaring.notification.vo.FcmDeviceTokenInfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -14,14 +15,20 @@ public class FcmDeviceTokenReader {
 
     private final FcmDeviceTokenRepository fcmDeviceTokenRepository;
 
-    public List<FcmDeviceToken> findTokensByCareRoles(
+    public List<FcmDeviceTokenInfo> findTokensByCareRoles(
             Collection<String> guardianMemberKeys,
             Collection<String> managerMemberKeys
     ) {
-        return fcmDeviceTokenRepository.findTokensByCareRoles(guardianMemberKeys, managerMemberKeys);
+        return toInfos(fcmDeviceTokenRepository.findTokensByCareRoles(guardianMemberKeys, managerMemberKeys));
     }
 
-    public List<FcmDeviceToken> findTokensByMemberKey(String memberKey) {
-        return fcmDeviceTokenRepository.findByMemberKey(memberKey);
+    public List<FcmDeviceTokenInfo> findTokensByMemberKey(String memberKey) {
+        return toInfos(fcmDeviceTokenRepository.findByMemberKey(memberKey));
+    }
+
+    private List<FcmDeviceTokenInfo> toInfos(List<FcmDeviceToken> tokens) {
+        return tokens.stream()
+                .map(FcmDeviceTokenInfo::from)
+                .toList();
     }
 }

@@ -1,7 +1,6 @@
 package com.recaring.safezone.vo;
 
 import com.recaring.safezone.dataaccess.entity.SafeZone;
-import com.recaring.safezone.dataaccess.entity.SafeZoneType;
 
 /**
  * 안심존은 중심 좌표 + 반경의 원형이다. 어떤 좌표가 이 존 안에 있는지는 존 자신의 성질이므로

@@ -1,15 +1,14 @@
-package com.recaring.location.implement.safezone;
+package com.recaring.safezone.implement;
 
 import com.recaring.location.event.GpsSavedEvent;
-import com.recaring.location.event.SafeZoneEnteredEvent;
-import com.recaring.location.event.SafeZoneExitedEvent;
+import com.recaring.safezone.event.SafeZoneEnteredEvent;
+import com.recaring.safezone.event.SafeZoneExitedEvent;
 import com.recaring.location.fixture.LocationFixture;
 import com.recaring.location.vo.Gps;
-import com.recaring.location.vo.SafeZoneObservation;
-import com.recaring.location.vo.SafeZoneTransition;
-import com.recaring.safezone.dataaccess.entity.SafeZoneType;
+import com.recaring.safezone.vo.SafeZoneObservation;
+import com.recaring.safezone.vo.SafeZoneTransition;
+import com.recaring.safezone.vo.SafeZoneType;
 import com.recaring.safezone.fixture.SafeZoneFixture;
-import com.recaring.safezone.implement.SafeZoneReader;
 import com.recaring.safezone.vo.SafeZoneInfo;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

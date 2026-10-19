@@ -27,7 +27,7 @@ public class SafeZoneReader {
         return SafeZoneInfo.from(getEntity(safeZoneKey, wardMemberKey));
     }
 
-    public SafeZone getEntity(String safeZoneKey, String wardMemberKey) {
+    private SafeZone getEntity(String safeZoneKey, String wardMemberKey) {
         return safeZoneRepository.findBySafeZoneKeyAndWardMemberKey(safeZoneKey, wardMemberKey)
                 .orElseThrow(() -> new AppException(ErrorType.NOT_FOUND_SAFE_ZONE));
     }

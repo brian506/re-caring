@@ -1,6 +1,6 @@
 package com.recaring.auth.implement;
 
-import com.recaring.member.dataaccess.entity.Member;
+import com.recaring.member.vo.MemberInfo;
 import com.recaring.member.fixture.MemberFixture;
 import com.recaring.security.jwt.JwtGenerator;
 import com.recaring.security.vo.Jwt;
@@ -39,7 +39,7 @@ class TokenIssuerTest {
     @Test
     @DisplayName("발급한 JWT 중 리프레시 토큰만 해당 회원 키로 저장된다")
     void issue_stores_only_the_refresh_token_for_that_member() {
-        Member member = MemberFixture.createMemberWithKey(MEMBER_KEY, MemberFixture.PHONE);
+        MemberInfo member = MemberFixture.createMemberInfoWithKey(MEMBER_KEY, MemberFixture.PHONE);
         given(jwtGenerator.generateJwt(any(TokenPayload.class))).willReturn(new Jwt(ACCESS_TOKEN, REFRESH_TOKEN));
 
         // When
@@ -54,7 +54,7 @@ class TokenIssuerTest {
     @DisplayName("토큰 페이로드에는 회원의 식별자와 역할이 담긴다")
     void issue_puts_member_key_and_role_into_payload() {
         // Given
-        Member member = MemberFixture.createMemberWithKey(MEMBER_KEY, MemberFixture.PHONE);
+        MemberInfo member = MemberFixture.createMemberInfoWithKey(MEMBER_KEY, MemberFixture.PHONE);
         given(jwtGenerator.generateJwt(any(TokenPayload.class))).willReturn(new Jwt(ACCESS_TOKEN, REFRESH_TOKEN));
 
         // When

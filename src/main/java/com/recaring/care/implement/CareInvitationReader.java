@@ -1,12 +1,13 @@
 package com.recaring.care.implement;
 
+import com.recaring.care.vo.CareInvitationInfo;
 import com.recaring.care.vo.ReceivedRequestInfo;
 import com.recaring.care.vo.SentRequestInfo;
 import com.recaring.care.dataaccess.entity.CareInvitation;
 import com.recaring.care.dataaccess.entity.CareInvitationStatus;
 import com.recaring.care.dataaccess.repository.CareInvitationRepository;
-import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.implement.MemberReader;
+import com.recaring.member.vo.MemberInfo;
 import com.recaring.support.exception.AppException;
 import com.recaring.support.exception.ErrorType;
 import lombok.RequiredArgsConstructor;
@@ -23,13 +24,15 @@ public class CareInvitationReader {
     private final CareInvitationRepository careInvitationRepository;
     private final MemberReader memberReader;
 
-    public CareInvitation findInvitationForRecipient(String requestKey, String memberKey) {
+    public CareInvitationInfo findInvitationForRecipient(String requestKey, String memberKey) {
         return careInvitationRepository.findInvitationForRecipient(requestKey, memberKey)
+                .map(CareInvitationInfo::from)
                 .orElseThrow(() -> new AppException(ErrorType.NOT_FOUND_CARE_REQUEST));
     }
 
-    public CareInvitation findInvitationForRequester(String requestKey, String requesterKey) {
+    public CareInvitationInfo findInvitationForRequester(String requestKey, String requesterKey) {
         return careInvitationRepository.findInvitationForRequester(requestKey, requesterKey)
+                .map(CareInvitationInfo::from)
                 .orElseThrow(() -> new AppException(ErrorType.NOT_FOUND_CARE_REQUEST));
     }
 
@@ -49,7 +52,7 @@ public class CareInvitationReader {
                 .distinct()
                 .toList();
 
-        Map<String, Member> memberMap = memberReader.findAllByMemberKeys(keys);
+        Map<String, MemberInfo> memberMap = memberReader.findAllByMemberKeys(keys);
 
         return requests.stream()
                 .map(r -> ReceivedRequestInfo.of(
@@ -68,7 +71,7 @@ public class CareInvitationReader {
                 .distinct()
                 .toList();
 
-        Map<String, Member> memberMap = memberReader.findAllByMemberKeys(keys);
+        Map<String, MemberInfo> memberMap = memberReader.findAllByMemberKeys(keys);
 
         return requests.stream()
                 .map(r -> SentRequestInfo.of(

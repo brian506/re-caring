@@ -26,7 +26,7 @@ public class QCareRelationship extends EntityPathBase<CareRelationship> {
 
     public final StringPath caregiverMemberKey = createString("caregiverMemberKey");
 
-    public final EnumPath<CareRole> careRole = createEnum("careRole", CareRole.class);
+    public final EnumPath<com.recaring.care.vo.CareRole> careRole = createEnum("careRole", com.recaring.care.vo.CareRole.class);
 
     //inherited
     public final DateTimePath<java.time.LocalDateTime> createdAt = _super.createdAt;

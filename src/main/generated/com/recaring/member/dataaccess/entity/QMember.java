@@ -29,7 +29,7 @@ public class QMember extends EntityPathBase<Member> {
     //inherited
     public final DateTimePath<java.time.LocalDateTime> createdAt = _super.createdAt;
 
-    public final EnumPath<Gender> gender = createEnum("gender", Gender.class);
+    public final EnumPath<com.recaring.member.vo.Gender> gender = createEnum("gender", com.recaring.member.vo.Gender.class);
 
     public final NumberPath<Long> id = createNumber("id", Long.class);
 
@@ -41,7 +41,7 @@ public class QMember extends EntityPathBase<Member> {
 
     public final StringPath profileAvatarCode = createString("profileAvatarCode");
 
-    public final EnumPath<MemberRole> role = createEnum("role", MemberRole.class);
+    public final EnumPath<com.recaring.member.vo.MemberRole> role = createEnum("role", com.recaring.member.vo.MemberRole.class);
 
     public final EnumPath<SignUpType> signUpType = createEnum("signUpType", SignUpType.class);
 

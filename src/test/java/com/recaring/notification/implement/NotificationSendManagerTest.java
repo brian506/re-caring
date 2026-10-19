@@ -1,6 +1,6 @@
 package com.recaring.notification.implement;
 
-import com.recaring.notification.dataaccess.entity.FcmDeviceToken;
+import com.recaring.notification.vo.FcmDeviceTokenInfo;
 import com.recaring.notification.implement.fcm.FcmClient;
 import com.recaring.notification.implement.fcm.FcmDeviceTokenManager;
 import com.recaring.notification.implement.fcm.FcmDeviceTokenReader;
@@ -42,9 +42,9 @@ class NotificationSendManagerTest {
     void sendToCareParties_records_for_all_recipients_and_broadcasts() {
         List<String> guardianKeys = List.of(NotificationFixture.GUARDIAN_KEY);
         List<String> managerKeys = List.of(NotificationFixture.MANAGER_KEY);
-        List<FcmDeviceToken> tokens = List.of(
-                NotificationFixture.guardianFcmDeviceToken(NotificationFixture.GUARDIAN_FCM_TOKEN),
-                NotificationFixture.managerFcmDeviceToken(NotificationFixture.MANAGER_FCM_TOKEN)
+        List<FcmDeviceTokenInfo> tokens = List.of(
+                NotificationFixture.guardianFcmDeviceTokenInfo(NotificationFixture.GUARDIAN_FCM_TOKEN),
+                NotificationFixture.managerFcmDeviceTokenInfo(NotificationFixture.MANAGER_FCM_TOKEN)
         );
         given(fcmDeviceTokenReader.findTokensByCareRoles(guardianKeys, managerKeys)).willReturn(tokens);
         given(fcmClient.sendAndCollectInvalidTokens(any(FcmPushMessage.class), anyList())).willReturn(List.of());
@@ -66,8 +66,8 @@ class NotificationSendManagerTest {
     void sendDataOnlyToCareParties_records_and_sends_data_only_message() {
         List<String> guardianKeys = List.of(NotificationFixture.GUARDIAN_KEY);
         List<String> managerKeys = List.of(NotificationFixture.MANAGER_KEY);
-        List<FcmDeviceToken> tokens = List.of(
-                NotificationFixture.guardianFcmDeviceToken(NotificationFixture.GUARDIAN_FCM_TOKEN)
+        List<FcmDeviceTokenInfo> tokens = List.of(
+                NotificationFixture.guardianFcmDeviceTokenInfo(NotificationFixture.GUARDIAN_FCM_TOKEN)
         );
         given(fcmDeviceTokenReader.findTokensByCareRoles(guardianKeys, managerKeys)).willReturn(tokens);
         given(fcmClient.sendAndCollectInvalidTokens(any(FcmPushMessage.class), anyList())).willReturn(List.of());
@@ -87,8 +87,8 @@ class NotificationSendManagerTest {
     @Test
     @DisplayName("특정 회원 발송 - 해당 회원에게 알림을 저장하고 회원 토큰으로 FCM을 발송한다")
     void sendToMember_records_and_sends_to_member_tokens() {
-        List<FcmDeviceToken> tokens = List.of(
-                NotificationFixture.guardianFcmDeviceToken(NotificationFixture.GUARDIAN_FCM_TOKEN)
+        List<FcmDeviceTokenInfo> tokens = List.of(
+                NotificationFixture.guardianFcmDeviceTokenInfo(NotificationFixture.GUARDIAN_FCM_TOKEN)
         );
         given(fcmDeviceTokenReader.findTokensByMemberKey(NotificationFixture.GUARDIAN_KEY))
                 .willReturn(tokens);
@@ -123,8 +123,8 @@ class NotificationSendManagerTest {
     void dispatch_deletes_invalid_tokens() {
         List<String> guardianKeys = List.of(NotificationFixture.GUARDIAN_KEY);
         List<String> managerKeys = List.of(NotificationFixture.MANAGER_KEY);
-        List<FcmDeviceToken> tokens = List.of(
-                NotificationFixture.guardianFcmDeviceToken(NotificationFixture.GUARDIAN_FCM_TOKEN)
+        List<FcmDeviceTokenInfo> tokens = List.of(
+                NotificationFixture.guardianFcmDeviceTokenInfo(NotificationFixture.GUARDIAN_FCM_TOKEN)
         );
         given(fcmDeviceTokenReader.findTokensByCareRoles(guardianKeys, managerKeys)).willReturn(tokens);
         given(fcmClient.sendAndCollectInvalidTokens(any(FcmPushMessage.class), anyList()))

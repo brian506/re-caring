@@ -1,9 +1,9 @@
-package com.recaring.location.dataaccess.repository.custom;
+package com.recaring.safezone.dataaccess.repository.custom;
 
-import com.recaring.location.dataaccess.entity.SafeZoneState;
+import com.recaring.safezone.dataaccess.entity.SafeZoneState;
 import com.recaring.support.repository.QuerydslRepositorySupport;
 
-import static com.recaring.location.dataaccess.entity.QSafeZoneState.safeZoneState;
+import static com.recaring.safezone.dataaccess.entity.QSafeZoneState.safeZoneState;
 
 public class SafeZoneStateRepositoryCustomImpl extends QuerydslRepositorySupport
         implements SafeZoneStateRepositoryCustom {

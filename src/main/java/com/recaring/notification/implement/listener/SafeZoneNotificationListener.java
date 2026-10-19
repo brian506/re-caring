@@ -1,10 +1,10 @@
 package com.recaring.notification.implement.listener;
 
-import com.recaring.care.dataaccess.entity.CareRole;
+import com.recaring.care.vo.CareRole;
 import com.recaring.care.implement.CareRelationshipReader;
 import com.recaring.care.vo.CaregiverInfo;
-import com.recaring.location.event.SafeZoneEnteredEvent;
-import com.recaring.location.event.SafeZoneExitedEvent;
+import com.recaring.safezone.event.SafeZoneEnteredEvent;
+import com.recaring.safezone.event.SafeZoneExitedEvent;
 import com.recaring.member.implement.MemberReader;
 import com.recaring.notification.implement.NotificationSendManager;
 import com.recaring.notification.implement.setting.NotificationSettingReader;

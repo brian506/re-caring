@@ -1,6 +1,6 @@
 package com.recaring.care.vo;
 
-import com.recaring.member.dataaccess.entity.MemberRole;
+import com.recaring.member.vo.MemberRole;
 import com.recaring.support.exception.AppException;
 import com.recaring.support.exception.ErrorType;
 
