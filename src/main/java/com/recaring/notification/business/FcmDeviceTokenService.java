@@ -16,8 +16,4 @@ public class FcmDeviceTokenService {
     public FcmDeviceTokenInfo upsert(String memberKey, String token, CarePartyRole careRole, FcmDevicePlatform platform) {
         return fcmDeviceTokenManager.upsert(memberKey, token, careRole, platform);
     }
-
-    public void delete(String token) {
-        fcmDeviceTokenManager.deleteByToken(token);
-    }
 }

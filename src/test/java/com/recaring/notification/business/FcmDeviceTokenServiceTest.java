@@ -51,12 +51,4 @@ class FcmDeviceTokenServiceTest {
                 CarePartyRole.GUARDIAN,
                 FcmDevicePlatform.ANDROID);
     }
-
-    @Test
-    @DisplayName("FCM 토큰 삭제를 FcmDeviceTokenManager에 위임한다")
-    void delete_delegates_to_manager() {
-        fcmDeviceTokenService.delete(NotificationFixture.GUARDIAN_FCM_TOKEN);
-
-        then(fcmDeviceTokenManager).should(times(1)).deleteByToken(NotificationFixture.GUARDIAN_FCM_TOKEN);
-    }
 }
