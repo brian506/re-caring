@@ -60,7 +60,7 @@ public class BatteryAlertStateManager {
         try {
             return Integer.valueOf(value.toString());
         } catch (NumberFormatException e) {
-            log.warn("[배터리 알림 상태 : 값 손상]: wardKey={} | value={}", wardKey, value);
+            log.warn("[BatteryAlert : StateCorrupted]: wardKey={} | value={}", wardKey, value);
             return null;
         }
     }

@@ -40,7 +40,7 @@ public class SiteInquiryRateLimitValidator {
             return;
         }
         long remaining = remainingSeconds(key, WINDOW);
-        log.warn("[웹 문의 : 등록 한도 초과]: clientIp={} | count={} | remaining={}", clientIp, count, remaining);
+        log.warn("[WebInquiry : RateLimitExceeded]: clientIp={} | count={} | remaining={}", clientIp, count, remaining);
         throw new AppException(ErrorType.SITE_INQUIRY_SUBMIT_RATE_LIMITED, new RetryAfter(remaining));
     }
 
@@ -73,7 +73,7 @@ public class SiteInquiryRateLimitValidator {
             return;
         }
         long remaining = remainingSeconds(key, window);
-        log.warn("[웹 문의 : 비밀글 조회 잠금]: inquiryKey={} | count={} | remaining={}", inquiryKey, count, remaining);
+        log.warn("[WebInquiry : SecretViewLocked]: inquiryKey={} | count={} | remaining={}", inquiryKey, count, remaining);
         throw new AppException(ErrorType.SITE_INQUIRY_VIEW_LOCKED, new RetryAfter(remaining));
     }
 

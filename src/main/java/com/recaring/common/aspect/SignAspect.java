@@ -37,13 +37,13 @@ public class SignAspect {
         String method = request.getMethod();
         String uri = request.getRequestURI();
         String userAgent = request.getHeader("User-Agent");
-        log.info("[REQUEST API]: IP={} | Method={} | URI={} | UserAgent={}", clientIp, method, uri, userAgent);
+        log.info("[RequestApi : Received]: IP={} | Method={} | URI={} | UserAgent={}", clientIp, method, uri, userAgent);
 
         Object result = joinPoint.proceed();
 
         HttpServletResponse response = attributes.getResponse();
         int status = resolveStatus(response, result);
-        log.info("[RESPONSE API]: status={}", status);
+        log.info("[ResponseApi : Sent]: status={}", status);
 
         return result;
     }
@@ -70,7 +70,7 @@ public class SignAspect {
             String method = request.getMethod();
             String uri = request.getRequestURI();
             String userAgent = request.getHeader("User-Agent");
-            log.info("[SIGN IN]: IP={} | Method={} | URI={} | UserAgent={}", clientIp, method, uri, userAgent);
+            log.info("[SignIn : Requested]: IP={} | Method={} | URI={} | UserAgent={}", clientIp, method, uri, userAgent);
         }
 
         return joinPoint.proceed();

@@ -393,7 +393,7 @@ AnomalyDetectionConsumer(수동 ACK)
   달라지면 UNIQUE 멱등 키도 무력해진다. 구간을 보는 탐지(배회 등)는 **판정을 트리거한 GPS point의 값**을 보낸다.
   파서는 오프셋·`Z`를 받지 못하므로 포맷도 에코 대상이다.
 - **중복 재배달은 `anomaly_detections`의 UNIQUE 제약으로 막는다.** ACK 전에 죽어 재배달되면 INSERT가 0을 돌려주고
-  이벤트를 발행하지 않아 알림도 다시 나가지 않는다. 0이면 `[이상탐지 결과 : 중복 저장 생략]` WARN을 남긴다.
+  이벤트를 발행하지 않아 알림도 다시 나가지 않는다. 0이면 `[AnomalyResult : DuplicateSkipped]` WARN을 남긴다.
   키는 `(ward_member_key, detection_type, recorded_at, alert_kind)` `NULLS NOT DISTINCT`다(#255). EVENT_END의 `detected_at`은
   종료 시각(두절이면 마지막 좌표, 복귀면 도착 시각)이라 같은 좌표에서 나간 알림과 3컬럼 키가 겹쳐 버려졌다.
   `NULLS NOT DISTINCT`는 운영 DDL에만 있고 엔티티(`ddl-auto=create`)는 일반 UNIQUE라, 로컬·테스트에서는 `alert_kind`가 null인

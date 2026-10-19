@@ -69,16 +69,16 @@ public class RedisStreamConfig {
         try {
             redisTemplate.opsForStream().createGroup(
                     AnomalyStreamProperties.STREAM_KEY, AnomalyStreamProperties.GROUP_NAME);
-            log.info("[이상탐지 스트림 : 컨슈머 그룹 생성]: group={}", AnomalyStreamProperties.GROUP_NAME);
+            log.info("[AnomalyStream : ConsumerGroupCreated]: group={}", AnomalyStreamProperties.GROUP_NAME);
         } catch (DataAccessException e) {
             // BUSYGROUP은 이미 있다는 뜻이라 정상이다. 재기동·다중 태스크마다 발생하므로 여기서 던지면
             // 두 번째 배포부터 기동이 막힌다. 그 외(연결 실패 등)는 컨슈머만 못 뜨고 GPS 수신은 살아 있어야 하므로
             // 기동을 막지 않고 error로만 남긴다.
             if (isGroupAlreadyExists(e)) {
-                log.info("[이상탐지 스트림 : 컨슈머 그룹 존재]: group={}", AnomalyStreamProperties.GROUP_NAME);
+                log.info("[AnomalyStream : ConsumerGroupExists]: group={}", AnomalyStreamProperties.GROUP_NAME);
                 return;
             }
-            log.error("[이상탐지 스트림 : 컨슈머 그룹 생성 실패]: group={}",
+            log.error("[AnomalyStream : ConsumerGroupCreateFailed]: group={}",
                     AnomalyStreamProperties.GROUP_NAME, e);
         }
     }

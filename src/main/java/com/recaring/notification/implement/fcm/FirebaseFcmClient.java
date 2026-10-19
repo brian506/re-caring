@@ -65,7 +65,7 @@ public class FirebaseFcmClient implements FcmClient {
         }
 
         if (!pendingTokens.isEmpty()) {
-            log.error("[알림 전송 : 재시도 소진]: tokens={} | attempts={}", pendingTokens.size(), MAX_ATTEMPTS);
+            log.error("[FcmSend : RetryExhausted]: tokens={} | attempts={}", pendingTokens.size(), MAX_ATTEMPTS);
         }
         return invalidTokens;
     }
@@ -84,7 +84,7 @@ public class FirebaseFcmClient implements FcmClient {
             String token = tokens.get(index);
             FirebaseMessagingException exception = response.getException();
             if (isInvalidToken(exception)) {
-                log.warn("[알림 전송 : 무효 토큰]: errorCode={}", errorCode(exception));
+                log.warn("[FcmSend : InvalidToken]: errorCode={}", errorCode(exception));
                 invalidTokens.add(token);
                 continue;
             }
@@ -92,7 +92,7 @@ public class FirebaseFcmClient implements FcmClient {
                 retryableTokens.add(token);
                 continue;
             }
-            log.warn("[알림 전송 : 전송 실패]: errorCode={} | attempt={} | error={}",
+            log.warn("[FcmSend : SendFailed]: errorCode={} | attempt={} | error={}",
                     errorCode(exception), attempt, exception.getMessage());
         }
         return retryableTokens;
@@ -104,11 +104,11 @@ public class FirebaseFcmClient implements FcmClient {
         try {
             return firebaseMessaging.sendEachForMulticast(multicastMessage);
         } catch (FirebaseMessagingException exception) {
-            log.error("[알림 전송 : 일괄 전송 실패]: errorCode={} | tokens={} | attempt={}",
+            log.error("[FcmSend : BatchSendFailed]: errorCode={} | tokens={} | attempt={}",
                     errorCode(exception), tokens.size(), attempt, exception);
             return null;
         } catch (RuntimeException exception) {
-            log.error("[알림 전송 : 예외]: tokens={} | attempt={}",
+            log.error("[FcmSend : UnexpectedException]: tokens={} | attempt={}",
                     tokens.size(), attempt, exception);
             return null;
         }

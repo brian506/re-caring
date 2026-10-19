@@ -33,7 +33,7 @@ public class CareRelationshipManager {
         designatedAvatarManager.deleteAllByRelationship(wardKey, caregiverKey);
         notificationSettingManager.deleteByRelationship(wardKey, caregiverKey);
         locationSettingManager.deleteByRelationship(wardKey, caregiverKey);
-        log.info("[케어 관계 : 이탈]: wardKey={} | caregiverKey={} | careRole={}",
+        log.info("[CareRelationship : Left]: wardKey={} | caregiverKey={} | careRole={}",
                 wardKey, caregiverKey, leaving.getCareRole());
 
         careInvitationWriter.deletePendingSentBy(wardKey, caregiverKey);

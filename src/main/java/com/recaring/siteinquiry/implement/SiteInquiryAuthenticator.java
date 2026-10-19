@@ -31,7 +31,7 @@ public class SiteInquiryAuthenticator {
         }
         rateLimitValidator.reserveViewAttempt(inquiryKey);
         if (rawPassword == null || !passwordEncoder.matches(rawPassword, inquiry.getPasswordHash())) {
-            log.info("[웹 문의 : 비밀글 비밀번호 불일치]: inquiryKey={}", inquiryKey);
+            log.info("[WebInquiry : SecretPasswordMismatch]: inquiryKey={}", inquiryKey);
             throw new AppException(ErrorType.SITE_INQUIRY_PASSWORD_MISMATCH);
         }
         rateLimitValidator.releaseViewAttempt(inquiryKey);

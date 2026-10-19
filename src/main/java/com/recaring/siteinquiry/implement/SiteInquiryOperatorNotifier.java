@@ -34,10 +34,10 @@ public class SiteInquiryOperatorNotifier {
 
     @Async("broadcastExecutor")
     public void notifySubmitted(SiteInquiryInfo inquiry) {
-        log.info("[웹 문의 : 신규 접수]: inquiryKey={} | category={} | secret={} | createdAt={}",
+        log.info("[WebInquiry : Received]: inquiryKey={} | category={} | secret={} | createdAt={}",
                 inquiry.inquiryKey(), inquiry.category(), inquiry.secret(), inquiry.createdAt());
         if (webhookUrl.isBlank()) {
-            log.info("[웹 문의 : Slack 발송 생략]: inquiryKey={} | reason=webhook url not configured", inquiry.inquiryKey());
+            log.info("[WebInquiry : SlackSendSkipped]: inquiryKey={} | reason=webhook url not configured", inquiry.inquiryKey());
             return;
         }
         try {
@@ -47,12 +47,12 @@ public class SiteInquiryOperatorNotifier {
                     .body(Map.of("text", message(inquiry)))
                     .retrieve()
                     .toBodilessEntity();
-            log.info("[웹 문의 : Slack 발송 완료]: inquiryKey={}", inquiry.inquiryKey());
+            log.info("[WebInquiry : SlackSent]: inquiryKey={}", inquiry.inquiryKey());
         } catch (RestClientResponseException e) {
-            log.warn("[웹 문의 : Slack 응답 오류]: inquiryKey={} | status={} | body={}",
+            log.warn("[WebInquiry : SlackResponseError]: inquiryKey={} | status={} | body={}",
                     inquiry.inquiryKey(), e.getStatusCode(), e.getResponseBodyAsString());
         } catch (ResourceAccessException e) {
-            log.warn("[웹 문의 : Slack 연결 실패]: inquiryKey={} | cause={}",
+            log.warn("[WebInquiry : SlackConnectionFailed]: inquiryKey={} | cause={}",
                     inquiry.inquiryKey(), e.getMostSpecificCause().getClass().getSimpleName());
         }
     }

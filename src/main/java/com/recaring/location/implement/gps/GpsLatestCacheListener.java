@@ -27,6 +27,6 @@ public class GpsLatestCacheListener {
             gpsLatestCacheManager.saveDisplayable(wardMemberKey, gps);
             return;
         }
-        log.debug("[GPS 캐시 : 표시 제외]: wardMemberKey={} | accuracy={}", wardMemberKey, gps.accuracy());
+        log.debug("[GpsCache : DisplayExcluded]: wardMemberKey={} | accuracy={}", wardMemberKey, gps.accuracy());
     }
 }

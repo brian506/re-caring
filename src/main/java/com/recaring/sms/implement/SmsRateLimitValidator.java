@@ -38,7 +38,7 @@ public class SmsRateLimitValidator {
         }
 
         long remaining = remainingSeconds(key);
-        log.warn("[SMS 발송 : 한도 초과]: phone={} | count={} | remaining={}",
+        log.warn("[SmsSend : RateLimitExceeded]: phone={} | count={} | remaining={}",
                 MaskingUtils.maskPhone(phone.value()), count, remaining);
         throw new AppException(ErrorType.SMS_SEND_QUOTA_EXCEEDED, new RetryAfter(remaining));
     }

@@ -43,7 +43,7 @@ public class GpsLatestCacheManager {
         try {
             return Optional.of(objectMapper.readValue(value, Gps.class));
         } catch (JsonProcessingException e) {
-            log.warn("[GPS 캐시 : 역직렬화 실패]: wardMemberKey={} | error={}", wardMemberKey, e.getOriginalMessage());
+            log.warn("[GpsCache : DeserializeFailed]: wardMemberKey={} | error={}", wardMemberKey, e.getOriginalMessage());
             return Optional.empty();
         }
     }
@@ -67,7 +67,7 @@ public class GpsLatestCacheManager {
             try {
                 result.put(wardMemberKeys.get(i), objectMapper.readValue(value, Gps.class));
             } catch (JsonProcessingException e) {
-                log.warn("[GPS 캐시 : 역직렬화 실패]: wardMemberKey={} | error={}", wardMemberKeys.get(i), e.getOriginalMessage());
+                log.warn("[GpsCache : DeserializeFailed]: wardMemberKey={} | error={}", wardMemberKeys.get(i), e.getOriginalMessage());
             }
         }
         return result;
@@ -91,7 +91,7 @@ public class GpsLatestCacheManager {
                     TimeUnit.HOURS
             );
         } catch (JsonProcessingException | DataAccessException e) {
-            log.warn("[GPS 캐시 : 저장 실패]: wardMemberKey={}", wardMemberKey, e);
+            log.warn("[GpsCache : SaveFailed]: wardMemberKey={}", wardMemberKey, e);
         }
     }
 

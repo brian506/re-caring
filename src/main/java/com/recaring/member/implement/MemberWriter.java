@@ -61,7 +61,7 @@ public class MemberWriter {
         Member member = memberRepository.findByMemberKey(memberKey)
                 .orElseThrow(() -> new AppException(ErrorType.NOT_FOUND_ACCOUNT));
         member.changePhone(newPhone.value());
-        log.info("[회원 정보 : 전화번호 변경 완료]: memberKey={}", memberKey);
+        log.info("[MemberProfile : PhoneChanged]: memberKey={}", memberKey);
     }
 
     @Transactional

@@ -38,7 +38,7 @@ public class AnomalyStreamErrorHandler implements ErrorHandler {
     public void markHealthy() {
         long failures = consecutiveErrors.getAndSet(0);
         if (failures > 0) {
-            log.info("[이상탐지 스트림 : 폴링 복구]: failures={}", failures);
+            log.info("[AnomalyStream : PollRecovered]: failures={}", failures);
         }
     }
 
@@ -50,14 +50,14 @@ public class AnomalyStreamErrorHandler implements ErrorHandler {
         long now = System.currentTimeMillis();
         if (failures == 1) {
             lastLoggedAtMillis = now;
-            log.warn("[이상탐지 스트림 : 폴링 실패]: failures={}", failures, throwable);
+            log.warn("[AnomalyStream : PollFailed]: failures={}", failures, throwable);
             return;
         }
         if (now - lastLoggedAtMillis < LOG_INTERVAL.toMillis()) {
             return;
         }
         lastLoggedAtMillis = now;
-        log.warn("[이상탐지 스트림 : 폴링 실패 지속]: failures={} | error={}", failures, rootMessage(throwable));
+        log.warn("[AnomalyStream : PollFailurePersisting]: failures={} | error={}", failures, rootMessage(throwable));
     }
 
     private void backOff(long failures) {

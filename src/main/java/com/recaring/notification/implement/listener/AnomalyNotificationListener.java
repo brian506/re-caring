@@ -46,13 +46,13 @@ public class AnomalyNotificationListener {
                 careRelationshipReader.findCaregiverInfos(wardMemberKey),
                 settings -> settings.anomaly().isEnabled(detection.detectionType()));
         if (caregivers.isEmpty()) {
-            log.info("[이상탐지 알림 : 수신자 없음]: wardMemberKey={} | detectionType={}",
+            log.info("[AnomalyAlert : NoRecipients]: wardMemberKey={} | detectionType={}",
                     wardMemberKey, detection.detectionType());
             return;
         }
 
         if (detection.reasonCode() == null && (detection.evidence() == null || detection.evidence().isBlank())) {
-            log.warn("[이상탐지 알림 : 문구 근거 없음]: wardMemberKey={} | detectionType={}",
+            log.warn("[AnomalyAlert : MissingEvidence]: wardMemberKey={} | detectionType={}",
                     wardMemberKey, detection.detectionType());
         }
 
@@ -66,7 +66,7 @@ public class AnomalyNotificationListener {
                 AnomalyNotificationBody.of(detection, wardName).value(),
                 buildPayload(detection, eventType)
         );
-        log.info("[이상탐지 알림 : 발송 완료]: wardMemberKey={} | detectionType={} | reasonCode={} | alertKind={} | score={}",
+        log.info("[AnomalyAlert : Sent]: wardMemberKey={} | detectionType={} | reasonCode={} | alertKind={} | score={}",
                 wardMemberKey, detection.detectionType(), detection.reasonCode(),
                 detection.event() == null ? null : detection.event().alertKind(), detection.score());
     }

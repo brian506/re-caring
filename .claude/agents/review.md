@@ -55,7 +55,7 @@ git diff develop...HEAD --name-only -- 'src/main/**'
 - [ ] 외부 노출 식별자는 `memberKey`, `requestKey` 등 UUID Key를 사용하는가
 
 ### [로깅 컨벤션]
-- [ ] 로그 메시지가 `[카테고리 : 상세내용]: 추가정보` 형식인가
+- [ ] 로그 메시지가 `[Category : Detail]: key=value` 형식이고, Category·Detail이 영문 PascalCase이며 Category가 `.claude/rules/log-vocabulary.md` 어휘에 있는가
 - [ ] 정상 흐름은 `log.info`, 비즈니스 예외는 `log.warn`, 시스템 오류는 `log.error`인가
 
 ### [Command / VO 패턴]

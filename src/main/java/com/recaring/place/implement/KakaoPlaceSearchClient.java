@@ -34,7 +34,7 @@ public class KakaoPlaceSearchClient {
         KakaoKeywordSearchResponse response = request(condition);
 
         if (response == null || response.documents() == null) {
-            log.info("[장소 검색 : 빈 응답]: queryLength={}", condition.keyword().value().length());
+            log.info("[PlaceSearch : EmptyResponse]: queryLength={}", condition.keyword().value().length());
             return List.of();
         }
 
@@ -62,21 +62,21 @@ public class KakaoPlaceSearchClient {
                     .retrieve()
                     .body(KakaoKeywordSearchResponse.class);
         } catch (HttpClientErrorException.TooManyRequests e) {
-            log.warn("[장소 검색 : 호출 한도 초과]: queryLength={} | biased={}", query.length(), condition.hasBias());
+            log.warn("[PlaceSearch : RateLimitExceeded]: queryLength={} | biased={}", query.length(), condition.hasBias());
             throw new AppException(ErrorType.PLACE_SEARCH_RATE_LIMITED);
         } catch (HttpClientErrorException.Unauthorized | HttpClientErrorException.Forbidden e) {
-            log.error("[장소 검색 : 키 인증 실패]: queryLength={} | status={}", query.length(), e.getStatusCode());
+            log.error("[PlaceSearch : KeyAuthFailed]: queryLength={} | status={}", query.length(), e.getStatusCode());
             throw new AppException(ErrorType.PLACE_SEARCH_UNAVAILABLE);
         } catch (HttpClientErrorException.BadRequest e) {
-            log.warn("[장소 검색 : 잘못된 요청]: queryLength={} | biased={} | radius={} | body={}",
+            log.warn("[PlaceSearch : BadRequest]: queryLength={} | biased={} | radius={} | body={}",
                     query.length(), condition.hasBias(), condition.radiusMeters(), e.getResponseBodyAsString());
             throw new AppException(ErrorType.PLACE_SEARCH_UNAVAILABLE);
         } catch (RestClientResponseException e) {
-            log.warn("[장소 검색 : 응답 오류]: queryLength={} | status={} | body={}",
+            log.warn("[PlaceSearch : ResponseError]: queryLength={} | status={} | body={}",
                     query.length(), e.getStatusCode(), e.getResponseBodyAsString());
             throw new AppException(ErrorType.PLACE_SEARCH_UNAVAILABLE);
         } catch (ResourceAccessException e) {
-            log.warn("[장소 검색 : 연결 실패]: queryLength={}", query.length(), e.getMostSpecificCause());
+            log.warn("[PlaceSearch : ConnectionFailed]: queryLength={}", query.length(), e.getMostSpecificCause());
             throw new AppException(ErrorType.PLACE_SEARCH_UNAVAILABLE);
         }
     }

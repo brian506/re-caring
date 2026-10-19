@@ -52,7 +52,7 @@ public class AnomalyDetectionManager {
                 event == null ? null : event.remindSeq()
         );
         if (inserted == 0) {
-            log.warn("[이상탐지 결과 : 중복 저장 생략]: wardMemberKey={} | detectionType={} | recordedAt={} | alertKind={} | eventId={}",
+            log.warn("[AnomalyResult : DuplicateSkipped]: wardMemberKey={} | detectionType={} | recordedAt={} | alertKind={} | eventId={}",
                     alert.wardMemberKey(), alert.detectionType(), alert.recordedAt(),
                     event == null ? null : event.alertKind(), event == null ? null : event.eventId());
             return;

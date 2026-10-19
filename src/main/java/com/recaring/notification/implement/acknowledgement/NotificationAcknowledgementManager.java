@@ -22,7 +22,7 @@ public class NotificationAcknowledgementManager {
         }
 
         boolean applied = anomalyAcknowledgementManager.acknowledge(wardKey, eventId);
-        log.info("[이상탐지 알림 : 보호자 확인]: memberKey={} | wardKey={} | eventId={} | applied={}",
+        log.info("[AnomalyAlert : Acknowledged]: memberKey={} | wardKey={} | eventId={} | applied={}",
                 memberKey, wardKey, eventId, applied);
     }
 }

@@ -38,7 +38,7 @@ public class SmsClient {
             sample.stop(sendTimer("SUCCESS", "none"));
         } catch (Exception e) {
             sample.stop(sendTimer("FAILURE", e.getClass().getSimpleName()));
-            log.warn("[SMS 발송 : 실패]: phone={}", MaskingUtils.maskPhone(phone), e);
+            log.warn("[SmsSend : Failed]: phone={}", MaskingUtils.maskPhone(phone), e);
             throw new AppException(ErrorType.SMS_SEND_FAILED);
         }
     }

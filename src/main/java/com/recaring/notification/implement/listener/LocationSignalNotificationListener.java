@@ -36,7 +36,7 @@ public class LocationSignalNotificationListener {
         String wardMemberKey = event.wardMemberKey();
         List<CaregiverInfo> caregivers = careRelationshipReader.findCaregiverInfos(wardMemberKey);
         if (caregivers.isEmpty()) {
-            log.warn("[위치 수집 중단 알림 : 수신자 없음]: wardMemberKey={}", wardMemberKey);
+            log.warn("[LocationSignalLost : NoRecipients]: wardMemberKey={}", wardMemberKey);
             return;
         }
 
@@ -58,7 +58,7 @@ public class LocationSignalNotificationListener {
                         + "님의 위치가 20분 넘게 수집되지 않고 있어요. 기기 전원과 앱 로그인 상태를 확인해 주세요.",
                 buildPayload(event)
         );
-        log.info("[위치 수집 중단 알림 : 발송 완료]: wardMemberKey={} | lastReceivedAt={}",
+        log.info("[LocationSignalLost : AlertSent]: wardMemberKey={} | lastReceivedAt={}",
                 wardMemberKey, event.lastGps().recordedAt());
     }
 
