@@ -3,8 +3,8 @@ package com.recaring.auth.business.command;
 import com.recaring.auth.vo.EncodedPassword;
 import com.recaring.auth.vo.NewLocalMember;
 import com.recaring.auth.vo.Password;
-import com.recaring.member.dataaccess.entity.Gender;
-import com.recaring.member.dataaccess.entity.MemberRole;
+import com.recaring.member.vo.Gender;
+import com.recaring.member.vo.MemberRole;
 import com.recaring.sms.vo.PhoneNumber;
 
 import java.time.LocalDate;

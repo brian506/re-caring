@@ -1,6 +1,7 @@
 package com.recaring.notification.implement.listener;
 
-import com.recaring.care.dataaccess.entity.CareRole;
+import com.recaring.safezone.fixture.SafeZoneFixture;
+import com.recaring.care.vo.CareRole;
 import com.recaring.care.fixture.CareFixture;
 import com.recaring.care.implement.CareRelationshipReader;
 import com.recaring.location.fixture.LocationFixture;
@@ -54,7 +55,7 @@ class SafeZoneNotificationListenerTest {
     void sends_entered_notification_with_ward_name() {
         givenCaregiversAndWardName();
 
-        safeZoneNotificationListener.onSafeZoneEntered(LocationFixture.createSafeZoneEnteredEvent());
+        safeZoneNotificationListener.onSafeZoneEntered(SafeZoneFixture.createSafeZoneEnteredEvent());
 
         then(notificationSendManager).should().sendToCareParties(
                 List.of(NotificationFixture.GUARDIAN_KEY),
@@ -71,7 +72,7 @@ class SafeZoneNotificationListenerTest {
     void sends_exited_notification_with_ward_name() {
         givenCaregiversAndWardName();
 
-        safeZoneNotificationListener.onSafeZoneExited(LocationFixture.createSafeZoneExitedEvent());
+        safeZoneNotificationListener.onSafeZoneExited(SafeZoneFixture.createSafeZoneExitedEvent());
 
         then(notificationSendManager).should().sendToCareParties(
                 List.of(NotificationFixture.GUARDIAN_KEY),
@@ -96,7 +97,7 @@ class SafeZoneNotificationListenerTest {
                         CareFixture.createCaregiverInfo(NotificationFixture.MANAGER_KEY, CareRole.MANAGER)));
         given(memberReader.findNameByMemberKey(NotificationFixture.WARD_KEY)).willReturn(NotificationFixture.WARD_NAME);
 
-        safeZoneNotificationListener.onSafeZoneEntered(LocationFixture.createSafeZoneEnteredEvent());
+        safeZoneNotificationListener.onSafeZoneEntered(SafeZoneFixture.createSafeZoneEnteredEvent());
 
         then(notificationSendManager).should().sendToCareParties(
                 List.of(NotificationFixture.OTHER_GUARDIAN_KEY),
@@ -120,7 +121,7 @@ class SafeZoneNotificationListenerTest {
                         CareFixture.createCaregiverInfo(NotificationFixture.GUARDIAN_KEY, CareRole.GUARDIAN),
                         CareFixture.createCaregiverInfo(NotificationFixture.MANAGER_KEY, CareRole.MANAGER)));
 
-        safeZoneNotificationListener.onSafeZoneExited(LocationFixture.createSafeZoneExitedEvent());
+        safeZoneNotificationListener.onSafeZoneExited(SafeZoneFixture.createSafeZoneExitedEvent());
 
         then(notificationSendManager).should(never())
                 .sendToCareParties(any(), any(), anyString(), anyString(), anyString(), any());
@@ -131,7 +132,7 @@ class SafeZoneNotificationListenerTest {
     void skips_when_no_caregiver() {
         given(careRelationshipReader.findCaregiverInfos(NotificationFixture.WARD_KEY)).willReturn(List.of());
 
-        safeZoneNotificationListener.onSafeZoneExited(LocationFixture.createSafeZoneExitedEvent());
+        safeZoneNotificationListener.onSafeZoneExited(SafeZoneFixture.createSafeZoneExitedEvent());
 
         then(notificationSendManager).should(never())
                 .sendToCareParties(any(), any(), anyString(), anyString(), anyString(), any());
@@ -149,7 +150,7 @@ class SafeZoneNotificationListenerTest {
         given(memberReader.findNameByMemberKey(NotificationFixture.WARD_KEY))
                 .willReturn(NotificationFixture.WARD_NAME);
 
-        safeZoneNotificationListener.onSafeZoneEntered(LocationFixture.createSafeZoneEnteredEvent());
+        safeZoneNotificationListener.onSafeZoneEntered(SafeZoneFixture.createSafeZoneEnteredEvent());
 
         then(notificationSendManager).should().sendToCareParties(
                 List.of(NotificationFixture.GUARDIAN_KEY, NotificationFixture.OTHER_GUARDIAN_KEY),
@@ -166,7 +167,7 @@ class SafeZoneNotificationListenerTest {
     void sends_danger_zone_entered_notification() {
         givenCaregiversAndWardName();
 
-        safeZoneNotificationListener.onSafeZoneEntered(LocationFixture.createDangerZoneEnteredEvent());
+        safeZoneNotificationListener.onSafeZoneEntered(SafeZoneFixture.createDangerZoneEnteredEvent());
 
         then(notificationSendManager).should().sendToCareParties(
                 List.of(NotificationFixture.GUARDIAN_KEY),
@@ -183,7 +184,7 @@ class SafeZoneNotificationListenerTest {
     void sends_danger_zone_exited_notification() {
         givenCaregiversAndWardName();
 
-        safeZoneNotificationListener.onSafeZoneExited(LocationFixture.createDangerZoneExitedEvent());
+        safeZoneNotificationListener.onSafeZoneExited(SafeZoneFixture.createDangerZoneExitedEvent());
 
         then(notificationSendManager).should().sendToCareParties(
                 List.of(NotificationFixture.GUARDIAN_KEY),
@@ -203,7 +204,7 @@ class SafeZoneNotificationListenerTest {
                         NotificationFixture.WARD_KEY, NotificationFixture.GUARDIAN_KEY, false, false)));
         givenCaregiversAndWardName();
 
-        safeZoneNotificationListener.onSafeZoneEntered(LocationFixture.createDangerZoneEnteredEvent());
+        safeZoneNotificationListener.onSafeZoneEntered(SafeZoneFixture.createDangerZoneEnteredEvent());
 
         then(notificationSendManager).should().sendToCareParties(
                 List.of(NotificationFixture.GUARDIAN_KEY),
@@ -228,7 +229,7 @@ class SafeZoneNotificationListenerTest {
                         CareFixture.createCaregiverInfo(NotificationFixture.MANAGER_KEY, CareRole.MANAGER)));
         given(memberReader.findNameByMemberKey(NotificationFixture.WARD_KEY)).willReturn(NotificationFixture.WARD_NAME);
 
-        safeZoneNotificationListener.onSafeZoneEntered(LocationFixture.createDangerZoneEnteredEvent());
+        safeZoneNotificationListener.onSafeZoneEntered(SafeZoneFixture.createDangerZoneEnteredEvent());
 
         then(notificationSendManager).should().sendToCareParties(
                 List.of(NotificationFixture.OTHER_GUARDIAN_KEY),
@@ -253,7 +254,7 @@ class SafeZoneNotificationListenerTest {
                         CareFixture.createCaregiverInfo(NotificationFixture.MANAGER_KEY, CareRole.MANAGER)));
         given(memberReader.findNameByMemberKey(NotificationFixture.WARD_KEY)).willReturn(NotificationFixture.WARD_NAME);
 
-        safeZoneNotificationListener.onSafeZoneExited(LocationFixture.createDangerZoneExitedEvent());
+        safeZoneNotificationListener.onSafeZoneExited(SafeZoneFixture.createDangerZoneExitedEvent());
 
         then(notificationSendManager).should().sendToCareParties(
                 List.of(NotificationFixture.OTHER_GUARDIAN_KEY),

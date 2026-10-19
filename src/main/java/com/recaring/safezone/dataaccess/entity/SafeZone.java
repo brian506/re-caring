@@ -1,6 +1,7 @@
 package com.recaring.safezone.dataaccess.entity;
 
 import com.recaring.common.entity.BaseEntity;
+import com.recaring.safezone.vo.SafeZoneType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;

@@ -1,16 +1,15 @@
 package com.recaring.care.implement;
 
-import com.recaring.care.dataaccess.entity.CareInvitation;
-import com.recaring.care.dataaccess.entity.CareInvitationStatus;
-import com.recaring.care.dataaccess.entity.CareRole;
+import com.recaring.care.vo.CareRole;
 import com.recaring.care.event.CareInvitationAcceptedEvent;
 import com.recaring.care.event.CareInvitationSentEvent;
+import com.recaring.care.vo.CareInvitationInfo;
 import com.recaring.care.vo.Caregiver;
 import com.recaring.care.vo.CareRelationshipRegistration;
 import com.recaring.care.vo.NewCareInvitation;
 import com.recaring.care.vo.Ward;
-import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.implement.MemberReader;
+import com.recaring.member.vo.MemberInfo;
 import com.recaring.sms.vo.PhoneNumber;
 import com.recaring.support.exception.AppException;
 import com.recaring.support.exception.ErrorType;
@@ -34,76 +33,76 @@ public class CareInvitationManager {
 
     @Transactional
     public void sendWardInvitation(String requesterMemberKey, String phoneNumber) {
-        Member ward = memberReader.findByPhone(new PhoneNumber(phoneNumber));
-        NewCareInvitation invitation = NewCareInvitation.ofWardRequest(requesterMemberKey, Ward.of(ward.getMemberKey(), ward.getRole()));
+        MemberInfo ward = memberReader.findByPhone(new PhoneNumber(phoneNumber));
+        NewCareInvitation invitation = NewCareInvitation.ofWardRequest(requesterMemberKey, Ward.of(ward.memberKey(), ward.role()));
 
         careRelationshipValidator.validateCanAddWard(invitation.requesterMemberKey(), invitation.wardMemberKey());
         validateNoPendingWardRequest(invitation);
-        CareInvitation saved = careInvitationWriter.register(invitation);
-        eventPublisher.publishEvent(new CareInvitationSentEvent(saved.getRequestKey(), saved.getTargetMemberKey(), saved.getRequesterMemberKey(), saved.targetRole()));
+        CareInvitationInfo saved = careInvitationWriter.register(invitation);
+        eventPublisher.publishEvent(new CareInvitationSentEvent(saved.requestKey(), saved.targetMemberKey(), saved.requesterMemberKey(), saved.targetRole()));
     }
 
     // 관리자 추가
     @Transactional
     public void sendManagerInvitation(String requesterKey, String phoneNumber, String wardMemberKey) {
-        Member newManager = memberReader.findByPhone(new PhoneNumber(phoneNumber));
-        NewCareInvitation invitation = NewCareInvitation.ofCaregiverRequest(requesterKey, Caregiver.of(newManager.getMemberKey(), newManager.getRole()), wardMemberKey, CareRole.MANAGER);
+        MemberInfo newManager = memberReader.findByPhone(new PhoneNumber(phoneNumber));
+        NewCareInvitation invitation = NewCareInvitation.ofCaregiverRequest(requesterKey, Caregiver.of(newManager.memberKey(), newManager.role()), wardMemberKey, CareRole.MANAGER);
 
         careRelationshipValidator.validateCanAddCaregiver(invitation.requesterMemberKey(), invitation.wardMemberKey(), invitation.targetMemberKey());
         validateNoPending(invitation);
-        CareInvitation saved = careInvitationWriter.register(invitation);
-        eventPublisher.publishEvent(new CareInvitationSentEvent(saved.getRequestKey(), saved.getTargetMemberKey(), saved.getRequesterMemberKey(), saved.targetRole()));
+        CareInvitationInfo saved = careInvitationWriter.register(invitation);
+        eventPublisher.publishEvent(new CareInvitationSentEvent(saved.requestKey(), saved.targetMemberKey(), saved.requesterMemberKey(), saved.targetRole()));
     }
 
     // 보호자 추가
     @Transactional
     public void sendGuardianInvitation(String requesterKey, String phoneNumber, String wardMemberKey) {
-        Member newGuardian = memberReader.findByPhone(new PhoneNumber(phoneNumber));
-        NewCareInvitation invitation = NewCareInvitation.ofCaregiverRequest(requesterKey, Caregiver.of(newGuardian.getMemberKey(), newGuardian.getRole()), wardMemberKey, CareRole.GUARDIAN);
+        MemberInfo newGuardian = memberReader.findByPhone(new PhoneNumber(phoneNumber));
+        NewCareInvitation invitation = NewCareInvitation.ofCaregiverRequest(requesterKey, Caregiver.of(newGuardian.memberKey(), newGuardian.role()), wardMemberKey, CareRole.GUARDIAN);
 
         careRelationshipValidator.validateCanAddCaregiver(invitation.requesterMemberKey(), invitation.wardMemberKey(), invitation.targetMemberKey());
         validateNoPending(invitation);
-        CareInvitation saved = careInvitationWriter.register(invitation);
-        eventPublisher.publishEvent(new CareInvitationSentEvent(saved.getRequestKey(), saved.getTargetMemberKey(), saved.getRequesterMemberKey(), saved.targetRole()));
+        CareInvitationInfo saved = careInvitationWriter.register(invitation);
+        eventPublisher.publishEvent(new CareInvitationSentEvent(saved.requestKey(), saved.targetMemberKey(), saved.requesterMemberKey(), saved.targetRole()));
     }
 
     // 요청 수락
     @Transactional
     public void accept(String requestKey, String memberKey) {
-        CareInvitation invitation = careInvitationReader.findInvitationForRecipient(requestKey, memberKey);
+        CareInvitationInfo invitation = careInvitationReader.findInvitationForRecipient(requestKey, memberKey);
         validatePending(invitation);
 
         careRelationshipWriter.register(
                 new CareRelationshipRegistration(
-                        invitation.getWardMemberKey(),
-                        invitation.getCaregiverKey(),
-                        invitation.getCareRole()
+                        invitation.wardMemberKey(),
+                        invitation.caregiverKey(),
+                        invitation.careRole()
                 )
         );
-        careInvitationWriter.accept(invitation.getRequestKey());
-        eventPublisher.publishEvent(new CareInvitationAcceptedEvent(invitation.getRequestKey(), memberKey, invitation.getRequesterMemberKey(), invitation.targetRole()));
+        careInvitationWriter.accept(invitation.requestKey());
+        eventPublisher.publishEvent(new CareInvitationAcceptedEvent(invitation.requestKey(), memberKey, invitation.requesterMemberKey(), invitation.targetRole()));
     }
 
     @Transactional
     public void reject(String requestKey, String memberKey) {
-        CareInvitation request = careInvitationReader.findInvitationForRecipient(requestKey, memberKey);
+        CareInvitationInfo request = careInvitationReader.findInvitationForRecipient(requestKey, memberKey);
         validatePending(request);
-        careInvitationWriter.reject(request.getRequestKey());
+        careInvitationWriter.reject(request.requestKey());
     }
 
     @Transactional
     public void resend(String requestKey, String requesterKey) {
-        CareInvitation invitation = careInvitationReader.findInvitationForRequester(requestKey, requesterKey);
+        CareInvitationInfo invitation = careInvitationReader.findInvitationForRequester(requestKey, requesterKey);
         validatePending(invitation);
-        careInvitationResendLimiter.acquire(invitation.getRequestKey());
-        eventPublisher.publishEvent(new CareInvitationSentEvent(invitation.getRequestKey(), invitation.getTargetMemberKey(), invitation.getRequesterMemberKey(), invitation.targetRole()));
+        careInvitationResendLimiter.acquire(invitation.requestKey());
+        eventPublisher.publishEvent(new CareInvitationSentEvent(invitation.requestKey(), invitation.targetMemberKey(), invitation.requesterMemberKey(), invitation.targetRole()));
     }
 
     @Transactional
     public void cancel(String requestKey, String requesterKey) {
-        CareInvitation invitation = careInvitationReader.findInvitationForRequester(requestKey, requesterKey);
+        CareInvitationInfo invitation = careInvitationReader.findInvitationForRequester(requestKey, requesterKey);
         validatePending(invitation);
-        careInvitationWriter.delete(invitation.getRequestKey());
+        careInvitationWriter.delete(invitation.requestKey());
     }
 
     private void validateNoPending(NewCareInvitation invitation) {
@@ -119,8 +118,8 @@ public class CareInvitationManager {
         }
     }
 
-    private void validatePending(CareInvitation invitation) {
-        if (invitation.getStatus() != CareInvitationStatus.PENDING) {
+    private void validatePending(CareInvitationInfo invitation) {
+        if (!invitation.isPending()) {
             throw new AppException(ErrorType.ALREADY_PROCESSED_CARE_REQUEST);
         }
     }

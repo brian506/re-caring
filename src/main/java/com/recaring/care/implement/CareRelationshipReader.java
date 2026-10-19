@@ -3,10 +3,10 @@ package com.recaring.care.implement;
 import com.recaring.care.vo.CaregiverInfo;
 import com.recaring.care.vo.WardInfo;
 import com.recaring.care.dataaccess.entity.CareRelationship;
-import com.recaring.care.dataaccess.entity.CareRole;
+import com.recaring.care.vo.CareRole;
 import com.recaring.care.dataaccess.repository.CareRelationshipRepository;
-import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.implement.MemberReader;
+import com.recaring.member.vo.MemberInfo;
 import com.recaring.support.exception.AppException;
 import com.recaring.support.exception.ErrorType;
 import lombok.RequiredArgsConstructor;
@@ -31,15 +31,15 @@ public class CareRelationshipReader {
                 .map(CareRelationship::getWardMemberKey)
                 .toList();
 
-        Map<String, Member> memberMap = memberReader.findAllByMemberKeys(wardKeys);
+        Map<String, MemberInfo> memberMap = memberReader.findAllByMemberKeys(wardKeys);
         Map<String, String> designatedAvatarCodes = designatedAvatarManager.findWardAvatarCodes(caregiverKey);
 
         return relationships.stream()
                 .map(r -> {
-                    Member ward = memberMap.get(r.getWardMemberKey());
-                    return new WardInfo(ward.getMemberKey(), ward.getName(), r.getWardNickname(), ward.getPhone(),
-                            ward.getGender(), r.getCareRole(), ward.getProfileAvatarCode(),
-                            designatedAvatarCodes.get(ward.getMemberKey()), ward.getCreatedAt());
+                    MemberInfo ward = memberMap.get(r.getWardMemberKey());
+                    return new WardInfo(ward.memberKey(), ward.name(), r.getWardNickname(), ward.phone(),
+                            ward.gender(), r.getCareRole(), ward.profileAvatarCode(),
+                            designatedAvatarCodes.get(ward.memberKey()), ward.joinedAt());
                 })
                 .toList();
     }
@@ -66,14 +66,14 @@ public class CareRelationshipReader {
                 .map(CareRelationship::getCaregiverMemberKey)
                 .toList();
 
-        Map<String, Member> memberMap = memberReader.findAllByMemberKeys(caregiverKeys);
+        Map<String, MemberInfo> memberMap = memberReader.findAllByMemberKeys(caregiverKeys);
 
         return relationships.stream()
                 .map(r -> {
-                    Member caregiver = memberMap.get(r.getCaregiverMemberKey());
-                    return new CaregiverInfo(caregiver.getMemberKey(), caregiver.getName(), caregiver.getPhone(),
-                            r.getCareRole(), caregiver.getProfileAvatarCode(),
-                            designatedAvatarCodes.get(caregiver.getMemberKey()));
+                    MemberInfo caregiver = memberMap.get(r.getCaregiverMemberKey());
+                    return new CaregiverInfo(caregiver.memberKey(), caregiver.name(), caregiver.phone(),
+                            r.getCareRole(), caregiver.profileAvatarCode(),
+                            designatedAvatarCodes.get(caregiver.memberKey()));
                 })
                 .toList();
     }

@@ -2,9 +2,8 @@ package com.recaring.auth.implement.local;
 
 import com.recaring.auth.vo.EncodedPassword;
 import com.recaring.auth.vo.Password;
-import com.recaring.auth.dataaccess.entity.LocalAuth;
-import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.implement.MemberReader;
+import com.recaring.member.vo.MemberInfo;
 import com.recaring.sms.vo.PhoneNumber;
 import com.recaring.support.exception.AppException;
 import com.recaring.support.exception.ErrorType;
@@ -34,20 +33,20 @@ public class LocalAuthAuthenticator {
         return new EncodedPassword(passwordEncoder.encode(password.value()));
     }
 
-    public Member authenticate(PhoneNumber phone, Password password) {
-        Optional<Member> member = memberReader.findOptionalByPhone(phone);
-        Optional<LocalAuth> localAuth = member.flatMap(m -> localAuthReader.findOptionalByMemberKey(m.getMemberKey()));
-        String encodedPassword = localAuth.map(LocalAuth::getPassword).orElse(dummyEncodedPassword);
+    public MemberInfo authenticate(PhoneNumber phone, Password password) {
+        Optional<MemberInfo> member = memberReader.findOptionalByPhone(phone);
+        Optional<EncodedPassword> storedPassword = member.flatMap(m -> localAuthReader.findOptionalPasswordByMemberKey(m.memberKey()));
+        String encodedPassword = storedPassword.map(EncodedPassword::value).orElse(dummyEncodedPassword);
         boolean matches = passwordEncoder.matches(password.value(), encodedPassword);
-        if (localAuth.isEmpty() || !matches) {
+        if (storedPassword.isEmpty() || !matches) {
             throw new AppException(ErrorType.INVALID_CREDENTIALS);
         }
         return member.get();
     }
 
     public void verifyPassword(String memberKey, Password password) {
-        LocalAuth localAuth = localAuthReader.findByMemberKey(memberKey);
-        if (!passwordEncoder.matches(password.value(), localAuth.getPassword())) {
+        EncodedPassword storedPassword = localAuthReader.findPasswordByMemberKey(memberKey);
+        if (!passwordEncoder.matches(password.value(), storedPassword.value())) {
             throw new AppException(ErrorType.INVALID_PASSWORD);
         }
     }

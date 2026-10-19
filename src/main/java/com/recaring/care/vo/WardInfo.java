@@ -1,7 +1,6 @@
 package com.recaring.care.vo;
 
-import com.recaring.care.dataaccess.entity.CareRole;
-import com.recaring.member.dataaccess.entity.Gender;
+import com.recaring.member.vo.Gender;
 
 import java.time.LocalDateTime;
 

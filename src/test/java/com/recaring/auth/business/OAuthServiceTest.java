@@ -1,5 +1,6 @@
 package com.recaring.auth.business;
 
+import com.recaring.member.vo.MemberInfo;
 import com.recaring.auth.dataaccess.entity.OAuth;
 import com.recaring.auth.fixture.AuthFixture;
 import com.recaring.auth.implement.TokenIssuer;
@@ -8,7 +9,6 @@ import com.recaring.auth.implement.oauth.OAuthManager;
 import com.recaring.auth.implement.oauth.OAuthReader;
 import com.recaring.auth.vo.OAuthProvider;
 import com.recaring.auth.vo.OAuthUser;
-import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.fixture.MemberFixture;
 import com.recaring.member.implement.MemberReader;
 import com.recaring.security.vo.Jwt;
@@ -80,12 +80,11 @@ class OAuthServiceTest {
     void signIn_issues_jwt_for_linked_member() {
         // given
         OAuthUser oAuthUser = new OAuthUser(KAKAO_MEMBER_ID, OAuthProvider.KAKAO, "카카오사용자");
-        OAuth oAuth = AuthFixture.createOAuth(LINKED_MEMBER_KEY, OAuthProvider.KAKAO, KAKAO_MEMBER_ID);
-        Member linkedMember = MemberFixture.createMemberWithKey(LINKED_MEMBER_KEY, MemberFixture.PHONE);
+        MemberInfo linkedMember = MemberFixture.createMemberInfoWithKey(LINKED_MEMBER_KEY, MemberFixture.PHONE);
 
         given(kakaoAuthenticator.supports(OAuthProvider.KAKAO)).willReturn(true);
         given(kakaoAuthenticator.authenticate(KAKAO_ACCESS_TOKEN)).willReturn(oAuthUser);
-        given(oAuthReader.find(OAuthProvider.KAKAO, KAKAO_MEMBER_ID)).willReturn(Optional.of(oAuth));
+        given(oAuthReader.findMemberKey(OAuthProvider.KAKAO, KAKAO_MEMBER_ID)).willReturn(Optional.of(LINKED_MEMBER_KEY));
         given(memberReader.findByMemberKey(LINKED_MEMBER_KEY)).willReturn(linkedMember);
         given(tokenIssuer.issue(linkedMember)).willReturn(AuthFixture.createJwt());
 
@@ -106,7 +105,7 @@ class OAuthServiceTest {
 
         given(naverAuthenticator.supports(OAuthProvider.NAVER)).willReturn(true);
         given(naverAuthenticator.authenticate(NAVER_ACCESS_TOKEN)).willReturn(oAuthUser);
-        given(oAuthReader.find(OAuthProvider.NAVER, NAVER_MEMBER_ID)).willReturn(Optional.empty());
+        given(oAuthReader.findMemberKey(OAuthProvider.NAVER, NAVER_MEMBER_ID)).willReturn(Optional.empty());
 
         // when & then
         assertThatThrownBy(() -> oAuthService.signIn(NAVER_ACCESS_TOKEN, OAuthProvider.NAVER))
@@ -130,7 +129,7 @@ class OAuthServiceTest {
                 .hasFieldOrPropertyWithValue("errorType", ErrorType.INVALID_OAUTH_USER);
 
         then(kakaoAuthenticator).should(never()).authenticate(anyString());
-        then(oAuthReader).should(never()).find(any(), anyString());
+        then(oAuthReader).should(never()).findMemberKey(any(), anyString());
     }
 
     @Test

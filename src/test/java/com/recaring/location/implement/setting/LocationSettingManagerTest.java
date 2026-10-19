@@ -1,6 +1,6 @@
 package com.recaring.location.implement.setting;
 
-import com.recaring.care.dataaccess.entity.CareRole;
+import com.recaring.care.vo.CareRole;
 import com.recaring.care.fixture.CareFixture;
 import com.recaring.care.implement.CareRelationshipReader;
 import com.recaring.location.dataaccess.entity.LocationSetting;

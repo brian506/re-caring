@@ -1,8 +1,12 @@
 package com.recaring.safezone.fixture;
 
+import com.recaring.safezone.event.SafeZoneExitedEvent;
+import com.recaring.safezone.event.SafeZoneEnteredEvent;
+import com.recaring.safezone.dataaccess.entity.SafeZoneState;
+import com.recaring.location.fixture.LocationFixture;
 import com.recaring.care.fixture.CareFixture;
 import com.recaring.safezone.dataaccess.entity.SafeZone;
-import com.recaring.safezone.dataaccess.entity.SafeZoneType;
+import com.recaring.safezone.vo.SafeZoneType;
 import com.recaring.safezone.vo.SafeZoneCreation;
 import com.recaring.safezone.vo.SafeZoneInfo;
 import com.recaring.safezone.vo.SafeZoneRadius;
@@ -86,5 +90,32 @@ public class SafeZoneFixture {
 
     public static SafeZoneUpdate updateCommand() {
         return new SafeZoneUpdate(UPDATED_NAME, UPDATED_ADDRESS, UPDATED_LATITUDE, UPDATED_LONGITUDE, new SafeZoneRadius(UPDATED_RADIUS_METERS), TYPE);
+    }
+
+    public static SafeZoneEnteredEvent createSafeZoneEnteredEvent() {
+        return new SafeZoneEnteredEvent(
+                LocationFixture.WARD_KEY, SAFE_ZONE_KEY, LocationFixture.SAFE_ZONE_NAME, SafeZoneType.SAFE, LocationFixture.LATITUDE, LocationFixture.LONGITUDE, LocationFixture.DETECTED_AT);
+    }
+
+    public static SafeZoneEnteredEvent createDangerZoneEnteredEvent() {
+        return new SafeZoneEnteredEvent(
+                LocationFixture.WARD_KEY, LocationFixture.DANGER_ZONE_KEY, DANGER_ZONE_NAME, SafeZoneType.DANGER, LocationFixture.LATITUDE, LocationFixture.LONGITUDE, LocationFixture.DETECTED_AT);
+    }
+
+    public static SafeZoneExitedEvent createSafeZoneExitedEvent() {
+        return new SafeZoneExitedEvent(
+                LocationFixture.WARD_KEY, SAFE_ZONE_KEY, LocationFixture.SAFE_ZONE_NAME, SafeZoneType.SAFE, LocationFixture.LATITUDE, LocationFixture.LONGITUDE, LocationFixture.DETECTED_AT);
+    }
+
+    public static SafeZoneExitedEvent createDangerZoneExitedEvent() {
+        return new SafeZoneExitedEvent(
+                LocationFixture.WARD_KEY, LocationFixture.DANGER_ZONE_KEY, DANGER_ZONE_NAME, SafeZoneType.DANGER, LocationFixture.LATITUDE, LocationFixture.LONGITUDE, LocationFixture.DETECTED_AT);
+    }
+
+    public static SafeZoneState createSafeZoneState(String safeZoneKeysCsv) {
+        return SafeZoneState.builder()
+                .wardMemberKey(LocationFixture.WARD_KEY)
+                .safeZoneKeys(safeZoneKeysCsv)
+                .build();
     }
 }

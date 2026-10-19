@@ -26,7 +26,7 @@ public class QMemberWithdrawal extends EntityPathBase<MemberWithdrawal> {
 
     public final StringPath memberKey = createString("memberKey");
 
-    public final EnumPath<MemberRole> role = createEnum("role", MemberRole.class);
+    public final EnumPath<com.recaring.member.vo.MemberRole> role = createEnum("role", com.recaring.member.vo.MemberRole.class);
 
     public final DateTimePath<java.time.LocalDateTime> withdrawnAt = createDateTime("withdrawnAt", java.time.LocalDateTime.class);
 

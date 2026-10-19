@@ -2,8 +2,7 @@ package com.recaring.care.vo;
 
 import com.recaring.care.dataaccess.entity.CareInvitation;
 import com.recaring.care.dataaccess.entity.CareInvitationStatus;
-import com.recaring.care.dataaccess.entity.CareRole;
-import com.recaring.member.dataaccess.entity.Member;
+import com.recaring.member.vo.MemberInfo;
 
 import java.time.LocalDateTime;
 
@@ -17,13 +16,13 @@ public record ReceivedRequestInfo(
         CareInvitationStatus status,
         LocalDateTime createdAt
 ) {
-    public static ReceivedRequestInfo of(CareInvitation invitation, Member requester, Member ward) {
+    public static ReceivedRequestInfo of(CareInvitation invitation, MemberInfo requester, MemberInfo ward) {
         return new ReceivedRequestInfo(
                 invitation.getRequestKey(),
-                requester.getMemberKey(),
-                requester.getName(),
-                ward.getMemberKey(),
-                ward.getName(),
+                requester.memberKey(),
+                requester.name(),
+                ward.memberKey(),
+                ward.name(),
                 invitation.getCareRole(),
                 invitation.getStatus(),
                 invitation.getCreatedAt()

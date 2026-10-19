@@ -1,9 +1,9 @@
 package com.recaring.auth.implement.local;
 
-import com.recaring.auth.dataaccess.entity.LocalAuth;
+import com.recaring.auth.vo.EncodedPassword;
+import com.recaring.member.vo.MemberInfo;
 import com.recaring.auth.fixture.AuthFixture;
 import com.recaring.auth.vo.Password;
-import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.fixture.MemberFixture;
 import com.recaring.member.implement.MemberReader;
 import com.recaring.sms.vo.PhoneNumber;
@@ -52,8 +52,8 @@ class LocalAuthAuthenticatorTest {
         localAuthAuthenticator = new LocalAuthAuthenticator(passwordEncoder, localAuthReader, memberReader);
     }
 
-    private LocalAuth storedAuth() {
-        return AuthFixture.createLocalAuth(OWNER_MEMBER_KEY);
+    private EncodedPassword storedPassword() {
+        return AuthFixture.createEncodedPassword();
     }
 
     @Test
@@ -62,17 +62,17 @@ class LocalAuthAuthenticatorTest {
         // Given
         PhoneNumber phone = new PhoneNumber(MemberFixture.PHONE);
         Password password = AuthFixture.createPassword();
-        Member owner = MemberFixture.createMemberWithKey(OWNER_MEMBER_KEY, MemberFixture.PHONE);
+        MemberInfo owner = MemberFixture.createMemberInfoWithKey(OWNER_MEMBER_KEY, MemberFixture.PHONE);
 
         given(memberReader.findOptionalByPhone(phone)).willReturn(Optional.of(owner));
-        given(localAuthReader.findOptionalByMemberKey(OWNER_MEMBER_KEY)).willReturn(Optional.of(storedAuth()));
+        given(localAuthReader.findOptionalPasswordByMemberKey(OWNER_MEMBER_KEY)).willReturn(Optional.of(storedPassword()));
         given(passwordEncoder.matches(AuthFixture.RAW_PASSWORD, AuthFixture.ENCODED_PASSWORD)).willReturn(true);
 
         // When
-        Member result = localAuthAuthenticator.authenticate(phone, password);
+        MemberInfo result = localAuthAuthenticator.authenticate(phone, password);
 
-        assertThat(result.getMemberKey()).isEqualTo(OWNER_MEMBER_KEY);
-        assertThat(result.getPhone()).isEqualTo(MemberFixture.PHONE);
+        assertThat(result.memberKey()).isEqualTo(OWNER_MEMBER_KEY);
+        assertThat(result.phone()).isEqualTo(MemberFixture.PHONE);
     }
 
     @Test
@@ -81,10 +81,10 @@ class LocalAuthAuthenticatorTest {
         // Given
         PhoneNumber phone = new PhoneNumber(MemberFixture.PHONE);
         Password password = AuthFixture.createPassword();
-        Member owner = MemberFixture.createMemberWithKey(OWNER_MEMBER_KEY, MemberFixture.PHONE);
+        MemberInfo owner = MemberFixture.createMemberInfoWithKey(OWNER_MEMBER_KEY, MemberFixture.PHONE);
 
         given(memberReader.findOptionalByPhone(phone)).willReturn(Optional.of(owner));
-        given(localAuthReader.findOptionalByMemberKey(OWNER_MEMBER_KEY)).willReturn(Optional.of(storedAuth()));
+        given(localAuthReader.findOptionalPasswordByMemberKey(OWNER_MEMBER_KEY)).willReturn(Optional.of(storedPassword()));
         given(passwordEncoder.matches(AuthFixture.RAW_PASSWORD, AuthFixture.ENCODED_PASSWORD)).willReturn(false);
 
         assertThatThrownBy(() -> localAuthAuthenticator.authenticate(phone, password))
@@ -113,10 +113,10 @@ class LocalAuthAuthenticatorTest {
         // Given
         PhoneNumber phone = new PhoneNumber(MemberFixture.PHONE);
         Password password = AuthFixture.createPassword();
-        Member owner = MemberFixture.createMemberWithKey(OWNER_MEMBER_KEY, MemberFixture.PHONE);
+        MemberInfo owner = MemberFixture.createMemberInfoWithKey(OWNER_MEMBER_KEY, MemberFixture.PHONE);
 
         given(memberReader.findOptionalByPhone(phone)).willReturn(Optional.of(owner));
-        given(localAuthReader.findOptionalByMemberKey(OWNER_MEMBER_KEY)).willReturn(Optional.empty());
+        given(localAuthReader.findOptionalPasswordByMemberKey(OWNER_MEMBER_KEY)).willReturn(Optional.empty());
         given(passwordEncoder.matches(AuthFixture.RAW_PASSWORD, DUMMY_ENCODED_PASSWORD)).willReturn(true);
 
         assertThatThrownBy(() -> localAuthAuthenticator.authenticate(phone, password))
@@ -129,7 +129,7 @@ class LocalAuthAuthenticatorTest {
     void verifyPassword_passes_when_password_matches() {
         // Given
         Password password = AuthFixture.createPassword();
-        given(localAuthReader.findByMemberKey(AuthFixture.MEMBER_KEY)).willReturn(storedAuth());
+        given(localAuthReader.findPasswordByMemberKey(AuthFixture.MEMBER_KEY)).willReturn(storedPassword());
         given(passwordEncoder.matches(AuthFixture.RAW_PASSWORD, AuthFixture.ENCODED_PASSWORD)).willReturn(true);
 
         assertThatCode(() -> localAuthAuthenticator.verifyPassword(AuthFixture.MEMBER_KEY, password))
@@ -141,7 +141,7 @@ class LocalAuthAuthenticatorTest {
     void verifyPassword_throws_when_password_mismatches() {
         // Given
         Password password = AuthFixture.createPassword();
-        given(localAuthReader.findByMemberKey(AuthFixture.MEMBER_KEY)).willReturn(storedAuth());
+        given(localAuthReader.findPasswordByMemberKey(AuthFixture.MEMBER_KEY)).willReturn(storedPassword());
         given(passwordEncoder.matches(AuthFixture.RAW_PASSWORD, AuthFixture.ENCODED_PASSWORD)).willReturn(false);
 
         assertThatThrownBy(() -> localAuthAuthenticator.verifyPassword(AuthFixture.MEMBER_KEY, password))

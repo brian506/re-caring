@@ -2,20 +2,22 @@
 
 > 마지막 업데이트: 2026-10-19. 기능 추가·수정 시 해당 섹션을 갱신한다.
 
+> 도메인 enum(`MemberRole`·`Gender` → `member.vo`, `CareRole`·`CarePartyRole` → `care.vo`, `SafeZoneType` → `safezone.vo`)은 `vo/`에 둔다. `SignUpType`·`SubscriptionType`·`*Status`·`*Category` 등 나머지 enum은 아직 `dataaccess/entity`에 남아 있다 (#284)
+
 ## 도메인별 패키지 현황
 
 | 도메인 | 주요 Service | 주요 Implement |
 |--------|-------------|---------------|
-| `auth` | LocalAuthService, OAuthService, TokenRefreshService | LocalAuthAuthenticator, TokenIssuer, RefreshTokenReader/Writer, OAuthManager |
-| `care` | CareInvitationService, CareRelationshipService | CareInvitationManager, CareInvitationReader/Writer, CareRelationshipValidator, DesignatedAvatarManager |
+| `auth` | LocalAuthService, OAuthService, TokenRefreshService | LocalAuthAuthenticator, TokenIssuer(`MemberInfo`로 발급), LocalAuthReader(`EncodedPassword` 반환), RefreshTokenReader/Writer, OAuthReader(`memberKey` 반환)/OAuthManager. 로그아웃의 FCM 토큰 삭제는 `FcmDeviceTokenManager` 직접 호출 |
+| `care` | CareInvitationService, CareRelationshipService | CareInvitationManager, CareInvitationReader/Writer(`CareInvitationInfo` VO 반환), CareRelationshipValidator, DesignatedAvatarManager |
 | `device` | DeviceTokenService | WardDeviceTokenManager, WardDeviceTokenReader |
-| `location` | LocationService, LocationSettingService | GpsHistoryManager, GpsLatestCacheManager/Listener, LocationSignalMonitor/AlertManager(signal), SseEmitterManager, LocationValidator, CareRelationshipCacheReader, BatteryThresholdEvaluator/BatteryDetectionListener/BatteryAlertStateManager/AnomalyAcknowledgementManager/DetectionPublisher/DetectionListener/AnomalyDetectionConsumer/AnomalyDetectionParser/AnomalyDetectionManager(detection), SafeZoneStateManager/SafeZoneDetectionListener(safezone), LocationSettingManager |
-| `member` | MemberService | MemberReader/Writer/Validator, MembersTermsAgreementWriter, MemberWithdrawalManager |
-| `notification` | NotificationService, NotificationSettingService, FcmDeviceTokenService | NotificationReader/Writer, NotificationSendManager, NotificationFeedbackManager/Validator(feedback), NotificationAcknowledgementManager(acknowledgement), NotificationSettingReader/Manager/Validator, FcmDeviceTokenReader/Manager, FcmClient(Firebase/NoOp), CareInvitationNotificationListener, BatteryThresholdNotificationListener, SafeZoneNotificationListener, AnomalyNotificationListener, LocationSignalNotificationListener |
+| `location` | LocationService, LocationSettingService | GpsHistoryManager, GpsLatestCacheManager/Listener, LocationSignalMonitor/AlertManager(signal), SseEmitterManager, LocationValidator, CareRelationshipCacheReader, BatteryThresholdEvaluator/BatteryDetectionListener/BatteryAlertStateManager/AnomalyAcknowledgementManager/DetectionPublisher/DetectionListener/AnomalyDetectionConsumer/AnomalyDetectionParser/AnomalyDetectionManager(detection), LocationSettingManager |
+| `member` | MemberService | MemberReader(`MemberInfo` VO 반환)/Writer/Validator, MembersTermsAgreementReader(`TermsAgreementInfo` 반환)/Writer, MemberWithdrawalManager |
+| `notification` | NotificationService, NotificationSettingService, FcmDeviceTokenService | NotificationReader/Writer, NotificationSendManager, NotificationFeedbackManager/Validator(feedback), NotificationAcknowledgementManager(acknowledgement), NotificationSettingReader/Manager/Validator, FcmDeviceTokenReader/Manager(`FcmDeviceTokenInfo` VO 반환), FcmClient(Firebase/NoOp), CareInvitationNotificationListener, BatteryThresholdNotificationListener, SafeZoneNotificationListener, AnomalyNotificationListener, LocationSignalNotificationListener |
 | `inquiry` | InquiryService | InquiryReader, InquiryManager(접수·답변·탈퇴 삭제, 답변 시 InquiryAnsweredEvent), InquiryOperatorNotifier(신규 접수 운영자 Slack 알림) |
 | `siteinquiry` | SiteInquiryService | SiteInquiryReader, SiteInquiryManager(등록·답변·답변 삭제·삭제), SiteInquiryAuthenticator(비밀글 비밀번호 BCrypt 인코딩·검증), SiteInquiryRateLimitValidator(등록 IP 한도·비밀번호 실패 잠금), SiteInquiryOperatorNotifier(신규 접수 Slack). 소개 웹사이트 비회원 문의 게시판 (#271). 길이 VO는 `inquiry.vo`의 InquiryTitle/Content/Answer 재사용 |
 | `place` | PlaceService | KakaoPlaceSearchClient (카카오 로컬 키워드 검색 프록시, 엔티티 없음) |
-| `safezone` | SafeZoneService | SafeZoneReader, SafeZoneWriter |
+| `safezone` | SafeZoneService | SafeZoneReader, SafeZoneWriter, SafeZoneStateManager, SafeZoneDetectionListener(`GpsSavedEvent` 구독 → `SafeZoneEntered/ExitedEvent` 발행). 안심존 상태(`SafeZoneState`)·이벤트·`SafeZoneObservation/Transition` VO도 이 도메인 소유 (#284에서 location에서 이동) |
 | `sms` | PhoneVerificationService | SmsClient, SmsCodeGenerator, PhoneVerificationReader/Writer, SmsRateLimitValidator |
 | `alert` | AlertService, AlertResolutionService | AlertInvestigationOrchestrator, AlertInvestigationAgent(Tool Use Loop), SsmContextFetcher, PrometheusContextFetcher, ErrorHistoryFetcher, RunbookService, SlackAlertNotifier, GitHubPrCreator, AlertRetryHandler |
 
@@ -110,7 +112,7 @@
 | WardDeviceToken | ward_device_tokens | wardKey(UUID, UNIQUE), token(UUID, UNIQUE), createdAt, expiresAt |
 | MembersTermsAgreement | members_terms_agreements | memberKey, agreedAt |
 | SafeZone | safe_zones | safeZoneKey(UUID), wardMemberKey, name, address, latitude, longitude, radiusMeters(int, 100~2000m — 앱 슬라이더 값을 그대로 저장. #260 배포 때 300 미만 값을 300으로 보정했고, #266에서 하한을 100으로 되돌렸지만 보정된 값은 복원하지 않았다), type(SAFE/DANGER — 위험존도 같은 테이블, #238) |
-| SafeZoneState | safe_zone_states | wardMemberKey(UNIQUE), safeZoneKeys(CSV, 현재 속한 안심존). 행 없음=최초 관측(알림 안 함), 빈 문자열=존 밖 |
+| SafeZoneState | safe_zone_states | wardMemberKey(UNIQUE), safeZoneKeys(CSV, 현재 속한 안심존). 행 없음=최초 관측(알림 안 함), 빈 문자열=존 밖. 엔티티는 `safezone.dataaccess.entity` (#284에서 location에서 이동, 테이블명 변경 없음) |
 | Notification | notifications | notificationKey(UUID, UNIQUE), recipientMemberKey, eventType, title, body, dataPayload(jsonb, 리다이렉트용), createdAt. 수신자별 개별 row. 읽음 필드 없음. 목록 조회 정렬·커서는 notification_id DESC (created_at은 fan-out 시 동시각 행이 생겨 정렬 불안정) |
 | AnomalyDetection | anomaly_detections | wardMemberKey, detectionType(5종), score, recordedAt, latitude, longitude, evidence(1000자, nullable — 엔진 2차 배포 후 안 옴), alertKind/eventId/eventStartedAt/eventEndedAt/categories/reasonCode/durationMin/usualMin/speedKmh/eventHour/remindSeq(#248, 전부 nullable — 이전 형식 메시지는 비어 있음). 사건(eventId) 하나에 알림 여러 행(START·CATEGORY_ADDED·REMIND·END). `(wardMemberKey, detectionType, recordedAt, alertKind)` UNIQUE NULLS NOT DISTINCT = 재배달 멱등 키(#255). 알림 토글과 무관하게 항상 저장되는 탐지 사건 원본 (1건 = 1 row) |
 | NotificationFeedback | notification_feedbacks | notificationId(UNIQUE — 1알림 1회), anomalyDetectionId(이상탐지 알림만 채움, 안심존 알림 평가는 NULL — 안심존 키·좌표는 notification_id로 알림 payload에서 찾는다), accuracy(ACCURATE/INACCURATE/UNSURE), reason(nullable, INACCURATE 전용), comment(100자, nullable). FK 제약은 걸지 않는다(이 프로젝트는 JPA 연관관계를 쓰지 않음). 이상탐지 알림의 `anomalyDetectionId`는 제출 시 `dataPayload`의 wardKey+type+recordedAt으로 `anomaly_detections`를 역조회해 채우며, **찾지 못하면 저장하지 않고 E9009로 거부한다** — 탐지 행과 조인되지 않는 라벨은 학습에 쓸 수 없고, 키 불일치 버그가 로그가 아니라 에러율로 드러나야 한다 |

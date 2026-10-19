@@ -1,17 +1,18 @@
 package com.recaring.care.fixture;
 
+import com.recaring.member.vo.MemberInfo;
 import com.recaring.care.dataaccess.entity.CareInvitation;
 import com.recaring.care.dataaccess.entity.CareInvitationStatus;
 import com.recaring.care.dataaccess.entity.CareRelationship;
-import com.recaring.care.dataaccess.entity.CareRole;
+import com.recaring.care.vo.CareRole;
 import com.recaring.care.dataaccess.entity.DesignatedAvatar;
 import com.recaring.care.vo.CaregiverInfo;
 import com.recaring.care.vo.CareRelationshipRegistration;
 import com.recaring.care.vo.ReceivedRequestInfo;
 import com.recaring.care.vo.WardInfo;
-import com.recaring.member.dataaccess.entity.Gender;
+import com.recaring.member.vo.Gender;
 import com.recaring.member.dataaccess.entity.Member;
-import com.recaring.member.dataaccess.entity.MemberRole;
+import com.recaring.member.vo.MemberRole;
 import com.recaring.member.dataaccess.entity.SignUpType;
 
 import java.time.LocalDateTime;
@@ -80,6 +81,18 @@ public class CareFixture {
                 .role(MemberRole.WARD)
                 .signUpType(SignUpType.LOCAL)
                 .build();
+    }
+
+    public static MemberInfo createWardMemberInfoWithAvatar(String profileAvatarCode) {
+        Member ward = createWardMember();
+        ward.changeProfileAvatarCode(profileAvatarCode);
+        return MemberInfo.from(ward);
+    }
+
+    public static MemberInfo createGuardianMemberInfoWithAvatar(String profileAvatarCode) {
+        Member guardian = createGuardianMember();
+        guardian.changeProfileAvatarCode(profileAvatarCode);
+        return MemberInfo.from(guardian);
     }
 
     public static CaregiverInfo createCaregiverInfo(String memberKey, CareRole careRole) {

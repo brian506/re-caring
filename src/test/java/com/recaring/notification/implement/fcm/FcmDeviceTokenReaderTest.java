@@ -1,5 +1,6 @@
 package com.recaring.notification.implement.fcm;
 
+import com.recaring.notification.vo.FcmDeviceTokenInfo;
 import com.recaring.notification.dataaccess.entity.FcmDeviceToken;
 import com.recaring.notification.dataaccess.repository.FcmDeviceTokenRepository;
 import com.recaring.notification.fixture.NotificationFixture;
@@ -34,9 +35,10 @@ class FcmDeviceTokenReaderTest {
         );
         given(fcmDeviceTokenRepository.findByMemberKey(NotificationFixture.GUARDIAN_KEY)).willReturn(tokens);
 
-        List<FcmDeviceToken> result = fcmDeviceTokenReader.findTokensByMemberKey(NotificationFixture.GUARDIAN_KEY);
+        List<FcmDeviceTokenInfo> result = fcmDeviceTokenReader.findTokensByMemberKey(NotificationFixture.GUARDIAN_KEY);
 
-        assertThat(result).isEqualTo(tokens);
+        assertThat(result).containsExactly(
+                NotificationFixture.guardianFcmDeviceTokenInfo(NotificationFixture.GUARDIAN_FCM_TOKEN));
         then(fcmDeviceTokenRepository).should().findByMemberKey(NotificationFixture.GUARDIAN_KEY);
     }
 }

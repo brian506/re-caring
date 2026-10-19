@@ -1,10 +1,10 @@
 package com.recaring.member.controller.response;
 
-import com.recaring.member.dataaccess.entity.Member;
-import com.recaring.member.dataaccess.entity.MemberRole;
-import com.recaring.member.dataaccess.entity.MembersTermsAgreement;
 import com.recaring.member.dataaccess.entity.SignUpType;
 import com.recaring.member.dataaccess.entity.SubscriptionType;
+import com.recaring.member.vo.MemberInfo;
+import com.recaring.member.vo.MemberRole;
+import com.recaring.member.vo.TermsAgreementInfo;
 import com.recaring.safezone.vo.SafeZoneInfo;
 
 import java.time.LocalDate;
@@ -27,22 +27,22 @@ public record MyInfoResponse(
         LocalDateTime joinedAt,
         List<SafeZoneInfo> safeZones
 ) {
-    public static MyInfoResponse of(Member member, MembersTermsAgreement termsAgreement,
+    public static MyInfoResponse of(MemberInfo member, TermsAgreementInfo termsAgreement,
                                     List<SafeZoneInfo> safeZones) {
         return new MyInfoResponse(
-                member.getMemberKey(),
-                member.getName(),
-                member.getPhone(),
-                member.getBirth(),
-                member.getGender() != null ? member.getGender().getDescription() : null,
-                member.getProfileAvatarCode(),
-                member.getRole(),
-                member.getSubscriptionType(),
-                member.getSignUpType(),
-                termsAgreement.getTermsServiceAgreedAt(),
-                termsAgreement.getTermsPrivacyAgreedAt(),
-                termsAgreement.getTermsLocationAgreedAt(),
-                member.getCreatedAt(),
+                member.memberKey(),
+                member.name(),
+                member.phone(),
+                member.birth(),
+                member.gender() != null ? member.gender().getDescription() : null,
+                member.profileAvatarCode(),
+                member.role(),
+                member.subscriptionType(),
+                member.signUpType(),
+                termsAgreement.termsServiceAgreedAt(),
+                termsAgreement.termsPrivacyAgreedAt(),
+                termsAgreement.termsLocationAgreedAt(),
+                member.joinedAt(),
                 safeZones
         );
     }

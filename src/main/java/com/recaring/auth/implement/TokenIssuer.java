@@ -1,6 +1,6 @@
 package com.recaring.auth.implement;
 
-import com.recaring.member.dataaccess.entity.Member;
+import com.recaring.member.vo.MemberInfo;
 import com.recaring.security.jwt.JwtGenerator;
 import com.recaring.security.vo.Jwt;
 import com.recaring.security.vo.TokenPayload;
@@ -16,9 +16,9 @@ public class TokenIssuer {
     private final JwtGenerator jwtGenerator;
     private final RefreshTokenWriter refreshTokenWriter;
 
-    public Jwt issue(Member member) {
-        Jwt jwt = jwtGenerator.generateJwt(new TokenPayload(member.getMemberKey(), member.getRole(), new Date()));
-        refreshTokenWriter.save(jwt.refreshToken(), member.getMemberKey());
+    public Jwt issue(MemberInfo member) {
+        Jwt jwt = jwtGenerator.generateJwt(new TokenPayload(member.memberKey(), member.role(), new Date()));
+        refreshTokenWriter.save(jwt.refreshToken(), member.memberKey());
         return jwt;
     }
 }

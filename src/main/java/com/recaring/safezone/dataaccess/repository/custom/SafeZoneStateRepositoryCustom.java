@@ -1,4 +1,4 @@
-package com.recaring.location.dataaccess.repository.custom;
+package com.recaring.safezone.dataaccess.repository.custom;
 
 public interface SafeZoneStateRepositoryCustom {
 

@@ -1,6 +1,6 @@
-package com.recaring.location.event;
+package com.recaring.safezone.event;
 
-import com.recaring.safezone.dataaccess.entity.SafeZoneType;
+import com.recaring.safezone.vo.SafeZoneType;
 
 import java.time.LocalDateTime;
 

@@ -1,9 +1,9 @@
 package com.recaring.auth.business;
 
+import com.recaring.member.vo.MemberInfo;
 import com.recaring.auth.implement.RefreshTokenReader;
 import com.recaring.auth.implement.RefreshTokenWriter;
 import com.recaring.auth.implement.TokenIssuer;
-import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.fixture.MemberFixture;
 import com.recaring.member.implement.MemberReader;
 import com.recaring.security.jwt.JwtValidator;
@@ -58,7 +58,7 @@ class TokenRefreshServiceTest {
     void refresh_success() {
         String oldRefreshToken = "old-refresh-token";
         String memberKey = UUID.randomUUID().toString();
-        Member member = MemberFixture.createMember();
+        MemberInfo member = MemberFixture.createMemberInfo();
         Jwt newJwt = new Jwt("new-access-token", "new-refresh-token");
 
         @SuppressWarnings("unchecked")

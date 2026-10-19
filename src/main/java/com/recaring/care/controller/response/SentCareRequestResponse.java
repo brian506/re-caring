@@ -1,7 +1,7 @@
 package com.recaring.care.controller.response;
 
 import com.recaring.care.dataaccess.entity.CareInvitationStatus;
-import com.recaring.care.dataaccess.entity.CarePartyRole;
+import com.recaring.care.vo.CarePartyRole;
 import com.recaring.care.vo.SentRequestInfo;
 
 import java.time.LocalDateTime;

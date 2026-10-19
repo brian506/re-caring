@@ -1,4 +1,4 @@
-package com.recaring.location.dataaccess.entity;
+package com.recaring.safezone.dataaccess.entity;
 
 import com.recaring.common.entity.BaseEntity;
 import jakarta.persistence.Column;

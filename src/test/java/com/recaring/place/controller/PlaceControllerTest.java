@@ -1,7 +1,7 @@
 package com.recaring.place.controller;
 
 import com.recaring.care.fixture.CareFixture;
-import com.recaring.member.dataaccess.entity.MemberRole;
+import com.recaring.member.vo.MemberRole;
 import com.recaring.place.fixture.PlaceFixture;
 import com.recaring.place.implement.KakaoPlaceSearchClient;
 import com.recaring.place.vo.PlaceSearchCondition;

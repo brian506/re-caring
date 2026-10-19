@@ -1,14 +1,17 @@
-package com.recaring.care.dataaccess.entity;
+package com.recaring.care.vo;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public enum CarePartyRole {
+public enum CareRole {
     GUARDIAN("보호자"),
-    MANAGER("관계자"),
-    WARD("보호 대상자");
+    MANAGER("관계자");
 
     private final String description;
+
+    public boolean isGuardian() {
+        return this == GUARDIAN;
+    }
 }

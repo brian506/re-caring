@@ -1,4 +1,4 @@
-package com.recaring.location.dataaccess.entity;
+package com.recaring.safezone.dataaccess.entity;
 
 import static com.querydsl.core.types.PathMetadataFactory.*;
 
@@ -18,7 +18,7 @@ import com.querydsl.core.types.Path;
 @Generated("com.querydsl.codegen.DefaultEntitySerializer")
 public class QSafeZoneState extends EntityPathBase<SafeZoneState> {
 
-    private static final long serialVersionUID = -1974305004L;
+    private static final long serialVersionUID = -645389288L;
 
     public static final QSafeZoneState safeZoneState = new QSafeZoneState("safeZoneState");
 

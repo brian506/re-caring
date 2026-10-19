@@ -15,9 +15,9 @@ import com.recaring.location.implement.detection.AnomalyDetectionManager;
 import com.recaring.location.implement.detection.BatteryAlertStateManager;
 import com.recaring.location.implement.gps.GpsHistoryManager;
 import com.recaring.location.implement.gps.GpsLatestCacheManager;
-import com.recaring.location.implement.safezone.SafeZoneStateManager;
-import com.recaring.member.dataaccess.entity.Member;
+import com.recaring.safezone.implement.SafeZoneStateManager;
 import com.recaring.member.dataaccess.entity.MemberWithdrawal;
+import com.recaring.member.vo.MemberRole;
 import com.recaring.member.dataaccess.repository.MemberWithdrawalRepository;
 import com.recaring.notification.dataaccess.repository.FcmDeviceTokenRepository;
 import com.recaring.notification.dataaccess.repository.NotificationSettingRepository;
@@ -63,9 +63,9 @@ public class MemberWithdrawalManager {
     public void withdraw(String memberKey, Password password) {
         localAuthAuthenticator.verifyPassword(memberKey, password);
 
-        Member member = memberReader.findByMemberKey(memberKey);
+        MemberRole role = memberReader.findByMemberKey(memberKey).role();
 
-        memberWithdrawalRepository.save(MemberWithdrawal.of(memberKey, member.getRole()));
+        memberWithdrawalRepository.save(MemberWithdrawal.of(memberKey, role));
 
         refreshTokenWriter.deleteByMemberKey(memberKey);
         localAuthRepository.deleteByMemberKey(memberKey);

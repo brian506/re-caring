@@ -1,9 +1,9 @@
-package com.recaring.location.implement.safezone;
+package com.recaring.safezone.implement;
 
-import com.recaring.location.dataaccess.entity.SafeZoneState;
-import com.recaring.location.dataaccess.repository.SafeZoneStateRepository;
-import com.recaring.location.vo.SafeZoneObservation;
-import com.recaring.location.vo.SafeZoneTransition;
+import com.recaring.safezone.dataaccess.entity.SafeZoneState;
+import com.recaring.safezone.dataaccess.repository.SafeZoneStateRepository;
+import com.recaring.safezone.vo.SafeZoneObservation;
+import com.recaring.safezone.vo.SafeZoneTransition;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

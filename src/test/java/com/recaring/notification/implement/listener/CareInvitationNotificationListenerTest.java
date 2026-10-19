@@ -1,10 +1,10 @@
 package com.recaring.notification.implement.listener;
 
-import com.recaring.care.dataaccess.entity.CarePartyRole;
+import com.recaring.member.vo.MemberInfo;
+import com.recaring.care.vo.CarePartyRole;
 import com.recaring.care.event.CareInvitationAcceptedEvent;
 import com.recaring.care.event.CareInvitationSentEvent;
 import com.recaring.care.fixture.CareFixture;
-import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.implement.MemberReader;
 import com.recaring.notification.implement.NotificationSendManager;
 import org.junit.jupiter.api.DisplayName;
@@ -36,7 +36,7 @@ class CareInvitationNotificationListenerTest {
     @Test
     @DisplayName("발송 이벤트 - 요청자 이름과 역할을 담아 초대 대상에게 알림을 보낸다")
     void onCareInvitationSent_sends_notification_to_target() {
-        Member requester = CareFixture.createGuardianMember(); // name = "보호자"
+        MemberInfo requester = MemberInfo.from(CareFixture.createGuardianMember()); // name = "보호자"
         CareInvitationSentEvent event = new CareInvitationSentEvent(
                 CareFixture.REQUEST_KEY,
                 CareFixture.WARD_MEMBER_KEY,
@@ -74,7 +74,7 @@ class CareInvitationNotificationListenerTest {
     @Test
     @DisplayName("수락 이벤트 - 수락자 이름을 담아 요청자에게 알림을 보낸다")
     void onCareInvitationAccepted_sends_notification_to_requester() {
-        Member acceptor = CareFixture.createWardMember(); // name = "보호대상자"
+        MemberInfo acceptor = MemberInfo.from(CareFixture.createWardMember()); // name = "보호대상자"
         CareInvitationAcceptedEvent event = new CareInvitationAcceptedEvent(
                 CareFixture.REQUEST_KEY,
                 CareFixture.WARD_MEMBER_KEY,

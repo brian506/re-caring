@@ -1,7 +1,7 @@
 package com.recaring.notification.dataaccess.repository.custom;
 
 import com.recaring.notification.dataaccess.entity.FcmDeviceToken;
-import com.recaring.care.dataaccess.entity.CareRole;
+import com.recaring.care.vo.CareRole;
 
 import java.util.Collection;
 import java.util.List;

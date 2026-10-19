@@ -1,5 +1,6 @@
 package com.recaring.member.implement;
 
+import com.recaring.member.vo.MemberInfo;
 import com.recaring.auth.dataaccess.repository.LocalAuthRepository;
 import com.recaring.auth.dataaccess.repository.OAuthRepository;
 import com.recaring.auth.fixture.AuthFixture;
@@ -16,9 +17,8 @@ import com.recaring.location.implement.detection.AnomalyAcknowledgementManager;
 import com.recaring.location.implement.detection.BatteryAlertStateManager;
 import com.recaring.location.implement.gps.GpsHistoryManager;
 import com.recaring.location.implement.gps.GpsLatestCacheManager;
-import com.recaring.location.implement.safezone.SafeZoneStateManager;
-import com.recaring.member.dataaccess.entity.Member;
-import com.recaring.member.dataaccess.entity.MemberRole;
+import com.recaring.safezone.implement.SafeZoneStateManager;
+import com.recaring.member.vo.MemberRole;
 import com.recaring.member.dataaccess.entity.MemberWithdrawal;
 import com.recaring.member.dataaccess.repository.MemberWithdrawalRepository;
 import com.recaring.member.fixture.MemberFixture;
@@ -149,7 +149,7 @@ class MemberWithdrawalManagerTest {
     }
 
     private void givenWithdrawableMember() {
-        Member member = MemberFixture.createWardMember(MemberFixture.PHONE);
+        MemberInfo member = MemberInfo.from(MemberFixture.createWardMember(MemberFixture.PHONE));
         given(memberReader.findByMemberKey(MEMBER_KEY)).willReturn(member);
     }
 }

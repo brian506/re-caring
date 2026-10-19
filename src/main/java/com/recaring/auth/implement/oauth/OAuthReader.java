@@ -14,8 +14,8 @@ public class OAuthReader {
 
     private final OAuthRepository oAuthRepository;
 
-    public Optional<OAuth> find(OAuthProvider provider, String providerMemberId) {
-        return oAuthRepository.find(provider, providerMemberId);
+    public Optional<String> findMemberKey(OAuthProvider provider, String providerMemberId) {
+        return oAuthRepository.find(provider, providerMemberId).map(OAuth::getMemberKey);
     }
 
     public boolean isLinked(String memberKey, OAuthProvider provider) {

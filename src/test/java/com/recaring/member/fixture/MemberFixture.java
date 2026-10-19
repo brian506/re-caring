@@ -1,11 +1,13 @@
 package com.recaring.member.fixture;
 
-import com.recaring.member.dataaccess.entity.Gender;
+import com.recaring.member.vo.Gender;
 import com.recaring.member.dataaccess.entity.Member;
-import com.recaring.member.dataaccess.entity.MemberRole;
+import com.recaring.member.vo.MemberRole;
 import com.recaring.member.dataaccess.entity.MembersTermsAgreement;
 import com.recaring.member.dataaccess.entity.SignUpType;
 import com.recaring.member.dataaccess.entity.SubscriptionType;
+import com.recaring.member.vo.MemberInfo;
+import com.recaring.member.vo.TermsAgreementInfo;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
@@ -88,5 +90,21 @@ public class MemberFixture {
         return MembersTermsAgreement.builder()
                 .memberKey(memberKey)
                 .build();
+    }
+
+    public static MemberInfo createMemberInfo() {
+        return MemberInfo.from(createMember());
+    }
+
+    public static MemberInfo createMemberInfoWithKey(String memberKey, String phone) {
+        return MemberInfo.from(createMemberWithKey(memberKey, phone));
+    }
+
+    public static MemberInfo createMemberInfoWithSubscription(SubscriptionType subscriptionType) {
+        return MemberInfo.from(createMemberWithSubscription(subscriptionType));
+    }
+
+    public static TermsAgreementInfo createTermsAgreementInfo() {
+        return TermsAgreementInfo.from(createTermsAgreement());
     }
 }

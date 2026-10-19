@@ -41,7 +41,7 @@ public class QSafeZone extends EntityPathBase<SafeZone> {
 
     public final StringPath safeZoneKey = createString("safeZoneKey");
 
-    public final EnumPath<SafeZoneType> type = createEnum("type", SafeZoneType.class);
+    public final EnumPath<com.recaring.safezone.vo.SafeZoneType> type = createEnum("type", com.recaring.safezone.vo.SafeZoneType.class);
 
     //inherited
     public final DateTimePath<java.time.LocalDateTime> updatedAt = _super.updatedAt;

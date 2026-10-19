@@ -30,7 +30,7 @@ public class CareRelationshipWriter {
     public void register(CareRelationshipRegistration registration) {
         Stream.of(registration.wardMemberKey(), registration.caregiverKey())
                 .sorted()
-                .forEach(memberReader::findForUpdate);
+                .forEach(memberReader::lockForUpdate);
         relationshipValidator.validateCanAddWard(registration.caregiverKey(), registration.wardMemberKey());
         careRelationshipRepository.save(
                 CareRelationship.of(registration.wardMemberKey(), registration.caregiverKey(), registration.careRole())

@@ -1,5 +1,6 @@
 package com.recaring.member.dataaccess.entity;
 
+import com.recaring.member.vo.MemberRole;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

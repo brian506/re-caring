@@ -1,7 +1,7 @@
 package com.recaring.notification.dataaccess.repository.custom;
 
 import com.querydsl.core.BooleanBuilder;
-import com.recaring.care.dataaccess.entity.CarePartyRole;
+import com.recaring.care.vo.CarePartyRole;
 import com.recaring.notification.dataaccess.entity.FcmDeviceToken;
 import com.recaring.support.repository.QuerydslRepositorySupport;
 

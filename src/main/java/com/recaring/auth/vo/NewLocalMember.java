@@ -1,7 +1,7 @@
 package com.recaring.auth.vo;
 
-import com.recaring.member.dataaccess.entity.Gender;
-import com.recaring.member.dataaccess.entity.MemberRole;
+import com.recaring.member.vo.Gender;
+import com.recaring.member.vo.MemberRole;
 import com.recaring.sms.vo.PhoneNumber;
 import lombok.Builder;
 

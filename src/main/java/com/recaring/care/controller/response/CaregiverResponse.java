@@ -1,7 +1,7 @@
 package com.recaring.care.controller.response;
 
 import com.recaring.care.vo.CaregiverInfo;
-import com.recaring.care.dataaccess.entity.CareRole;
+import com.recaring.care.vo.CareRole;
 
 public record CaregiverResponse(
         String memberKey,

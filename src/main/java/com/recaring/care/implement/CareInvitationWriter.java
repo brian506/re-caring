@@ -2,6 +2,7 @@ package com.recaring.care.implement;
 
 import com.recaring.care.dataaccess.entity.CareInvitation;
 import com.recaring.care.dataaccess.repository.CareInvitationRepository;
+import com.recaring.care.vo.CareInvitationInfo;
 import com.recaring.care.vo.NewCareInvitation;
 import com.recaring.support.exception.AppException;
 import com.recaring.support.exception.ErrorType;
@@ -16,8 +17,8 @@ public class CareInvitationWriter {
     private final CareInvitationRepository careInvitationRepository;
 
     @Transactional
-    public CareInvitation register(NewCareInvitation invitation) {
-        return careInvitationRepository.save(CareInvitation.from(invitation));
+    public CareInvitationInfo register(NewCareInvitation invitation) {
+        return CareInvitationInfo.from(careInvitationRepository.save(CareInvitation.from(invitation)));
     }
 
     @Transactional

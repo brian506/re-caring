@@ -1,12 +1,11 @@
-package com.recaring.location.implement.safezone;
+package com.recaring.safezone.implement;
 
 import com.recaring.location.event.GpsSavedEvent;
-import com.recaring.location.event.SafeZoneEnteredEvent;
-import com.recaring.location.event.SafeZoneExitedEvent;
+import com.recaring.safezone.event.SafeZoneEnteredEvent;
+import com.recaring.safezone.event.SafeZoneExitedEvent;
 import com.recaring.location.vo.Gps;
-import com.recaring.location.vo.SafeZoneObservation;
-import com.recaring.location.vo.SafeZoneTransition;
-import com.recaring.safezone.implement.SafeZoneReader;
+import com.recaring.safezone.vo.SafeZoneObservation;
+import com.recaring.safezone.vo.SafeZoneTransition;
 import com.recaring.safezone.vo.SafeZoneInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

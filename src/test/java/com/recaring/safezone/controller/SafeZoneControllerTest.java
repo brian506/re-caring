@@ -5,7 +5,7 @@ import com.recaring.care.fixture.CareFixture;
 import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.dataaccess.repository.MemberRepository;
 import com.recaring.safezone.dataaccess.entity.SafeZone;
-import com.recaring.safezone.dataaccess.entity.SafeZoneType;
+import com.recaring.safezone.vo.SafeZoneType;
 import com.recaring.safezone.dataaccess.repository.SafeZoneRepository;
 import com.recaring.safezone.fixture.SafeZoneFixture;
 import com.recaring.support.AbstractIntegrationTest;

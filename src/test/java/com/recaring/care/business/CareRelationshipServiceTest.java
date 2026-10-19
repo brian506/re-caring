@@ -1,6 +1,6 @@
 package com.recaring.care.business;
 
-import com.recaring.care.dataaccess.entity.CareRole;
+import com.recaring.care.vo.CareRole;
 import com.recaring.care.fixture.CareFixture;
 import com.recaring.care.implement.CareRelationshipManager;
 import com.recaring.care.implement.CareRelationshipReader;

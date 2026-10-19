@@ -7,9 +7,9 @@ import com.recaring.auth.implement.RefreshTokenWriter;
 import com.recaring.auth.implement.TokenIssuer;
 import com.recaring.auth.vo.EncodedPassword;
 import com.recaring.auth.vo.Password;
-import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.implement.MemberReader;
-import com.recaring.notification.business.FcmDeviceTokenService;
+import com.recaring.member.vo.MemberInfo;
+import com.recaring.notification.implement.fcm.FcmDeviceTokenManager;
 import com.recaring.security.vo.Jwt;
 import com.recaring.sms.implement.PhoneVerificationWriter;
 import com.recaring.sms.vo.PhoneNumber;
@@ -26,7 +26,7 @@ public class LocalAuthService {
     private final LocalAuthManager localAuthManager;
     private final RefreshTokenWriter refreshTokenWriter;
     private final PhoneVerificationWriter phoneVerificationWriter;
-    private final FcmDeviceTokenService fcmDeviceTokenService;
+    private final FcmDeviceTokenManager fcmDeviceTokenManager;
 
     public void signUp(SignUpCommand command) {
         PhoneNumber phone = phoneVerificationWriter.consumePhoneByToken(command.smsToken());
@@ -35,21 +35,21 @@ public class LocalAuthService {
     }
 
     public Jwt signIn(PhoneNumber phone, Password password) {
-        Member member = authAuthenticator.authenticate(phone, password);
+        MemberInfo member = authAuthenticator.authenticate(phone, password);
         return tokenIssuer.issue(member);
     }
 
     public void resetPassword(String smsToken, Password password) {
         PhoneNumber phone = phoneVerificationWriter.consumePhoneByToken(smsToken);
-        Member member = memberReader.findByPhone(phone);
+        String memberKey = memberReader.findByPhone(phone).memberKey();
         EncodedPassword encodedPassword = authAuthenticator.encodePassword(password);
-        localAuthManager.changePassword(member.getMemberKey(), encodedPassword.value());
+        localAuthManager.changePassword(memberKey, encodedPassword.value());
     }
 
     public void signOut(String refreshToken, String fcmToken) {
         refreshTokenWriter.delete(refreshToken);
         if (fcmToken != null && !fcmToken.isBlank()) {
-            fcmDeviceTokenService.delete(fcmToken);
+            fcmDeviceTokenManager.deleteByToken(fcmToken);
         }
     }
 }

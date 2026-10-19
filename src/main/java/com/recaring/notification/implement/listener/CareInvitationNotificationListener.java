@@ -30,7 +30,7 @@ public class CareInvitationNotificationListener {
         log.info("[CareInvitationAlert : SentEventReceived]: requestKey={} | targetMemberKey={}",
                 event.requestKey(), event.targetMemberKey());
 
-        String requesterName = memberReader.findByMemberKey(event.requesterMemberKey()).getName();
+        String requesterName = memberReader.findByMemberKey(event.requesterMemberKey()).name();
         String roleDescription = event.targetRole().getDescription();
 
         notificationSendManager.sendToMember(
@@ -48,7 +48,7 @@ public class CareInvitationNotificationListener {
         log.info("[CareInvitationAlert : AcceptedEventReceived]: requestKey={} | requesterMemberKey={}",
                 event.requestKey(), event.requesterMemberKey());
 
-        String acceptorName = memberReader.findByMemberKey(event.acceptorMemberKey()).getName();
+        String acceptorName = memberReader.findByMemberKey(event.acceptorMemberKey()).name();
 
         notificationSendManager.sendToMember(
                 event.requesterMemberKey(),

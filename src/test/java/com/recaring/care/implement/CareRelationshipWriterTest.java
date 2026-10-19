@@ -1,7 +1,7 @@
 package com.recaring.care.implement;
 
 import com.recaring.care.dataaccess.entity.CareRelationship;
-import com.recaring.care.dataaccess.entity.CareRole;
+import com.recaring.care.vo.CareRole;
 import com.recaring.care.dataaccess.repository.CareRelationshipRepository;
 import com.recaring.care.fixture.CareFixture;
 import com.recaring.care.vo.CareRelationshipRegistration;
@@ -98,8 +98,8 @@ class CareRelationshipWriterTest {
 
         // then
         InOrder order = inOrder(memberReader, relationshipValidator);
-        order.verify(memberReader).findForUpdate(CareFixture.GUARDIAN_MEMBER_KEY);
-        order.verify(memberReader).findForUpdate(CareFixture.WARD_MEMBER_KEY);
+        order.verify(memberReader).lockForUpdate(CareFixture.GUARDIAN_MEMBER_KEY);
+        order.verify(memberReader).lockForUpdate(CareFixture.WARD_MEMBER_KEY);
         order.verify(relationshipValidator)
                 .validateCanAddWard(CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY);
     }
@@ -116,8 +116,8 @@ class CareRelationshipWriterTest {
 
         // then
         InOrder order = inOrder(memberReader, relationshipValidator);
-        order.verify(memberReader).findForUpdate(CareFixture.LOW_SORTING_WARD_MEMBER_KEY);
-        order.verify(memberReader).findForUpdate(CareFixture.GUARDIAN_MEMBER_KEY);
+        order.verify(memberReader).lockForUpdate(CareFixture.LOW_SORTING_WARD_MEMBER_KEY);
+        order.verify(memberReader).lockForUpdate(CareFixture.GUARDIAN_MEMBER_KEY);
         order.verify(relationshipValidator)
                 .validateCanAddWard(CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.LOW_SORTING_WARD_MEMBER_KEY);
     }
