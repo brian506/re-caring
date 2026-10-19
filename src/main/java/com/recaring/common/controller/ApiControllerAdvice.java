@@ -37,7 +37,7 @@ public class ApiControllerAdvice {
     @NullMarked
     @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
     public ResponseEntity<ApiResponse<@Nullable Object>> handleOptimisticLockException(ObjectOptimisticLockingFailureException e) {
-        log.warn("[OptimisticLockException]: message={}", e.getMessage());
+        log.warn("[OptimisticLock : Conflict]: message={}", e.getMessage());
         return new ResponseEntity<>(ApiResponse.error(ErrorType.NOTIFICATION_SETTING_UPDATE_CONFLICT, null), HttpStatus.CONFLICT);
     }
 
@@ -52,7 +52,7 @@ public class ApiControllerAdvice {
     @NullMarked
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiResponse<@Nullable Object>> handleDataIntegrityViolationException(DataIntegrityViolationException e) {
-        log.warn("[데이터 제약 : 위반]: type={} | constraint={}",
+        log.warn("[DataIntegrity : ConstraintViolated]: type={} | constraint={}",
                 e.getMostSpecificCause().getClass().getSimpleName(), constraintNameOf(e));
         return new ResponseEntity<>(ApiResponse.error(ErrorType.DUPLICATE_RESOURCE, null), HttpStatus.CONFLICT);
     }
@@ -67,7 +67,7 @@ public class ApiControllerAdvice {
     @NullMarked
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<@Nullable Object>> handleValidationException(MethodArgumentNotValidException e) {
-        log.warn("[요청 검증 : 실패]: message={}", e.getMessage());
+        log.warn("[RequestValidation : BodyInvalid]: message={}", e.getMessage());
         return new ResponseEntity<>(ApiResponse.error(ErrorType.INVALID_ACCESS_PATH, null), HttpStatus.BAD_REQUEST);
     }
 
@@ -77,14 +77,14 @@ public class ApiControllerAdvice {
     @NullMarked
     @ExceptionHandler({MissingServletRequestParameterException.class, MethodArgumentTypeMismatchException.class})
     public ResponseEntity<ApiResponse<@Nullable Object>> handleRequestParamException(Exception e) {
-        log.warn("[요청 파라미터 : 바인딩 실패]: message={}", e.getMessage());
+        log.warn("[RequestValidation : ParamBindFailed]: message={}", e.getMessage());
         return new ResponseEntity<>(ApiResponse.error(ErrorType.INVALID_ACCESS_PATH, null), HttpStatus.BAD_REQUEST);
     }
 
     @NullMarked
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiResponse<@Nullable Object>> handleMessageNotReadableException(HttpMessageNotReadableException e) {
-        log.warn("[요청 본문 : 해석 실패]: message={}", e.getMessage());
+        log.warn("[RequestValidation : BodyParseFailed]: message={}", e.getMessage());
         return new ResponseEntity<>(ApiResponse.error(ErrorType.INVALID_ACCESS_PATH, null), HttpStatus.BAD_REQUEST);
     }
 
@@ -94,7 +94,7 @@ public class ApiControllerAdvice {
     @NullMarked
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ApiResponse<@Nullable Object>> handleConstraintViolationException(ConstraintViolationException e) {
-        log.warn("[요청 파라미터 : 제약 위반]: message={}", e.getMessage());
+        log.warn("[RequestValidation : ParamConstraintViolated]: message={}", e.getMessage());
         return new ResponseEntity<>(ApiResponse.error(ErrorType.INVALID_ACCESS_PATH, null), HttpStatus.BAD_REQUEST);
     }
 
@@ -104,14 +104,14 @@ public class ApiControllerAdvice {
     // 정상적인 클라이언트 이탈이므로 바디 없이 debug 로그만 남기고 조용히 종료한다.
     @ExceptionHandler(AsyncRequestNotUsableException.class)
     public void handleAsyncRequestNotUsable(AsyncRequestNotUsableException e) {
-        log.debug("[SSE 이벤트 : 연결 종료]: message={}", e.getMessage());
+        log.debug("[SseEvent : ConnectionClosed]: message={}", e.getMessage());
     }
 
     @NullMarked
     @ExceptionHandler(Exception.class)
     public @Nullable ResponseEntity<ApiResponse<@Nullable Object>> handleException(Exception e) {
         if (DisconnectedClientHelper.isClientDisconnectedException(e)) {
-            log.warn("[응답 전송 : 클라이언트 연결 끊김]: type={} | message={}", e.getClass().getName(), e.getMessage());
+            log.warn("[ResponseWrite : ClientDisconnected]: type={} | message={}", e.getClass().getName(), e.getMessage());
             return null;
         }
         printExceptionLog(e);
@@ -129,13 +129,13 @@ public class ApiControllerAdvice {
 
         switch (e.getErrorType().getLogLevel()) {
             case ERROR ->
-                    log.error("[AppException]: class={} | method={} | line={} | status={} | errorCode={} | message={} | data={}",
+                    log.error("[AppException : Handled]: class={} | method={} | line={} | status={} | errorCode={} | message={} | data={}",
                             className, methodName, lineNumber, status, errorCode, message, data);
             case WARN ->
-                    log.warn("[AppException]: class={} | method={} | line={} | status={} | errorCode={} | message={} | data={}",
+                    log.warn("[AppException : Handled]: class={} | method={} | line={} | status={} | errorCode={} | message={} | data={}",
                             className, methodName, lineNumber, status, errorCode, message, data);
             default ->
-                    log.info("[AppException]: class={} | method={} | line={} | status={} | errorCode={} | message={} | data={}",
+                    log.info("[AppException : Handled]: class={} | method={} | line={} | status={} | errorCode={} | message={} | data={}",
                             className, methodName, lineNumber, status, errorCode, message, data);
         }
     }
@@ -143,7 +143,7 @@ public class ApiControllerAdvice {
     private void printExceptionLog(Exception e) {
         // 미처리 예외는 예외 타입과 전체 스택트레이스를 함께 남겨야 근본 원인을 진단할 수 있다.
         // (과거: stackTrace[0]만 파싱해 CGLIB 프록시 프레임·null 메시지만 찍혀 원인 불명이었음)
-        log.error("[미처리 예외 : 시스템 오류]: type={} | message={}",
+        log.error("[UnhandledException : SystemError]: type={} | message={}",
                 e.getClass().getName(), e.getMessage(), e);
     }
 }

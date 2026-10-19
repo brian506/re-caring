@@ -31,24 +31,24 @@ public class AnomalyDetectionParser {
     public Optional<AnomalyAlert> parse(Map<String, String> fields) {
         Optional<DetectionType> detectionType = DetectionType.find(fields.get("detection_type"));
         if (detectionType.isEmpty()) {
-            log.warn("[이상탐지 결과 : 알 수 없는 유형]: detectionType={}", fields.get("detection_type"));
+            log.warn("[AnomalyResult : UnknownDetectionType]: detectionType={}", fields.get("detection_type"));
             return Optional.empty();
         }
 
         String wardMemberKey = fields.get("ward_member_key");
         if (wardMemberKey == null || wardMemberKey.isBlank()) {
-            log.warn("[이상탐지 결과 : 회원 식별자 없음]: detectionType={}", detectionType.get());
+            log.warn("[AnomalyResult : MissingMemberKey]: detectionType={}", detectionType.get());
             return Optional.empty();
         }
 
         String alertKind = fields.get("alert_kind");
         Optional<AnomalyAlertKind> kind = AnomalyAlertKind.find(alertKind);
         if (alertKind != null && kind.isEmpty()) {
-            log.warn("[이상탐지 결과 : 알 수 없는 알림 종류]: wardMemberKey={} | alertKind={}", wardMemberKey, alertKind);
+            log.warn("[AnomalyResult : UnknownAlertKind]: wardMemberKey={} | alertKind={}", wardMemberKey, alertKind);
             return Optional.empty();
         }
         if (kind.isPresent() && isBlank(fields.get("event_id"))) {
-            log.warn("[이상탐지 결과 : 사건 식별자 없음]: wardMemberKey={} | alertKind={}", wardMemberKey, alertKind);
+            log.warn("[AnomalyResult : MissingEventId]: wardMemberKey={} | alertKind={}", wardMemberKey, alertKind);
             return Optional.empty();
         }
 
@@ -68,14 +68,14 @@ public class AnomalyDetectionParser {
                     parseMeasures(fields)
             ));
         } catch (NumberFormatException e) {
-            log.warn("[이상탐지 결과 : 숫자 형식 오류]: wardMemberKey={} | error={}", wardMemberKey, e.getMessage());
+            log.warn("[AnomalyResult : InvalidNumberFormat]: wardMemberKey={} | error={}", wardMemberKey, e.getMessage());
             return Optional.empty();
         } catch (DateTimeParseException e) {
-            log.warn("[이상탐지 결과 : 시각 형식 오류]: wardMemberKey={} | recordedAt={}",
+            log.warn("[AnomalyResult : InvalidTimeFormat]: wardMemberKey={} | recordedAt={}",
                     wardMemberKey, recordedAt);
             return Optional.empty();
         } catch (NullPointerException e) {
-            log.warn("[이상탐지 결과 : 필수 필드 누락]: wardMemberKey={} | fields={}", wardMemberKey, fields.keySet());
+            log.warn("[AnomalyResult : MissingRequiredFields]: wardMemberKey={} | fields={}", wardMemberKey, fields.keySet());
             return Optional.empty();
         }
     }
@@ -97,7 +97,7 @@ public class AnomalyDetectionParser {
         }
         Optional<AnomalyReasonCode> reasonCode = AnomalyReasonCode.find(value);
         if (reasonCode.isEmpty()) {
-            log.warn("[이상탐지 결과 : 알 수 없는 사유 코드]: wardMemberKey={} | reasonCode={}", wardMemberKey, value);
+            log.warn("[AnomalyResult : UnknownReasonCode]: wardMemberKey={} | reasonCode={}", wardMemberKey, value);
         }
         return reasonCode.orElse(null);
     }
@@ -132,7 +132,7 @@ public class AnomalyDetectionParser {
         if (evidence.length() <= MAX_EVIDENCE_LENGTH) {
             return evidence;
         }
-        log.warn("[이상탐지 결과 : 근거 문구 초과]: length={}", evidence.length());
+        log.warn("[AnomalyResult : EvidenceTruncated]: length={}", evidence.length());
         return evidence.substring(0, MAX_EVIDENCE_LENGTH);
     }
 

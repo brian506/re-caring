@@ -49,12 +49,12 @@ public class LocationSignalMonitor {
             return;
         }
 
-        log.info("[위치 수집 중단 : 감지]: wardMemberKey={} | lastReceivedAt={}", wardMemberKey, gps.recordedAt());
+        log.info("[LocationSignalLost : Detected]: wardMemberKey={} | lastReceivedAt={}", wardMemberKey, gps.recordedAt());
         try {
             eventPublisher.publishEvent(new LocationSignalLostEvent(wardMemberKey, gps));
         } catch (RuntimeException e) {
             locationSignalAlertManager.release(wardMemberKey, gps.recordedAt());
-            log.warn("[위치 수집 중단 : 알림 처리 실패]: wardMemberKey={}", wardMemberKey, e);
+            log.warn("[LocationSignalLost : AlertFailed]: wardMemberKey={}", wardMemberKey, e);
         }
     }
 }

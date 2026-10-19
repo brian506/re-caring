@@ -30,7 +30,7 @@ public class CareInvitationResendLimiter {
 
         Long ttl = redisTemplate.getExpire(key, TimeUnit.SECONDS);
         long remaining = ttl == null ? 0 : Math.max(ttl, 0);
-        log.warn("[케어 요청 재전송 : 간격 제한]: requestKey={} | remaining={}", requestKey, remaining);
+        log.warn("[CareInvitationResend : RateLimited]: requestKey={} | remaining={}", requestKey, remaining);
         throw new AppException(ErrorType.CARE_REQUEST_RESEND_TOO_SOON, new RetryAfter(remaining));
     }
 }

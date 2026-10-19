@@ -31,7 +31,7 @@ public class LocationControllerAdvice {
     @NullMarked
     @ExceptionHandler(AppException.class)
     public ResponseEntity<ApiResponse<@Nullable Object>> handleAppException(AppException e) {
-        log.warn("[AppException]: status={} | errorCode={} | message={}",
+        log.warn("[AppException : Handled]: status={} | errorCode={} | message={}",
                 e.getErrorType().getStatus().value(), e.getErrorType().getErrorCode(), e.getMessage());
         return ResponseEntity
                 .status(e.getErrorType().getStatus())

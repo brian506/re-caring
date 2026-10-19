@@ -32,7 +32,7 @@ public class BatteryThresholdNotificationListener {
     public void onBatteryThresholdAlert(BatteryThresholdAlertEvent event) {
         String memberKey = event.memberKey();
         int thresholdPercent = event.thresholdPercent();
-        log.info("[배터리 잔량 알림 : 이벤트 수신]: memberKey={} | threshold={}", memberKey, thresholdPercent);
+        log.info("[BatteryAlert : EventReceived]: memberKey={} | threshold={}", memberKey, thresholdPercent);
 
         // 판정 이후 관계가 끊긴 보호자에게 보내지 않도록 현재 관계와 교집합을 취한다.
         List<CaregiverInfo> caregivers = careRelationshipReader.findCaregiverInfos(memberKey).stream()

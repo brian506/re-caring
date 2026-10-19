@@ -70,7 +70,7 @@ public class BatteryDetectionListener {
         });
 
         recipientsByThreshold.forEach((threshold, recipientKeys) -> {
-            log.info("[배터리 잔량 : 선택값 도달]: wardKey={} | battery={} | threshold={} | recipients={}",
+            log.info("[BatteryAlert : ThresholdReached]: wardKey={} | battery={} | threshold={} | recipients={}",
                     wardKey, batteryPercent, threshold, recipientKeys.size());
             eventPublisher.publishEvent(new BatteryThresholdAlertEvent(
                     wardKey, threshold, event.gps().occurredAt(), List.copyOf(recipientKeys)));

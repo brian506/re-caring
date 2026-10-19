@@ -27,7 +27,7 @@ public class CareInvitationNotificationListener {
     @Async("broadcastExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onCareInvitationSent(CareInvitationSentEvent event) {
-        log.info("[케어 초대 알림 : 발송 이벤트 수신]: requestKey={} | targetMemberKey={}",
+        log.info("[CareInvitationAlert : SentEventReceived]: requestKey={} | targetMemberKey={}",
                 event.requestKey(), event.targetMemberKey());
 
         String requesterName = memberReader.findByMemberKey(event.requesterMemberKey()).getName();
@@ -45,7 +45,7 @@ public class CareInvitationNotificationListener {
     @Async("broadcastExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onCareInvitationAccepted(CareInvitationAcceptedEvent event) {
-        log.info("[케어 초대 알림 : 수락 이벤트 수신]: requestKey={} | requesterMemberKey={}",
+        log.info("[CareInvitationAlert : AcceptedEventReceived]: requestKey={} | requesterMemberKey={}",
                 event.requestKey(), event.requesterMemberKey());
 
         String acceptorName = memberReader.findByMemberKey(event.acceptorMemberKey()).getName();

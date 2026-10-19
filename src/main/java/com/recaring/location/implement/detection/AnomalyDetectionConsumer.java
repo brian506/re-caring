@@ -36,7 +36,7 @@ public class AnomalyDetectionConsumer implements StreamListener<String, MapRecor
             return;
         }
 
-        log.info("[이상탐지 결과 : 수신]: wardMemberKey={} | detectionType={} | recordedAt={} | score={}",
+        log.info("[AnomalyResult : Received]: wardMemberKey={} | detectionType={} | recordedAt={} | score={}",
                 alert.get().wardMemberKey(), alert.get().detectionType(),
                 alert.get().recordedAt(), alert.get().score());
 
@@ -57,7 +57,7 @@ public class AnomalyDetectionConsumer implements StreamListener<String, MapRecor
             }
         }
 
-        log.warn("[이상탐지 결과 : 재시도 소진]: wardMemberKey={} | detectionType={} | attempts={}",
+        log.warn("[AnomalyResult : RetryExhausted]: wardMemberKey={} | detectionType={} | attempts={}",
                 alert.wardMemberKey(), alert.detectionType(), MAX_ATTEMPTS);
     }
 
@@ -66,7 +66,7 @@ public class AnomalyDetectionConsumer implements StreamListener<String, MapRecor
             // 탐지 저장과 알림이 끝난 뒤에 ACK해야 도중에 죽어도 PEL 회수로 복구된다.
             anomalyDetectionManager.record(alert);
         } catch (RuntimeException e) {
-            log.warn("[이상탐지 결과 : 처리 실패]: wardMemberKey={} | detectionType={} | attempt={}",
+            log.warn("[AnomalyResult : ProcessFailed]: wardMemberKey={} | detectionType={} | attempt={}",
                     alert.wardMemberKey(), alert.detectionType(), attempt, e);
             return false;
         }

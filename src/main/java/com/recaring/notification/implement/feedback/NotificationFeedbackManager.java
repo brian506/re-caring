@@ -38,20 +38,20 @@ public class NotificationFeedbackManager {
                 .comment(answer.comment())
                 .build());
 
-        log.info("[알림 피드백 : 제출 완료]: notificationKey={} | category={} | accuracy={} | reason={} | anomalyDetectionId={}",
+        log.info("[NotificationFeedback : Submitted]: notificationKey={} | category={} | accuracy={} | reason={} | anomalyDetectionId={}",
                 notificationKey, target.category(), answer.accuracy(), answer.reason(), anomalyDetectionId);
     }
 
     private Long resolveAnomalyDetectionId(FeedbackTarget target) {
         if (!target.hasDetectionKeys()) {
-            log.warn("[알림 피드백 : 탐지 역조회 키 없음]: notificationId={} | eventType={}",
+            log.warn("[NotificationFeedback : DetectionLookupKeyMissing]: notificationId={} | eventType={}",
                     target.notificationId(), target.eventType());
             throw new AppException(ErrorType.NOTIFICATION_FEEDBACK_DETECTION_NOT_FOUND);
         }
         return anomalyDetectionManager
                 .findDetectionId(target.wardMemberKey(), target.detectionType(), target.recordedAt())
                 .orElseThrow(() -> {
-                    log.warn("[알림 피드백 : 탐지 역조회 실패]: notificationId={} | wardMemberKey={} | detectionType={} | recordedAt={}",
+                    log.warn("[NotificationFeedback : DetectionLookupFailed]: notificationId={} | wardMemberKey={} | detectionType={} | recordedAt={}",
                             target.notificationId(), target.wardMemberKey(), target.detectionType(), target.recordedAt());
                     return new AppException(ErrorType.NOTIFICATION_FEEDBACK_DETECTION_NOT_FOUND);
                 });

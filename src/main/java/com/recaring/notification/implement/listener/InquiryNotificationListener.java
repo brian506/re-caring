@@ -31,6 +31,6 @@ public class InquiryNotificationListener {
                 "\"" + event.title() + "\" 문의에 답변이 달렸어요.",
                 Map.of("type", EVENT_TYPE_ANSWERED, "inquiryKey", event.inquiryKey())
         );
-        log.info("[문의 답변 알림 : 발송 완료]: inquiryKey={} | memberKey={}", event.inquiryKey(), event.memberKey());
+        log.info("[InquiryAnswerAlert : Sent]: inquiryKey={} | memberKey={}", event.inquiryKey(), event.memberKey());
     }
 }

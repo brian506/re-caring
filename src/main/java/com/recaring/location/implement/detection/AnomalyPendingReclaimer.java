@@ -79,7 +79,7 @@ public class AnomalyPendingReclaimer {
                 return;
             }
         }
-        log.warn("[이상탐지 스트림 : PEL 회수 중단]: passes={} | batchSize={}", MAX_PASSES, BATCH_SIZE);
+        log.warn("[AnomalyStream : PelReclaimHalted]: passes={} | batchSize={}", MAX_PASSES, BATCH_SIZE);
     }
 
     private PendingMessages findPending(Duration minIdle) {
@@ -91,7 +91,7 @@ public class AnomalyPendingReclaimer {
                     BATCH_SIZE,
                     minIdle);
         } catch (DataAccessException e) {
-            log.warn("[이상탐지 스트림 : PEL 조회 실패]", e);
+            log.warn("[AnomalyStream : PelQueryFailed]", e);
             return null;
         }
     }
@@ -103,10 +103,10 @@ public class AnomalyPendingReclaimer {
                     AnomalyStreamProperties.GROUP_NAME,
                     AnomalyStreamProperties.CONSUMER_NAME,
                     XClaimOptions.minIdle(minIdle).ids(recordIds));
-            log.info("[이상탐지 스트림 : PEL 회수]: requested={} | claimed={}", recordIds.size(), records.size());
+            log.info("[AnomalyStream : PelReclaimed]: requested={} | claimed={}", recordIds.size(), records.size());
             return records;
         } catch (DataAccessException e) {
-            log.warn("[이상탐지 스트림 : PEL 회수 실패]: requested={}", recordIds.size(), e);
+            log.warn("[AnomalyStream : PelReclaimFailed]: requested={}", recordIds.size(), e);
             return List.of();
         }
     }
@@ -123,7 +123,7 @@ public class AnomalyPendingReclaimer {
     }
 
     private void discard(PendingMessage pendingMessage) {
-        log.error("[이상탐지 스트림 : 재처리 한도 초과 폐기]: recordId={} | deliveryCount={}",
+        log.error("[AnomalyStream : DeliveryLimitDiscarded]: recordId={} | deliveryCount={}",
                 pendingMessage.getIdAsString(), pendingMessage.getTotalDeliveryCount());
         acknowledge(pendingMessage.getId());
     }

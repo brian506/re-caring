@@ -88,6 +88,6 @@ public class MemberWithdrawalManager {
         batteryAlertStateManager.delete(memberKey);
         anomalyAcknowledgementManager.delete(memberKey);
 
-        log.info("[회원 탈퇴 : 완료]: memberKey={}", memberKey);
+        log.info("[MemberWithdrawal : Completed]: memberKey={}", memberKey);
     }
 }

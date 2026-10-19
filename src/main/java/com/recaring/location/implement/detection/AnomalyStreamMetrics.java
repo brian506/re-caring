@@ -69,7 +69,7 @@ public class AnomalyStreamMetrics {
             Optional<StreamInfo.XInfoGroup> group = findGroup();
             if (group.isEmpty()) {
                 markUnknown();
-                log.warn("[이상탐지 스트림 : 컨슈머 그룹 없음]: group={}", AnomalyStreamProperties.GROUP_NAME);
+                log.warn("[AnomalyStream : ConsumerGroupMissing]: group={}", AnomalyStreamProperties.GROUP_NAME);
                 return;
             }
 
@@ -80,10 +80,10 @@ public class AnomalyStreamMetrics {
             anomalyStreamErrorHandler.markHealthy();
         } catch (RedisConnectionFailureException e) {
             markUnknown();
-            log.warn("[이상탐지 스트림 : 지표 수집 연결 실패]", e);
+            log.warn("[AnomalyStream : MetricsConnectionFailed]", e);
         } catch (DataAccessException e) {
             markUnknown();
-            log.warn("[이상탐지 스트림 : 지표 수집 실패]", e);
+            log.warn("[AnomalyStream : MetricsCollectFailed]", e);
         }
     }
 

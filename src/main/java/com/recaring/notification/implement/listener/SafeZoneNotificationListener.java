@@ -62,7 +62,7 @@ public class SafeZoneNotificationListener {
                 careRelationshipReader.findCaregiverInfos(wardMemberKey),
                 alertType::isEnabledIn);
         if (caregivers.isEmpty()) {
-            log.info("[안심존 알림 : 수신자 없음]: wardMemberKey={} | alertType={}", wardMemberKey, alertType);
+            log.info("[SafeZoneAlert : NoRecipients]: wardMemberKey={} | alertType={}", wardMemberKey, alertType);
             return;
         }
 

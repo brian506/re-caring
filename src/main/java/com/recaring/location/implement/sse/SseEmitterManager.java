@@ -93,7 +93,7 @@ public class SseEmitterManager {
                 }
             }
         } catch (IOException | IllegalStateException e) {
-            log.debug("[SSE 이벤트 : 전송 종료]: wardKey={} | error={}", wardKey, e.getMessage());
+            log.debug("[SseEvent : SendClosed]: wardKey={} | error={}", wardKey, e.getMessage());
             sendFailures.increment();
             stop(active, removedError);
             completeQuietly(emitter, null); // client disconnect — complete gracefully, not with error (avoids Tomcat error dispatch)
@@ -102,7 +102,7 @@ public class SseEmitterManager {
             stop(active, removedCompletion);
             completeQuietly(emitter, null);
         } catch (Exception e) {
-            log.warn("[SSE 이벤트 : 예상치 못한 종료]: wardKey={} | error={}", wardKey, e.getMessage(), e);
+            log.warn("[SseEvent : UnexpectedClosed]: wardKey={} | error={}", wardKey, e.getMessage(), e);
             sendFailures.increment();
             stop(active, removedError);
             completeQuietly(emitter, null); // complete gracefully — completeWithError triggers Tomcat error dispatch on committed response

@@ -63,7 +63,7 @@ public class AuthenticationExceptionHandler {
         String userAgent = request.getHeader("User-Agent");
         String errorCode = body.error().errorCode();
         String message = body.error().message();
-        log.warn("[Authentication Exception]: IP={} | Method={} | URI={} | UserAgent={} | errorCode={} | message={}",
+        log.warn("[Authentication : Unauthorized]: IP={} | Method={} | URI={} | UserAgent={} | errorCode={} | message={}",
                 clientIp, method, uri, userAgent, errorCode, message);
 
         response.setStatus(HttpStatus.UNAUTHORIZED.value());

@@ -36,7 +36,7 @@ public class DetectionPublisher {
             redisTemplate.<String, String>opsForStream()
                     .add(STREAM_KEY, toFields(wardMemberKey, gps), trimBeyondRetention());
         } catch (DataAccessException e) {
-            log.warn("[이상탐지 Stream : 발행 실패]: wardMemberKey={}", wardMemberKey, e);
+            log.warn("[DetectionStream : PublishFailed]: wardMemberKey={}", wardMemberKey, e);
         }
     }
 
