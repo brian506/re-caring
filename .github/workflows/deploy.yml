@@ -81,7 +81,9 @@ jobs:
           task-definition: task-definition.json
           container-name: recaring
           image: 757052694924.dkr.ecr.ap-northeast-2.amazonaws.com/re-caring-api:${{ env.SHORT_SHA }}
-          environment-variables: "SPRING_PROFILES_ACTIVE=dev"
+          environment-variables: |
+            SPRING_PROFILES_ACTIVE=dev
+            LOGGING_STRUCTURED_ECS_SERVICE_VERSION=${{ env.SHORT_SHA }}
 
       - name: Rolling deploy to ECS
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2

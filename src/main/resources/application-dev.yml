@@ -93,6 +93,8 @@ logging:
   structured:
     format:
       console: ecs
+    json:
+      customizer: com.recaring.config.logging.LogFieldsJsonMembersCustomizer
     ecs:
       service:
         environment: dev
