@@ -175,6 +175,7 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/api/v1/site/**", siteConfig);
         source.registerCorsConfiguration("/api/v1/admin/site-inquiries/**", siteConfig);
+        source.registerCorsConfiguration("/api/v1/admin/inquiries/**", siteConfig);
         source.registerCorsConfiguration("/**", config);
         return source;
     }
