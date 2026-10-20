@@ -3,8 +3,6 @@ spring:
     name: recaring
   config:
     import: "optional:file:.env[.properties]"
-  flyway:
-    init-sqls: SET lock_timeout = '5s'
 
 logging:
   level:

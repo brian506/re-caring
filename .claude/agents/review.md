@@ -73,6 +73,7 @@ git diff develop...HEAD --name-only -- 'src/main/**'
 ### [스키마 마이그레이션]
 - [ ] 엔티티 변경(테이블·컬럼·제약)에 대응하는 `db/migration/V{n}__*.sql`이 같은 PR에 있는가
 - [ ] 기존(develop에 머지된) 마이그레이션 파일을 수정·삭제하지 않았는가
+- [ ] 첫 줄에 `SET LOCAL lock_timeout = '5s';`가 있는가 (CONCURRENTLY 파일은 `SET` + 마지막 `RESET`)
 - [ ] 컬럼 삭제·이름 변경이 이전 버전 코드를 깨뜨리지 않는가 (expand → contract)
 - [ ] `safe_zones`·`gps_histories` 변경이면 엔진 선배포가 언급됐는가
 - [ ] `CREATE INDEX CONCURRENTLY`는 별도 파일 + `.sql.conf`의 `executeInTransaction=false`인가

@@ -90,6 +90,7 @@ Entity, Repository (필요 시 QueryDSL)
 엔티티를 바꾸면 같은 브랜치에 `src/main/resources/db/migration/V{n}__{description}.sql`을 추가한다.
 DB에 직접 적용하지 않는다. local·test·dev 모두 앱 기동 시 Flyway가 적용한다.
 
+- 첫 줄에 `SET LOCAL lock_timeout = '5s';`를 둔다.
 - 버전 `n`은 develop의 최댓값 + 1. 이미 있는 마이그레이션 파일은 수정하지 않는다.
 - 엔티티에서 실제로 바뀐 것만 정확히 기록한다. 특히 다음을 빠뜨리지 않는다:
   - 새 테이블/컬럼 추가 (`CREATE TABLE`, `ALTER TABLE ... ADD COLUMN`)
