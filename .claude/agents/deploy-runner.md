@@ -28,7 +28,7 @@ allowed-tools: Bash(./gradlew *) Bash(git *) Bash(gh *) Bash(bash *) Bash(sleep 
 | phase | 수행 Step |
 |-------|----------|
 | `prepare` | Step 0 사전 조건 → Step 1 빌드·테스트 → Step 2 커밋·푸시 |
-| `publish` | Step 3 PR → Step 4 CI → Step 4.5 DDL → Step 5 머지·배포 → Step 6 정리 |
+| `publish` | Step 3 PR → Step 4 CI → Step 4.5 마이그레이션 점검 → Step 5 머지·배포 → Step 6 정리 |
 
 phase가 지정되지 않았으면 사용자에게 확인하고 중단한다. 임의로 전체를 실행하지 않는다 —
 리뷰 게이트를 건너뛰고 PR까지 가버린다.
@@ -127,24 +127,28 @@ CI 실패 시 `.claude/skills/deploy/references/error-handling.md` 파일을 Rea
 원인 수정 후 `commit-and-push.sh`로 재푸시하면 CI가 자동 재트리거된다.
 수정 커밋은 type을 `fix`로 지정한다.
 
-## Step 4.5: 스키마 변경 적용 (pending DDL) — 머지 전 필수
+## Step 4.5: 마이그레이션 사전 점검 — 머지 전 필수
 
-머지하면 GitHub Actions가 즉시 ECS 배포를 트리거하고, 앱은 `ddl-auto=validate`로 기동한다.
-따라서 스키마 변경은 **머지 이전에** dev DB에 반드시 적용돼 있어야 한다 (안 그러면 crash loop).
-
-먼저 적용될 DDL을 눈으로 검토한다 (파일이 있을 때만). 그다음 적용 스크립트를 실행한다.
-스크립트는 `docs/pending-ddl.sql`(gitignore된 브랜치용 ledger)을 읽어 dev DB에 한 트랜잭션으로 적용하고,
-성공 시 파일을 자동 삭제한다. 파일이 없거나 비어 있으면 `NO_PENDING_DDL`을 출력하고 무해하게 종료한다.
+머지하면 GitHub Actions가 즉시 ECS 배포를 트리거하고, 새 태스크가 기동하면서 Flyway가 미적용 마이그레이션을 dev DB에 실행한다.
+DB에 직접 DDL을 적용하지 않는다. 이 단계는 머지 전에 위험한 마이그레이션을 걸러내는 점검이다.
 
 ```bash
-bash .claude/skills/deploy/scripts/apply-pending-ddl.sh docs/pending-ddl.sql
+git diff --name-status origin/develop...HEAD -- src/main/resources/db/migration
 ```
 
-- 출력이 `NO_PENDING_DDL` → 이번 배포에 스키마 변경 없음. Step 5로 진행한다.
-- 출력이 `Status: Success` → 적용 완료. Step 5로 진행한다.
-- 그 외(스크립트 exit≠0, `DDL APPLY FAILED`) → 원인을 분석해 사용자에게 보고하고 **중단**한다. 절대 머지하지 않는다.
+- 출력이 없으면 → 이번 배포에 스키마 변경 없음. Step 5로 진행한다.
+- `M`(수정)·`D`(삭제)가 있으면 → 이미 적용된 파일을 건드린 것이다. **중단**하고 사용자에게 보고한다 (checksum 불일치로 앱 기동 실패).
+- `A`(추가)만 있으면 → 각 파일을 읽고 아래를 확인한다. 하나라도 걸리면 사용자에게 보고하고 승인 전까지 머지하지 않는다.
+  - 버전 번호가 develop의 최댓값보다 큰가 (다른 PR과 겹치지 않는가)
+  - `DROP COLUMN`·`RENAME`·`DROP TABLE`·`SET NOT NULL`이 이전 버전 코드를 깨뜨리지 않는가 (expand → contract)
+  - `safe_zones`·`gps_histories`를 바꾸면 이상탐지 엔진 대응이 먼저 배포됐는가
+- `safe_zones`·`gps_histories`를 바꾸는 경우에만 머지 직전 `idle in transaction` 세션이 없는지 확인한다 (있으면 `lock_timeout`에 걸려 기동이 실패한다):
 
-`Status: Success`(또는 `NO_PENDING_DDL`) 확인 전까지 Step 5로 넘어가지 않는다.
+```bash
+bash .claude/skills/deploy/scripts/check-idle-transactions.sh
+```
+
+출력이 `NO_IDLE_IN_TRANSACTION`이면 Step 5로 진행한다. 세션이 나오면 사용자에게 보고하고 중단한다.
 
 ## Step 5: 머지 & 배포
 

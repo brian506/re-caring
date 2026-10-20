@@ -59,7 +59,7 @@ flowchart LR
 | 분류 | 사용 기술 |
 |------|----------|
 | Language / Framework | Java 21, Spring Boot 4, Spring Security, Spring Data JPA, QueryDSL |
-| Database / Cache | PostgreSQL 16 (AWS RDS), Redis 7 (Cache, Stream) |
+| Database / Cache | PostgreSQL 17 (AWS RDS), Flyway, Redis 7 (Cache, Stream) |
 | 인증 | JWT (Access / Refresh), Device Token, OAuth2 (Kakao, Naver) |
 | 외부 연동 | Firebase Cloud Messaging, CoolSMS, Kakao Local API |
 | Infra | AWS ECS (EC2), ECR, RDS, S3, SSM, CloudWatch Logs, Nginx + Certbot |

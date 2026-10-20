@@ -11,7 +11,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: validate
       database-platform: org.hibernate.dialect.PostgreSQLDialect
     defer-datasource-initialization: false
     properties:

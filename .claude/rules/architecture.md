@@ -132,7 +132,7 @@ public class FooRequest {
 
 ## 인덱스 규칙
 
-`@Table(indexes = {...})` 금지. 인덱스는 별도 DDL로 관리하며 Entity에 TODO 주석으로 표시한다 (CLAUDE.md 참고).
+`@Table(indexes = {...})` 금지. 인덱스는 Flyway 마이그레이션에 작성한다 (`.claude/rules/ddl-conventions.md`).
 
 ---
 

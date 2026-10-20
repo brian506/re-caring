@@ -26,17 +26,22 @@
 ## Entity & Database
 
 - **`@Table(indexes = ...)` 어노테이션을 사용하면 안 된다**
-  - 인덱스는 별도 DDL 스크립트로 관리, 엔티티에 TODO 주석으로 표시
-  - 올바른 예: `// TODO: CREATE INDEX idx_xxx ON yyy(zzz);`
+  - 인덱스는 Flyway 마이그레이션(`db/migration/V{n}__*.sql`)에 `CREATE INDEX`로 작성한다
 
 - **삭제는 모두 hard-delete로 처리한다 (soft-delete 금지)**
   - `@SQLDelete` / `@SQLRestriction` / `deleted_at` 컬럼을 새로 도입하면 안 된다
   - 실제 삭제: `repository.delete(entity)` 또는 파생 `deleteBy...` / `@Modifying` 벌크 쿼리 사용
 
-- **스키마 변경 적용 전에 코드를 머지/배포하면 안 된다**
-  - `spring.jpa.hibernate.ddl-auto=validate` — 스키마 불일치 시 시작 즉시 충돌(crash loop)
-  - 스키마 변경은 기능마다 별도 DDL 파일을 만들지 않고, 구현 중 `docs/pending-ddl.sql`(gitignore된 브랜치용 ledger)에 변경분을 append한다.
-  - `/deploy`가 CI 통과 후·머지 직전에 `apply-pending-ddl.sh`로 dev DB에 적용하고 `Status: Success` 확인 후 파일을 삭제한다. 이 확인 전까지 머지 금지.
+- **스키마를 Flyway 마이그레이션 밖에서 바꾸면 안 된다**
+  - DB에 직접 DDL을 실행하지 않는다 (SSM psql·콘솔 포함). 엔티티를 바꾸면 같은 PR에 `V{n}__*.sql`을 추가한다
+  - `ddl-auto=validate` — 마이그레이션 없이 엔티티만 바꾸면 통합 테스트와 앱 기동이 실패한다
+
+- **이미 적용된 마이그레이션 파일을 수정·삭제하면 안 된다**
+  - checksum 불일치로 Flyway validate가 실패해 앱이 기동하지 않는다. 고칠 내용은 새 버전 파일로 추가한다
+
+- **이전 버전 코드가 깨지는 스키마 변경을 한 번에 배포하면 안 된다**
+  - 롤링 배포 중 이전 태스크가 새 스키마 위에서 돈다. 컬럼 삭제·이름 변경은 expand → contract로 나눈다
+  - `safe_zones`·`gps_histories` 변경은 이상탐지 엔진을 먼저 배포한다
   - 자세한 흐름 → `.claude/rules/ddl-conventions.md`
 
 ## Swagger / API Documentation

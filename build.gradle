@@ -40,6 +40,8 @@ dependencies {
 
 	// DB
 	runtimeOnly 'org.postgresql:postgresql'
+	implementation 'org.springframework.boot:spring-boot-starter-flyway'
+	implementation 'org.flywaydb:flyway-database-postgresql'
 	implementation("io.github.openfeign.querydsl:querydsl-core:${queryDslVersion}")
 	implementation("io.github.openfeign.querydsl:querydsl-jpa:$queryDslVersion")
 	annotationProcessor("io.github.openfeign.querydsl:querydsl-apt:$queryDslVersion:jpa")

@@ -68,7 +68,14 @@ git diff develop...HEAD --name-only -- 'src/main/**'
 - [ ] ErrorType이 적절한 LogLevel을 사용하는가
 
 ### [인덱스]
-- [ ] 새 Entity에 인덱스가 필요하다면 `@Table(indexes=...)` 대신 TODO 주석으로 표시됐는가
+- [ ] 새 Entity에 인덱스가 필요하다면 `@Table(indexes=...)` 대신 마이그레이션에 `CREATE INDEX`로 작성됐는가
+
+### [스키마 마이그레이션]
+- [ ] 엔티티 변경(테이블·컬럼·제약)에 대응하는 `db/migration/V{n}__*.sql`이 같은 PR에 있는가
+- [ ] 기존(develop에 머지된) 마이그레이션 파일을 수정·삭제하지 않았는가
+- [ ] 컬럼 삭제·이름 변경이 이전 버전 코드를 깨뜨리지 않는가 (expand → contract)
+- [ ] `safe_zones`·`gps_histories` 변경이면 엔진 선배포가 언급됐는가
+- [ ] `CREATE INDEX CONCURRENTLY`는 별도 파일 + `.sql.conf`의 `executeInTransaction=false`인가
 
 ---
 

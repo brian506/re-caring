@@ -85,22 +85,21 @@ Implement: {Reader}, {Writer}, {Validator}
 ### 4-1. DataAccess 계층
 Entity, Repository (필요 시 QueryDSL)
 
-### 4-2. 스키마 변경 기록 (새 Entity·컬럼·타입·제약 변경 시 필수)
+### 4-2. Flyway 마이그레이션 작성 (새 Entity·컬럼·타입·제약·인덱스 변경 시 필수)
 
-**구현 중에는 DB에 직접 적용하지 않는다.** 로컬은 `ddl-auto=create`라 적용이 불필요하고, dev/prod 적용은 배포 시점(`/deploy`)에 일괄 수행한다.
+엔티티를 바꾸면 같은 브랜치에 `src/main/resources/db/migration/V{n}__{description}.sql`을 추가한다.
+DB에 직접 적용하지 않는다. local·test·dev 모두 앱 기동 시 Flyway가 적용한다.
 
-엔티티를 바꿀 때마다 그 **변경분 DDL을 `docs/pending-ddl.sql`에 append**한다 (이 파일은 gitignore된 브랜치용 ledger — 커밋되지 않고, 배포 시 소비된 뒤 삭제된다).
-
-- 파일이 없으면 생성하고, 있으면 이어서 추가한다.
+- 버전 `n`은 develop의 최댓값 + 1. 이미 있는 마이그레이션 파일은 수정하지 않는다.
 - 엔티티에서 실제로 바뀐 것만 정확히 기록한다. 특히 다음을 빠뜨리지 않는다:
   - 새 테이블/컬럼 추가 (`CREATE TABLE`, `ALTER TABLE ... ADD COLUMN`)
-  - **삭제된 컬럼** (`ALTER TABLE ... DROP COLUMN`) — 엔티티에서 지운 필드
+  - **삭제된 컬럼** (`ALTER TABLE ... DROP COLUMN`) — 단, 이전 버전 코드가 쓰는 컬럼이면 expand → contract로 다음 배포에 분리
   - **삭제된 테이블** (`DROP TABLE`) — FK로 참조되면 참조 테이블부터 먼저 정리
   - 타입/NULL/UNIQUE 제약 변경 (`ALTER TABLE ... ALTER COLUMN`)
-- 변환 규칙·형식 → `.claude/rules/ddl-conventions.md`
-- 인덱스는 DDL에 넣지 않고 엔티티에 TODO 주석으로만 남긴다.
-
-기록만 하고 적용은 하지 않으므로 이 단계에서 `apply-ddl.sh` / AskUserQuestion은 필요 없다. 배포 전 실제 적용·확인은 `/deploy`가 담당한다.
+  - 인덱스 (`CREATE INDEX`)
+- `safe_zones`·`gps_histories` 변경은 이상탐지 엔진에 영향이 있으므로 완료 보고에 명시한다.
+- 변환 규칙·무중단 제약 → `.claude/rules/ddl-conventions.md`
+- 엔티티와 SQL이 맞는지는 `./gradlew integrationTest`가 Hibernate validate로 확인한다.
 
 ### 4-3. Implement 계층
 Reader / Writer / Manager / Validator / Authenticator — 역할 기준 → `.claude/rules/architecture.md`
