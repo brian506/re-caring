@@ -36,6 +36,8 @@ public class QSafeZoneState extends EntityPathBase<SafeZoneState> {
 
     public final StringPath wardMemberKey = createString("wardMemberKey");
 
+    public final StringPath zoneVersions = createString("zoneVersions");
+
     public QSafeZoneState(String variable) {
         super(SafeZoneState.class, forVariable(variable));
     }

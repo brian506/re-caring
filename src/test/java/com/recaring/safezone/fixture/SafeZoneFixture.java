@@ -12,6 +12,8 @@ import com.recaring.safezone.vo.SafeZoneInfo;
 import com.recaring.safezone.vo.SafeZoneRadius;
 import com.recaring.safezone.vo.SafeZoneUpdate;
 
+import java.time.LocalDateTime;
+
 public class SafeZoneFixture {
 
     public static final String WARD_MEMBER_KEY = CareFixture.WARD_MEMBER_KEY;
@@ -26,6 +28,9 @@ public class SafeZoneFixture {
     public static final SafeZoneType TYPE = SafeZoneType.SAFE;
 
     public static final String DANGER_ZONE_NAME = "공사장";
+
+    public static final LocalDateTime ZONE_UPDATED_AT = LocalDateTime.of(2026, 10, 1, 9, 0, 0);
+    public static final LocalDateTime ZONE_EDITED_AT = LocalDateTime.of(2026, 10, 2, 14, 30, 0);
 
     public static final String UPDATED_NAME = "직장";
     public static final String UPDATED_ADDRESS = "서울시 서초구 반포대로 2";
@@ -62,26 +67,31 @@ public class SafeZoneFixture {
     }
 
     public static SafeZoneInfo createSafeZoneInfo(String safeZoneKey) {
-        return new SafeZoneInfo(safeZoneKey, NAME, ADDRESS, LATITUDE, LONGITUDE, RADIUS_METERS, TYPE);
+        return new SafeZoneInfo(safeZoneKey, NAME, ADDRESS, LATITUDE, LONGITUDE, RADIUS_METERS, TYPE, ZONE_UPDATED_AT);
     }
 
     public static SafeZoneInfo createSafeZoneInfoAt(
             String safeZoneKey, String name, double latitude, double longitude) {
-        return new SafeZoneInfo(safeZoneKey, name, ADDRESS, latitude, longitude, RADIUS_METERS, TYPE);
+        return new SafeZoneInfo(safeZoneKey, name, ADDRESS, latitude, longitude, RADIUS_METERS, TYPE, ZONE_UPDATED_AT);
     }
 
     public static SafeZoneInfo createDangerZoneInfoAt(
             String safeZoneKey, String name, double latitude, double longitude) {
-        return new SafeZoneInfo(safeZoneKey, name, ADDRESS, latitude, longitude, RADIUS_METERS, SafeZoneType.DANGER);
+        return new SafeZoneInfo(safeZoneKey, name, ADDRESS, latitude, longitude, RADIUS_METERS, SafeZoneType.DANGER, ZONE_UPDATED_AT);
     }
 
     public static SafeZoneInfo createSafeZoneInfoAt(
             String safeZoneKey, double latitude, double longitude, int radiusMeters) {
-        return new SafeZoneInfo(safeZoneKey, NAME, ADDRESS, latitude, longitude, radiusMeters, TYPE);
+        return createSafeZoneInfoAt(safeZoneKey, latitude, longitude, radiusMeters, ZONE_UPDATED_AT);
+    }
+
+    public static SafeZoneInfo createSafeZoneInfoAt(
+            String safeZoneKey, double latitude, double longitude, int radiusMeters, LocalDateTime updatedAt) {
+        return new SafeZoneInfo(safeZoneKey, NAME, ADDRESS, latitude, longitude, radiusMeters, TYPE, updatedAt);
     }
 
     public static SafeZoneInfo createSafeZoneInfoWithRadius(String safeZoneKey, int radiusMeters) {
-        return new SafeZoneInfo(safeZoneKey, NAME, ADDRESS, LATITUDE, LONGITUDE, radiusMeters, TYPE);
+        return new SafeZoneInfo(safeZoneKey, NAME, ADDRESS, LATITUDE, LONGITUDE, radiusMeters, TYPE, ZONE_UPDATED_AT);
     }
 
     public static SafeZoneCreation createCommand() {
@@ -112,10 +122,22 @@ public class SafeZoneFixture {
                 LocationFixture.WARD_KEY, LocationFixture.DANGER_ZONE_KEY, DANGER_ZONE_NAME, SafeZoneType.DANGER, LocationFixture.LATITUDE, LocationFixture.LONGITUDE, LocationFixture.DETECTED_AT);
     }
 
-    public static SafeZoneState createSafeZoneState(String safeZoneKeysCsv) {
+    public static SafeZoneState createSafeZoneState(String safeZoneKeysCsv, String zoneVersionsCsv) {
+        return SafeZoneState.builder()
+                .wardMemberKey(LocationFixture.WARD_KEY)
+                .safeZoneKeys(safeZoneKeysCsv)
+                .zoneVersions(zoneVersionsCsv)
+                .build();
+    }
+
+    public static SafeZoneState createLegacySafeZoneState(String safeZoneKeysCsv) {
         return SafeZoneState.builder()
                 .wardMemberKey(LocationFixture.WARD_KEY)
                 .safeZoneKeys(safeZoneKeysCsv)
                 .build();
+    }
+
+    public static String zoneVersion(String safeZoneKey, LocalDateTime updatedAt) {
+        return safeZoneKey + "@" + updatedAt;
     }
 }

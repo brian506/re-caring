@@ -35,7 +35,7 @@ class SafeZoneObservationTest {
     void inside_ward_exits_beyond_radius_plus_margin(double latitudeDelta, int approxMeters, boolean expectedInside) {
         SafeZoneObservation observation = observe(List.of(HOME_300M), latitudeDelta, TRACK_ACCURACY);
 
-        Set<String> current = observation.resolve(Set.of(HOME_KEY));
+        Set<String> current = observation.resolve(Set.of(HOME_KEY), Set.of(HOME_KEY));
 
         assertThat(current.contains(HOME_KEY)).isEqualTo(expectedInside);
     }
@@ -49,7 +49,7 @@ class SafeZoneObservationTest {
     void outside_ward_enters_within_radius_minus_margin(double latitudeDelta, int approxMeters, boolean expectedInside) {
         SafeZoneObservation observation = observe(List.of(HOME_300M), latitudeDelta, TRACK_ACCURACY);
 
-        Set<String> current = observation.resolve(Set.of());
+        Set<String> current = observation.resolve(Set.of(), Set.of(HOME_KEY));
 
         assertThat(current.contains(HOME_KEY)).isEqualTo(expectedInside);
     }
@@ -63,7 +63,7 @@ class SafeZoneObservationTest {
     void accuracy_larger_than_minimum_widens_margin(double latitudeDelta, int approxMeters, boolean expectedInside) {
         SafeZoneObservation observation = observe(List.of(HOME_300M), latitudeDelta, 80.0);
 
-        Set<String> current = observation.resolve(Set.of(HOME_KEY));
+        Set<String> current = observation.resolve(Set.of(HOME_KEY), Set.of(HOME_KEY));
 
         assertThat(current.contains(HOME_KEY)).isEqualTo(expectedInside);
     }
@@ -78,7 +78,7 @@ class SafeZoneObservationTest {
         SafeZoneInfo small = SafeZoneFixture.createSafeZoneInfoAt(HOME_KEY, LATITUDE, LONGITUDE, 100);
         SafeZoneObservation observation = observe(List.of(small), latitudeDelta, 100.0);
 
-        Set<String> current = observation.resolve(Set.of());
+        Set<String> current = observation.resolve(Set.of(), Set.of(HOME_KEY));
 
         assertThat(current.contains(HOME_KEY)).isEqualTo(expectedInside);
     }
@@ -88,7 +88,7 @@ class SafeZoneObservationTest {
     void deleted_zone_is_dropped_from_current_state() {
         SafeZoneObservation observation = observe(List.of(HOME_300M), 0.0, TRACK_ACCURACY);
 
-        Set<String> current = observation.resolve(Set.of(HOME_KEY, HOSPITAL_KEY));
+        Set<String> current = observation.resolve(Set.of(HOME_KEY, HOSPITAL_KEY), Set.of(HOME_KEY));
 
         assertThat(current).containsExactly(HOME_KEY);
     }
