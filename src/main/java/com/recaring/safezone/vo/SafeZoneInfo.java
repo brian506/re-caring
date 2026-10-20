@@ -2,6 +2,8 @@ package com.recaring.safezone.vo;
 
 import com.recaring.safezone.dataaccess.entity.SafeZone;
 
+import java.time.LocalDateTime;
+
 /**
  * 안심존은 중심 좌표 + 반경의 원형이다. 어떤 좌표가 이 존 안에 있는지는 존 자신의 성질이므로
  * 중심까지의 대권 거리(haversine)를 재는 판정을 이 객체가 직접 수행한다.
@@ -13,7 +15,8 @@ public record SafeZoneInfo(
         double latitude,
         double longitude,
         int radiusMeters,
-        SafeZoneType type
+        SafeZoneType type,
+        LocalDateTime updatedAt
 ) {
     private static final double EARTH_RADIUS_METERS = 6_371_008.8;
 
@@ -25,8 +28,13 @@ public record SafeZoneInfo(
                 entity.getLatitude(),
                 entity.getLongitude(),
                 entity.getRadiusMeters(),
-                entity.getType()
+                entity.getType(),
+                entity.getUpdatedAt()
         );
+    }
+
+    public String version() {
+        return String.valueOf(updatedAt);
     }
 
     public boolean contains(double targetLatitude, double targetLongitude) {
