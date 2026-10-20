@@ -15,7 +15,6 @@ import java.time.LocalDateTime;
 @Getter
 @Entity
 @Table(name = "gps_histories")
-// TODO: CREATE INDEX idx_gps_ward_recorded ON gps_histories (ward_member_key, recorded_at);
 // TODO: CREATE INDEX idx_gps_ward_measured ON gps_histories (ward_member_key, measured_at);
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class GpsHistory {

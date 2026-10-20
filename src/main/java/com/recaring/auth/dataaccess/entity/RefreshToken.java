@@ -9,7 +9,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
-// TODO: CREATE INDEX idx_refresh_token_token ON refresh_token(token);
 // TODO: CREATE INDEX idx_refresh_token_member_key ON refresh_token(member_key);
 @Getter
 @Entity

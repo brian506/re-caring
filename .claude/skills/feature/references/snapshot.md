@@ -1,6 +1,6 @@
 # 프로젝트 스냅샷
 
-> 마지막 업데이트: 2026-10-19. 기능 추가·수정 시 해당 섹션을 갱신한다.
+> 마지막 업데이트: 2026-10-20. 기능 추가·수정 시 해당 섹션을 갱신한다.
 
 > 도메인 enum(`MemberRole`·`Gender` → `member.vo`, `CareRole`·`CarePartyRole` → `care.vo`, `SafeZoneType` → `safezone.vo`)은 `vo/`에 둔다. `SignUpType`·`SubscriptionType`·`*Status`·`*Category` 등 나머지 enum은 아직 `dataaccess/entity`에 남아 있다 (#284)
 
@@ -19,7 +19,6 @@
 | `place` | PlaceService | KakaoPlaceSearchClient (카카오 로컬 키워드 검색 프록시, 엔티티 없음) |
 | `safezone` | SafeZoneService | SafeZoneReader, SafeZoneWriter, SafeZoneStateManager, SafeZoneDetectionListener(`GpsSavedEvent` 구독 → `SafeZoneEntered/ExitedEvent` 발행). 안심존 상태(`SafeZoneState`)·이벤트·`SafeZoneObservation/Transition` VO도 이 도메인 소유 (#284에서 location에서 이동) |
 | `sms` | PhoneVerificationService | SmsClient, SmsCodeGenerator, PhoneVerificationReader/Writer, SmsRateLimitValidator |
-| `alert` | AlertService, AlertResolutionService | AlertInvestigationOrchestrator, AlertInvestigationAgent(Tool Use Loop), SsmContextFetcher, PrometheusContextFetcher, ErrorHistoryFetcher, RunbookService, SlackAlertNotifier, GitHubPrCreator, AlertRetryHandler |
 
 > 공통 필터: `common/filter/RequestIdFilter` — 최우선 순위 서블릿 필터. 요청의 `X-Request-Id`(영숫자·하이픈 8~64자)를 재사용하거나 UUID를 생성해 MDC `requestId`에 넣고 응답 헤더로 반환. `AsyncConfig`의 executor(broadcast·detection-retry·sse-poll)는 `MdcTaskDecorator`로 MDC를 복사해 비동기 스레드에도 `requestId`가 남는다. 로그 출력: dev는 ECS JSON(`requestId` 필드), local은 평문 `[requestId]` (#259)
 
@@ -118,8 +117,6 @@
 | NotificationSetting | notification_settings | (wardMemberKey, caregiverMemberKey) UNIQUE — 보호자별 설정, 안심존·위험존(진입/이탈)·응급호출 토글, 이상탐지 토글 5종(speed/wandering/abnormalDwelling/routeDeviation/timeAnomaly), lowBatteryEnabled, batteryThresholdPercents(CSV, 기본 '' = 선택 없음 → 알림 없음) |
 | Inquiry | inquiries | inquiryKey(UUID, UNIQUE), memberKey, category(4종), title(50), content(1000), status(WAITING/ANSWERED), answer(2000, nullable), answeredAt(nullable). 탈퇴 시 hard-delete. 인덱스 `(member_key, inquiry_id DESC)` |
 | SiteInquiry | site_inquiries | inquiryKey(UUID, UNIQUE), category(4종), title(50), content(1000), email(100), phone(20, nullable), isSecret, passwordHash(BCrypt, nullable), status(WAITING/ANSWERED), answer(2000, nullable), answeredAt(nullable). 회원과 무관. 인덱스 TODO `(status, site_inquiry_id)` |
-| AlertRunbook | alert_runbooks | errorSignature, commands(jsonb), resolutionContext, successCount, isValid |
-| AlertInvestigation | alert_investigations | fingerprint, alertName, severity, threadTs, status, fixCommands(jsonb) |
 
 ## 케어 역할(CareRole) — 보호자-대상자 (#242)
 
@@ -388,8 +385,7 @@ AnomalyDetectionConsumer(수동 ACK)
   이벤트를 발행하지 않아 알림도 다시 나가지 않는다. 0이면 `[AnomalyResult : DuplicateSkipped]` WARN을 남긴다.
   키는 `(ward_member_key, detection_type, recorded_at, alert_kind)` `NULLS NOT DISTINCT`다(#255). EVENT_END의 `detected_at`은
   종료 시각(두절이면 마지막 좌표, 복귀면 도착 시각)이라 같은 좌표에서 나간 알림과 3컬럼 키가 겹쳐 버려졌다.
-  `NULLS NOT DISTINCT`는 운영 DDL에만 있고 엔티티(`ddl-auto=create`)는 일반 UNIQUE라, 로컬·테스트에서는 `alert_kind`가 null인
-  이전 형식 메시지의 중복이 걸러지지 않는다. 피드백 역조회(`findIdByDetectionKeys`)는 EVENT_END 행을 제외한다.
+  `NULLS NOT DISTINCT` 제약은 Flyway `V1__baseline.sql`에 있어 로컬·테스트에도 동일하게 적용된다(#287). 피드백 역조회(`findIdByDetectionKeys`)는 EVENT_END 행을 제외한다.
 - **저장과 알림은 반드시 한 트랜잭션이어야 한다.** 알림 저장이 실패했는데 탐지 저장만 커밋되면,
   재배달분이 중복으로 걸러져 알림이 영영 발송되지 않는다. `AnomalyDetectionManager.record`의 `@Transactional`이
   그 경계이며, 실패 시 통째로 롤백되고 ACK도 건너뛰어 다음 재배달에서 처음부터 다시 처리된다.
@@ -423,7 +419,7 @@ AnomalyDetectionConsumer(수동 ACK)
 |---|------|------|------|
 | 1 | SSE emitter 메모리 누수 위험 | `SseEmitterManager` | 부하 시 emitter 미제거 → heap 증가. broadcast 중 IOException 외 예외 케이스 누락 가능 |
 | 2 | AFTER_COMMIT 실패 무시 | `GpsEventHandler` | DB 저장 성공 → Redis/SSE 실패 시 재시도 없음. Outbox 패턴 미적용 |
-| 3 | GPS 히스토리 인덱스 미실행 + 보관 정책 부재 | `GpsHistory` entity | `ward_member_key + recorded_at` 복합 인덱스 TODO 주석만 있고 DDL 미실행 → 모든 경로 조회가 seq scan. 보관 정리 수단도 없어 gp3 20GB가 실질 한도(WARD 1,000명이면 약 36일). 결정·검증 계획 → `docs/gps-storage-decisions.md` |
+| 3 | GPS 히스토리 보관 정책 부재 | `GpsHistory` entity | `(ward_member_key, recorded_at)` 인덱스는 dev에 있다(V1 baseline 포함). `(ward_member_key, measured_at)`은 TODO로만 남아 있다. 보관 정리 수단도 없어 gp3 20GB가 실질 한도(WARD 1,000명이면 약 36일). 결정·검증 계획 → `docs/gps-storage-decisions.md` |
 | 4 | SSE 구독자 수 무제한 | `SseEmitterManager` | wardKey당 emitter 수 제한 없음 |
 | 5 | CareInvitation 만료 정리 배치 없음 | `CareInvitation` | PENDING 만료건 DB에 잔류, 주기적 정리 미구현 |
 | 6 | Device Token 검증 DB 직조회 | `DeviceTokenAuthFilter` | GPS 수신마다 `WardDeviceTokenRepository.findByToken()` DB 조회. Redis 캐싱(`device-token:{token}` → wardMemberKey, TTL 24h)으로 개선 가능. 단, 재발급(`reissue()`) 시 구 토큰 캐시 명시적 삭제 필요 — 트러블슈팅 비교 후 적용 결정 |
@@ -440,3 +436,6 @@ AnomalyDetectionConsumer(수동 ACK)
 | 17 | 운영 API 인증이 공유 키 하나 | `AdminApiKeyFilter` | `/api/v1/admin/**`는 `X-Admin-Key` == `ADMIN_API_KEY` 상수 시간 비교만 한다. 운영자 식별·감사 로그·키 회전이 없고, 키가 비어 있으면 전부 401. 운영자 계정·권한이 필요해지면 교체 |
 | 18 | `NetworkUtils.getClientIp`가 조작 가능한 IP를 믿음 | `NetworkUtils` | X-Forwarded-For 첫 값을 우선한다. nginx는 `$proxy_add_x_forwarded_for`로 덧붙이기만 해서 첫 값은 클라이언트가 정한다. IP 기반 제한에는 `getProxiedClientIp`(X-Real-IP)를 쓴다 |
 | 19 | 웹 문의 목록 페이징 없음 | `GET /api/v1/site/inquiries` | 전체를 내려주고 프론트가 6개씩 나눈다. 건수가 늘면 커서 페이징으로 바꿔야 한다 |
+| 20 | 엔티티 TODO 인덱스는 후보 목록 | `Inquiry`, `DesignatedAvatar`, `RefreshToken`, `Notification`, `AnomalyDetection`, `GpsHistory` | 데이터가 적어 seq scan으로 충분하므로 미리 만들지 않는다. dev 보조 인덱스는 `idx_gps_ward_recorded`·`idx_member_withdrawal_member_key`뿐이고, UNIQUE 키(`token`, `notification_key`, `inquiry_key` 등)는 제약 인덱스가 있다. 느린 쿼리(`log_slow_query` 500ms·Performance Insights)가 확인되면 해당 TODO를 마이그레이션으로 만든다(큰 테이블은 `CONCURRENTLY` + `executeInTransaction=false`). 먼저 지켜볼 후보: 알림함 커서 조회 `notifications(recipient_member_key, notification_id DESC)` |
+| 22 | prod Flyway 미적용 | `application-prod.yml` | `spring.flyway.enabled: false`. prod 전환 시 dev처럼 스키마를 대조하고 `baseline-on-migrate`·`baseline-version: 1`을 켠다 |
+| 23 | `gps_histories` 월 파티션 수동 생성 | dev RDS | `recorded_at` 월별 RANGE 파티션이 2026_08~2026_11 + default까지만 있다. 생성 자동화가 없어 이후 데이터는 default 파티션으로 쌓인다. 월 파티션 생성 수단(마이그레이션·배치) 결정 필요 |

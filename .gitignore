@@ -54,9 +54,6 @@ override.tf.json
 CLAUDE.md
 docs/git.md
 
-### pending schema migration ledger (applied & deleted at deploy time) ###
-docs/pending-ddl.sql
-
 ### rule-engine build artifacts ###
 rule-engine/__pycache__/
 rule-engine/*.zip

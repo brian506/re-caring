@@ -19,7 +19,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## 빌드 및 실행 명령어
 
 ```bash
-docker compose -f docker-compose-local.yml up -d  # 인프라 (PostgreSQL 16, Redis 7)
+docker compose -f docker-compose-local.yml up -d  # 인프라 (PostgreSQL 17, Redis 7)
 ./gradlew build                # 빌드
 ./gradlew test                 # 단위 테스트
 ./gradlew integrationTest      # 통합 테스트 (Testcontainers)
@@ -27,11 +27,13 @@ docker compose -f docker-compose-local.yml up -d  # 인프라 (PostgreSQL 16, Re
 ./gradlew clean compileJava    # QueryDSL Q클래스 재생성
 ```
 
+스키마는 Flyway가 관리한다. 로컬 DB 볼륨이 예전 Hibernate `create`로 만든 것이면 `docker compose -f docker-compose-local.yml down -v` 후 다시 띄운다.
+
 로컬 실행 시 Spring 프로파일을 `local`로 지정해야 한다 (`application-local.yml` 참고).
 
 ## 스택
 
-Spring Boot 4.0.3 · Java 21 · PostgreSQL 16 · Redis 7 · QueryDSL 7 · JWT (jjwt 0.12) · CoolSMS
+Spring Boot 4.0.3 · Java 21 · PostgreSQL 17 · Flyway · Redis 7 · QueryDSL 7 · JWT (jjwt 0.12) · CoolSMS
 
 ## 로깅 규칙
 
@@ -71,7 +73,7 @@ EC2 서버 접근은 **SSH가 아닌 AWS SSM Session Manager**로만 한다. SSH
 
 ## 인덱스 규칙
 
-Entity `@Table`의 `indexes` 속성을 사용하지 않는다. 인덱스는 별도 DDL 쿼리로 관리하며, 필요한 위치에 TODO 주석으로 표시한다.
+Entity `@Table`의 `indexes` 속성을 사용하지 않는다. 인덱스는 Flyway 마이그레이션(`src/main/resources/db/migration`)에 작성한다. 스키마 변경 규칙은 `.claude/rules/ddl-conventions.md` 참고.
 
 ## 환경 선택
 
