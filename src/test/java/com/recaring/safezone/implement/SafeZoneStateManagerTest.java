@@ -222,6 +222,20 @@ class SafeZoneStateManagerTest {
     }
 
     @Test
+    @DisplayName("수정된 존의 기준선을 다시 세운 뒤 다음 관측에서 그 존을 벗어나면 이탈로 판정한다")
+    void rebaselined_version_is_recognized_on_next_observation() {
+        SafeZoneState stored = SafeZoneFixture.createSafeZoneState(HOME_KEY, HOME_VERSION);
+        given(safeZoneStateRepository.findByWardMemberKey(LocationFixture.WARD_KEY))
+                .willReturn(Optional.of(stored));
+        safeZoneStateManager.transition(LocationFixture.WARD_KEY, observeAt(0.0, EDITED_HOME_300M));
+
+        Optional<SafeZoneTransition> result = safeZoneStateManager
+                .transition(LocationFixture.WARD_KEY, observeAt(AT_340M_LATITUDE_DELTA, EDITED_HOME_300M));
+
+        assertThat(result).map(SafeZoneTransition::exitedKeys).contains(Set.of(HOME_KEY));
+    }
+
+    @Test
     @DisplayName("버전 정보가 없는 배포 전 상태는 진입·이탈 없이 기준선만 다시 세운다")
     void legacy_state_without_versions_rebaselines_without_transition() {
         SafeZoneState stored = SafeZoneFixture.createLegacySafeZoneState(HOME_KEY);
