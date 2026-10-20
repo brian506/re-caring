@@ -31,17 +31,13 @@ class NotificationAcknowledgementControllerTest extends AbstractIntegrationTest 
 
     private Member ward;
     private Member guardian;
-    private Member manager;
 
     @BeforeEach
     void setUp() {
         ward = memberRepository.save(NotificationFixture.createWard());
         guardian = memberRepository.save(NotificationFixture.createGuardian());
-        manager = memberRepository.save(NotificationFixture.createManager());
         careRelationshipRepository.save(
                 CareFixture.createGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
-        careRelationshipRepository.save(
-                CareFixture.createManagerRelationship(ward.getMemberKey(), manager.getMemberKey()));
         anomalyAcknowledgementManager.reset(ward.getMemberKey(), LocationFixture.EVENT_ID);
     }
 
@@ -64,15 +60,6 @@ class NotificationAcknowledgementControllerTest extends AbstractIntegrationTest 
     }
 
     @Test
-    @DisplayName("관계자도 사건을 확인할 수 있다")
-    void acknowledge_allows_manager() {
-        acknowledge(manager, ward.getMemberKey(), LocationFixture.EVENT_ID)
-                .expectStatus().isOk();
-
-        assertThat(anomalyAcknowledgementManager.isAcknowledged(ward.getMemberKey())).isTrue();
-    }
-
-    @Test
     @DisplayName("지난 사건을 확인하면 성공하지만 진행 중인 사건은 확인되지 않는다")
     void acknowledge_of_previous_event_keeps_current_event_unacknowledged() {
         acknowledge(guardian, ward.getMemberKey(), LocationFixture.PREVIOUS_EVENT_ID)
@@ -87,9 +74,9 @@ class NotificationAcknowledgementControllerTest extends AbstractIntegrationTest 
         Member otherGuardian = memberRepository.save(NotificationFixture.createOtherGuardian());
 
         acknowledge(otherGuardian, ward.getMemberKey(), LocationFixture.EVENT_ID)
-                .expectStatus().isForbidden()
+                .expectStatus().isBadRequest()
                 .expectBody()
-                .jsonPath("$.error.errorCode").isEqualTo("E6001");
+                .jsonPath("$.error.errorCode").isEqualTo("E5011");
 
         assertThat(anomalyAcknowledgementManager.isAcknowledged(ward.getMemberKey())).isFalse();
     }

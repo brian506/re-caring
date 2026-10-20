@@ -1,6 +1,5 @@
 package com.recaring.care.implement;
 
-import com.recaring.care.vo.CareRole;
 import com.recaring.care.event.CareInvitationAcceptedEvent;
 import com.recaring.care.event.CareInvitationSentEvent;
 import com.recaring.care.vo.CareInvitationInfo;
@@ -42,23 +41,11 @@ public class CareInvitationManager {
         eventPublisher.publishEvent(new CareInvitationSentEvent(saved.requestKey(), saved.targetMemberKey(), saved.requesterMemberKey(), saved.targetRole()));
     }
 
-    // 관리자 추가
-    @Transactional
-    public void sendManagerInvitation(String requesterKey, String phoneNumber, String wardMemberKey) {
-        MemberInfo newManager = memberReader.findByPhone(new PhoneNumber(phoneNumber));
-        NewCareInvitation invitation = NewCareInvitation.ofCaregiverRequest(requesterKey, Caregiver.of(newManager.memberKey(), newManager.role()), wardMemberKey, CareRole.MANAGER);
-
-        careRelationshipValidator.validateCanAddCaregiver(invitation.requesterMemberKey(), invitation.wardMemberKey(), invitation.targetMemberKey());
-        validateNoPending(invitation);
-        CareInvitationInfo saved = careInvitationWriter.register(invitation);
-        eventPublisher.publishEvent(new CareInvitationSentEvent(saved.requestKey(), saved.targetMemberKey(), saved.requesterMemberKey(), saved.targetRole()));
-    }
-
     // 보호자 추가
     @Transactional
     public void sendGuardianInvitation(String requesterKey, String phoneNumber, String wardMemberKey) {
         MemberInfo newGuardian = memberReader.findByPhone(new PhoneNumber(phoneNumber));
-        NewCareInvitation invitation = NewCareInvitation.ofCaregiverRequest(requesterKey, Caregiver.of(newGuardian.memberKey(), newGuardian.role()), wardMemberKey, CareRole.GUARDIAN);
+        NewCareInvitation invitation = NewCareInvitation.ofCaregiverRequest(requesterKey, Caregiver.of(newGuardian.memberKey(), newGuardian.role()), wardMemberKey);
 
         careRelationshipValidator.validateCanAddCaregiver(invitation.requesterMemberKey(), invitation.wardMemberKey(), invitation.targetMemberKey());
         validateNoPending(invitation);

@@ -29,7 +29,7 @@ public class DesignatedAvatarManager {
     }
 
     /**
-     * owner가 한 대상자 범위 안에서 지정한 얼굴을 대상 memberKey로 묶는다. 보호자·관계자 목록 조회용.
+     * owner가 한 대상자 범위 안에서 지정한 얼굴을 대상 memberKey로 묶는다. 보호자 목록 조회용.
      */
     public Map<String, String> findAvatarCodesInWard(String ownerMemberKey, String wardMemberKey) {
         return designatedAvatarRepository.findAllByOwnerMemberKeyAndWardMemberKey(ownerMemberKey, wardMemberKey)

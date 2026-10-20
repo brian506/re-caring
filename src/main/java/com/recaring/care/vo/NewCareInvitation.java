@@ -34,12 +34,12 @@ public record NewCareInvitation(
     }
 
 
-    public static NewCareInvitation ofCaregiverRequest(String requesterKey, Caregiver caregiver, String wardMemberKey, CareRole careRole) {
+    public static NewCareInvitation ofCaregiverRequest(String requesterKey, Caregiver caregiver, String wardMemberKey) {
         return new NewCareInvitation(
                 requesterKey,
                 caregiver.memberKey(),
                 wardMemberKey,
-                careRole
+                CareRole.GUARDIAN
         );
     }
 }

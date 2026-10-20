@@ -48,10 +48,6 @@ public class Member extends BaseEntity {
     @Column(nullable = false, length = 10)
     private SignUpType signUpType;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private SubscriptionType subscriptionType;
-
     @Column(nullable = false, length = 30)
     private String profileAvatarCode;
 
@@ -66,7 +62,6 @@ public class Member extends BaseEntity {
         this.gender = gender;
         this.role = role;
         this.signUpType = signUpType;
-        this.subscriptionType = SubscriptionType.BASIC;
         this.profileAvatarCode = ProfileAvatarCode.defaultFor(memberKey, role, gender).value();
     }
 

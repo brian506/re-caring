@@ -31,7 +31,7 @@ class NotificationWriterTest {
     @DisplayName("수신자별로 알림을 한 건씩 저장한다")
     void addAll_saves_one_notification_per_recipient() {
         notificationWriter.addAll(
-                List.of(NotificationFixture.GUARDIAN_KEY, NotificationFixture.MANAGER_KEY),
+                List.of(NotificationFixture.GUARDIAN_KEY, NotificationFixture.SECOND_GUARDIAN_KEY),
                 "SAFE_ZONE_EXIT",
                 "안심존 이탈",
                 "홍길동님이 안심존을 벗어났어요.",
@@ -44,7 +44,7 @@ class NotificationWriterTest {
         List<Notification> saved = captor.getValue();
         assertThat(saved).hasSize(2);
         assertThat(saved).extracting(Notification::getRecipientMemberKey)
-                .containsExactly(NotificationFixture.GUARDIAN_KEY, NotificationFixture.MANAGER_KEY);
+                .containsExactly(NotificationFixture.GUARDIAN_KEY, NotificationFixture.SECOND_GUARDIAN_KEY);
         assertThat(saved).allSatisfy(notification -> {
             assertThat(notification.getEventType()).isEqualTo("SAFE_ZONE_EXIT");
             assertThat(notification.getTitle()).isEqualTo("안심존 이탈");

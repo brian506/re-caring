@@ -21,14 +21,14 @@ public class CareFixture {
 
     public static final String GUARDIAN_MEMBER_KEY = "guardian-member-key";
     public static final String WARD_MEMBER_KEY = "ward-member-key";
-    public static final String MANAGER_MEMBER_KEY = "manager-member-key";
+    public static final String SECOND_GUARDIAN_MEMBER_KEY = "second-guardian-member-key";
     public static final String REQUEST_KEY = "test-request-key";
     // Sorts before every other member key; used to pin the lock order when the ward key is the smaller one.
     public static final String LOW_SORTING_WARD_MEMBER_KEY = "aaa-ward-member-key";
 
     public static final String GUARDIAN_PHONE = "01011112222";
     public static final String WARD_PHONE = "01033334444";
-    public static final String MANAGER_PHONE = "01055556666";
+    public static final String SECOND_GUARDIAN_PHONE = "01055556666";
     public static final String OTHER_GUARDIAN_PHONE = "01077778888";
     public static final String OTHER_WARD_PHONE = "01099990000";
     public static final LocalDateTime WARD_JOINED_AT = LocalDateTime.of(2026, 8, 14, 10, 23);
@@ -143,10 +143,6 @@ public class CareFixture {
         return CareRelationship.of(wardKey, caregiverKey, CareRole.GUARDIAN);
     }
 
-    public static CareRelationship createManagerRelationship(String wardKey, String managerKey) {
-        return CareRelationship.of(wardKey, managerKey, CareRole.MANAGER);
-    }
-
     public static CareInvitation createWardInvitation(String requesterKey, String wardKey) {
         return CareInvitation.builder()
                 .requesterMemberKey(requesterKey)
@@ -162,15 +158,6 @@ public class CareFixture {
                 .targetMemberKey(targetKey)
                 .wardMemberKey(wardKey)
                 .careRole(CareRole.GUARDIAN)
-                .build();
-    }
-
-    public static CareInvitation createManagerInvitation(String requesterKey, String targetKey, String wardKey) {
-        return CareInvitation.builder()
-                .requesterMemberKey(requesterKey)
-                .targetMemberKey(targetKey)
-                .wardMemberKey(wardKey)
-                .careRole(CareRole.MANAGER)
                 .build();
     }
 

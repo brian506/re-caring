@@ -37,20 +37,20 @@ class NotificationSettingControllerTest extends AbstractIntegrationTest {
 
     private Member ward;
     private Member guardian;
-    private Member manager;
+    private Member secondGuardian;
     private Member otherGuardian;
 
     @BeforeEach
     void setUp() {
         ward = memberRepository.save(NotificationFixture.createWard());
         guardian = memberRepository.save(NotificationFixture.createGuardian());
-        manager = memberRepository.save(NotificationFixture.createManager());
+        secondGuardian = memberRepository.save(NotificationFixture.createSecondGuardian());
         otherGuardian = memberRepository.save(NotificationFixture.createOtherGuardian());
 
         careRelationshipRepository.save(
                 CareFixture.createGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
         careRelationshipRepository.save(
-                CareFixture.createManagerRelationship(ward.getMemberKey(), manager.getMemberKey()));
+                CareFixture.createGuardianRelationship(ward.getMemberKey(), secondGuardian.getMemberKey()));
     }
 
     @AfterEach
@@ -87,8 +87,8 @@ class NotificationSettingControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("PATCH /safe-zone - 보호자가 바꾼 안심존 알림은 그 보호자에게만 저장되고 관계자의 설정은 그대로다")
-    void updateSafeZone_by_guardian_does_not_affect_manager() {
+    @DisplayName("PATCH /safe-zone - 보호자가 바꾼 안심존 알림은 그 보호자에게만 저장되고 다른 보호자의 설정은 그대로다")
+    void updateSafeZone_by_guardian_does_not_affect_other_guardian() {
         // 기본값이 둘 다 true라, 먼저 둘 다 끄지 않으면 exit가 기본값과 같아 무엇도 검증되지 않는다
         patchSafeZone(guardian, false, false);
         expectSafeZone(guardian, false, false);
@@ -97,7 +97,7 @@ class NotificationSettingControllerTest extends AbstractIntegrationTest {
         patchSafeZone(guardian, true, false);
         expectSafeZone(guardian, true, false);
 
-        expectSafeZone(manager, true, true);
+        expectSafeZone(secondGuardian, true, true);
         assertThat(notificationSettingRepository.findByWardMemberKeyAndCaregiverMemberKey(
                 ward.getMemberKey(), guardian.getMemberKey()))
                 .hasValueSatisfying(setting -> {
@@ -105,13 +105,13 @@ class NotificationSettingControllerTest extends AbstractIntegrationTest {
                     assertThat(setting.isSafeZoneExitEnabled()).isFalse();
                 });
         assertThat(notificationSettingRepository.findByWardMemberKeyAndCaregiverMemberKey(
-                ward.getMemberKey(), manager.getMemberKey()))
+                ward.getMemberKey(), secondGuardian.getMemberKey()))
                 .isEmpty();
     }
 
     @Test
-    @DisplayName("PATCH /danger-zone - 보호자가 바꾼 위험존 알림은 그 보호자에게만 저장되고 안심존 설정과 관계자 설정은 그대로다")
-    void updateDangerZone_by_guardian_does_not_affect_safe_zone_or_manager() {
+    @DisplayName("PATCH /danger-zone - 보호자가 바꾼 위험존 알림은 그 보호자에게만 저장되고 안심존 설정과 다른 보호자의 설정은 그대로다")
+    void updateDangerZone_by_guardian_does_not_affect_safe_zone_or_other_guardian() {
         patchDangerZone(guardian, false, false);
         expectDangerZone(guardian, false, false);
 
@@ -119,7 +119,7 @@ class NotificationSettingControllerTest extends AbstractIntegrationTest {
         expectDangerZone(guardian, true, false);
 
         expectSafeZone(guardian, true, true);
-        expectDangerZone(manager, true, true);
+        expectDangerZone(secondGuardian, true, true);
         assertThat(notificationSettingRepository.findByWardMemberKeyAndCaregiverMemberKey(
                 ward.getMemberKey(), guardian.getMemberKey()))
                 .hasValueSatisfying(setting -> {
@@ -129,7 +129,7 @@ class NotificationSettingControllerTest extends AbstractIntegrationTest {
                     assertThat(setting.isSafeZoneExitEnabled()).isTrue();
                 });
         assertThat(notificationSettingRepository.findByWardMemberKeyAndCaregiverMemberKey(
-                ward.getMemberKey(), manager.getMemberKey()))
+                ward.getMemberKey(), secondGuardian.getMemberKey()))
                 .isEmpty();
     }
 
@@ -267,29 +267,29 @@ class NotificationSettingControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("GET /api/v1/notifications/settings/{wardKey} - 케어 관계가 없으면 403을 반환한다")
-    void getSetting_returns_403_for_unrelated_member() {
+    @DisplayName("GET /api/v1/notifications/settings/{wardKey} - 케어 관계가 없으면 400 E5011을 반환한다")
+    void getSetting_returns_400_for_unrelated_member() {
         client.get()
                 .uri("/api/v1/notifications/settings/{wardKey}", ward.getMemberKey())
                 .header(HttpHeaders.AUTHORIZATION, bearerToken(otherGuardian))
                 .exchange()
-                .expectStatus().isForbidden()
+                .expectStatus().isBadRequest()
                 .expectBody()
                 .jsonPath("$.resultType").isEqualTo("ERROR")
-                .jsonPath("$.error.errorCode").isEqualTo("E6001");
+                .jsonPath("$.error.errorCode").isEqualTo("E5011");
     }
 
     @Test
-    @DisplayName("GET /api/v1/notifications/settings/{wardKey} - 대상자 본인은 알림 수신자가 아니므로 403을 반환한다")
-    void getSetting_returns_403_for_ward_self() {
+    @DisplayName("GET /api/v1/notifications/settings/{wardKey} - 대상자 본인은 알림 수신자가 아니므로 400 E5011을 반환한다")
+    void getSetting_returns_400_for_ward_self() {
         client.get()
                 .uri("/api/v1/notifications/settings/{wardKey}", ward.getMemberKey())
                 .header(HttpHeaders.AUTHORIZATION, bearerToken(ward))
                 .exchange()
-                .expectStatus().isForbidden()
+                .expectStatus().isBadRequest()
                 .expectBody()
                 .jsonPath("$.resultType").isEqualTo("ERROR")
-                .jsonPath("$.error.errorCode").isEqualTo("E6001");
+                .jsonPath("$.error.errorCode").isEqualTo("E5011");
     }
 
     @Test

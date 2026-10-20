@@ -15,11 +15,8 @@ public class FcmDeviceTokenReader {
 
     private final FcmDeviceTokenRepository fcmDeviceTokenRepository;
 
-    public List<FcmDeviceTokenInfo> findTokensByCareRoles(
-            Collection<String> guardianMemberKeys,
-            Collection<String> managerMemberKeys
-    ) {
-        return toInfos(fcmDeviceTokenRepository.findTokensByCareRoles(guardianMemberKeys, managerMemberKeys));
+    public List<FcmDeviceTokenInfo> findGuardianTokens(Collection<String> memberKeys) {
+        return toInfos(fcmDeviceTokenRepository.findGuardianTokens(memberKeys));
     }
 
     public List<FcmDeviceTokenInfo> findTokensByMemberKey(String memberKey) {

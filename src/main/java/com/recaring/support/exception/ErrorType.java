@@ -42,9 +42,7 @@ public enum ErrorType {
     INVALID_CREDENTIALS(HttpStatus.BAD_REQUEST, ErrorCode.E2022, "전화번호 또는 비밀번호가 올바르지 않습니다.", LogLevel.INFO),
 
     // Member (E3xxx)
-    PREMIUM_ONLY(HttpStatus.BAD_REQUEST, ErrorCode.E3003, "프리미엄 구독을 한 회원만 접근 가능합니다", LogLevel.WARN),
     BASIC_ONLY(HttpStatus.BAD_REQUEST, ErrorCode.E3004, "베이식 구독을 한 회원만 접근 가능합니다", LogLevel.WARN),
-    SUBSCRIPTION_ONLY(HttpStatus.BAD_REQUEST, ErrorCode.E3005, "멤버십 결제가 필요한 기능입니다.", LogLevel.WARN),
     ALREADY_REGISTERED_PHONE(HttpStatus.CONFLICT, ErrorCode.E3006, "이미 가입된 전화번호입니다.", LogLevel.WARN),
     INVALID_PROFILE_AVATAR_CODE(HttpStatus.BAD_REQUEST, ErrorCode.E3008, "지원하지 않는 프로필 아바타 코드입니다.", LogLevel.WARN),
 
@@ -57,15 +55,14 @@ public enum ErrorType {
     SMS_SEND_QUOTA_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, ErrorCode.E4005, "인증번호 요청 한도를 초과했습니다.", LogLevel.WARN),
 
     // Care (E5xxx)
-    CARE_CAREGIVER_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, ErrorCode.E5000, "보호 대상자에 연결할 수 있는 보호자·관계자는 최대 5명입니다.", LogLevel.WARN),
-    ALREADY_CARE_RELATIONSHIP(HttpStatus.BAD_REQUEST, ErrorCode.E5001, "이미 등록된 보호자/관리자입니다.", LogLevel.WARN),
-    NOT_GUARDIAN_OF_WARD(HttpStatus.FORBIDDEN, ErrorCode.E5002, "해당 보호 대상자의 보호자가 아닙니다.", LogLevel.WARN),
+    CARE_CAREGIVER_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, ErrorCode.E5000, "보호 대상자에 연결할 수 있는 보호자는 최대 5명입니다.", LogLevel.WARN),
+    ALREADY_CARE_RELATIONSHIP(HttpStatus.BAD_REQUEST, ErrorCode.E5001, "이미 등록된 보호자입니다.", LogLevel.WARN),
     NOT_FOUND_CARE_REQUEST(HttpStatus.BAD_REQUEST, ErrorCode.E5003, "존재하지 않는 케어 요청입니다.", LogLevel.WARN),
     NOT_CARE_REQUEST_TARGET(HttpStatus.FORBIDDEN, ErrorCode.E5004, "해당 케어 요청의 수신자가 아닙니다.", LogLevel.WARN),
     EXPIRED_CARE_REQUEST(HttpStatus.BAD_REQUEST, ErrorCode.E5005, "만료된 케어 요청입니다.", LogLevel.WARN),
     ALREADY_PROCESSED_CARE_REQUEST(HttpStatus.BAD_REQUEST, ErrorCode.E5006, "이미 처리된 케어 요청입니다.", LogLevel.WARN),
     INVALID_WARD_ROLE(HttpStatus.BAD_REQUEST, ErrorCode.E5007, "보호 대상자로 가입한 회원만 대상자로 추가할 수 있습니다.", LogLevel.WARN),
-    INVALID_CAREGIVER_ROLE(HttpStatus.BAD_REQUEST, ErrorCode.E5008, "보호자로 가입한 회원만 보호자/관리자로 추가할 수 있습니다.", LogLevel.WARN),
+    INVALID_CAREGIVER_ROLE(HttpStatus.BAD_REQUEST, ErrorCode.E5008, "보호자로 가입한 회원만 보호자로 추가할 수 있습니다.", LogLevel.WARN),
     ALREADY_PENDING_CARE_REQUEST(HttpStatus.BAD_REQUEST, ErrorCode.E5009, "이미 대기 중인 케어 요청이 존재합니다.", LogLevel.WARN),
     WARD_KEY_REQUIRED(HttpStatus.BAD_REQUEST, ErrorCode.E5010, "보호자를 추가하려면 보호 대상자 키가 필요합니다.", LogLevel.WARN),
     NOT_FOUND_CARE_RELATIONSHIP(HttpStatus.BAD_REQUEST, ErrorCode.E5011, "존재하지 않는 케어 관계입니다.", LogLevel.WARN),
@@ -75,7 +72,6 @@ public enum ErrorType {
 
     // Location (E6xxx)
     NOT_WARD_MEMBER(HttpStatus.FORBIDDEN, ErrorCode.E6000, "보호 대상자로 가입한 회원만 GPS를 전송할 수 있습니다.", LogLevel.WARN),
-    NOT_CARE_RELATED_WARD(HttpStatus.FORBIDDEN, ErrorCode.E6001, "케어 관계가 없는 보호 대상자입니다.", LogLevel.WARN),
     INVALID_LOCATION_COLLECTION_INTERVAL(HttpStatus.BAD_REQUEST, ErrorCode.E6002, "지원하지 않는 위치 수집 주기입니다.", LogLevel.WARN),
     ANOMALY_EVENT_NOT_FOUND(HttpStatus.NOT_FOUND, ErrorCode.E6003, "이상탐지 사건을 찾을 수 없습니다.", LogLevel.WARN),
 
@@ -84,7 +80,6 @@ public enum ErrorType {
 
     // SafeZone (E8xxx)
     NOT_FOUND_SAFE_ZONE(HttpStatus.BAD_REQUEST, ErrorCode.E8000, "존재하지 않는 안심존입니다.", LogLevel.WARN),
-    NOT_CAREGIVER_OF_WARD(HttpStatus.FORBIDDEN, ErrorCode.E8001, "해당 보호 대상자의 보호자/관계자가 아닙니다.", LogLevel.WARN),
     INVALID_SAFE_ZONE_COORDINATE(HttpStatus.BAD_REQUEST, ErrorCode.E8002, "안심존 좌표가 유효한 범위를 벗어났습니다.", LogLevel.WARN),
     INVALID_SAFE_ZONE_RADIUS(HttpStatus.BAD_REQUEST, ErrorCode.E8003, "안심존 반경은 100m 이상 2000m 이하여야 합니다.", LogLevel.WARN),
 

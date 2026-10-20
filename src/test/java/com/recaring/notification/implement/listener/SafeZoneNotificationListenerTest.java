@@ -57,9 +57,8 @@ class SafeZoneNotificationListenerTest {
 
         safeZoneNotificationListener.onSafeZoneEntered(SafeZoneFixture.createSafeZoneEnteredEvent());
 
-        then(notificationSendManager).should().sendToCareParties(
-                List.of(NotificationFixture.GUARDIAN_KEY),
-                List.of(NotificationFixture.MANAGER_KEY),
+        then(notificationSendManager).should().sendToCaregivers(
+                List.of(NotificationFixture.GUARDIAN_KEY, NotificationFixture.SECOND_GUARDIAN_KEY),
                 "SAFE_ZONE_ENTERED",
                 "안심존 진입 알림",
                 "김소연님이 안심존 1에 도착했어요.",
@@ -74,9 +73,8 @@ class SafeZoneNotificationListenerTest {
 
         safeZoneNotificationListener.onSafeZoneExited(SafeZoneFixture.createSafeZoneExitedEvent());
 
-        then(notificationSendManager).should().sendToCareParties(
-                List.of(NotificationFixture.GUARDIAN_KEY),
-                List.of(NotificationFixture.MANAGER_KEY),
+        then(notificationSendManager).should().sendToCaregivers(
+                List.of(NotificationFixture.GUARDIAN_KEY, NotificationFixture.SECOND_GUARDIAN_KEY),
                 "SAFE_ZONE_EXITED",
                 "안심존 이탈 알림",
                 "김소연님이 안심존 1에서 벗어났어요.",
@@ -94,14 +92,13 @@ class SafeZoneNotificationListenerTest {
                 .willReturn(List.of(
                         CareFixture.createCaregiverInfo(NotificationFixture.GUARDIAN_KEY, CareRole.GUARDIAN),
                         CareFixture.createCaregiverInfo(NotificationFixture.OTHER_GUARDIAN_KEY, CareRole.GUARDIAN),
-                        CareFixture.createCaregiverInfo(NotificationFixture.MANAGER_KEY, CareRole.MANAGER)));
+                        CareFixture.createCaregiverInfo(NotificationFixture.SECOND_GUARDIAN_KEY, CareRole.GUARDIAN)));
         given(memberReader.findNameByMemberKey(NotificationFixture.WARD_KEY)).willReturn(NotificationFixture.WARD_NAME);
 
         safeZoneNotificationListener.onSafeZoneEntered(SafeZoneFixture.createSafeZoneEnteredEvent());
 
-        then(notificationSendManager).should().sendToCareParties(
-                List.of(NotificationFixture.OTHER_GUARDIAN_KEY),
-                List.of(NotificationFixture.MANAGER_KEY),
+        then(notificationSendManager).should().sendToCaregivers(
+                List.of(NotificationFixture.OTHER_GUARDIAN_KEY, NotificationFixture.SECOND_GUARDIAN_KEY),
                 "SAFE_ZONE_ENTERED",
                 "안심존 진입 알림",
                 "김소연님이 안심존 1에 도착했어요.",
@@ -115,16 +112,16 @@ class SafeZoneNotificationListenerTest {
         given(notificationSettingRepository.findAllByWardMemberKey(NotificationFixture.WARD_KEY))
                 .willReturn(List.of(
                         NotificationFixture.createSafeZoneSetting(NotificationFixture.WARD_KEY, NotificationFixture.GUARDIAN_KEY, true, false),
-                        NotificationFixture.createSafeZoneSetting(NotificationFixture.WARD_KEY, NotificationFixture.MANAGER_KEY, true, false)));
+                        NotificationFixture.createSafeZoneSetting(NotificationFixture.WARD_KEY, NotificationFixture.SECOND_GUARDIAN_KEY, true, false)));
         given(careRelationshipReader.findCaregiverInfos(NotificationFixture.WARD_KEY))
                 .willReturn(List.of(
                         CareFixture.createCaregiverInfo(NotificationFixture.GUARDIAN_KEY, CareRole.GUARDIAN),
-                        CareFixture.createCaregiverInfo(NotificationFixture.MANAGER_KEY, CareRole.MANAGER)));
+                        CareFixture.createCaregiverInfo(NotificationFixture.SECOND_GUARDIAN_KEY, CareRole.GUARDIAN)));
 
         safeZoneNotificationListener.onSafeZoneExited(SafeZoneFixture.createSafeZoneExitedEvent());
 
         then(notificationSendManager).should(never())
-                .sendToCareParties(any(), any(), anyString(), anyString(), anyString(), any());
+                .sendToCaregivers(any(), anyString(), anyString(), anyString(), any());
     }
 
     @Test
@@ -135,31 +132,8 @@ class SafeZoneNotificationListenerTest {
         safeZoneNotificationListener.onSafeZoneExited(SafeZoneFixture.createSafeZoneExitedEvent());
 
         then(notificationSendManager).should(never())
-                .sendToCareParties(any(), any(), anyString(), anyString(), anyString(), any());
+                .sendToCaregivers(any(), anyString(), anyString(), anyString(), any());
         then(memberReader).should(never()).findNameByMemberKey(anyString());
-    }
-
-    @Test
-    @DisplayName("보호자는 보호자 수신자로, 관계자는 관계자 수신자로 분류된다")
-    void classifies_guardians_and_managers_into_separate_recipients() {
-        given(careRelationshipReader.findCaregiverInfos(NotificationFixture.WARD_KEY))
-                .willReturn(List.of(
-                        CareFixture.createCaregiverInfo(NotificationFixture.GUARDIAN_KEY, CareRole.GUARDIAN),
-                        CareFixture.createCaregiverInfo(NotificationFixture.OTHER_GUARDIAN_KEY, CareRole.GUARDIAN),
-                        CareFixture.createCaregiverInfo(NotificationFixture.MANAGER_KEY, CareRole.MANAGER)));
-        given(memberReader.findNameByMemberKey(NotificationFixture.WARD_KEY))
-                .willReturn(NotificationFixture.WARD_NAME);
-
-        safeZoneNotificationListener.onSafeZoneEntered(SafeZoneFixture.createSafeZoneEnteredEvent());
-
-        then(notificationSendManager).should().sendToCareParties(
-                List.of(NotificationFixture.GUARDIAN_KEY, NotificationFixture.OTHER_GUARDIAN_KEY),
-                List.of(NotificationFixture.MANAGER_KEY),
-                "SAFE_ZONE_ENTERED",
-                "안심존 진입 알림",
-                "김소연님이 안심존 1에 도착했어요.",
-                expectedPayload("SAFE_ZONE_ENTERED")
-        );
     }
 
     @Test
@@ -169,9 +143,8 @@ class SafeZoneNotificationListenerTest {
 
         safeZoneNotificationListener.onSafeZoneEntered(SafeZoneFixture.createDangerZoneEnteredEvent());
 
-        then(notificationSendManager).should().sendToCareParties(
-                List.of(NotificationFixture.GUARDIAN_KEY),
-                List.of(NotificationFixture.MANAGER_KEY),
+        then(notificationSendManager).should().sendToCaregivers(
+                List.of(NotificationFixture.GUARDIAN_KEY, NotificationFixture.SECOND_GUARDIAN_KEY),
                 "DANGER_ZONE_ENTERED",
                 "위험존 진입 알림",
                 "김소연님이 위험존 공사장에 들어갔어요.",
@@ -186,9 +159,8 @@ class SafeZoneNotificationListenerTest {
 
         safeZoneNotificationListener.onSafeZoneExited(SafeZoneFixture.createDangerZoneExitedEvent());
 
-        then(notificationSendManager).should().sendToCareParties(
-                List.of(NotificationFixture.GUARDIAN_KEY),
-                List.of(NotificationFixture.MANAGER_KEY),
+        then(notificationSendManager).should().sendToCaregivers(
+                List.of(NotificationFixture.GUARDIAN_KEY, NotificationFixture.SECOND_GUARDIAN_KEY),
                 "DANGER_ZONE_EXITED",
                 "위험존 이탈 알림",
                 "김소연님이 위험존 공사장에서 벗어났어요.",
@@ -206,9 +178,8 @@ class SafeZoneNotificationListenerTest {
 
         safeZoneNotificationListener.onSafeZoneEntered(SafeZoneFixture.createDangerZoneEnteredEvent());
 
-        then(notificationSendManager).should().sendToCareParties(
-                List.of(NotificationFixture.GUARDIAN_KEY),
-                List.of(NotificationFixture.MANAGER_KEY),
+        then(notificationSendManager).should().sendToCaregivers(
+                List.of(NotificationFixture.GUARDIAN_KEY, NotificationFixture.SECOND_GUARDIAN_KEY),
                 "DANGER_ZONE_ENTERED",
                 "위험존 진입 알림",
                 "김소연님이 위험존 공사장에 들어갔어요.",
@@ -226,14 +197,13 @@ class SafeZoneNotificationListenerTest {
                 .willReturn(List.of(
                         CareFixture.createCaregiverInfo(NotificationFixture.GUARDIAN_KEY, CareRole.GUARDIAN),
                         CareFixture.createCaregiverInfo(NotificationFixture.OTHER_GUARDIAN_KEY, CareRole.GUARDIAN),
-                        CareFixture.createCaregiverInfo(NotificationFixture.MANAGER_KEY, CareRole.MANAGER)));
+                        CareFixture.createCaregiverInfo(NotificationFixture.SECOND_GUARDIAN_KEY, CareRole.GUARDIAN)));
         given(memberReader.findNameByMemberKey(NotificationFixture.WARD_KEY)).willReturn(NotificationFixture.WARD_NAME);
 
         safeZoneNotificationListener.onSafeZoneEntered(SafeZoneFixture.createDangerZoneEnteredEvent());
 
-        then(notificationSendManager).should().sendToCareParties(
-                List.of(NotificationFixture.OTHER_GUARDIAN_KEY),
-                List.of(NotificationFixture.MANAGER_KEY),
+        then(notificationSendManager).should().sendToCaregivers(
+                List.of(NotificationFixture.OTHER_GUARDIAN_KEY, NotificationFixture.SECOND_GUARDIAN_KEY),
                 "DANGER_ZONE_ENTERED",
                 "위험존 진입 알림",
                 "김소연님이 위험존 공사장에 들어갔어요.",
@@ -251,14 +221,13 @@ class SafeZoneNotificationListenerTest {
                 .willReturn(List.of(
                         CareFixture.createCaregiverInfo(NotificationFixture.GUARDIAN_KEY, CareRole.GUARDIAN),
                         CareFixture.createCaregiverInfo(NotificationFixture.OTHER_GUARDIAN_KEY, CareRole.GUARDIAN),
-                        CareFixture.createCaregiverInfo(NotificationFixture.MANAGER_KEY, CareRole.MANAGER)));
+                        CareFixture.createCaregiverInfo(NotificationFixture.SECOND_GUARDIAN_KEY, CareRole.GUARDIAN)));
         given(memberReader.findNameByMemberKey(NotificationFixture.WARD_KEY)).willReturn(NotificationFixture.WARD_NAME);
 
         safeZoneNotificationListener.onSafeZoneExited(SafeZoneFixture.createDangerZoneExitedEvent());
 
-        then(notificationSendManager).should().sendToCareParties(
-                List.of(NotificationFixture.OTHER_GUARDIAN_KEY),
-                List.of(NotificationFixture.MANAGER_KEY),
+        then(notificationSendManager).should().sendToCaregivers(
+                List.of(NotificationFixture.OTHER_GUARDIAN_KEY, NotificationFixture.SECOND_GUARDIAN_KEY),
                 "DANGER_ZONE_EXITED",
                 "위험존 이탈 알림",
                 "김소연님이 위험존 공사장에서 벗어났어요.",
@@ -292,7 +261,7 @@ class SafeZoneNotificationListenerTest {
         given(careRelationshipReader.findCaregiverInfos(NotificationFixture.WARD_KEY))
                 .willReturn(List.of(
                         CareFixture.createCaregiverInfo(NotificationFixture.GUARDIAN_KEY, CareRole.GUARDIAN),
-                        CareFixture.createCaregiverInfo(NotificationFixture.MANAGER_KEY, CareRole.MANAGER)));
+                        CareFixture.createCaregiverInfo(NotificationFixture.SECOND_GUARDIAN_KEY, CareRole.GUARDIAN)));
         given(memberReader.findNameByMemberKey(NotificationFixture.WARD_KEY))
                 .willReturn(NotificationFixture.WARD_NAME);
     }

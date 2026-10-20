@@ -26,7 +26,6 @@ public class LocationSettingManager {
     }
 
     // 기기는 보호자들이 고른 주기 중 가장 짧은 주기로 수집한다. 그보다 긴 주기를 고른 보호자에게는 SSE에서 솎아 보낸다.
-    // 관계자는 주기를 고를 수 없어 기기 주기를 그대로 따르므로 계산에서 뺀다.
     public LocationCollectionInterval findDeviceCollectionInterval(String wardMemberKey) {
         Map<String, LocationCollectionInterval> intervals = locationSettingRepository
                 .findAllByWardMemberKey(wardMemberKey).stream()
@@ -35,7 +34,6 @@ public class LocationSettingManager {
                         setting -> LocationCollectionInterval.fromSeconds(setting.getCollectionIntervalSeconds())));
 
         return careRelationshipReader.findCaregiverInfos(wardMemberKey).stream()
-                .filter(caregiver -> caregiver.careRole().isGuardian())
                 .map(CaregiverInfo::memberKey)
                 .map(caregiverKey -> intervals.getOrDefault(caregiverKey, LocationCollectionInterval.DEFAULT))
                 .reduce(LocationCollectionInterval::shorter)

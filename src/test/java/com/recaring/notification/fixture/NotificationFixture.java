@@ -30,10 +30,10 @@ public class NotificationFixture {
     public static final String WARD_KEY = LocationFixture.WARD_KEY;
     public static final String WARD_NAME = "김소연";
     public static final String GUARDIAN_KEY = LocationFixture.GUARDIAN_KEY;
-    public static final String MANAGER_KEY = LocationFixture.MANAGER_KEY;
+    public static final String SECOND_GUARDIAN_KEY = LocationFixture.SECOND_GUARDIAN_KEY;
     public static final String OTHER_GUARDIAN_KEY = LocationFixture.OTHER_GUARDIAN_KEY;
     public static final String GUARDIAN_FCM_TOKEN = "guardian-fcm-token-001";
-    public static final String MANAGER_FCM_TOKEN = "manager-fcm-token-001";
+    public static final String SECOND_GUARDIAN_FCM_TOKEN = "second-guardian-fcm-token-001";
     public static final String BATTERY_LOW_EVENT_TYPE = "BATTERY_LOW";
     public static final String BATTERY_LOW_TITLE = "배터리 부족";
     public static final String BATTERY_LOW_BODY = "배터리가 부족합니다. 잔량은 40% 입니다.";
@@ -74,10 +74,10 @@ public class NotificationFixture {
                 .build();
     }
 
-    public static Member createManager() {
+    public static Member createSecondGuardian() {
         return Member.builder()
                 .phone("01055556666")
-                .name("Manager")
+                .name("Second Guardian")
                 .birth(LocalDate.of(1975, 1, 1))
                 .gender(Gender.MALE)
                 .role(MemberRole.GUARDIAN)
@@ -173,10 +173,10 @@ public class NotificationFixture {
                 .build();
     }
 
-    public static FcmDeviceToken managerFcmDeviceToken(String token) {
+    public static FcmDeviceToken secondGuardianFcmDeviceToken(String token) {
         return FcmDeviceToken.builder()
-                .memberKey(MANAGER_KEY)
-                .careRole(CarePartyRole.MANAGER)
+                .memberKey(SECOND_GUARDIAN_KEY)
+                .careRole(CarePartyRole.GUARDIAN)
                 .token(token)
                 .platform(FcmDevicePlatform.IOS)
                 .build();
@@ -186,8 +186,8 @@ public class NotificationFixture {
         return FcmDeviceTokenInfo.from(guardianFcmDeviceToken(token));
     }
 
-    public static FcmDeviceTokenInfo managerFcmDeviceTokenInfo(String token) {
-        return FcmDeviceTokenInfo.from(managerFcmDeviceToken(token));
+    public static FcmDeviceTokenInfo secondGuardianFcmDeviceTokenInfo(String token) {
+        return FcmDeviceTokenInfo.from(secondGuardianFcmDeviceToken(token));
     }
 
     public static Notification notification(String recipientMemberKey, String eventType, String title, String body) {

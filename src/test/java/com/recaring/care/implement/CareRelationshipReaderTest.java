@@ -8,8 +8,6 @@ import com.recaring.care.fixture.CareFixture;
 import com.recaring.care.vo.CaregiverInfo;
 import com.recaring.care.vo.WardInfo;
 import com.recaring.member.implement.MemberReader;
-import com.recaring.support.exception.AppException;
-import com.recaring.support.exception.ErrorType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,10 +19,8 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.times;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("CareRelationshipReader 단위 테스트")
@@ -122,64 +118,24 @@ class CareRelationshipReaderTest {
     }
 
     @Test
-    @DisplayName("보호자·관계자 목록에는 회원 정보와 케어 역할이 함께 담긴다")
+    @DisplayName("보호자 목록에는 회원 정보와 케어 역할이 함께 담긴다")
     void findCaregiverInfos_combines_member_and_care_role() {
         // given
         MemberInfo caregiver = MemberInfo.from(CareFixture.createGuardianMember());
         given(careRelationshipRepository.findAllByWardMemberKey(CareFixture.WARD_MEMBER_KEY))
-                .willReturn(List.of(CareFixture.createManagerRelationship(
-                        CareFixture.WARD_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY)));
-        given(memberReader.findAllByMemberKeys(List.of(CareFixture.MANAGER_MEMBER_KEY)))
-                .willReturn(Map.of(CareFixture.MANAGER_MEMBER_KEY, caregiver));
+                .willReturn(List.of(CareFixture.createGuardianRelationship(
+                        CareFixture.WARD_MEMBER_KEY, CareFixture.SECOND_GUARDIAN_MEMBER_KEY)));
+        given(memberReader.findAllByMemberKeys(List.of(CareFixture.SECOND_GUARDIAN_MEMBER_KEY)))
+                .willReturn(Map.of(CareFixture.SECOND_GUARDIAN_MEMBER_KEY, caregiver));
 
         // when
         List<CaregiverInfo> result = careRelationshipReader.findCaregiverInfos(CareFixture.WARD_MEMBER_KEY);
 
         // then
         assertThat(result).containsExactly(
-                CareFixture.createCaregiverInfo(caregiver.memberKey(), CareRole.MANAGER,
+                CareFixture.createCaregiverInfo(caregiver.memberKey(), CareRole.GUARDIAN,
                         caregiver.profileAvatarCode(), null));
     }
-
-    @Test
-    @DisplayName("보호 대상자와 보호자 사이의 케어 역할을 반환한다")
-    void findCareRole_returns_role() {
-        // given
-        given(careRelationshipRepository.findAllByWardMemberKey(CareFixture.WARD_MEMBER_KEY))
-                .willReturn(List.of(
-                        CareFixture.createGuardianRelationship(CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY),
-                        CareFixture.createManagerRelationship(CareFixture.WARD_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY)
-                ));
-
-        // when
-        CareRole result = careRelationshipReader.findCareRole(
-                CareFixture.WARD_MEMBER_KEY,
-                CareFixture.MANAGER_MEMBER_KEY
-        );
-
-        // then
-        assertThat(result).isEqualTo(CareRole.MANAGER);
-        then(careRelationshipRepository).should(times(1)).findAllByWardMemberKey(CareFixture.WARD_MEMBER_KEY);
-    }
-
-    @Test
-    @DisplayName("케어 관계가 없는 보호 대상자의 역할을 조회하면 예외가 발생한다")
-    void findCareRole_throws_exception_when_not_related() {
-        // given
-        given(careRelationshipRepository.findAllByWardMemberKey(CareFixture.WARD_MEMBER_KEY))
-                .willReturn(List.of(
-                        CareFixture.createGuardianRelationship(CareFixture.WARD_MEMBER_KEY, CareFixture.GUARDIAN_MEMBER_KEY)
-                ));
-
-        // when / then
-        assertThatThrownBy(() -> careRelationshipReader.findCareRole(
-                CareFixture.WARD_MEMBER_KEY,
-                CareFixture.MANAGER_MEMBER_KEY
-        ))
-                .isInstanceOf(AppException.class)
-                .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_CARE_RELATED_WARD);
-    }
-
 
     @Test
     @DisplayName("보호 대상자 목록에는 대상자 본인이 고른 얼굴과 내가 지정한 얼굴이 함께 담긴다")
@@ -204,17 +160,17 @@ class CareRelationshipReaderTest {
     }
 
     @Test
-    @DisplayName("보호자·관계자 목록에는 그 사람이 고른 얼굴과 내가 지정한 얼굴이 함께 담긴다")
+    @DisplayName("보호자 목록에는 그 사람이 고른 얼굴과 내가 지정한 얼굴이 함께 담긴다")
     void findCaregiverInfos_includes_own_and_designated_avatar_codes() {
         // given
-        MemberInfo manager = CareFixture.createGuardianMemberInfoWithAvatar(CareFixture.ADULT_AVATAR_CODE);
+        MemberInfo secondGuardian = CareFixture.createGuardianMemberInfoWithAvatar(CareFixture.ADULT_AVATAR_CODE);
         given(careRelationshipRepository.findAllByWardMemberKey(CareFixture.WARD_MEMBER_KEY))
-                .willReturn(List.of(CareFixture.createManagerRelationship(
-                        CareFixture.WARD_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY)));
-        given(memberReader.findAllByMemberKeys(List.of(CareFixture.MANAGER_MEMBER_KEY)))
-                .willReturn(Map.of(CareFixture.MANAGER_MEMBER_KEY, manager));
+                .willReturn(List.of(CareFixture.createGuardianRelationship(
+                        CareFixture.WARD_MEMBER_KEY, CareFixture.SECOND_GUARDIAN_MEMBER_KEY)));
+        given(memberReader.findAllByMemberKeys(List.of(CareFixture.SECOND_GUARDIAN_MEMBER_KEY)))
+                .willReturn(Map.of(CareFixture.SECOND_GUARDIAN_MEMBER_KEY, secondGuardian));
         given(designatedAvatarManager.findAvatarCodesInWard(CareFixture.GUARDIAN_MEMBER_KEY, CareFixture.WARD_MEMBER_KEY))
-                .willReturn(Map.of(manager.memberKey(), CareFixture.SENIOR_AVATAR_CODE));
+                .willReturn(Map.of(secondGuardian.memberKey(), CareFixture.SENIOR_AVATAR_CODE));
 
         // when
         List<CaregiverInfo> result = careRelationshipReader.findCaregiverInfos(
@@ -222,7 +178,7 @@ class CareRelationshipReaderTest {
 
         // then
         assertThat(result).containsExactly(CareFixture.createCaregiverInfo(
-                manager.memberKey(), CareRole.MANAGER,
+                secondGuardian.memberKey(), CareRole.GUARDIAN,
                 CareFixture.ADULT_AVATAR_CODE, CareFixture.SENIOR_AVATAR_CODE));
     }
 
@@ -230,12 +186,12 @@ class CareRelationshipReaderTest {
     @DisplayName("보는 사람이 없는 알림 경로에서는 지정 얼굴을 조회하지 않고 비워 둔다")
     void findCaregiverInfos_without_requester_leaves_designated_avatar_empty() {
         // given
-        MemberInfo manager = MemberInfo.from(CareFixture.createGuardianMember());
+        MemberInfo secondGuardian = MemberInfo.from(CareFixture.createGuardianMember());
         given(careRelationshipRepository.findAllByWardMemberKey(CareFixture.WARD_MEMBER_KEY))
-                .willReturn(List.of(CareFixture.createManagerRelationship(
-                        CareFixture.WARD_MEMBER_KEY, CareFixture.MANAGER_MEMBER_KEY)));
-        given(memberReader.findAllByMemberKeys(List.of(CareFixture.MANAGER_MEMBER_KEY)))
-                .willReturn(Map.of(CareFixture.MANAGER_MEMBER_KEY, manager));
+                .willReturn(List.of(CareFixture.createGuardianRelationship(
+                        CareFixture.WARD_MEMBER_KEY, CareFixture.SECOND_GUARDIAN_MEMBER_KEY)));
+        given(memberReader.findAllByMemberKeys(List.of(CareFixture.SECOND_GUARDIAN_MEMBER_KEY)))
+                .willReturn(Map.of(CareFixture.SECOND_GUARDIAN_MEMBER_KEY, secondGuardian));
 
         // when
         List<CaregiverInfo> result = careRelationshipReader.findCaregiverInfos(CareFixture.WARD_MEMBER_KEY);

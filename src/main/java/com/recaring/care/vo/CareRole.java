@@ -6,12 +6,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum CareRole {
-    GUARDIAN("보호자"),
-    MANAGER("관계자");
+    GUARDIAN("보호자");
 
     private final String description;
-
-    public boolean isGuardian() {
-        return this == GUARDIAN;
-    }
 }

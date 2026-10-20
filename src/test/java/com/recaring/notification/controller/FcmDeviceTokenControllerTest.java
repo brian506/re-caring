@@ -1,5 +1,6 @@
 package com.recaring.notification.controller;
 
+import com.recaring.care.vo.CarePartyRole;
 import com.recaring.member.dataaccess.entity.Member;
 import com.recaring.member.dataaccess.repository.MemberRepository;
 import com.recaring.notification.dataaccess.repository.FcmDeviceTokenRepository;
@@ -32,13 +33,11 @@ class FcmDeviceTokenControllerTest extends AbstractIntegrationTest {
     private JwtGenerator jwtGenerator;
 
     private Member guardian;
-    private Member manager;
     private Member ward;
 
     @BeforeEach
     void setUp() {
         guardian = memberRepository.save(NotificationFixture.createGuardian());
-        manager = memberRepository.save(NotificationFixture.createManager());
         ward = memberRepository.save(NotificationFixture.createWard());
     }
 
@@ -97,27 +96,30 @@ class FcmDeviceTokenControllerTest extends AbstractIntegrationTest {
 
         client.put()
                 .uri("/api/v1/notifications/device-tokens")
-                .header(HttpHeaders.AUTHORIZATION, bearerToken(manager))
+                .header(HttpHeaders.AUTHORIZATION, bearerToken(ward))
                 .contentType(MediaType.APPLICATION_JSON)
                 .body("""
                         {
                           "token": "shared-fcm-token-http",
-                          "careRole": "MANAGER",
+                          "careRole": "WARD",
                           "platform": "IOS"
                         }
                         """)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
-                .jsonPath("$.data.memberKey").isEqualTo(manager.getMemberKey())
-                .jsonPath("$.data.careRole").isEqualTo("MANAGER")
+                .jsonPath("$.data.memberKey").isEqualTo(ward.getMemberKey())
+                .jsonPath("$.data.careRole").isEqualTo("WARD")
                 .jsonPath("$.data.platform").isEqualTo("IOS");
 
         assertThat(fcmDeviceTokenRepository.findAll()).hasSize(1);
         assertThat(fcmDeviceTokenRepository.findByToken("shared-fcm-token-http"))
                 .isPresent()
                 .get()
-                .satisfies(token -> assertThat(token.getMemberKey()).isEqualTo(manager.getMemberKey()));
+                .satisfies(token -> {
+                    assertThat(token.getMemberKey()).isEqualTo(ward.getMemberKey());
+                    assertThat(token.getCareRole()).isEqualTo(CarePartyRole.WARD);
+                });
     }
 
     @Test

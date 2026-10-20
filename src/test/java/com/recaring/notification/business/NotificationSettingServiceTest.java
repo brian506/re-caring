@@ -1,11 +1,11 @@
 package com.recaring.notification.business;
 
+import com.recaring.care.implement.CareRelationshipValidator;
 import com.recaring.notification.business.command.UpdateAnomalyNotificationSettingCommand;
 import com.recaring.notification.fixture.NotificationFixture;
 import com.recaring.notification.vo.NotificationSettings;
 import com.recaring.notification.implement.setting.NotificationSettingManager;
 import com.recaring.notification.implement.setting.NotificationSettingReader;
-import com.recaring.notification.implement.setting.NotificationSettingValidator;
 import com.recaring.notification.vo.BatteryThresholds;
 import com.recaring.support.exception.AppException;
 import com.recaring.support.exception.ErrorType;
@@ -41,7 +41,7 @@ class NotificationSettingServiceTest {
     @Mock
     private NotificationSettingManager notificationSettingManager;
     @Mock
-    private NotificationSettingValidator notificationSettingValidator;
+    private CareRelationshipValidator careRelationshipValidator;
 
     @Test
     @DisplayName("조회는 접근 권한을 확인한 뒤 요청한 보호자 본인의 설정을 돌려준다")
@@ -53,9 +53,9 @@ class NotificationSettingServiceTest {
         NotificationSettings result = notificationSettingService.getSetting(
                 NotificationFixture.GUARDIAN_KEY, NotificationFixture.WARD_KEY);
 
-        InOrder inOrder = inOrder(notificationSettingValidator, notificationSettingReader);
-        then(notificationSettingValidator).should(inOrder)
-                .validateSettingAccess(NotificationFixture.GUARDIAN_KEY, NotificationFixture.WARD_KEY);
+        InOrder inOrder = inOrder(careRelationshipValidator, notificationSettingReader);
+        then(careRelationshipValidator).should(inOrder)
+                .validateCaregiver(NotificationFixture.GUARDIAN_KEY, NotificationFixture.WARD_KEY);
         then(notificationSettingReader).should(inOrder).findSetting(NotificationFixture.WARD_KEY, NotificationFixture.GUARDIAN_KEY);
         assertThat(result).isSameAs(expected);
     }
@@ -63,14 +63,14 @@ class NotificationSettingServiceTest {
     @Test
     @DisplayName("케어 관계가 없는 요청자는 설정을 조회할 수 없다")
     void getSetting_throws_when_requester_is_not_care_related() {
-        willThrow(new AppException(ErrorType.NOT_CARE_RELATED_WARD))
-                .given(notificationSettingValidator)
-                .validateSettingAccess(NotificationFixture.OTHER_GUARDIAN_KEY, NotificationFixture.WARD_KEY);
+        willThrow(new AppException(ErrorType.NOT_FOUND_CARE_RELATIONSHIP))
+                .given(careRelationshipValidator)
+                .validateCaregiver(NotificationFixture.OTHER_GUARDIAN_KEY, NotificationFixture.WARD_KEY);
 
         assertThatThrownBy(() -> notificationSettingService.getSetting(
                 NotificationFixture.OTHER_GUARDIAN_KEY, NotificationFixture.WARD_KEY))
                 .isInstanceOf(AppException.class)
-                .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_CARE_RELATED_WARD);
+                .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_FOUND_CARE_RELATIONSHIP);
         then(notificationSettingReader).should(never()).findSetting(NotificationFixture.WARD_KEY, NotificationFixture.OTHER_GUARDIAN_KEY);
     }
 
@@ -80,9 +80,9 @@ class NotificationSettingServiceTest {
         notificationSettingService.updateSafeZone(
                 NotificationFixture.GUARDIAN_KEY, NotificationFixture.WARD_KEY, false, true);
 
-        InOrder inOrder = inOrder(notificationSettingValidator, notificationSettingManager);
-        then(notificationSettingValidator).should(inOrder)
-                .validateSettingAccess(NotificationFixture.GUARDIAN_KEY, NotificationFixture.WARD_KEY);
+        InOrder inOrder = inOrder(careRelationshipValidator, notificationSettingManager);
+        then(careRelationshipValidator).should(inOrder)
+                .validateCaregiver(NotificationFixture.GUARDIAN_KEY, NotificationFixture.WARD_KEY);
         then(notificationSettingManager).should(inOrder)
                 .updateSafeZone(NotificationFixture.WARD_KEY, NotificationFixture.GUARDIAN_KEY, false, true);
     }
@@ -98,14 +98,14 @@ class NotificationSettingServiceTest {
                 NotificationFixture.WARD_KEY, toggles[0], toggles[1], toggles[2], toggles[3], toggles[4]);
 
         // When
-        notificationSettingService.updateAnomaly(NotificationFixture.MANAGER_KEY, command);
+        notificationSettingService.updateAnomaly(NotificationFixture.SECOND_GUARDIAN_KEY, command);
 
         // Then
-        InOrder inOrder = inOrder(notificationSettingValidator, notificationSettingManager);
-        then(notificationSettingValidator).should(inOrder)
-                .validateSettingAccess(NotificationFixture.MANAGER_KEY, NotificationFixture.WARD_KEY);
+        InOrder inOrder = inOrder(careRelationshipValidator, notificationSettingManager);
+        then(careRelationshipValidator).should(inOrder)
+                .validateCaregiver(NotificationFixture.SECOND_GUARDIAN_KEY, NotificationFixture.WARD_KEY);
         then(notificationSettingManager).should(inOrder).updateAnomaly(
-                NotificationFixture.WARD_KEY, NotificationFixture.MANAGER_KEY, toggles[0], toggles[1], toggles[2], toggles[3], toggles[4]);
+                NotificationFixture.WARD_KEY, NotificationFixture.SECOND_GUARDIAN_KEY, toggles[0], toggles[1], toggles[2], toggles[3], toggles[4]);
     }
 
     @Test
@@ -114,9 +114,9 @@ class NotificationSettingServiceTest {
         notificationSettingService.updateEmergencyCall(
                 NotificationFixture.GUARDIAN_KEY, NotificationFixture.WARD_KEY, false);
 
-        InOrder inOrder = inOrder(notificationSettingValidator, notificationSettingManager);
-        then(notificationSettingValidator).should(inOrder)
-                .validateSettingAccess(NotificationFixture.GUARDIAN_KEY, NotificationFixture.WARD_KEY);
+        InOrder inOrder = inOrder(careRelationshipValidator, notificationSettingManager);
+        then(careRelationshipValidator).should(inOrder)
+                .validateCaregiver(NotificationFixture.GUARDIAN_KEY, NotificationFixture.WARD_KEY);
         then(notificationSettingManager).should(inOrder)
                 .updateEmergencyCall(NotificationFixture.WARD_KEY, NotificationFixture.GUARDIAN_KEY, false);
     }
@@ -129,9 +129,9 @@ class NotificationSettingServiceTest {
         notificationSettingService.updateBattery(
                 NotificationFixture.GUARDIAN_KEY, NotificationFixture.WARD_KEY, true, thresholds);
 
-        InOrder inOrder = inOrder(notificationSettingValidator, notificationSettingManager);
-        then(notificationSettingValidator).should(inOrder)
-                .validateSettingAccess(NotificationFixture.GUARDIAN_KEY, NotificationFixture.WARD_KEY);
+        InOrder inOrder = inOrder(careRelationshipValidator, notificationSettingManager);
+        then(careRelationshipValidator).should(inOrder)
+                .validateCaregiver(NotificationFixture.GUARDIAN_KEY, NotificationFixture.WARD_KEY);
         then(notificationSettingManager).should(inOrder)
                 .updateBattery(NotificationFixture.WARD_KEY, NotificationFixture.GUARDIAN_KEY, true, thresholds);
     }

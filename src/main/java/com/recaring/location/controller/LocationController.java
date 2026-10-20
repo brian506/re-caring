@@ -43,7 +43,7 @@ public class LocationController {
 
     @Operation(
             summary = "실시간 위치 SSE 스트림",
-            description = "보호자(GUARDIAN/MANAGER)가 보호대상자의 실시간 위치를 구독합니다. [GUARDIAN 전용]"
+            description = "보호자가 보호대상자의 실시간 위치를 구독합니다. [GUARDIAN 전용]"
     )
     @GetMapping(value = "/stream/{wardKey}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter streamLocation(
@@ -55,7 +55,7 @@ public class LocationController {
 
     @Operation(
             summary = "날짜별 이동 경로 히스토리 조회",
-            description = "보호자(GUARDIAN/MANAGER)가 보호대상자의 날짜별 이동 경로를 조회합니다. "
+            description = "보호자가 보호대상자의 날짜별 이동 경로를 조회합니다. "
                     + "보호대상자(WARD)는 wardKey에 본인 memberKey를 넣어 자신의 이동 경로를 조회할 수 있습니다."
     )
     @GetMapping("/history/{wardKey}")
@@ -73,7 +73,7 @@ public class LocationController {
 
     @Operation(
             summary = "이상탐지 사건 경로 조회",
-            description = "보호자(GUARDIAN/MANAGER)가 이상탐지 사건의 시작부터 종료까지 이동 경로를 조회합니다. "
+            description = "보호자가 이상탐지 사건의 시작부터 종료까지 이동 경로를 조회합니다. "
                     + "eventId는 푸시 data 또는 알림 목록 dataPayload의 값을 그대로 보냅니다. "
                     + "종료된 사건은 종료 알림 수신 시각까지, 진행 중인 사건은 마지막 알림 시각까지 조회하며 진행 중이면 ongoing=true, endedAt=null입니다."
     )

@@ -38,46 +38,59 @@ class NotificationSendManagerTest {
     private FcmClient fcmClient;
 
     @Test
-    @DisplayName("브로드캐스트 - 보호자/관계자 전원에게 알림을 저장하고 토큰으로 FCM을 발송한다")
-    void sendToCareParties_records_for_all_recipients_and_broadcasts() {
-        List<String> guardianKeys = List.of(NotificationFixture.GUARDIAN_KEY);
-        List<String> managerKeys = List.of(NotificationFixture.MANAGER_KEY);
+    @DisplayName("브로드캐스트 - 수신자 전원에게 알림을 저장하고 보호자 토큰으로 FCM을 발송한다")
+    void sendToCaregivers_records_for_all_recipients_and_broadcasts() {
+        List<String> recipientKeys = List.of(NotificationFixture.GUARDIAN_KEY, NotificationFixture.SECOND_GUARDIAN_KEY);
         List<FcmDeviceTokenInfo> tokens = List.of(
                 NotificationFixture.guardianFcmDeviceTokenInfo(NotificationFixture.GUARDIAN_FCM_TOKEN),
-                NotificationFixture.managerFcmDeviceTokenInfo(NotificationFixture.MANAGER_FCM_TOKEN)
+                NotificationFixture.secondGuardianFcmDeviceTokenInfo(NotificationFixture.SECOND_GUARDIAN_FCM_TOKEN)
         );
-        given(fcmDeviceTokenReader.findTokensByCareRoles(guardianKeys, managerKeys)).willReturn(tokens);
+        given(fcmDeviceTokenReader.findGuardianTokens(recipientKeys)).willReturn(tokens);
         given(fcmClient.sendAndCollectInvalidTokens(any(FcmPushMessage.class), anyList())).willReturn(List.of());
 
-        notificationSendManager.sendToCareParties(
-                guardianKeys, managerKeys, "SAFE_ZONE_EXIT", "title", "body", Map.of("wardKey", NotificationFixture.WARD_KEY));
+        notificationSendManager.sendToCaregivers(
+                recipientKeys, "SAFE_ZONE_EXIT", "title", "body", Map.of("wardKey", NotificationFixture.WARD_KEY));
 
         then(notificationWriter).should().addAll(
-                List.of(NotificationFixture.GUARDIAN_KEY, NotificationFixture.MANAGER_KEY),
+                List.of(NotificationFixture.GUARDIAN_KEY, NotificationFixture.SECOND_GUARDIAN_KEY),
                 "SAFE_ZONE_EXIT", "title", "body", Map.of("wardKey", NotificationFixture.WARD_KEY));
         then(fcmClient).should().sendAndCollectInvalidTokens(
                 new FcmPushMessage("title", "body", Map.of("wardKey", NotificationFixture.WARD_KEY), false),
-                List.of(NotificationFixture.GUARDIAN_FCM_TOKEN, NotificationFixture.MANAGER_FCM_TOKEN));
+                List.of(NotificationFixture.GUARDIAN_FCM_TOKEN, NotificationFixture.SECOND_GUARDIAN_FCM_TOKEN));
         then(fcmDeviceTokenManager).should().deleteInvalidTokens(List.of());
     }
 
     @Test
+    @DisplayName("브로드캐스트 - 같은 수신자가 여러 번 들어와도 알림은 한 건만 저장하고 토큰도 한 번만 조회한다")
+    void sendToCaregivers_records_duplicated_recipient_once() {
+        given(fcmDeviceTokenReader.findGuardianTokens(List.of(NotificationFixture.GUARDIAN_KEY))).willReturn(List.of());
+
+        notificationSendManager.sendToCaregivers(
+                List.of(NotificationFixture.GUARDIAN_KEY, NotificationFixture.GUARDIAN_KEY),
+                "SAFE_ZONE_EXIT", "title", "body", Map.of("wardKey", NotificationFixture.WARD_KEY));
+
+        then(notificationWriter).should().addAll(
+                List.of(NotificationFixture.GUARDIAN_KEY),
+                "SAFE_ZONE_EXIT", "title", "body", Map.of("wardKey", NotificationFixture.WARD_KEY));
+        then(fcmDeviceTokenReader).should().findGuardianTokens(List.of(NotificationFixture.GUARDIAN_KEY));
+    }
+
+    @Test
     @DisplayName("data 전용 발송 - 알림함에는 그대로 저장하고 FCM은 data 전용 메시지로 보낸다")
-    void sendDataOnlyToCareParties_records_and_sends_data_only_message() {
-        List<String> guardianKeys = List.of(NotificationFixture.GUARDIAN_KEY);
-        List<String> managerKeys = List.of(NotificationFixture.MANAGER_KEY);
+    void sendDataOnlyToCaregivers_records_and_sends_data_only_message() {
+        List<String> recipientKeys = List.of(NotificationFixture.GUARDIAN_KEY, NotificationFixture.SECOND_GUARDIAN_KEY);
         List<FcmDeviceTokenInfo> tokens = List.of(
                 NotificationFixture.guardianFcmDeviceTokenInfo(NotificationFixture.GUARDIAN_FCM_TOKEN)
         );
-        given(fcmDeviceTokenReader.findTokensByCareRoles(guardianKeys, managerKeys)).willReturn(tokens);
+        given(fcmDeviceTokenReader.findGuardianTokens(recipientKeys)).willReturn(tokens);
         given(fcmClient.sendAndCollectInvalidTokens(any(FcmPushMessage.class), anyList())).willReturn(List.of());
 
-        notificationSendManager.sendDataOnlyToCareParties(
-                guardianKeys, managerKeys, "LOCATION_SIGNAL_LOST", "title", "body",
+        notificationSendManager.sendDataOnlyToCaregivers(
+                recipientKeys, "LOCATION_SIGNAL_LOST", "title", "body",
                 Map.of("wardKey", NotificationFixture.WARD_KEY));
 
         then(notificationWriter).should().addAll(
-                List.of(NotificationFixture.GUARDIAN_KEY, NotificationFixture.MANAGER_KEY),
+                List.of(NotificationFixture.GUARDIAN_KEY, NotificationFixture.SECOND_GUARDIAN_KEY),
                 "LOCATION_SIGNAL_LOST", "title", "body", Map.of("wardKey", NotificationFixture.WARD_KEY));
         then(fcmClient).should().sendAndCollectInvalidTokens(
                 new FcmPushMessage("title", "body", Map.of("wardKey", NotificationFixture.WARD_KEY), true),
@@ -121,17 +134,16 @@ class NotificationSendManagerTest {
     @Test
     @DisplayName("무효 토큰이 반환되면 해당 토큰을 삭제한다")
     void dispatch_deletes_invalid_tokens() {
-        List<String> guardianKeys = List.of(NotificationFixture.GUARDIAN_KEY);
-        List<String> managerKeys = List.of(NotificationFixture.MANAGER_KEY);
+        List<String> recipientKeys = List.of(NotificationFixture.GUARDIAN_KEY);
         List<FcmDeviceTokenInfo> tokens = List.of(
                 NotificationFixture.guardianFcmDeviceTokenInfo(NotificationFixture.GUARDIAN_FCM_TOKEN)
         );
-        given(fcmDeviceTokenReader.findTokensByCareRoles(guardianKeys, managerKeys)).willReturn(tokens);
+        given(fcmDeviceTokenReader.findGuardianTokens(recipientKeys)).willReturn(tokens);
         given(fcmClient.sendAndCollectInvalidTokens(any(FcmPushMessage.class), anyList()))
                 .willReturn(List.of(NotificationFixture.GUARDIAN_FCM_TOKEN));
 
-        notificationSendManager.sendToCareParties(
-                guardianKeys, managerKeys, "SAFE_ZONE_EXIT", "title", "body", Map.of("wardKey", NotificationFixture.WARD_KEY));
+        notificationSendManager.sendToCaregivers(
+                recipientKeys, "SAFE_ZONE_EXIT", "title", "body", Map.of("wardKey", NotificationFixture.WARD_KEY));
 
         then(fcmDeviceTokenManager).should().deleteInvalidTokens(List.of(NotificationFixture.GUARDIAN_FCM_TOKEN));
     }

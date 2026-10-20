@@ -28,7 +28,7 @@ class LocationSettingManagerTest {
 
     private static final String GUARDIAN_KEY = LocationFixture.GUARDIAN_KEY;
     private static final String OTHER_GUARDIAN_KEY = LocationFixture.OTHER_GUARDIAN_KEY;
-    private static final String MANAGER_KEY = LocationFixture.MANAGER_KEY;
+    private static final String SECOND_GUARDIAN_KEY = LocationFixture.SECOND_GUARDIAN_KEY;
 
     @InjectMocks
     private LocationSettingManager locationSettingManager;
@@ -120,20 +120,6 @@ class LocationSettingManagerTest {
         LocationCollectionInterval result = locationSettingManager.findDeviceCollectionInterval(LocationFixture.WARD_KEY);
 
         assertThat(result).isEqualTo(LocationCollectionInterval.THIRTY_SECONDS);
-    }
-
-    @Test
-    @DisplayName("관계자는 주기를 고르지 않으므로 기기 수집 주기 계산에서 빠진다")
-    void findDeviceCollectionInterval_ignores_manager() {
-        given(locationSettingRepository.findAllByWardMemberKey(LocationFixture.WARD_KEY)).willReturn(List.of(
-                LocationFixture.createLocationSetting(GUARDIAN_KEY, 180)));
-        given(careRelationshipReader.findCaregiverInfos(LocationFixture.WARD_KEY)).willReturn(List.of(
-                CareFixture.createCaregiverInfo(GUARDIAN_KEY, CareRole.GUARDIAN),
-                CareFixture.createCaregiverInfo(MANAGER_KEY, CareRole.MANAGER)));
-
-        LocationCollectionInterval result = locationSettingManager.findDeviceCollectionInterval(LocationFixture.WARD_KEY);
-
-        assertThat(result).isEqualTo(LocationCollectionInterval.THREE_MINUTES);
     }
 
     @Test

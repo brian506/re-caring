@@ -1,7 +1,6 @@
 package com.recaring.member.controller.response;
 
 import com.recaring.member.dataaccess.entity.SignUpType;
-import com.recaring.member.dataaccess.entity.SubscriptionType;
 import com.recaring.member.vo.MemberInfo;
 import com.recaring.member.vo.MemberRole;
 import com.recaring.member.vo.TermsAgreementInfo;
@@ -19,7 +18,6 @@ public record MyInfoResponse(
         String gender,
         String profileAvatarCode,
         MemberRole role,
-        SubscriptionType subscriptionType,
         SignUpType signUpType,
         LocalDateTime termsServiceAgreedAt,
         LocalDateTime termsPrivacyAgreedAt,
@@ -37,7 +35,6 @@ public record MyInfoResponse(
                 member.gender() != null ? member.gender().getDescription() : null,
                 member.profileAvatarCode(),
                 member.role(),
-                member.subscriptionType(),
                 member.signUpType(),
                 termsAgreement.termsServiceAgreedAt(),
                 termsAgreement.termsPrivacyAgreedAt(),

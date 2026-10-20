@@ -49,9 +49,7 @@ class LocationControllerTest extends AbstractIntegrationTest {
 
     private Member ward;
     private Member guardian;
-    private Member manager;
     private String guardianJwtToken;
-    private String managerJwtToken;
     private String wardJwtToken;
     private String wardDeviceToken;
 
@@ -59,15 +57,12 @@ class LocationControllerTest extends AbstractIntegrationTest {
     void setUp() {
         ward = memberRepository.save(LocationFixture.createWard());
         guardian = memberRepository.save(LocationFixture.createGuardian());
-        manager = memberRepository.save(LocationFixture.createManager());
 
         String encoded = passwordEncoder.encode(AuthFixture.RAW_PASSWORD);
         localAuthRepository.save(AuthFixture.createLocalAuth(ward.getMemberKey(), encoded));
         localAuthRepository.save(AuthFixture.createLocalAuth(guardian.getMemberKey(), encoded));
-        localAuthRepository.save(AuthFixture.createLocalAuth(manager.getMemberKey(), encoded));
 
         guardianJwtToken = extractAccessToken(guardian.getPhone(), AuthFixture.RAW_PASSWORD);
-        managerJwtToken = extractAccessToken(manager.getPhone(), AuthFixture.RAW_PASSWORD);
         wardJwtToken = extractAccessToken(ward.getPhone(), AuthFixture.RAW_PASSWORD);
 
         WardDeviceToken deviceToken = DeviceFixture.createDeviceToken(ward.getMemberKey());
@@ -76,8 +71,6 @@ class LocationControllerTest extends AbstractIntegrationTest {
 
         careRelationshipRepository.save(
                 CareFixture.createGuardianRelationship(ward.getMemberKey(), guardian.getMemberKey()));
-        careRelationshipRepository.save(
-                CareFixture.createManagerRelationship(ward.getMemberKey(), manager.getMemberKey()));
     }
 
     @AfterEach
@@ -180,19 +173,6 @@ class LocationControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("GET /api/v1/location/history/{wardKey} - MANAGER 역할의 케어 관계여도 좌표가 반환된다")
-    void getHistory_returns_recorded_coordinates_for_manager() {
-        sendGps(LocationFixture.LATITUDE, LocationFixture.LONGITUDE).expectStatus().isOk();
-
-        getHistoryAsToday(managerJwtToken)
-                .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$.data.length()").isEqualTo(1)
-                .jsonPath("$.data[0].latitude").isEqualTo(LocationFixture.LATITUDE)
-                .jsonPath("$.data[0].longitude").isEqualTo(LocationFixture.LONGITUDE);
-    }
-
-    @Test
     @DisplayName("GET /api/v1/location/history/{wardKey} - WARD 본인은 케어 관계 없이도 자신의 경로를 조회한다")
     void getHistory_allows_ward_to_view_own_history() {
         sendGps(LocationFixture.LATITUDE, LocationFixture.LONGITUDE).expectStatus().isOk();
@@ -215,15 +195,17 @@ class LocationControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("GET /api/v1/location/history/{wardKey} - 케어 관계 없는 wardKey 조회 시 403이 반환된다")
-    void getHistory_returns_403_for_unrelated_ward() {
+    @DisplayName("GET /api/v1/location/history/{wardKey} - 케어 관계 없는 wardKey 조회 시 400 E5011이 반환된다")
+    void getHistory_returns_400_for_unrelated_ward() {
         String today = LocalDate.now().format(DateTimeFormatter.ISO_DATE);
 
         client.get()
                 .uri("/api/v1/location/history/{wardKey}?date={date}", "non-existent-ward-key", today)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + guardianJwtToken)
                 .exchange()
-                .expectStatus().isForbidden();
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.error.errorCode").isEqualTo("E5011");
     }
 
     // ── 이상탐지 사건 경로 조회 ──────────────────────────────────────────────
@@ -431,8 +413,8 @@ class LocationControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("GET /api/v1/location/anomaly-events/{wardKey}/route - 케어 관계가 없는 보호자가 조회하면 403 E6001이 반환된다")
-    void getAnomalyEventRoute_returns_403_for_unrelated_guardian() {
+    @DisplayName("GET /api/v1/location/anomaly-events/{wardKey}/route - 케어 관계가 없는 보호자가 조회하면 400 E5011이 반환된다")
+    void getAnomalyEventRoute_returns_400_for_unrelated_guardian() {
         String wardKey = ward.getMemberKey();
         LocalDateTime start = LocationFixture.ROUTE_EVENT_STARTED_AT;
         anomalyDetectionRepository.saveAll(List.of(
@@ -444,9 +426,9 @@ class LocationControllerTest extends AbstractIntegrationTest {
         String unrelatedJwtToken = extractAccessToken(unrelatedGuardian.getPhone(), AuthFixture.RAW_PASSWORD);
 
         getAnomalyEventRoute(unrelatedJwtToken, wardKey, LocationFixture.anomalyEventId(wardKey, start))
-                .expectStatus().isForbidden()
+                .expectStatus().isBadRequest()
                 .expectBody()
-                .jsonPath("$.error.errorCode").isEqualTo("E6001");
+                .jsonPath("$.error.errorCode").isEqualTo("E5011");
     }
 
     // ── SSE 스트림 ────────────────────────────────────────────────────────────

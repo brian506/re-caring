@@ -1,7 +1,6 @@
 package com.recaring.notification.dataaccess.repository.custom;
 
 import com.recaring.notification.dataaccess.entity.FcmDeviceToken;
-import com.recaring.care.vo.CareRole;
 
 import java.util.Collection;
 import java.util.List;
@@ -14,8 +13,5 @@ public interface FcmDeviceTokenRepositoryCustom {
 
     void deleteByTokenIn(Collection<String> tokens);
 
-    List<FcmDeviceToken> findTokensByCareRoles(
-            Collection<String> guardianMemberKeys,
-            Collection<String> managerMemberKeys
-    );
+    List<FcmDeviceToken> findGuardianTokens(Collection<String> memberKeys);
 }

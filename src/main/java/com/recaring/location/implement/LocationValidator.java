@@ -14,7 +14,7 @@ public class LocationValidator {
     public void validateCaregiverAccess(String caregiverKey, String wardKey) {
         boolean hasRelationship = careRelationshipCacheReader.hasCaregiverAccess(wardKey, caregiverKey);
         if (!hasRelationship) {
-            throw new AppException(ErrorType.NOT_CARE_RELATED_WARD);
+            throw new AppException(ErrorType.NOT_FOUND_CARE_RELATIONSHIP);
         }
     }
 
@@ -23,12 +23,5 @@ public class LocationValidator {
             return;
         }
         validateCaregiverAccess(requesterKey, wardKey);
-    }
-
-    public void validateGuardianAccess(String caregiverKey, String wardKey) {
-        boolean isGuardian = careRelationshipCacheReader.hasGuardianAccess(wardKey, caregiverKey);
-        if (!isGuardian) {
-            throw new AppException(ErrorType.NOT_GUARDIAN_OF_WARD);
-        }
     }
 }
