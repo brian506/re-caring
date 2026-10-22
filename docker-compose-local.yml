@@ -47,7 +47,7 @@ services:
     environment:
       GF_SECURITY_ADMIN_PASSWORD: admin
       TZ: Asia/Seoul
-      ALERT_SLACK_WEBHOOK_URL: ${ALERT_SLACK_WEBHOOK_URL:-http://localhost/local-alert-webhook}
+      ALERT_SLACK_WEBHOOK_SECRET: ${ALERT_SLACK_WEBHOOK_SECRET:-http://localhost/local-alert-webhook}
     volumes:
       - grafana-local-data:/var/lib/grafana
       - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro

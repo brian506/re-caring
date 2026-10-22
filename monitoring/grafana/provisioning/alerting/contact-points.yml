@@ -7,7 +7,7 @@ contactPoints:
       - uid: slack-monitoring
         type: slack
         settings:
-          url: ${ALERT_SLACK_WEBHOOK_URL}
+          url: ${ALERT_SLACK_WEBHOOK_SECRET}
           title: '{{ template "recaring.slack.title" . }}'
           text: '{{ template "recaring.slack.text" . }}'
         disableResolveMessage: true
