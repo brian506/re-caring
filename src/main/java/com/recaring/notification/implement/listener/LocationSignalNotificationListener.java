@@ -39,18 +39,16 @@ public class LocationSignalNotificationListener {
             return;
         }
 
-        List<String> recipientKeys = caregivers.stream()
-                .map(CaregiverInfo::memberKey)
-                .toList();
-
-        notificationSendManager.sendDataOnlyToCaregivers(
-                recipientKeys,
-                EVENT_TYPE_SIGNAL_LOST,
-                TITLE,
-                memberReader.findNameByMemberKey(wardMemberKey)
-                        + "님의 위치가 20분 넘게 수집되지 않고 있어요. 기기 전원과 앱 로그인 상태를 확인해 주세요.",
-                buildPayload(event)
-        );
+        String wardName = memberReader.findNameByMemberKey(wardMemberKey);
+        Map<String, String> payload = buildPayload(event);
+        CaregiverInfo.groupKeysByWardDisplayName(caregivers, wardName).forEach((displayName, recipientKeys) ->
+                notificationSendManager.sendDataOnlyToCaregivers(
+                        recipientKeys,
+                        EVENT_TYPE_SIGNAL_LOST,
+                        TITLE,
+                        displayName + "님의 위치가 20분 넘게 수집되지 않고 있어요. 기기 전원과 앱 로그인 상태를 확인해 주세요.",
+                        payload
+                ));
         log.info("[LocationSignalLost : AlertSent]: wardMemberKey={} | lastReceivedAt={}",
                 wardMemberKey, event.lastGps().recordedAt());
     }

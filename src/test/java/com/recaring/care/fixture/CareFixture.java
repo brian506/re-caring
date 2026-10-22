@@ -102,7 +102,7 @@ public class CareFixture {
     public static CaregiverInfo createCaregiverInfo(String memberKey, CareRole careRole,
                                                     String profileAvatarCode, String designatedProfileAvatarCode) {
         return new CaregiverInfo(memberKey, "보호자", GUARDIAN_PHONE, careRole,
-                profileAvatarCode, designatedProfileAvatarCode);
+                profileAvatarCode, designatedProfileAvatarCode, null);
     }
 
     public static WardInfo createWardInfo(String memberKey, CareRole careRole) {

@@ -40,20 +40,19 @@ public class BatteryThresholdNotificationListener {
         if (caregivers.isEmpty()) {
             return;
         }
-        List<String> recipientKeys = caregivers.stream()
-                .map(CaregiverInfo::memberKey)
-                .toList();
-
-        notificationSendManager.sendToCaregivers(
-                recipientKeys,
-                EVENT_TYPE_BATTERY_THRESHOLD,
-                TITLE,
-                memberReader.findNameByMemberKey(memberKey) + "님의 배터리 잔량이 " + thresholdPercent + "%에 도달했어요.",
-                Map.of(
-                        "type", EVENT_TYPE_BATTERY_THRESHOLD,
-                        "wardKey", memberKey,
-                        "thresholdPercent", String.valueOf(thresholdPercent)
-                )
+        String wardName = memberReader.findNameByMemberKey(memberKey);
+        Map<String, String> payload = Map.of(
+                "type", EVENT_TYPE_BATTERY_THRESHOLD,
+                "wardKey", memberKey,
+                "thresholdPercent", String.valueOf(thresholdPercent)
         );
+        CaregiverInfo.groupKeysByWardDisplayName(caregivers, wardName).forEach((displayName, recipientKeys) ->
+                notificationSendManager.sendToCaregivers(
+                        recipientKeys,
+                        EVENT_TYPE_BATTERY_THRESHOLD,
+                        TITLE,
+                        displayName + "님의 배터리 잔량이 " + thresholdPercent + "%에 도달했어요.",
+                        payload
+                ));
     }
 }

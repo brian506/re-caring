@@ -69,7 +69,7 @@ public class CareRelationshipReader {
                     MemberInfo caregiver = memberMap.get(r.getCaregiverMemberKey());
                     return new CaregiverInfo(caregiver.memberKey(), caregiver.name(), caregiver.phone(),
                             r.getCareRole(), caregiver.profileAvatarCode(),
-                            designatedAvatarCodes.get(caregiver.memberKey()));
+                            designatedAvatarCodes.get(caregiver.memberKey()), r.getWardNickname());
                 })
                 .toList();
     }
