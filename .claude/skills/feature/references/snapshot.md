@@ -165,8 +165,9 @@ SSE에서 `recordedAt` 간격으로 솎아 보낸다(허용 오차 10초).
 
 별명은 `(보호자, 대상자)` 쌍마다 하나라 `care_relationships`의 UNIQUE 키와 카디널리티가 같다.
 그래서 별도 테이블을 만들지 않고 `ward_nickname` 컬럼을 뒀다. 관계가 삭제되면 별명도 같이 사라진다.
-알림 본문은 별명이 아니라 실명을 쓴다 — 발행 시점에 본문이 확정되는 구조라 수신자별 별명을 적용하려면
-조회가 한 번 더 들어간다.
+보호자 알림(이상탐지·안심존·배터리·위치 수집 중단) 본문은 수신자가 붙인 별명을 쓰고, 별명이 없으면 실명을 쓴다.
+수신자 조회(`findCaregiverInfos`)가 이미 관계 행을 읽으므로 `CaregiverInfo.wardNickname`으로 실어 추가 조회가 없다.
+본문이 수신자마다 다를 수 있어 표시 이름별로 수신자를 묶어(`CaregiverInfo.groupKeysByWardDisplayName`) 그룹마다 한 번씩 발송한다.
 
 프로필 아바타는 이미지가 아니라 앱 번들 일러스트 16종의 코드 문자열(`ProfileAvatarCode` VO, 예: `senior_female_1`)만 저장한다.
 본인이 고른 얼굴은 `members.profile_avatar_code`(전역), 보호자가 대상자·다른 보호자에게 붙인 얼굴은 `designated_avatars`(호출자 범위)로 나눈다.

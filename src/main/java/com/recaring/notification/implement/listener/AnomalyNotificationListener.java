@@ -56,13 +56,15 @@ public class AnomalyNotificationListener {
 
         String wardName = memberReader.findNameByMemberKey(wardMemberKey);
         String eventType = detection.detectionType().name();
-        notificationSendManager.sendToCaregivers(
-                caregivers.stream().map(CaregiverInfo::memberKey).toList(),
-                eventType,
-                detection.notificationTitle(),
-                AnomalyNotificationBody.of(detection, wardName).value(),
-                buildPayload(detection, eventType)
-        );
+        Map<String, String> payload = buildPayload(detection, eventType);
+        CaregiverInfo.groupKeysByWardDisplayName(caregivers, wardName).forEach((displayName, recipientKeys) ->
+                notificationSendManager.sendToCaregivers(
+                        recipientKeys,
+                        eventType,
+                        detection.notificationTitle(),
+                        AnomalyNotificationBody.of(detection, displayName).value(),
+                        payload
+                ));
         log.info("[AnomalyAlert : Sent]: wardMemberKey={} | detectionType={} | reasonCode={} | alertKind={} | score={}",
                 wardMemberKey, detection.detectionType(), detection.reasonCode(),
                 detection.event() == null ? null : detection.event().alertKind(), detection.score());

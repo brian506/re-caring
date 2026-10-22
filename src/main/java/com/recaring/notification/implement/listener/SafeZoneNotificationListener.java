@@ -65,26 +65,23 @@ public class SafeZoneNotificationListener {
             return;
         }
 
-        String body = memberReader.findNameByMemberKey(wardMemberKey) + "님이 " + alertType.bodySuffix(safeZoneName);
-
-        List<String> recipientKeys = caregivers.stream()
-                .map(CaregiverInfo::memberKey)
-                .toList();
-
+        String wardName = memberReader.findNameByMemberKey(wardMemberKey);
         String eventType = alertType.name();
-        notificationSendManager.sendToCaregivers(
-                recipientKeys,
-                eventType,
-                alertType.notificationTitle(),
-                body,
-                Map.of(
-                        "type", eventType,
-                        "wardKey", wardMemberKey,
-                        "safeZoneKey", safeZoneKey,
-                        "recordedAt", RECORDED_AT_FORMAT.format(detectedAt),
-                        "latitude", String.valueOf(latitude),
-                        "longitude", String.valueOf(longitude)
-                )
+        Map<String, String> payload = Map.of(
+                "type", eventType,
+                "wardKey", wardMemberKey,
+                "safeZoneKey", safeZoneKey,
+                "recordedAt", RECORDED_AT_FORMAT.format(detectedAt),
+                "latitude", String.valueOf(latitude),
+                "longitude", String.valueOf(longitude)
         );
+        CaregiverInfo.groupKeysByWardDisplayName(caregivers, wardName).forEach((displayName, recipientKeys) ->
+                notificationSendManager.sendToCaregivers(
+                        recipientKeys,
+                        eventType,
+                        alertType.notificationTitle(),
+                        displayName + "님이 " + alertType.bodySuffix(safeZoneName),
+                        payload
+                ));
     }
 }
