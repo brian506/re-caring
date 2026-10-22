@@ -9,7 +9,7 @@
 | `ResponseApi` | API 응답 상태 | `SignAspect` |
 | `SignIn` | 로그인 요청 진입 | `SignAspect` |
 | `Authentication` | JWT/Device 인증 실패 401 | `AuthenticationExceptionHandler` |
-| `AppException` | 비즈니스 예외 처리 (Detail `Handled`) | `ApiControllerAdvice`, `LocationControllerAdvice` |
+| `AppException` | 비즈니스 예외 처리 (Detail `Handled`) | `AppExceptionLogger` (`ApiControllerAdvice`, `LocationControllerAdvice`에서 호출) |
 | `UnhandledException` | 미처리 예외 500 | `ApiControllerAdvice` |
 | `RequestValidation` | 요청 검증·바인딩·본문 해석 실패 400 | `ApiControllerAdvice` |
 | `DataIntegrity` | DB 제약 위반 409 | `ApiControllerAdvice` |

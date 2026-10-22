@@ -1,5 +1,6 @@
 package com.recaring.siteinquiry.implement;
 
+import com.recaring.common.utils.MaskingUtils;
 import com.recaring.siteinquiry.vo.SiteInquiryInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -50,7 +51,7 @@ public class SiteInquiryOperatorNotifier {
             log.info("[WebInquiry : SlackSent]: inquiryKey={}", inquiry.inquiryKey());
         } catch (RestClientResponseException e) {
             log.warn("[WebInquiry : SlackResponseError]: inquiryKey={} | status={} | body={}",
-                    inquiry.inquiryKey(), e.getStatusCode(), e.getResponseBodyAsString());
+                    inquiry.inquiryKey(), e.getStatusCode(), MaskingUtils.maskExternalText(e.getResponseBodyAsString()));
         } catch (ResourceAccessException e) {
             log.warn("[WebInquiry : SlackConnectionFailed]: inquiryKey={} | cause={}",
                     inquiry.inquiryKey(), e.getMostSpecificCause().getClass().getSimpleName());
