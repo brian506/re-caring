@@ -1,8 +1,8 @@
 package com.recaring.location.controller;
 
+import com.recaring.common.controller.AppExceptionLogger;
 import com.recaring.support.exception.AppException;
 import com.recaring.support.response.ApiResponse;
-import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.springframework.core.Ordered;
@@ -23,7 +23,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 // A narrower `assignableTypes` scope does NOT raise priority — it only decides candidacy.
 // Without an explicit order both this and ApiControllerAdvice sit at LOWEST_PRECEDENCE, the
 // global one wins by scan order, and this handler never runs.
-@Slf4j
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @RestControllerAdvice(assignableTypes = LocationController.class)
 public class LocationControllerAdvice {
@@ -31,8 +30,7 @@ public class LocationControllerAdvice {
     @NullMarked
     @ExceptionHandler(AppException.class)
     public ResponseEntity<ApiResponse<@Nullable Object>> handleAppException(AppException e) {
-        log.warn("[AppException : Handled]: status={} | errorCode={} | message={}",
-                e.getErrorType().getStatus().value(), e.getErrorType().getErrorCode(), e.getMessage());
+        AppExceptionLogger.log(e);
         return ResponseEntity
                 .status(e.getErrorType().getStatus())
                 .contentType(MediaType.APPLICATION_JSON)

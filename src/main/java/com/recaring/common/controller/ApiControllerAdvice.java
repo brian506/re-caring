@@ -2,7 +2,6 @@ package com.recaring.common.controller;
 
 
 import com.recaring.support.exception.AppException;
-import com.recaring.support.exception.ErrorCode;
 import com.recaring.support.exception.ErrorType;
 import com.recaring.support.response.ApiResponse;
 import jakarta.validation.ConstraintViolationException;
@@ -29,7 +28,7 @@ public class ApiControllerAdvice {
     @NullMarked
     @ExceptionHandler(AppException.class)
     public ResponseEntity<ApiResponse<@Nullable Object>> handleAppException(AppException e) {
-        printAppExceptionLog(e);
+        AppExceptionLogger.log(e);
 
         return new ResponseEntity<>(ApiResponse.error(e.getErrorType(), e.getData()), e.getErrorType().getStatus());
     }
@@ -116,28 +115,6 @@ public class ApiControllerAdvice {
         }
         printExceptionLog(e);
         return new ResponseEntity<>(ApiResponse.error(ErrorType.DEFAULT_ERROR, null), HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-
-    private void printAppExceptionLog(AppException e) {
-        String className = e.getStackTrace()[0].getClassName();
-        String methodName = e.getStackTrace()[0].getMethodName();
-        int lineNumber = e.getStackTrace()[0].getLineNumber();
-        int status = e.getErrorType().getStatus().value();
-        ErrorCode errorCode = e.getErrorType().getErrorCode();
-        String message = e.getMessage();
-        Object data = e.getData();
-
-        switch (e.getErrorType().getLogLevel()) {
-            case ERROR ->
-                    log.error("[AppException : Handled]: class={} | method={} | line={} | status={} | errorCode={} | message={} | data={}",
-                            className, methodName, lineNumber, status, errorCode, message, data);
-            case WARN ->
-                    log.warn("[AppException : Handled]: class={} | method={} | line={} | status={} | errorCode={} | message={} | data={}",
-                            className, methodName, lineNumber, status, errorCode, message, data);
-            default ->
-                    log.info("[AppException : Handled]: class={} | method={} | line={} | status={} | errorCode={} | message={} | data={}",
-                            className, methodName, lineNumber, status, errorCode, message, data);
-        }
     }
 
     private void printExceptionLog(Exception e) {

@@ -1,5 +1,6 @@
 package com.recaring.place.implement;
 
+import com.recaring.common.utils.MaskingUtils;
 import com.recaring.place.vo.Place;
 import com.recaring.place.vo.PlaceSearchCondition;
 import com.recaring.place.vo.kakao.KakaoKeywordSearchResponse;
@@ -69,11 +70,11 @@ public class KakaoPlaceSearchClient {
             throw new AppException(ErrorType.PLACE_SEARCH_UNAVAILABLE);
         } catch (HttpClientErrorException.BadRequest e) {
             log.warn("[PlaceSearch : BadRequest]: queryLength={} | biased={} | radius={} | body={}",
-                    query.length(), condition.hasBias(), condition.radiusMeters(), e.getResponseBodyAsString());
+                    query.length(), condition.hasBias(), condition.radiusMeters(), MaskingUtils.maskExternalText(e.getResponseBodyAsString()));
             throw new AppException(ErrorType.PLACE_SEARCH_UNAVAILABLE);
         } catch (RestClientResponseException e) {
             log.warn("[PlaceSearch : ResponseError]: queryLength={} | status={} | body={}",
-                    query.length(), e.getStatusCode(), e.getResponseBodyAsString());
+                    query.length(), e.getStatusCode(), MaskingUtils.maskExternalText(e.getResponseBodyAsString()));
             throw new AppException(ErrorType.PLACE_SEARCH_UNAVAILABLE);
         } catch (ResourceAccessException e) {
             log.warn("[PlaceSearch : ConnectionFailed]: queryLength={}", query.length(), e.getMostSpecificCause());

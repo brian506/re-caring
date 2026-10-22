@@ -1,5 +1,6 @@
 package com.recaring.inquiry.implement;
 
+import com.recaring.common.utils.MaskingUtils;
 import com.recaring.inquiry.vo.InquiryInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -50,7 +51,7 @@ public class InquiryOperatorNotifier {
             log.info("[Inquiry : SlackSent]: inquiryKey={}", inquiry.inquiryKey());
         } catch (RestClientResponseException e) {
             log.warn("[Inquiry : SlackResponseError]: inquiryKey={} | status={} | body={}",
-                    inquiry.inquiryKey(), e.getStatusCode(), e.getResponseBodyAsString());
+                    inquiry.inquiryKey(), e.getStatusCode(), MaskingUtils.maskExternalText(e.getResponseBodyAsString()));
         } catch (ResourceAccessException e) {
             log.warn("[Inquiry : SlackConnectionFailed]: inquiryKey={} | cause={}",
                     inquiry.inquiryKey(), e.getMostSpecificCause().getClass().getSimpleName());

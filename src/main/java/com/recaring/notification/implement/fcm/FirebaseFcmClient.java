@@ -1,5 +1,6 @@
 package com.recaring.notification.implement.fcm;
 
+import com.recaring.common.utils.MaskingUtils;
 import com.google.firebase.ErrorCode;
 import com.google.firebase.messaging.AndroidConfig;
 import com.google.firebase.messaging.BatchResponse;
@@ -93,7 +94,7 @@ public class FirebaseFcmClient implements FcmClient {
                 continue;
             }
             log.warn("[FcmSend : SendFailed]: errorCode={} | attempt={} | error={}",
-                    errorCode(exception), attempt, exception.getMessage());
+                    errorCode(exception), attempt, MaskingUtils.maskExternalText(exception.getMessage()));
         }
         return retryableTokens;
     }

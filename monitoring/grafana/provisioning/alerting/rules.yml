@@ -1,0 +1,41 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: recaring-app
+    folder: recaring
+    interval: 1m
+    rules:
+      - uid: recaring-error-log
+        title: ERROR 로그 발생
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: round(sum(increase(logback_events_total{job="recaring", level="error"}[5m])))
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [0]
+        noDataState: OK
+        execErrState: Error
+        for: 0s
+        labels:
+          severity: error
+        annotations:
+          summary: 'spring-app에서 최근 5분간 ERROR 로그 {{ index .Values "A" }}건'
+          description: 'CloudWatch Logs /ecs/recaring 에서 log.level = "ERROR" 로 원문을 확인하세요.'

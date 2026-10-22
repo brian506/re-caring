@@ -1,0 +1,30 @@
+apiVersion: 1
+
+contactPoints:
+  - orgId: 1
+    name: slack-monitoring
+    receivers:
+      - uid: slack-monitoring
+        type: slack
+        settings:
+          url: ${ALERT_SLACK_WEBHOOK_URL}
+          title: '{{ template "recaring.slack.title" . }}'
+          text: '{{ template "recaring.slack.text" . }}'
+        disableResolveMessage: true
+
+templates:
+  - orgId: 1
+    name: recaring-slack
+    template: |
+      {{ define "recaring.slack.title" -}}
+      {{ if eq .Status "firing" }}🚨 [FIRING]{{ else }}✅ [RESOLVED]{{ end }} {{ .CommonLabels.alertname }}
+      {{- end }}
+
+      {{ define "recaring.slack.text" -}}
+      {{ range .Alerts -}}
+      {{ .Annotations.summary }}
+      {{ if .Annotations.description }}{{ .Annotations.description }}
+      {{ end -}}
+      시작: {{ .StartsAt.Local.Format "2006-01-02 15:04:05" }}{{ if eq .Status "resolved" }} | 종료: {{ .EndsAt.Local.Format "2006-01-02 15:04:05" }}{{ end }}
+      {{ end -}}
+      {{- end }}

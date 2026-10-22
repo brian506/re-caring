@@ -1,6 +1,6 @@
 # 프로젝트 스냅샷
 
-> 마지막 업데이트: 2026-10-20. 기능 추가·수정 시 해당 섹션을 갱신한다.
+> 마지막 업데이트: 2026-10-22. 기능 추가·수정 시 해당 섹션을 갱신한다.
 
 > 도메인 enum(`MemberRole`·`Gender` → `member.vo`, `CareRole`·`CarePartyRole` → `care.vo`, `SafeZoneType` → `safezone.vo`)은 `vo/`에 둔다. `SignUpType`·`SubscriptionType`·`*Status`·`*Category` 등 나머지 enum은 아직 `dataaccess/entity`에 남아 있다 (#284)
 
@@ -23,6 +23,10 @@
 > 공통 필터: `common/filter/RequestIdFilter` — 최우선 순위 서블릿 필터. 요청의 `X-Request-Id`(영숫자·하이픈 8~64자)를 재사용하거나 UUID를 생성해 MDC `requestId`에 넣고 응답 헤더로 반환. `AsyncConfig`의 executor(broadcast·detection-retry·sse-poll)는 `MdcTaskDecorator`로 MDC를 복사해 비동기 스레드에도 `requestId`가 남는다. 로그 출력: dev는 ECS JSON(`requestId` 필드), local은 평문 `[requestId]` (#259)
 
 > 로그 필드(dev ECS JSON): `config/logging/LogFieldsJsonMembersCustomizer`(`logging.structured.json.customizer`)가 `domain`(앱 로거는 `com.recaring.` 다음 패키지, 외부는 라이브러리명·`springframework`→`spring`), `category`·`detail`(메시지 선두 `[카테고리 : 상세]`)을 추가. `service.version`은 deploy.yml이 `LOGGING_STRUCTURED_ECS_SERVICE_VERSION=SHORT_SHA`로 주입 (#281)
+
+> AppException 로그: 두 advice 모두 `common/controller/AppExceptionLogger`로 찍는다. SLF4J key-value로 `errorCode`·`errorType`·`httpStatus`·`domain`을 별도 필드로 남기고(ECS 포맷이 key-value를 최상위 필드로 출력), `domain`은 스택에서 `common`·`support`·`config`를 제외한 첫 `com.recaring.` 프레임의 패키지다. key-value로 `domain`이 있으면 customizer는 로거 기반 `domain`을 생략해 키 중복을 막는다. ERROR 레벨만 예외 객체를 넘겨 원인 체인을 남기고 WARN/INFO는 스택 없이 남긴다 (#293)
+
+> 외부 API 로그 마스킹: 외부 응답 body·SDK 예외 메시지는 `MaskingUtils.maskExternalText`로 남긴다 (32자 이상 토큰형 문자열 `[REDACTED]`, 휴대폰 번호 가운데 마스킹, 300자 절단). 적용: 카카오 장소 검색·앱/웹 문의 Slack 응답 body, FCM 전송 실패 메시지. CoolSMS 실패는 요청에 인증번호가 담기므로 예외 메시지 없이 타입만 남긴다 (#293)
 
 > 외부 API 지표: 카카오·Slack·OAuth RestClient는 `ObservationRegistry`를 연결해 `http_client_requests`(client.name·status·outcome)를 남긴다. `uri(String)`으로 호출하면 경로 전체가 uri 태그에 들어가므로 비밀값이 담긴 URL(Slack 웹훅)은 `URI` 객체로 호출한다. CoolSMS는 `sms.send` Timer(outcome·exception). FCM은 Firebase 콘솔 지표를 쓴다 (#259)
 
