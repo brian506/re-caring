@@ -9,6 +9,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.EnumSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -45,7 +46,7 @@ class AnomalyNotificationBodyTest {
                 DetectionType.ABNORMAL_DWELLING, AnomalyAlertKind.EVENT_START, AnomalyReasonCode.DWELL_UNKNOWN,
                 LocationFixture.anomalyMeasures(durationMin, null, null, null)), NotificationFixture.WARD_NAME);
 
-        assertThat(body.value()).isEqualTo("김소연님이 낯선 곳에서 움직임이 없으십니다 (" + expectedDetail + ").");
+        assertThat(body.value()).isEqualTo("김소연님이 낯선 곳에 머물고 계십니다 (" + expectedDetail + ").");
     }
 
     @Test
@@ -98,14 +99,25 @@ class AnomalyNotificationBodyTest {
         assertThat(body.value()).isEqualTo("김소연님이 야간(3시경)에 외출하셨습니다.");
     }
 
+    @ParameterizedTest
+    @EnumSource(value = AnomalyReasonCode.class, names = {"DWELL_UNKNOWN", "DWELL_AFTER_VEHICLE"})
+    @DisplayName("낯선 곳 체류는 차에서 내렸는지와 상관없이 같은 문구로 보여준다")
+    void uses_same_sentence_for_unknown_place_dwell(AnomalyReasonCode reasonCode) {
+        AnomalyNotificationBody body = AnomalyNotificationBody.of(LocationFixture.createEventAnomalyAlert(
+                DetectionType.ABNORMAL_DWELLING, AnomalyAlertKind.EVENT_START, reasonCode,
+                LocationFixture.anomalyMeasures(20, null, null, null)), NotificationFixture.WARD_NAME);
+
+        assertThat(body.value()).isEqualTo("김소연님이 낯선 곳에 머물고 계십니다 (지속 20분).");
+    }
+
     @Test
-    @DisplayName("재알림에는 확인 필요 표시를 앞에 붙인다")
-    void prefixes_remind() {
+    @DisplayName("재알림도 첫 알림과 같은 문구로 보여준다")
+    void does_not_prefix_remind() {
         AnomalyNotificationBody body = AnomalyNotificationBody.of(LocationFixture.createEventAnomalyAlert(
                 DetectionType.ROUTE_DEVIATION, AnomalyAlertKind.REMIND, AnomalyReasonCode.OFF_ROUTE,
                 LocationFixture.anomalyMeasures(20, null, null, null)), NotificationFixture.WARD_NAME);
 
-        assertThat(body.value()).isEqualTo("[확인 필요] 김소연님이 평소 다니지 않던 곳에 계십니다 (지속 20분).");
+        assertThat(body.value()).isEqualTo("김소연님이 평소 다니지 않던 곳에 계십니다 (지속 20분).");
     }
 
     @Test

@@ -343,7 +343,7 @@ GpsSavedEvent → DetectionListener → DetectionPublisher → XADD gps-detectio
 | `remind_seq` / `event_ended_at` | REMIND / EVENT_END에만 |
 
 **푸시 정책**(#248): 문구는 `AnomalyNotificationBody`가 `reason_code`별 템플릿으로 조립한다(분 → "1시간 30분"). `duration_min`이 오면 괄호 안에 "지속 3시간 20분"으로 붙인다(속도·평소 체류와 함께면 쉼표로 이음, 시각 유형 NIGHT_OUTING·RARE_HOUR 제외).
-REMIND는 앞에 `[확인 필요] `를 붙인다. EVENT_END는 `anomaly_detections`에만 저장하고 푸시하지 않으며 `anomaly:ack` 키를 지운다.
+REMIND도 첫 알림과 같은 본문을 쓴다(제목만 사유 코드별 재알림 제목). 낯선 곳 체류(`DWELL_UNKNOWN`·`DWELL_AFTER_VEHICLE`)는 "낯선 곳에 머물고 계십니다" 한 문구로 통일한다. EVENT_END는 `anomaly_detections`에만 저장하고 푸시하지 않으며 `anomaly:ack` 키를 지운다.
 제목은 `DetectionType` 기준이되, `DWELL_KNOWN_LONG`·`DWELL_SAFEZONE_LONG`만 "오래 머무름 확인"이다(#255, `AnomalyReasonCode.notificationTitle`).
 `VEHICLE`의 REMIND만 "차량 이동 계속 중"이다(#257). 엔진이 확인 전까지 `VEHICLE_REMIND_EVERY_MINUTES`(기본 30분) 간격으로 보낸다.
 이 두 사유의 REMIND는 저장만 하고 푸시하지 않으며 `anomaly:ack`도 리셋하지 않는다 — 같은 자리에 있는 한 사건이 닫히지 않아 확인 전까지 매시간 울린다.

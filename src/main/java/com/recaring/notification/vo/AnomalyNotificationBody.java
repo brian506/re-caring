@@ -10,15 +10,11 @@ import java.util.stream.Collectors;
 public record AnomalyNotificationBody(String value) {
 
     private static final String NAME_PLACEHOLDER = "{name}";
-    private static final String REMIND_PREFIX = "[확인 필요] ";
     private static final int MAX_LENGTH = 1000;
     private static final int MINUTES_PER_HOUR = 60;
 
     public static AnomalyNotificationBody of(AnomalyAlert alert, String wardName) {
         String body = describe(alert, wardName);
-        if (alert.isRemind()) {
-            body = REMIND_PREFIX + body;
-        }
         return new AnomalyNotificationBody(body.length() <= MAX_LENGTH ? body : body.substring(0, MAX_LENGTH));
     }
 
@@ -30,8 +26,7 @@ public record AnomalyNotificationBody(String value) {
         }
         return switch (alert.reasonCode()) {
             case VEHICLE -> sentence(subject + "차량으로 이동 중입니다", speed(measures), duration(measures));
-            case DWELL_UNKNOWN -> sentence(subject + "낯선 곳에서 움직임이 없으십니다", duration(measures));
-            case DWELL_AFTER_VEHICLE -> sentence(subject + "차에서 내린 뒤 낯선 곳에 머물고 계십니다", duration(measures));
+            case DWELL_UNKNOWN, DWELL_AFTER_VEHICLE -> sentence(subject + "낯선 곳에 머물고 계십니다", duration(measures));
             case DWELL_KNOWN_LONG -> sentence(subject + "평소보다 오래 한 곳에 머물고 계십니다",
                     duration(measures), usual(measures));
             case DWELL_SAFEZONE_LONG -> sentence(subject + "안심존 안 한 곳에 오래 머물고 계십니다", duration(measures));
