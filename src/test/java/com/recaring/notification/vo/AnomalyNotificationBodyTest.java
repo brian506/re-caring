@@ -16,8 +16,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DisplayName("이상탐지 알림 문구 조립 단위 테스트")
 class AnomalyNotificationBodyTest {
 
-    private static final int MAX_BODY_LENGTH = 1000;
-
     @ParameterizedTest(name = "평소 {0}분이면 \"{1}\"")
     @CsvSource({
             "40, 평소 약 40분",
@@ -111,28 +109,48 @@ class AnomalyNotificationBodyTest {
     }
 
     @Test
-    @DisplayName("재알림도 첫 알림과 같은 문구로 보여준다")
-    void does_not_prefix_remind() {
+    @DisplayName("재알림은 지속 시간을 빼고 보여준다")
+    void omits_duration_on_remind() {
         AnomalyNotificationBody body = AnomalyNotificationBody.of(LocationFixture.createEventAnomalyAlert(
                 DetectionType.ROUTE_DEVIATION, AnomalyAlertKind.REMIND, AnomalyReasonCode.OFF_ROUTE,
                 LocationFixture.anomalyMeasures(20, null, null, null)), NotificationFixture.WARD_NAME);
 
-        assertThat(body.value()).isEqualTo("김소연님이 평소 다니지 않던 곳에 계십니다 (지속 20분).");
+        assertThat(body.value()).isEqualTo("김소연님이 평소 다니지 않던 곳에 계십니다.");
     }
 
     @Test
-    @DisplayName("사유 코드가 없으면 근거 문구에 이름을 채워 쓴다")
-    void falls_back_to_evidence_without_reason_code() {
-        AnomalyNotificationBody body = AnomalyNotificationBody.of(
-                LocationFixture.createAnomalyAlert(DetectionType.WANDERING, LocationFixture.WANDERING_EVIDENCE),
-                NotificationFixture.WARD_NAME);
+    @DisplayName("차량 이동 재알림은 속도와 지속 시간을 빼고 보여준다")
+    void omits_speed_and_duration_on_vehicle_remind() {
+        AnomalyNotificationBody body = AnomalyNotificationBody.of(LocationFixture.createEventAnomalyAlert(
+                DetectionType.SPEED_ANOMALY, AnomalyAlertKind.REMIND, AnomalyReasonCode.VEHICLE,
+                LocationFixture.anomalyMeasures(200, null, 41, null)), NotificationFixture.WARD_NAME);
 
-        assertThat(body.value()).isEqualTo("김소연 님이 같은 곳을 맴돌고 계십니다.");
+        assertThat(body.value()).isEqualTo("김소연님이 차량으로 이동 중입니다.");
     }
 
     @Test
-    @DisplayName("사유 코드도 근거 문구도 없으면 기본 문구를 쓴다")
-    void falls_back_to_default_without_reason_and_evidence() {
+    @DisplayName("재알림이어도 평소 체류 시간은 보여준다")
+    void keeps_usual_dwell_time_on_remind() {
+        AnomalyNotificationBody body = AnomalyNotificationBody.of(LocationFixture.createEventAnomalyAlert(
+                DetectionType.ABNORMAL_DWELLING, AnomalyAlertKind.REMIND, AnomalyReasonCode.DWELL_KNOWN_LONG,
+                LocationFixture.anomalyMeasures(135, 90, null, null)), NotificationFixture.WARD_NAME);
+
+        assertThat(body.value()).isEqualTo("김소연님이 평소보다 오래 한 곳에 머물고 계십니다 (평소 약 1시간 30분).");
+    }
+
+    @Test
+    @DisplayName("도착 지연은 고정 문구로 보여준다")
+    void shows_fixed_sentence_for_no_arrival() {
+        AnomalyNotificationBody body = AnomalyNotificationBody.of(LocationFixture.createEventAnomalyAlert(
+                DetectionType.ROUTE_DEVIATION, AnomalyAlertKind.EVENT_START, AnomalyReasonCode.NO_ARRIVAL,
+                LocationFixture.anomalyMeasures(null, null, null, null)), NotificationFixture.WARD_NAME);
+
+        assertThat(body.value()).isEqualTo("김소연님이 평소 도착하시던 곳에 아직 도착하지 않으셨습니다.");
+    }
+
+    @Test
+    @DisplayName("사유 코드가 없으면 기본 문구를 쓴다")
+    void falls_back_to_default_without_reason_code() {
         AnomalyNotificationBody body = AnomalyNotificationBody.of(
                 LocationFixture.createAnomalyAlert(DetectionType.ABNORMAL_DWELLING, null),
                 NotificationFixture.WARD_NAME);
@@ -141,24 +159,12 @@ class AnomalyNotificationBodyTest {
     }
 
     @Test
-    @DisplayName("이름을 채운 뒤 문구가 정확히 1000자면 자르지 않는다")
-    void keeps_body_at_the_length_limit() {
+    @DisplayName("사유 코드가 없으면 엔진 문장이 있어도 본문에 쓰지 않는다")
+    void ignores_evidence_without_reason_code() {
         AnomalyNotificationBody body = AnomalyNotificationBody.of(
-                LocationFixture.createAnomalyAlert(DetectionType.ROUTE_DEVIATION, "{name}" + "가".repeat(MAX_BODY_LENGTH - 3)),
+                LocationFixture.createAnomalyAlert(DetectionType.WANDERING, LocationFixture.WANDERING_EVIDENCE),
                 NotificationFixture.WARD_NAME);
 
-        assertThat(body.value()).hasSize(MAX_BODY_LENGTH);
-        assertThat(body.value()).startsWith(NotificationFixture.WARD_NAME);
-        assertThat(body.value()).endsWith("가");
-    }
-
-    @Test
-    @DisplayName("이름을 채운 뒤 문구가 저장 한도를 넘으면 1000자로 자른다")
-    void truncates_body_beyond_the_length_limit() {
-        AnomalyNotificationBody body = AnomalyNotificationBody.of(
-                LocationFixture.createAnomalyAlert(DetectionType.ROUTE_DEVIATION, "{name}" + "가".repeat(MAX_BODY_LENGTH)),
-                NotificationFixture.WARD_NAME);
-
-        assertThat(body.value()).hasSize(MAX_BODY_LENGTH);
+        assertThat(body.value()).isEqualTo("김소연님에게 이상 징후가 감지되었어요.");
     }
 }

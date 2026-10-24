@@ -49,8 +49,8 @@ public class AnomalyNotificationListener {
             return;
         }
 
-        if (detection.reasonCode() == null && (detection.evidence() == null || detection.evidence().isBlank())) {
-            log.warn("[AnomalyAlert : MissingEvidence]: wardMemberKey={} | detectionType={}",
+        if (detection.reasonCode() == null) {
+            log.warn("[AnomalyAlert : MissingReasonCode]: wardMemberKey={} | detectionType={}",
                     wardMemberKey, detection.detectionType());
         }
 

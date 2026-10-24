@@ -200,12 +200,6 @@ public class LocationFixture {
     public static AnomalyAlert createEventAnomalyAlert(
             DetectionType detectionType, AnomalyAlertKind alertKind, AnomalyReasonCode reasonCode,
             AnomalyMeasures measures) {
-        return createEventAnomalyAlert(detectionType, alertKind, reasonCode, measures, null);
-    }
-
-    public static AnomalyAlert createEventAnomalyAlert(
-            DetectionType detectionType, AnomalyAlertKind alertKind, AnomalyReasonCode reasonCode,
-            AnomalyMeasures measures, String evidence) {
         AnomalyEvent event = new AnomalyEvent(
                 EVENT_ID,
                 alertKind,
@@ -214,7 +208,7 @@ public class LocationFixture {
                 detectionType.name(),
                 alertKind == AnomalyAlertKind.REMIND ? 1 : null);
         return new AnomalyAlert(
-                WARD_KEY, detectionType, ANOMALY_SCORE, DETECTED_AT, LATITUDE, LONGITUDE, evidence,
+                WARD_KEY, detectionType, ANOMALY_SCORE, DETECTED_AT, LATITUDE, LONGITUDE, null,
                 event, reasonCode, measures);
     }
 
@@ -284,10 +278,6 @@ public class LocationFixture {
                 .eventEndedAt(endedAt)
                 .categories(detectionType.name())
                 .build();
-    }
-
-    public static AnomalyDetectedEvent createAnomalyDetectedEvent(DetectionType detectionType, String evidence) {
-        return new AnomalyDetectedEvent(createAnomalyAlert(detectionType, evidence));
     }
 
     public static AnomalyDetectedEvent createAnomalyDetectedEvent(AnomalyAlert alert) {
