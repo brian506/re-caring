@@ -374,7 +374,7 @@ AnomalyDetectionConsumer(수동 ACK)
   실패가 전파되어 ACK를 건너뛸 수 있다.
 - **처리 못 하는 메시지는 버리고 ACK한다.** 알 수 없는 유형, 숫자·시각 형식 오류, 필수 필드 누락 모두.
   ACK하지 않으면 PEL에 남아 영원히 재배달되며 뒤가 밀린다(poison message).
-- **`evidence`는 1000자로 자른다.** `notifications.body`가 `length=1000`이라 초과 시 INSERT가 실패하고,
+- **`evidence`는 1000자로 자른다.** `anomaly_detections.evidence`가 `varchar(1000)`이라 초과 시 INSERT가 실패하고,
   실패하면 ACK되지 않아 같은 poison 경로로 들어간다.
 - **컨슈머 그룹은 백엔드가 만든다.** `createGroup`이 스트림까지 함께 만들어(MKSTREAM) 엔진이 첫 결과를 넣기 전에
   기동해도 된다. **`BUSYGROUP`은 정상으로 취급해야 한다** — 재기동·다중 태스크마다 발생하므로 던지면
