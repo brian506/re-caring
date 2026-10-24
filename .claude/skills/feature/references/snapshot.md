@@ -1,6 +1,6 @@
 # 프로젝트 스냅샷
 
-> 마지막 업데이트: 2026-10-22. 기능 추가·수정 시 해당 섹션을 갱신한다.
+> 마지막 업데이트: 2026-10-24. 기능 추가·수정 시 해당 섹션을 갱신한다.
 
 > 도메인 enum(`MemberRole`·`Gender` → `member.vo`, `CareRole`·`CarePartyRole` → `care.vo`, `SafeZoneType` → `safezone.vo`)은 `vo/`에 둔다. `SignUpType`·`SubscriptionType`·`*Status`·`*Category` 등 나머지 enum은 아직 `dataaccess/entity`에 남아 있다 (#284)
 
@@ -334,16 +334,16 @@ GpsSavedEvent → DetectionListener → DetectionPublisher → XADD gps-detectio
 | `score` | 항상 0.5000~1.0000, 소수 4자리 |
 | `detected_at` | 입력의 `recorded_at`을 **그대로 에코**(필드명은 `detected_at`, 파서는 `recorded_at`도 받는다). EVENT_END는 `event_ended_at`과 같은 값. 엔진 자기 시계 금지. 구간을 보는 탐지(배회 등)는 판정을 트리거한 GPS point의 값 |
 | `latitude` / `longitude` | 소수 6자리 |
-| `evidence` | **전환 기간에만** 옴(엔진 1차 배포). 2차 배포에서 빠진다. `reason_code`가 없을 때만 문구 fallback으로 쓴다 |
+| `evidence` | **전환 기간에만** 옴. 백엔드 배포 후 엔진이 `EMIT_EVIDENCE=0`으로 끈다. 저장만 하고 푸시 문구에는 쓰지 않는다(#299) |
 | `alert_kind` | `EVENT_START` / `CATEGORY_ADDED` / `REMIND` / `EVENT_END`. 없으면 이전 형식 메시지로 보고 바로 푸시한다. 모르는 값이면 버린다 |
 | `event_id` / `event_started_at` | 사건 식별자(`{key}:{사건 시작 시각}`)·시작 시각. `alert_kind`가 있는데 `event_id`가 없으면 버린다 |
 | `categories` | 이번에 성립한 카테고리 전부(쉼표 구분). `detection_type`은 그중 최상위 |
-| `reason_code` | 걸린 규칙 12종(`AnomalyReasonCode`). 모르는 값이면 null로 두고 evidence/기본 문구로 fallback |
+| `reason_code` | 걸린 규칙 12종(`AnomalyReasonCode`). 모르는 값이면 null로 두고 기본 문구("이상 징후가 감지되었어요")로 보낸다 |
 | `duration_min` / `usual_min` / `speed_kmh` / `hour` | 해당 시에만. 문구 조립용 숫자 |
 | `remind_seq` / `event_ended_at` | REMIND / EVENT_END에만 |
 
 **푸시 정책**(#248): 문구는 `AnomalyNotificationBody`가 `reason_code`별 템플릿으로 조립한다(분 → "1시간 30분"). `duration_min`이 오면 괄호 안에 "지속 3시간 20분"으로 붙인다(속도·평소 체류와 함께면 쉼표로 이음, 시각 유형 NIGHT_OUTING·RARE_HOUR 제외).
-REMIND도 첫 알림과 같은 본문을 쓴다(제목만 사유 코드별 재알림 제목). 낯선 곳 체류(`DWELL_UNKNOWN`·`DWELL_AFTER_VEHICLE`)는 "낯선 곳에 머물고 계십니다" 한 문구로 통일한다. EVENT_END는 `anomaly_detections`에만 저장하고 푸시하지 않으며 `anomaly:ack` 키를 지운다.
+REMIND의 numbers는 직전 알림 값 재전송이라 본문에서 지속 시간·속도를 뺀다(#299, 멈춘 시간처럼 보임). `NO_ARRIVAL`은 고정 문구. 낯선 곳 체류(`DWELL_UNKNOWN`·`DWELL_AFTER_VEHICLE`)는 "낯선 곳에 머물고 계십니다" 한 문구로 통일한다. EVENT_END는 `anomaly_detections`에만 저장하고 푸시하지 않으며 `anomaly:ack` 키를 지운다.
 제목은 `DetectionType` 기준이되, `DWELL_KNOWN_LONG`·`DWELL_SAFEZONE_LONG`만 "오래 머무름 확인"이다(#255, `AnomalyReasonCode.notificationTitle`).
 `VEHICLE`의 REMIND만 "차량 이동 계속 중"이다(#257). 엔진이 확인 전까지 `VEHICLE_REMIND_EVERY_MINUTES`(기본 30분) 간격으로 보낸다.
 이 두 사유의 REMIND는 저장만 하고 푸시하지 않으며 `anomaly:ack`도 리셋하지 않는다 — 같은 자리에 있는 한 사건이 닫히지 않아 확인 전까지 매시간 울린다.

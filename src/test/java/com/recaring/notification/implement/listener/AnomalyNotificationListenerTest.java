@@ -58,37 +58,30 @@ class AnomalyNotificationListenerTest {
     }
 
     @Test
-    @DisplayName("탐지 근거 문구의 이름 자리에 대상자 이름을 채워 보낸다")
-    void fills_ward_name_into_evidence() {
-        givenCaregiversAndWardName();
-
-        anomalyNotificationListener.onAnomalyDetected(
-                LocationFixture.createAnomalyDetectedEvent(DetectionType.WANDERING, "{name} 님이 같은 곳을 맴돌고 계십니다."));
-
-        assertThat(capturedBody()).isEqualTo("김소연 님이 같은 곳을 맴돌고 계십니다.");
-    }
-
-    @Test
     @DisplayName("연결된 보호자 전원에게 알림 발송을 위임한다")
     void sends_to_every_linked_caregiver() {
         givenCaregiversAndWardName();
 
-        anomalyNotificationListener.onAnomalyDetected(
-                LocationFixture.createAnomalyDetectedEvent(DetectionType.SPEED_ANOMALY, "{name} 님이 차량 속도로 이동 중입니다."));
+        anomalyNotificationListener.onAnomalyDetected(LocationFixture.createAnomalyDetectedEvent(LocationFixture.createEventAnomalyAlert(
+                DetectionType.SPEED_ANOMALY, AnomalyAlertKind.EVENT_START, AnomalyReasonCode.VEHICLE,
+                LocationFixture.anomalyMeasures(null, null, LocationFixture.VEHICLE_SPEED_KMH, null))));
 
         then(notificationSendManager).should().sendToCaregivers(
                 List.of(NotificationFixture.GUARDIAN_KEY, NotificationFixture.SECOND_GUARDIAN_KEY),
                 DetectionType.SPEED_ANOMALY.name(),
                 // 기댓값을 enum에서 되읽으면 유형↔제목이 뒤바뀌어도 통과하므로 문구를 직접 고정한다
                 "빠른 이동 알림",
-                "김소연 님이 차량 속도로 이동 중입니다.",
+                "김소연님이 차량으로 이동 중입니다 (약 92km/h).",
                 Map.of(
                         "type", DetectionType.SPEED_ANOMALY.name(),
                         "wardKey", NotificationFixture.WARD_KEY,
                         "score", String.valueOf(LocationFixture.ANOMALY_SCORE),
                         "recordedAt", LocationFixture.DETECTED_AT_TEXT,
                         "latitude", String.valueOf(LocationFixture.LATITUDE),
-                        "longitude", String.valueOf(LocationFixture.LONGITUDE)
+                        "longitude", String.valueOf(LocationFixture.LONGITUDE),
+                        "eventId", LocationFixture.EVENT_ID,
+                        "alertKind", "EVENT_START",
+                        "reasonCode", "VEHICLE"
                 )
         );
     }
@@ -101,8 +94,9 @@ class AnomalyNotificationListenerTest {
                         NotificationFixture.WARD_KEY, NotificationFixture.GUARDIAN_KEY, true, true, true, true, false)));
         givenCaregiversAndWardName();
 
-        anomalyNotificationListener.onAnomalyDetected(
-                LocationFixture.createAnomalyDetectedEvent(DetectionType.TIME_ANOMALY, "{name} 님은 평소 이 시각에는 나가신 적이 거의 없습니다."));
+        anomalyNotificationListener.onAnomalyDetected(LocationFixture.createAnomalyDetectedEvent(LocationFixture.createEventAnomalyAlert(
+                DetectionType.TIME_ANOMALY, AnomalyAlertKind.EVENT_START, AnomalyReasonCode.RARE_HOUR,
+                LocationFixture.anomalyMeasures(null, null, null, 3))));
 
         then(notificationSendManager).should().sendToCaregivers(
                 eq(List.of(NotificationFixture.SECOND_GUARDIAN_KEY)),
@@ -116,8 +110,9 @@ class AnomalyNotificationListenerTest {
         given(careRelationshipReader.findCaregiverInfos(NotificationFixture.WARD_KEY))
                 .willReturn(List.of());
 
-        anomalyNotificationListener.onAnomalyDetected(
-                LocationFixture.createAnomalyDetectedEvent(DetectionType.WANDERING, "{name} 님이 같은 곳을 맴돌고 계십니다."));
+        anomalyNotificationListener.onAnomalyDetected(LocationFixture.createAnomalyDetectedEvent(LocationFixture.createEventAnomalyAlert(
+                DetectionType.ROUTE_DEVIATION, AnomalyAlertKind.EVENT_START, AnomalyReasonCode.OFF_ROUTE,
+                LocationFixture.anomalyMeasures(LocationFixture.DWELL_DURATION_MIN, null, null, null))));
 
         then(notificationSendManager).should(never())
                 .sendToCaregivers(any(), anyString(), anyString(), anyString(), any());
@@ -208,12 +203,5 @@ class AnomalyNotificationListenerTest {
         then(notificationSendManager).should().sendToCaregivers(
                 any(), anyString(), titleCaptor.capture(), anyString(), any());
         return titleCaptor.getValue();
-    }
-
-    private String capturedBody() {
-        ArgumentCaptor<String> bodyCaptor = ArgumentCaptor.forClass(String.class);
-        then(notificationSendManager).should().sendToCaregivers(
-                any(), anyString(), anyString(), bodyCaptor.capture(), any());
-        return bodyCaptor.getValue();
     }
 }
