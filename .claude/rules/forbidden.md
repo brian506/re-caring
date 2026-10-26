@@ -42,7 +42,7 @@
 - **이전 버전 코드가 깨지는 스키마 변경을 한 번에 배포하면 안 된다**
   - 롤링 배포 중 이전 태스크가 새 스키마 위에서 돈다. 컬럼 삭제·이름 변경은 expand → contract로 나눈다
   - `safe_zones`·`gps_histories` 변경은 이상탐지 엔진을 먼저 배포한다
-  - 자세한 흐름 → `.claude/rules/ddl-conventions.md`
+  - 자세한 흐름 → `.claude/rules/flyway-conventions.md`
 
 ## Swagger / API Documentation
 

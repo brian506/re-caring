@@ -1,4 +1,4 @@
-# DDL Conventions (Flyway)
+# Flyway Conventions
 
 스키마는 Flyway 마이그레이션(`src/main/resources/db/migration/V{n}__{description}.sql`)으로만 바꾼다.
 앱이 뜰 때 Flyway가 미적용 버전을 실행하고, 이어서 Hibernate가 `ddl-auto=validate`로 엔티티와 대조한다.
@@ -46,7 +46,7 @@ ECS 롤링 배포 중에는 새 스키마 위에서 **이전 버전 태스크가
 
 엔진(`recaring-detection`)이 `safe_zones`·`gps_histories`를 직접 SQL로 읽는다. 이 두 테이블의 컬럼을 바꾸거나 지우는 마이그레이션은:
 
-1. 엔진 쪽 대응을 먼저 배포한다 (태스크 정의 이미지 태그가 고정이므로 서비스 재배포만으로는 반영되지 않는다).
+1. 엔진 쪽 대응을 먼저 배포한다. 엔진 태스크 정의는 `recaring-detection-detect:latest`를 쓰므로 새 이미지를 푸시한 뒤 `recaring-detection-service`를 강제 재배포해야 반영된다.
 2. 머지 직전 dev DB `pg_stat_activity`에 `idle in transaction` 세션이 없는지 확인한다 (`/deploy` Step 4.5).
 
 `gps_histories`는 `recorded_at` 월별 RANGE 파티션 테이블이다. 컬럼 변경은 부모 테이블에 걸면 파티션에 전파된다.

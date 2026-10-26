@@ -39,8 +39,13 @@ gh issue create --title "hotfix: {수정 내용}" --body "{상세 설명}" --lab
 사용자가 제공한 수정 내용을 분석해 코드를 수정한다.
 
 수정 전 반드시 확인:
-- `references/architecture.md` — 레이어 규칙 준수
+- `.claude/rules/architecture.md` — 레이어 규칙 준수
 - 기존 패턴을 벗어나지 않도록 유사 코드 먼저 확인
+
+수정 후 반드시 문서를 함께 갱신한다 (CLAUDE.md "문서 동기화"):
+- `.claude/skills/feature/references/snapshot.md` — 바뀐 동작·API·엔티티·기술 부채 반영, 상단 날짜 갱신
+- `.claude/rules/architecture.md` — 구조가 바뀐 경우
+- 무관하면 커밋 전에 두 문서를 확인하고 완료 보고에 "문서 갱신 불필요"를 적는다. 문서도 같은 커밋에 포함한다
 
 ## Step 3: 빌드 & 테스트
 

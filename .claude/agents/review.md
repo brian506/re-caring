@@ -70,6 +70,11 @@ git diff develop...HEAD --name-only -- 'src/main/**'
 ### [인덱스]
 - [ ] 새 Entity에 인덱스가 필요하다면 `@Table(indexes=...)` 대신 마이그레이션에 `CREATE INDEX`로 작성됐는가
 
+### [문서 동기화]
+- [ ] `src/main/`·설정·마이그레이션 변경이 있는데 `snapshot.md` 변경이 diff에 없지 않은가 (API·엔티티·Redis 키·동작·기술 부채 반영)
+- [ ] 새 도메인·`implement/` 하위 패키지·인증 흐름·외부 식별자 변경이 있는데 `.claude/rules/architecture.md`가 그대로이지 않은가
+- 누락이면 🟡 Warning으로 보고한다
+
 ### [스키마 마이그레이션]
 - [ ] 엔티티 변경(테이블·컬럼·제약)에 대응하는 `db/migration/V{n}__*.sql`이 같은 PR에 있는가
 - [ ] 기존(develop에 머지된) 마이그레이션 파일을 수정·삭제하지 않았는가

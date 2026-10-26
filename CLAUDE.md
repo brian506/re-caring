@@ -14,7 +14,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **코드 아키텍처 규칙**: `.claude/rules/architecture.md`
 - **API·엔티티·기술 부채 현황**: `.claude/skills/feature/references/snapshot.md`
 
-기능 구현 후 새 API·엔티티·알려진 이슈가 생기면 `.claude/skills/feature/references/snapshot.md`의 해당 섹션을 함께 갱신한다.
+## 문서 동기화 (필수)
+
+`src/main/` 코드·설정·마이그레이션·인프라를 생성하거나 수정하면 **같은 작업(같은 커밋·PR) 안에서** 아래 두 문서를 반드시 함께 갱신한다. 문서 갱신 없이 작업 완료로 보고하지 않는다.
+
+- `.claude/skills/feature/references/snapshot.md` — API·엔티티·도메인 패키지·Redis 키·탐지 파이프라인·인프라 현황·기술 부채 중 바뀐 섹션. 상단 `마지막 업데이트` 날짜도 갱신
+- `.claude/rules/architecture.md` — 도메인 패키지 표, `implement/` 하위 패키지, 인증 흐름, 외부 식별자 등 구조가 바뀐 경우
+
+바뀐 내용이 문서와 무관하면(내부 로직만 수정 등) 두 문서를 확인한 뒤 "갱신 불필요"라고 완료 보고에 명시한다. 해결한 기술 부채는 표에서 지운다.
 
 ## 빌드 및 실행 명령어
 
@@ -73,7 +80,7 @@ EC2 서버 접근은 **SSH가 아닌 AWS SSM Session Manager**로만 한다. SSH
 
 ## 인덱스 규칙
 
-Entity `@Table`의 `indexes` 속성을 사용하지 않는다. 인덱스는 Flyway 마이그레이션(`src/main/resources/db/migration`)에 작성한다. 스키마 변경 규칙은 `.claude/rules/ddl-conventions.md` 참고.
+Entity `@Table`의 `indexes` 속성을 사용하지 않는다. 인덱스는 Flyway 마이그레이션(`src/main/resources/db/migration`)에 작성한다. 스키마 변경 규칙은 `.claude/rules/flyway-conventions.md` 참고.
 
 ## 환경 선택
 

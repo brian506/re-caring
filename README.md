@@ -134,5 +134,4 @@ docker compose -f docker-compose-local.yml up -d   # PostgreSQL, Redis
 
 ## 문서
 
-- [기능 명세서](docs/기능명세서.md)
 - [Grafana SSE 대시보드](docs/grafana-sse-dashboard.json)

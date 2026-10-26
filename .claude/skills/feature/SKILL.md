@@ -99,7 +99,7 @@ DB에 직접 적용하지 않는다. local·test·dev 모두 앱 기동 시 Flyw
   - 타입/NULL/UNIQUE 제약 변경 (`ALTER TABLE ... ALTER COLUMN`)
   - 인덱스 (`CREATE INDEX`)
 - `safe_zones`·`gps_histories` 변경은 이상탐지 엔진에 영향이 있으므로 완료 보고에 명시한다.
-- 변환 규칙·무중단 제약 → `.claude/rules/ddl-conventions.md`
+- 변환 규칙·무중단 제약 → `.claude/rules/flyway-conventions.md`
 - 엔티티와 SQL이 맞는지는 `./gradlew integrationTest`가 Hibernate validate로 확인한다.
 
 ### 4-3. Implement 계층
@@ -125,9 +125,13 @@ Reader / Writer / Manager / Validator / Authenticator — 역할 기준 → `.cl
 
 `BUILD SUCCESSFUL` 확인 전까지 완료로 보고하지 않는다.
 
-## Step 5: 스냅샷 갱신
+## Step 5: 문서 갱신 (필수 — 생략 금지)
 
-`.claude/skills/feature/references/snapshot.md`를 업데이트한다.
+코드를 생성·수정했으면 아래 두 문서를 반드시 함께 갱신한다 (CLAUDE.md "문서 동기화"). 갱신 전에는 완료 보고하지 않는다.
+
+**`.claude/rules/architecture.md`** — 새 도메인, `implement/` 하위 패키지 추가·이동, 인증 흐름·필터 경로 변경, 새 외부 식별자(`*Key`)가 생기면 해당 부분을 고친다.
+
+**`.claude/skills/feature/references/snapshot.md`**
 
 - 새 API → "API 엔드포인트" 테이블
 - 새 Entity → "엔티티 목록" 테이블
@@ -142,5 +146,6 @@ Reader / Writer / Manager / Validator / Authenticator — 역할 기준 → `.cl
 브랜치: feature/{N}
 구현 항목:
   - [계층별 생성/수정 파일 목록]
+문서 갱신: snapshot.md [갱신 섹션 | 갱신 불필요], architecture.md [갱신 내용 | 갱신 불필요]
 다음 단계: 테스트·빌드 준비되면 "테스트 작성해줘" 또는 /deploy 로 배포 진행
 ```
