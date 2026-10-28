@@ -1,6 +1,6 @@
 # 프로젝트 스냅샷
 
-> 마지막 업데이트: 2026-10-26 (패키지별 코드 대조 + AWS 인프라 조회로 전면 검증). 기능 추가·수정 시 해당 섹션을 갱신한다.
+> 마지막 업데이트: 2026-10-28 (비밀번호 규칙 특수문자 허용 #301). 기능 추가·수정 시 해당 섹션을 갱신한다.
 
 > 도메인 enum은 `vo/`에 둔다(`MemberRole`·`Gender`, `CareRole`·`CarePartyRole`, `SafeZoneType`·`SafeZoneAlertType`, `OAuthProvider`, `DetectionType`·`AnomalyAlertKind`·`AnomalyReasonCode`, `LocationCollectionInterval`, `FeedbackCategory`). 나머지 enum(`SignUpType`, `CareInvitationStatus`, `InquiryStatus/Category`, `SiteInquiryStatus/Category`, `FcmDevicePlatform`, `FeedbackAccuracy/Reason`)은 아직 `dataaccess/entity`에 남아 있다 (#284)
 
@@ -46,7 +46,7 @@
 
 | 도메인 | Method | Path | 설명 |
 |--------|--------|------|------|
-| Auth | POST | `/api/v1/auth/sign-up` | 로컬 회원가입. 이메일 없음 — SMS 인증된 전화번호가 로그인 ID. 전화번호 중복 E3006, 선검사를 통과한 동시 요청의 UNIQUE 위반 E409 — 모두 409. `verificationToken`은 1회용(성공·실패 무관하게 소비) |
+| Auth | POST | `/api/v1/auth/sign-up` | 로컬 회원가입. 이메일 없음 — SMS 인증된 전화번호가 로그인 ID. 전화번호 중복 E3006, 선검사를 통과한 동시 요청의 UNIQUE 위반 E409 — 모두 409. `verificationToken`은 1회용(성공·실패 무관하게 소비). 비밀번호 규칙(`Password` VO, 가입·재설정·변경·로그인 공통): 8~20자(E2012), 영문·숫자 각 1자 이상 + 공백 제외 출력 가능 ASCII(특수문자 허용, E2015) |
 | Auth | POST | `/api/v1/auth/sign-in/local` | 로컬 로그인. Request `{ phone, password }` (이메일 로그인 제거). 미가입 번호·비밀번호 불일치 모두 E2022(400) 하나로 응답해 가입 여부를 숨기고, 미가입 번호도 더미 해시로 비교 1회를 수행해 응답 시간을 맞춘다 |
 | Auth | POST | `/api/v1/auth/sign-in/{kakao\|naver}` | OAuth 로그인 (미연동 계정은 OAUTH_NOT_LINKED) |
 | Auth | POST | `/api/v1/auth/oauth/link/{kakao\|naver}` | OAuth 사후 연동 (JWT 인증). 같은 provider 재연동 E2019, 다른 회원이 이미 연동한 계정은 UNIQUE 위반 E409. local_auth 존재 검사는 없다(현재 가입 경로가 로컬뿐이라 실질 차이 없음) |

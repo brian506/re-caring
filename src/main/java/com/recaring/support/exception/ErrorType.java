@@ -32,7 +32,7 @@ public enum ErrorType {
     PASSWORD_IS_NULL(HttpStatus.BAD_REQUEST, ErrorCode.E2011, "비밀번호는 null일 수 없습니다.", LogLevel.WARN),
     INVALID_PASSWORD_LENGTH(HttpStatus.BAD_REQUEST, ErrorCode.E2012, "비밀번호 길이는 8~20자리여야 합니다.", LogLevel.WARN),
     INVALID_ACCOUNT_FORMAT(HttpStatus.BAD_REQUEST, ErrorCode.E2014, "계정은 영문 또는 숫자를 포함해야 합니다.", LogLevel.WARN),
-    INVALID_PASSWORD_FORMAT(HttpStatus.BAD_REQUEST, ErrorCode.E2015, "비밀번호는 영문과 숫자를 포함해야 합니다.", LogLevel.WARN),
+    INVALID_PASSWORD_FORMAT(HttpStatus.BAD_REQUEST, ErrorCode.E2015, "비밀번호는 영문과 숫자를 각각 1자 이상 포함해야 하며, 영문·숫자·특수문자만 사용할 수 있습니다(공백 불가).", LogLevel.WARN),
     NOT_FOUND_ACCOUNT(HttpStatus.BAD_REQUEST, ErrorCode.E2016, "존재하지 않는 계정 정보입니다.", LogLevel.WARN),
     INVALID_PASSWORD(HttpStatus.BAD_REQUEST, ErrorCode.E2017, "비밀번호가 일치하지 않습니다.", LogLevel.WARN),
     INVALID_MEMBER_KEY(HttpStatus.BAD_REQUEST, ErrorCode.E2018, "멤버 key가 유효하지 않습니다.", LogLevel.WARN),
