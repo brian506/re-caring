@@ -74,9 +74,47 @@ class PasswordTest {
     }
 
     @Test
-    @DisplayName("영문·숫자를 모두 포함해도 특수문자가 섞이면 INVALID_PASSWORD_FORMAT 예외가 발생한다")
-    void create_fail_when_password_has_special_character() {
-        assertThatThrownBy(() -> new Password("password1!"))
+    @DisplayName("영문·숫자에 특수문자가 섞인 비밀번호는 생성된다")
+    void create_success_with_special_character() {
+        Password password = new Password("p@ssw0rd#1");
+        assertThat(password.value()).isEqualTo("p@ssw0rd#1");
+    }
+
+    @Test
+    @DisplayName("허용 범위 양 끝 특수문자 '!'와 '~'를 포함한 비밀번호는 생성된다")
+    void create_success_with_boundary_special_characters() {
+        Password password = new Password("!abcd123~");
+        assertThat(password.value()).isEqualTo("!abcd123~");
+    }
+
+    @Test
+    @DisplayName("공백이 섞이면 INVALID_PASSWORD_FORMAT 예외가 발생한다")
+    void create_fail_when_password_has_space() {
+        assertThatThrownBy(() -> new Password("abcd 1234"))
+                .isInstanceOf(AppException.class)
+                .hasFieldOrPropertyWithValue("errorType", ErrorType.INVALID_PASSWORD_FORMAT);
+    }
+
+    @Test
+    @DisplayName("허용 범위 바로 위 제어문자(DEL)가 섞이면 INVALID_PASSWORD_FORMAT 예외가 발생한다")
+    void create_fail_when_password_has_del_character() {
+        assertThatThrownBy(() -> new Password("abcd1234\u007F"))
+                .isInstanceOf(AppException.class)
+                .hasFieldOrPropertyWithValue("errorType", ErrorType.INVALID_PASSWORD_FORMAT);
+    }
+
+    @Test
+    @DisplayName("한글이 섞이면 INVALID_PASSWORD_FORMAT 예외가 발생한다")
+    void create_fail_when_password_has_korean() {
+        assertThatThrownBy(() -> new Password("비밀번호abc123"))
+                .isInstanceOf(AppException.class)
+                .hasFieldOrPropertyWithValue("errorType", ErrorType.INVALID_PASSWORD_FORMAT);
+    }
+
+    @Test
+    @DisplayName("특수문자와 숫자만 있고 영문이 없으면 INVALID_PASSWORD_FORMAT 예외가 발생한다")
+    void create_fail_when_password_has_special_and_number_only() {
+        assertThatThrownBy(() -> new Password("!@#$1234"))
                 .isInstanceOf(AppException.class)
                 .hasFieldOrPropertyWithValue("errorType", ErrorType.INVALID_PASSWORD_FORMAT);
     }
