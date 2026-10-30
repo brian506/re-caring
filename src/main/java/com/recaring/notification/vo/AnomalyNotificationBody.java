@@ -26,10 +26,11 @@ public record AnomalyNotificationBody(String value) {
         String duration = remind ? null : duration(measures);
         return switch (alert.reasonCode()) {
             case VEHICLE -> sentence(subject + "차량으로 이동 중입니다", remind ? null : speed(measures), duration);
-            case DWELL_UNKNOWN, DWELL_AFTER_VEHICLE -> sentence(subject + "낯선 곳에 머물고 계십니다", duration);
+            case DWELL_UNKNOWN, DWELL_AFTER_VEHICLE -> sentence(subject + "평소 가지 않으시던 곳에 오래 머물고 계십니다", duration)
+                    + " 자주 가시는 곳이라면 안심존으로 등록해 관리해 보세요.";
             case DWELL_KNOWN_LONG -> sentence(subject + "평소보다 오래 한 곳에 머물고 계십니다",
                     duration, usual(measures));
-            case DWELL_SAFEZONE_LONG -> sentence(subject + "안심존 안 한 곳에 오래 머물고 계십니다", duration);
+            case DWELL_SAFEZONE_LONG -> sentence(subject + "안심존 안에서 오래 머물고 계십니다", duration);
             case OFF_ROUTE -> sentence(subject + "평소 다니지 않던 곳에 계십니다", duration);
             case OUTSIDE_SAFEZONE -> sentence(subject + "안심존을 벗어나 계십니다", duration);
             case UNFAMILIAR_AREA -> sentence(subject + "평소 생활 범위에서 벗어난 곳에 계십니다", duration);
