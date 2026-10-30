@@ -20,6 +20,9 @@ public record AnomalyAlert(
         if (event == null) {
             return true;
         }
+        if (reasonCode != null && !reasonCode.isPushed()) {
+            return false;
+        }
         if (isRemind() && reasonCode != null && !reasonCode.isRemindPushed()) {
             return false;
         }

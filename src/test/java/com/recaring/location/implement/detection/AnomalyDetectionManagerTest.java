@@ -135,6 +135,27 @@ class AnomalyDetectionManagerTest {
         then(anomalyAcknowledgementManager).should(never()).reset(anyString(), anyString());
     }
 
+    @ParameterizedTest
+    @EnumSource(value = AnomalyAlertKind.class, names = {"EVENT_START", "CATEGORY_ADDED"})
+    @DisplayName("안심존 안 체류는 사건의 첫 알림도 저장만 하고 보내지 않는다")
+    void does_not_publish_first_alert_for_safe_zone_stay(AnomalyAlertKind alertKind) {
+        givenStored(alertKind, AnomalyReasonCode.DWELL_SAFEZONE_LONG, null);
+
+        anomalyDetectionManager.record(dwellingAlert(alertKind, AnomalyReasonCode.DWELL_SAFEZONE_LONG));
+
+        then(eventPublisher).should(never()).publishEvent(any(AnomalyDetectedEvent.class));
+    }
+
+    @Test
+    @DisplayName("안심존 안 체류의 첫 알림은 보호자 확인 상태를 미확인으로 되돌리지 않는다")
+    void does_not_reset_acknowledgement_on_safe_zone_stay_first_alert() {
+        givenStored(AnomalyAlertKind.EVENT_START, AnomalyReasonCode.DWELL_SAFEZONE_LONG, null);
+
+        anomalyDetectionManager.record(dwellingAlert(AnomalyAlertKind.EVENT_START, AnomalyReasonCode.DWELL_SAFEZONE_LONG));
+
+        then(anomalyAcknowledgementManager).should(never()).reset(anyString(), anyString());
+    }
+
     @Test
     @DisplayName("아는 장소 체류도 사건의 첫 알림은 보낸다")
     void publishes_first_alert_for_long_stay() {

@@ -44,7 +44,8 @@ class AnomalyNotificationBodyTest {
                 DetectionType.ABNORMAL_DWELLING, AnomalyAlertKind.EVENT_START, AnomalyReasonCode.DWELL_UNKNOWN,
                 LocationFixture.anomalyMeasures(durationMin, null, null, null)), NotificationFixture.WARD_NAME);
 
-        assertThat(body.value()).isEqualTo("김소연님이 낯선 곳에 머물고 계십니다 (" + expectedDetail + ").");
+        assertThat(body.value()).isEqualTo("김소연님이 평소 가지 않으시던 곳에 오래 머물고 계십니다 (" + expectedDetail + ")."
+                + " 자주 가시는 곳이라면 안심존으로 등록해 관리해 보세요.");
     }
 
     @Test
@@ -99,13 +100,25 @@ class AnomalyNotificationBodyTest {
 
     @ParameterizedTest
     @EnumSource(value = AnomalyReasonCode.class, names = {"DWELL_UNKNOWN", "DWELL_AFTER_VEHICLE"})
-    @DisplayName("낯선 곳 체류는 차에서 내렸는지와 상관없이 같은 문구로 보여준다")
+    @DisplayName("낯선 곳 체류는 차에서 내렸는지와 상관없이 같은 문구와 안심존 등록 안내를 보여준다")
     void uses_same_sentence_for_unknown_place_dwell(AnomalyReasonCode reasonCode) {
         AnomalyNotificationBody body = AnomalyNotificationBody.of(LocationFixture.createEventAnomalyAlert(
                 DetectionType.ABNORMAL_DWELLING, AnomalyAlertKind.EVENT_START, reasonCode,
                 LocationFixture.anomalyMeasures(20, null, null, null)), NotificationFixture.WARD_NAME);
 
-        assertThat(body.value()).isEqualTo("김소연님이 낯선 곳에 머물고 계십니다 (지속 20분).");
+        assertThat(body.value()).isEqualTo("김소연님이 평소 가지 않으시던 곳에 오래 머물고 계십니다 (지속 20분)."
+                + " 자주 가시는 곳이라면 안심존으로 등록해 관리해 보세요.");
+    }
+
+    @Test
+    @DisplayName("낯선 곳 체류 재알림은 지속 시간 없이 안심존 등록 안내를 붙인다")
+    void appends_safe_zone_guide_without_duration_on_unknown_place_remind() {
+        AnomalyNotificationBody body = AnomalyNotificationBody.of(LocationFixture.createEventAnomalyAlert(
+                DetectionType.ABNORMAL_DWELLING, AnomalyAlertKind.REMIND, AnomalyReasonCode.DWELL_UNKNOWN,
+                LocationFixture.anomalyMeasures(20, null, null, null)), NotificationFixture.WARD_NAME);
+
+        assertThat(body.value()).isEqualTo("김소연님이 평소 가지 않으시던 곳에 오래 머물고 계십니다."
+                + " 자주 가시는 곳이라면 안심존으로 등록해 관리해 보세요.");
     }
 
     @Test
