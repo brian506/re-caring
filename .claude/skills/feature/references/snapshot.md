@@ -1,6 +1,6 @@
 # 프로젝트 스냅샷
 
-> 마지막 업데이트: 2026-10-30 (안심존 장시간 체류 푸시 중단·낯선 곳 체류 문구 수정 #303). 기능 추가·수정 시 해당 섹션을 갱신한다.
+> 마지막 업데이트: 2026-10-31 (낯선 곳 체류 재알림 안심존 등록 안내 제거 #305). 기능 추가·수정 시 해당 섹션을 갱신한다.
 
 > 도메인 enum은 `vo/`에 둔다(`MemberRole`·`Gender`, `CareRole`·`CarePartyRole`, `SafeZoneType`·`SafeZoneAlertType`, `OAuthProvider`, `DetectionType`·`AnomalyAlertKind`·`AnomalyReasonCode`, `LocationCollectionInterval`, `FeedbackCategory`). 나머지 enum(`SignUpType`, `CareInvitationStatus`, `InquiryStatus/Category`, `SiteInquiryStatus/Category`, `FcmDevicePlatform`, `FeedbackAccuracy/Reason`)은 아직 `dataaccess/entity`에 남아 있다 (#284)
 
@@ -422,7 +422,7 @@ GpsSavedEvent → DetectionListener → DetectionPublisher → XADD gps-detectio
 | `remind_seq` / `event_ended_at` | REMIND / EVENT_END에만 |
 
 **푸시 정책**(#248): 문구는 `AnomalyNotificationBody`가 `reason_code`별 템플릿으로 조립한다(분 → "1시간 30분"). `duration_min`이 오면 괄호 안에 "지속 3시간 20분"으로 붙인다(속도·평소 체류와 함께면 쉼표로 이음, 시각 유형 NIGHT_OUTING·RARE_HOUR 제외).
-REMIND의 numbers는 직전 알림 값 재전송이라 본문에서 지속 시간·속도를 뺀다(#299, 멈춘 시간처럼 보임). `NO_ARRIVAL`은 고정 문구. 낯선 곳 체류(`DWELL_UNKNOWN`·`DWELL_AFTER_VEHICLE`)는 "평소 가지 않으시던 곳에 오래 머물고 계십니다 (지속 N분). 자주 가시는 곳이라면 안심존으로 등록해 관리해 보세요." 한 문구로 통일한다(#303). EVENT_END는 `anomaly_detections`에만 저장하고 푸시하지 않으며 `anomaly:ack` 키를 지운다.
+REMIND의 numbers는 직전 알림 값 재전송이라 본문에서 지속 시간·속도를 뺀다(#299, 멈춘 시간처럼 보임). `NO_ARRIVAL`은 고정 문구. 낯선 곳 체류(`DWELL_UNKNOWN`·`DWELL_AFTER_VEHICLE`)는 "평소 가지 않으시던 곳에 오래 머물고 계십니다 (지속 N분). 자주 가시는 곳이라면 안심존으로 등록해 관리해 보세요." 한 문구로 통일하며, 재알림에는 안심존 등록 안내를 붙이지 않는다(#303, #305). EVENT_END는 `anomaly_detections`에만 저장하고 푸시하지 않으며 `anomaly:ack` 키를 지운다.
 제목은 `DetectionType` 기준이되, `DWELL_KNOWN_LONG`만 "오래 머무름 확인"이다(#255, `AnomalyReasonCode.notificationTitle`).
 `DWELL_KNOWN_LONG`의 REMIND는 저장만 하고 푸시하지 않으며 `anomaly:ack`도 리셋하지 않는다 — 같은 자리에 있는 한 사건이 닫히지 않아 확인 전까지 매시간 울린다.
 `DWELL_SAFEZONE_LONG`(안심존 안 장시간 체류)은 alert_kind와 무관하게 **저장만 하고 푸시하지 않으며** `anomaly:ack`도 리셋하지 않는다(#303, `AnomalyReasonCode.isPushed`) — 실내 GPS 오차로 평소 생활과 구분되지 않고, 보호자에게는 안심 정보라 이상 알림으로 부적절하다.
