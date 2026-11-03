@@ -147,7 +147,7 @@ class SafeZoneNotificationListenerTest {
                 List.of(NotificationFixture.GUARDIAN_KEY, NotificationFixture.SECOND_GUARDIAN_KEY),
                 "DANGER_ZONE_ENTERED",
                 "위험존 진입 알림",
-                "김소연님이 위험존 공사장에 들어갔어요.",
+                "김소연님이 공사장에 들어갔어요.",
                 expectedDangerPayload("DANGER_ZONE_ENTERED")
         );
     }
@@ -163,7 +163,7 @@ class SafeZoneNotificationListenerTest {
                 List.of(NotificationFixture.GUARDIAN_KEY, NotificationFixture.SECOND_GUARDIAN_KEY),
                 "DANGER_ZONE_EXITED",
                 "위험존 이탈 알림",
-                "김소연님이 위험존 공사장에서 벗어났어요.",
+                "김소연님이 공사장에서 벗어났어요.",
                 expectedDangerPayload("DANGER_ZONE_EXITED")
         );
     }
@@ -182,7 +182,7 @@ class SafeZoneNotificationListenerTest {
                 List.of(NotificationFixture.GUARDIAN_KEY, NotificationFixture.SECOND_GUARDIAN_KEY),
                 "DANGER_ZONE_ENTERED",
                 "위험존 진입 알림",
-                "김소연님이 위험존 공사장에 들어갔어요.",
+                "김소연님이 공사장에 들어갔어요.",
                 expectedDangerPayload("DANGER_ZONE_ENTERED")
         );
     }
@@ -206,7 +206,7 @@ class SafeZoneNotificationListenerTest {
                 List.of(NotificationFixture.OTHER_GUARDIAN_KEY, NotificationFixture.SECOND_GUARDIAN_KEY),
                 "DANGER_ZONE_ENTERED",
                 "위험존 진입 알림",
-                "김소연님이 위험존 공사장에 들어갔어요.",
+                "김소연님이 공사장에 들어갔어요.",
                 expectedDangerPayload("DANGER_ZONE_ENTERED")
         );
     }
@@ -230,7 +230,7 @@ class SafeZoneNotificationListenerTest {
                 List.of(NotificationFixture.OTHER_GUARDIAN_KEY, NotificationFixture.SECOND_GUARDIAN_KEY),
                 "DANGER_ZONE_EXITED",
                 "위험존 이탈 알림",
-                "김소연님이 위험존 공사장에서 벗어났어요.",
+                "김소연님이 공사장에서 벗어났어요.",
                 expectedDangerPayload("DANGER_ZONE_EXITED")
         );
     }

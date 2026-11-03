@@ -48,7 +48,7 @@ public class NotificationFixture {
     public static final String SAFE_ZONE_BODY = "김소연님이 안심존 1에서 벗어났어요.";
     public static final String DANGER_ZONE_EVENT_TYPE = "DANGER_ZONE_ENTERED";
     public static final String DANGER_ZONE_TITLE = "위험존 진입 알림";
-    public static final String DANGER_ZONE_BODY = "김소연님이 위험존 공사장에 들어갔어요.";
+    public static final String DANGER_ZONE_BODY = "김소연님이 공사장에 들어갔어요.";
     public static final Long FEEDBACK_NOTIFICATION_ID = 30L;
     public static final String FEEDBACK_COMMENT = "집에 계셨어요";
 

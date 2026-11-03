@@ -9,8 +9,8 @@ public enum SafeZoneAlertType {
 
     SAFE_ZONE_ENTERED("안심존 진입 알림", "%s에 도착했어요."),
     SAFE_ZONE_EXITED("안심존 이탈 알림", "%s에서 벗어났어요."),
-    DANGER_ZONE_ENTERED("위험존 진입 알림", "위험존 %s에 들어갔어요."),
-    DANGER_ZONE_EXITED("위험존 이탈 알림", "위험존 %s에서 벗어났어요.");
+    DANGER_ZONE_ENTERED("위험존 진입 알림", "%s에 들어갔어요."),
+    DANGER_ZONE_EXITED("위험존 이탈 알림", "%s에서 벗어났어요.");
 
     private final String notificationTitle;
     private final String bodySuffixFormat;
